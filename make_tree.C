@@ -39,17 +39,21 @@ using namespace std;
 
 //Configurable parameters
 int numChan=16;
-int maxEvents=-1;
+int maxEvents=-1; 
 int sideband_range[2] = {0,50}; //in ns
 float sample_rate = 0.8;
-
 bool debug=false;
+
+vector<TString> tubeSpecies = {"ET","ET","ET","ET",             // 0 1 2 3 
+							   "R878","R878","R878","ET",       // 4 5 6 7	
+							   "R7725","R7725","R7725","R7725",	// 8 9 10 11
+							   "R878","R878","R878","R878"};    // 12 13 14 15
 
 
 
 //Declare global variables
 vector<TH1D*> waves;
-TTree *inTree;
+TTree * inTree;
 TTree * outTree;
 int event = 0;
 vector<int> * v_chan;
@@ -61,6 +65,8 @@ vector<float> * v_sideband_mean;
 vector<float> * v_sideband_RMS;
 
 
+
+
 void loadBranches();
 void prepareOutBranches();
 void clearOutBranches();
@@ -70,6 +76,7 @@ vector< vector<float> > findPulses(int ic);
 vector< vector<float> > findPulses_inside_out(int ic);
 void displayPulse(int ic, float begin, float end, int ipulse);
 void displayEvent(int ic, vector<vector<float> > bounds);
+void h1cosmetic(TH1D* hist);
 
 vector<int> eventsPrinted(16,0);
 TString displayDirectory;
@@ -80,7 +87,7 @@ void make_tree(TString runNum){
 	inTree = (TTree*)f->Get("data"); 
 	if(maxEvents<0) maxEvents=inTree->GetEntries();
 	cout<<"Entries: "<<inTree->GetEntries()<<endl;
-
+	if((int)tubeSpecies.size()!=numChan) cout<<"Tube species map does not match number of channels"<<endl;
 	loadBranches();	
 
 	TString outFileName = inFileName.ReplaceAll(".root","_output.root");
@@ -152,7 +159,7 @@ void processChannel(int ic){
 	prepareWave(ic, sb_mean, sb_RMS);
 
 	vector<vector<float> > pulseBounds;
-	if(ic>3 && ic!=7) pulseBounds = findPulses(ic);
+	if(tubeSpecies[ic]!="ET") pulseBounds = findPulses(ic);
 	else pulseBounds = findPulses_inside_out(ic); //Use inside-out method for narrow ET pulses
 
 	int npulses= pulseBounds.size();
@@ -186,8 +193,10 @@ void displayPulse(int ic, float begin, float end, int ipulse){
 
 	waves[ic]->SetAxisRange(begin-130,end+130);
 	waves[ic]->SetLineWidth(2);
-	waves[ic]->SetTitle(Form("Zoom on event %i, channel %i, pulse %i;t[ns];Amplitude [mV];",event,ic,ipulse));
+	waves[ic]->SetTitle(Form("Zoom on event %i, channel %i, pulse %i (%s);Time [ns];Amplitude [mV];",event,ic,ipulse,tubeSpecies[ic].Data()));
+	h1cosmetic(waves[ic]);	
 	waves[ic]->Draw("hist");
+
 
 
 	//Show boundaries of pulse
@@ -199,9 +208,9 @@ void displayPulse(int ic, float begin, float end, int ipulse){
 	TLatex tla;
 	tla.SetTextSize(0.045);
 	tla.SetTextFont(42);
-	tla.DrawLatexNDC(0.13,0.83,Form("Height: %0.2f",v_height->back()));
-	tla.DrawLatexNDC(0.13,0.78,Form("Area: %0.2f",v_area->back()));
-	tla.DrawLatexNDC(0.13,0.73,Form("Duration: %0.2f",v_duration->back()));
+	tla.DrawLatexNDC(0.13,0.83,Form("Height: %0.2f mV",v_height->back()));
+	tla.DrawLatexNDC(0.13,0.78,Form("Area: %0.2f nVs",v_area->back()));
+	tla.DrawLatexNDC(0.13,0.73,Form("Duration: %0.2f ns",v_duration->back()));
 
 	c.Print(displayDirectory+Form("Event%i_Chan%i_begin%0.0f.pdf",event,ic,begin));
 }
@@ -215,24 +224,25 @@ void displayEvent(int ic, vector<vector<float> > bounds){
 	waves[ic]->SetAxisRange(0,1024./sample_rate);
 	waves[ic]->SetLineWidth(2);
 	waves[ic]->SetMaximum(100.);
-	waves[ic]->SetTitle(Form("Event %i, channel %i;t[ns];Amplitude [mV];",event,ic));
+	waves[ic]->SetTitle(Form("Event %i, channel %i (%s);Time [ns];Amplitude [mV];",event,ic,tubeSpecies[ic].Data()));
 
+	h1cosmetic(waves[ic]);
 	waves[ic]->Draw("hist");
 
 
 	//Show boundaries of pulse
 	TLine line; line.SetLineWidth(4); line.SetLineStyle(7);	
 	for(uint ip=0; ip<bounds.size();ip++){
-		line.SetLineColor(30);
+		line.SetLineColor(kGreen-3);
 		line.DrawLine(bounds[ip][0],0,bounds[ip][0],0.4*waves[ic]->GetMaximum());
-		line.SetLineColor(46);
+		line.SetLineColor(kRed-4);
 		line.DrawLine(bounds[ip][1],0,bounds[ip][1],0.4*waves[ic]->GetMaximum());
 	}
 	//Display values stored for this pulse
 	 TLatex tla;
 	tla.SetTextSize(0.045);
 	tla.SetTextFont(42);
-	tla.DrawLatexNDC(0.13,0.83,Form("N pulses: %i",(int)bounds.size()));
+	tla.DrawLatexNDC(0.13,0.83,Form("Number of pulses: %i",(int)bounds.size()));
 	// tla.DrawLatexNDC(0.13,0.78,Form("Area: %0.2f",v_area->back()));
 	// tla.DrawLatexNDC(0.13,0.73,Form("Duration: %0.2f",v_duration->back()));
 
@@ -378,6 +388,19 @@ void clearOutBranches(){
 	v_sideband_mean->clear();
 	v_sideband_RMS->clear();
 }
+
+
+void h1cosmetic(TH1D *hist){
+   
+  hist->GetXaxis()->SetTitleSize(0.045);
+  hist->GetXaxis()->SetLabelSize(0.04);
+  hist->GetYaxis()->SetTitleSize(0.045);
+  hist->GetYaxis()->SetLabelSize(0.04);
+  hist->GetYaxis()->SetTitleOffset(1.01);
+  hist->GetXaxis()->SetTitleOffset(0.96);
+
+}
+
 
 void loadBranches(){
 	for(int ic=0;ic<numChan;ic++) waves.push_back(new TH1D());

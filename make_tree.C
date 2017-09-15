@@ -60,6 +60,7 @@ vector<int> * v_chan;
 vector<float> * v_height;
 vector<float> * v_time;
 vector<float> * v_area;
+vector<float> * v_ipulse;
 vector<float> * v_duration;
 vector<float> * v_sideband_mean;
 vector<float> * v_sideband_RMS;
@@ -172,6 +173,7 @@ void processChannel(int ic){
 		v_height->push_back(waves[ic]->GetMaximum());
 		v_time->push_back(pulseBounds[ipulse][0]);
 		v_area->push_back(waves[ic]->Integral());
+		v_ipulse->push_back(ipulse);
 		v_duration->push_back(pulseBounds[ipulse][1] - pulseBounds[ipulse][0]);
 		v_sideband_mean->push_back(sb_mean);
 		v_sideband_RMS->push_back(sb_RMS);	
@@ -364,6 +366,7 @@ void prepareOutBranches(){
 	TBranch * b_height = outTree->Branch("height",&v_height);
 	TBranch * b_time = outTree->Branch("time",&v_time);
 	TBranch * b_area = outTree->Branch("area",&v_area);
+	TBranch * b_ipulse = outTree->Branch("ipulse",&v_ipulse);
 	TBranch * b_duration = outTree->Branch("duration",&v_duration);
 	TBranch * b_sideband_mean = outTree->Branch("sideband_mean",&v_sideband_mean);
 	TBranch * b_sideband_RMS = outTree->Branch("sideband_RMS",&v_sideband_RMS);
@@ -373,6 +376,7 @@ void prepareOutBranches(){
 	outTree->SetBranchAddress("height",&v_height,&b_height);
 	outTree->SetBranchAddress("time",&v_time,&b_time);
 	outTree->SetBranchAddress("area",&v_area,&b_area);
+	outTree->SetBranchAddress("ipulse",&v_ipulse,&b_ipulse);
 	outTree->SetBranchAddress("duration",&v_duration,&b_duration);
 	outTree->SetBranchAddress("sideband_mean",&v_sideband_mean,&b_sideband_mean);
 	outTree->SetBranchAddress("sideband_RMS",&v_sideband_RMS,&b_sideband_RMS);
@@ -384,6 +388,7 @@ void clearOutBranches(){
 	v_height->clear();
 	v_time->clear();
 	v_area->clear();
+	v_ipulse->clear();
 	v_duration->clear();
 	v_sideband_mean->clear();
 	v_sideband_RMS->clear();

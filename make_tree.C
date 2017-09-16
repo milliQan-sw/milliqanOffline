@@ -164,7 +164,7 @@ void processChannel(int ic){
 	if(tubeSpecies[ic]!="ET") pulseBounds = findPulses(ic);
 	else pulseBounds = findPulses_inside_out(ic); //Use inside-out method for narrow ET pulses
 
-	npulses= pulseBounds.size();
+	int npulses = pulseBounds.size();
 	for(int ipulse = 0; ipulse<npulses; ipulse++){
 		//Set waveform range to this pulse
 		waves[ic]->SetAxisRange(pulseBounds[ipulse][0],pulseBounds[ipulse][1]);

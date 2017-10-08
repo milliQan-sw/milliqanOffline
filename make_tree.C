@@ -25,7 +25,7 @@
 #include "TSystemDirectory.h"
 #include "TSystemFile.h"
 #include "TGaxis.h"
-
+#include "/net/cms6/cms6r0/milliqan/MilliDAQ/interface/Event.h"
 
 #include <string>
 
@@ -35,14 +35,19 @@
 #endif
 
 using namespace std;
-
+//gSystem->Load("/net/cms6/cms6r0/milliqan/MilliDAQ/libMilliDAQ.so");
 
 //Configurable parameters
 int numChan=16;
 int maxEvents=-1; 
 int sideband_range[2] = {0,50}; //in ns
-float sample_rate = 0.8;
+float sample_rate = 1.6;
 bool debug=false;
+
+//Read output from new format instead of interactiveDAQ
+bool milliDAQ=true;
+
+
 
 vector<TString> tubeSpecies = {"ET","ET","ET","ET",             // 0 1 2 3 
 							   "R878","R878","R878","ET",       // 4 5 6 7	
@@ -56,7 +61,10 @@ vector<TH1D*> waves;
 TTree * inTree;
 TTree * outTree;
 int event = 0;
-vector<int> * v_npulses;
+Long64_t event_time=0;
+string event_t_string;
+mdaq::Event * evt = new mdaq::Event(); //for MilliDAQ output only
+vector<int> * v_npulses; 
 vector<int> * v_ipulse;
 vector<int> * v_chan;
 vector<float> * v_height;
@@ -67,9 +75,30 @@ vector<float> * v_sideband_mean;
 vector<float> * v_sideband_RMS;
 
 
+//Temporary sanity check
+float max_0;
+float max_1;
+float max_2;
+float max_3;
+float max_4;
+float max_5;
+float max_6;
+float max_7;
+float max_8;
+float max_9;
+float max_10;
+float max_11;
+float max_12;
+float max_13;
+float max_14;
+float max_15;
 
 
-void loadBranches();
+
+
+void loadBranchesMilliDAQ();
+void loadWavesMilliDAQ();
+void loadBranchesInteractiveDAQ();
 void prepareOutBranches();
 void clearOutBranches();
 void processChannel(int ic);
@@ -83,19 +112,31 @@ void h1cosmetic(TH1D* hist);
 vector<int> eventsPrinted(16,0);
 TString displayDirectory;
 
-void make_tree(TString runNum){
-	TString inFileName = "Run"+runNum+".root";
+void make_tree(TString fileName){
+	TString inFileName = fileName;
 	TFile *f = TFile::Open(inFileName, "READ");
-	inTree = (TTree*)f->Get("data"); 
+
+	if(milliDAQ) inTree = (TTree*)f->Get("Events"); 
+	else inTree = (TTree*)f->Get("data"); 
+
 	if(maxEvents<0) maxEvents=inTree->GetEntries();
 	cout<<"Entries: "<<inTree->GetEntries()<<endl;
 	if((int)tubeSpecies.size()!=numChan) cout<<"Tube species map does not match number of channels"<<endl;
-	loadBranches();	
+	
+	if(milliDAQ) loadBranchesMilliDAQ();
+	else loadBranchesInteractiveDAQ();	
 
-	TString outFileName = inFileName.ReplaceAll(".root","_output.root");
+
+	inFileName.ReplaceAll(".root","");
+	inFileName.ReplaceAll("..","");
+	inFileName.ReplaceAll("/net/cms6/cms6r0/milliqan/","");
+	inFileName.ReplaceAll("/","");
+
+	gSystem->mkdir("trees");	
+	TString outFileName = "trees/"+inFileName+".root";
 	TFile * outFile = new TFile(outFileName,"recreate");
 
-	displayDirectory = "displays/Run"+runNum+"/";
+	displayDirectory = "displays/"+inFileName+"/";
 	gSystem->mkdir(displayDirectory);
 
 	outTree = new TTree("t","t");
@@ -108,19 +149,54 @@ void make_tree(TString runNum){
 	for(int i=0;i<maxEvents;i++){
 		if(i%1000==0) cout<<"Processing event "<<i<<endl;
 		inTree->GetEntry(i);
+		//cout<<"Got entry "<<i<<endl;
+		if(milliDAQ) loadWavesMilliDAQ();
 		clearOutBranches();
 		event=i;
 
+		if(milliDAQ){
+			//Waveforms are not inverted yet- done in processChannel
+			max_0= -1.*waves[0]->GetMinimum();
+			max_1= -1.*waves[1]->GetMinimum();
+			max_2= -1.*waves[2]->GetMinimum();
+			max_3= -1.*waves[3]->GetMinimum();
+			max_4= -1.*waves[4]->GetMinimum();
+			max_5= -1.*waves[5]->GetMinimum();
+			max_6= -1.*waves[6]->GetMinimum();
+			max_7= -1.*waves[7]->GetMinimum();
+			max_8= -1.*waves[8]->GetMinimum();
+			max_9= -1.*waves[9]->GetMinimum();
+			max_10= -1.*waves[10]->GetMinimum();
+			max_11= -1.*waves[11]->GetMinimum();
+			max_12= -1.*waves[12]->GetMinimum();
+			max_13= -1.*waves[13]->GetMinimum();
+			max_14= -1.*waves[14]->GetMinimum();
+			max_15= -1.*waves[15]->GetMinimum();
+
+		}
+
+
+		//This defines the time in seconds since 00:00:00 on 18/09/2017 
+		if(milliDAQ) {
+			event_time = evt->DAQTimeStamp.GetSec() - 1505692800;
+			event_t_string = evt->DAQTimeStamp.AsString("s");
+		}
+		else{ event_time=0;event_t_string="";}
+
 		for(int ic=0;ic<numChan;ic++){
+			if(ic==13) continue;
 		//	cout<<Form("Chan %i min: ",ic)<<waves[ic]->GetMinimum()<<endl;
 			processChannel(ic);		
 		}
 
+
 		outTree->Fill();
 	}
+	cout<<"Processed "<<maxEvents<<" events."<<endl;
 
 	outTree->Write();
 	outFile->Close();
+	cout<<"Closed output tree."<<endl;
 }
 
 
@@ -181,9 +257,9 @@ void processChannel(int ic){
 		v_sideband_RMS->push_back(sb_RMS);	
 
 
-		if(event<20 || eventsPrinted[ic]<10) displayPulse(ic,pulseBounds[ipulse][0],pulseBounds[ipulse][1],ipulse);
+		if(event<10 || eventsPrinted[ic]<5) displayPulse(ic,pulseBounds[ipulse][0],pulseBounds[ipulse][1],ipulse);
 	}
-	if(event<10 || (event<20 && npulses>0) || eventsPrinted[ic]<10) {displayEvent(ic,pulseBounds); eventsPrinted[ic]++;}
+	if(event<5 || (event<10 && npulses>0) || eventsPrinted[ic]<5) {displayEvent(ic,pulseBounds); eventsPrinted[ic]++;}
 }
 
 void displayPulse(int ic, float begin, float end, int ipulse){
@@ -297,16 +373,13 @@ vector< vector<float> > findPulses(int ic){
 			}
 			//cout << "DEBUG: Inside pulse, t = "<< w.t[i] <<", v = "<<v<<", nunder = "<<nunder<<endl;
 			if (nunder>NconsecEnd) { // The end of a pulse
-				// Record the pulse window
-				// tWindow[0] = waves[ic]->GetBinCenter(i_begin);
-				// tWindow[1] = waves[ic]->GetBinCenter(i);
 			 
 				//cout<<"DEBUG: i_begin "<<i_begin<<endl;
 				// cout<<"DEBUG: tWindow 0 and 1: "<<w.t[i_begin]<<" "<<w.t[i]<<endl;
 
 				bounds.push_back({(float)waves[ic]->GetBinLowEdge(i_begin+1), (float)waves[ic]->GetBinLowEdge(i+1)}); //start and end of pulse
 				if(debug) cout<<"i_begin, i: "<<i_begin<<" "<<i<<endl;
-				// tWindow[0]=0; tWindow[1]=0;
+
 		    	inpulse = false; // End the pulse
 	      		nover = 0;
 	      		nunder = 0;
@@ -364,6 +437,9 @@ vector< vector<float> > findPulses_inside_out(int ic){
 void prepareOutBranches(){
 
 	TBranch * b_event = outTree->Branch("event",&event,"event/I");
+	TBranch * b_event_time = outTree->Branch("event_time",&event_time,"event_time/L");
+	TBranch * b_event_t_string = outTree->Branch("event_t_string",&event_t_string);
+
 	TBranch * b_chan = outTree->Branch("chan",&v_chan);
 	TBranch * b_height = outTree->Branch("height",&v_height);
 	TBranch * b_time = outTree->Branch("time",&v_time);
@@ -374,7 +450,29 @@ void prepareOutBranches(){
 	TBranch * b_sideband_mean = outTree->Branch("sideband_mean",&v_sideband_mean);
 	TBranch * b_sideband_RMS = outTree->Branch("sideband_RMS",&v_sideband_RMS);
 
+	TBranch * b_max_0 = outTree->Branch("max_0",&max_0,"max_0/F");	
+	TBranch * b_max_1 = outTree->Branch("max_1",&max_1,"max_1/F");	
+	TBranch * b_max_2 = outTree->Branch("max_2",&max_2,"max_2/F");	
+	TBranch * b_max_3 = outTree->Branch("max_3",&max_3,"max_3/F");	
+	TBranch * b_max_4 = outTree->Branch("max_4",&max_4,"max_4/F");	
+	TBranch * b_max_5 = outTree->Branch("max_5",&max_5,"max_5/F");	
+	TBranch * b_max_6 = outTree->Branch("max_6",&max_6,"max_6/F");	
+	TBranch * b_max_7 = outTree->Branch("max_7",&max_7,"max_7/F");	
+	TBranch * b_max_8 = outTree->Branch("max_8",&max_8,"max_8/F");	
+	TBranch * b_max_9 = outTree->Branch("max_9",&max_9,"max_9/F");	
+	TBranch * b_max_10 = outTree->Branch("max_10",&max_10,"max_10/F");	
+	TBranch * b_max_11 = outTree->Branch("max_11",&max_11,"max_11/F");	
+	TBranch * b_max_12 = outTree->Branch("max_12",&max_12,"max_12/F");	
+	//TBranch * b_max_13 = outTree->Branch("max_13",&max_13,"max_13/F");	
+	TBranch * b_max_14 = outTree->Branch("max_14",&max_14,"max_14/F");	
+	TBranch * b_max_15 = outTree->Branch("max_15",&max_15,"max_15/F");	
+
+
+
+
 	outTree->SetBranchAddress("event",&event,&b_event);
+	outTree->SetBranchAddress("event_time",&event_time,&b_event_time);
+	//outTree->SetBranchAddress("event_t_string",&event_t_string,&b_event_t_string);
 	outTree->SetBranchAddress("chan",&v_chan,&b_chan);
 	outTree->SetBranchAddress("height",&v_height,&b_height);
 	outTree->SetBranchAddress("time",&v_time,&b_time);
@@ -384,6 +482,23 @@ void prepareOutBranches(){
 	outTree->SetBranchAddress("duration",&v_duration,&b_duration);
 	outTree->SetBranchAddress("sideband_mean",&v_sideband_mean,&b_sideband_mean);
 	outTree->SetBranchAddress("sideband_RMS",&v_sideband_RMS,&b_sideband_RMS);
+
+	outTree->SetBranchAddress("max_0",&max_0,&b_max_0);
+	outTree->SetBranchAddress("max_1",&max_1,&b_max_1);
+	outTree->SetBranchAddress("max_2",&max_2,&b_max_2);
+	outTree->SetBranchAddress("max_3",&max_3,&b_max_3);
+	outTree->SetBranchAddress("max_4",&max_4,&b_max_4);
+	outTree->SetBranchAddress("max_5",&max_5,&b_max_5);
+	outTree->SetBranchAddress("max_6",&max_6,&b_max_6);
+	outTree->SetBranchAddress("max_7",&max_7,&b_max_7);
+	outTree->SetBranchAddress("max_8",&max_8,&b_max_8);
+	outTree->SetBranchAddress("max_10",&max_10,&b_max_10);
+	outTree->SetBranchAddress("max_11",&max_11,&b_max_11);
+	outTree->SetBranchAddress("max_12",&max_12,&b_max_12);
+	//outTree->SetBranchAddress("max_13",&max_13,&b_max_13);
+	outTree->SetBranchAddress("max_14",&max_14,&b_max_14);
+	outTree->SetBranchAddress("max_15",&max_15,&b_max_15);
+
 
 }
 
@@ -412,7 +527,21 @@ void h1cosmetic(TH1D *hist){
 }
 
 
-void loadBranches(){
+void loadBranchesMilliDAQ(){
+	inTree->SetBranchAddress("event", &evt);
+	for(int ic=0;ic<numChan;ic++) waves.push_back(new TH1D());
+
+}
+
+void loadWavesMilliDAQ(){
+	for(int i=0;i<numChan;i++){
+		if(waves[i]) delete waves[i];
+		waves[i] = (TH1D*) evt->GetWaveform(i, Form("h%i",i));
+	}
+}
+
+
+void loadBranchesInteractiveDAQ(){
 	for(int ic=0;ic<numChan;ic++) waves.push_back(new TH1D());
 
 	auto branch0 = inTree->GetBranch("channel_0");
@@ -428,7 +557,7 @@ void loadBranches(){
 	auto branch10 = inTree->GetBranch("channel_10");
 	auto branch11 = inTree->GetBranch("channel_11");
 	auto branch12 = inTree->GetBranch("channel_12");
-	auto branch13 = inTree->GetBranch("channel_13");
+	//auto branch13 = inTree->GetBranch("channel_13");
 	auto branch14 = inTree->GetBranch("channel_14");
 	auto branch15 = inTree->GetBranch("channel_15");
 
@@ -445,7 +574,7 @@ void loadBranches(){
 	branch10->SetAddress(&(waves[10]));
 	branch11->SetAddress(&(waves[11]));
 	branch12->SetAddress(&(waves[12]));
-	branch13->SetAddress(&(waves[13]));
+	//branch13->SetAddress(&(waves[13]));
 	branch14->SetAddress(&(waves[14]));
 	branch15->SetAddress(&(waves[15]));
 

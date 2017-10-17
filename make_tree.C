@@ -43,6 +43,7 @@ int maxEvents=-1;
 int sideband_range[2] = {0,50}; //in ns
 float sample_rate = 1.6;
 bool debug=false;
+TString version = "3";
 
 //Read output from new format instead of interactiveDAQ
 bool milliDAQ=true;
@@ -61,8 +62,12 @@ vector<TH1D*> waves;
 TTree * inTree;
 TTree * outTree;
 int event = 0;
+int fileNum=0;
+int runNum=0;
 Long64_t event_time=0;
 string event_t_string;
+int fillNum;
+bool beam;
 mdaq::Event * evt = new mdaq::Event(); //for MilliDAQ output only
 vector<int> * v_npulses; 
 vector<int> * v_ipulse;
@@ -95,7 +100,8 @@ float max_15;
 
 
 
-
+void loadFillList(TString fillFile="collisionsTimeList.txt");
+int findFill(int seconds);
 void loadBranchesMilliDAQ();
 void loadWavesMilliDAQ();
 void loadBranchesInteractiveDAQ();
@@ -112,10 +118,79 @@ void h1cosmetic(TH1D* hist);
 vector<int> eventsPrinted(16,0);
 TString displayDirectory;
 
+//Fill list tuple format:
+//start time [s], end time [s], fill number, luminosity
+vector<std::tuple<int, int, int, float>> fillList; 
+
+void loadFillList(TString fillFile){
+
+	int fillnumber, start,end;
+	float lumi;
+	string date,time;
+	ifstream infile;
+	infile.open(fillFile); 
+
+	while(infile >> fillnumber >> start >> end >> lumi >> date >> time){
+		if(end<=start && end>0) cout<<"Error in fill time list"<<endl; //end == -1 indicates ongoing fill
+		else{
+			//cout<<Form("Appending %i %i %i %0.2f",start,end,fillnumber,lumi)<<endl;
+			fillList.push_back(make_tuple(start,end,fillnumber,lumi));
+		}
+	}
+	sort(fillList.begin(),fillList.end());
+	cout<<"First fill "<<get<2>(fillList[0])<<endl;
+	cout<<"Last fill "<<get<2>(fillList[fillList.size()-1])<<endl;
+}
+
+int findFill(int seconds){
+	auto index_of_first_fill_with_larger_start_time = distance(fillList.begin(), lower_bound(fillList.begin(),fillList.end(), 
+       make_tuple(seconds, seconds, 0, 0.) ));
+	//cout<<"index "<<index_of_first_fill_with_larger_start_time<<endl;
+	int this_fill=0;
+	if(index_of_first_fill_with_larger_start_time > (int)fillList.size()) this_fill=-1;
+	//This event is during a fill if its time is less than the end time of the fill before the first fill with a larger start time
+	else if(seconds < get<1>(fillList[index_of_first_fill_with_larger_start_time-1]) || get<1>(fillList[index_of_first_fill_with_larger_start_time-1])==-1){
+		//end time == -1 indicates ongoing fill 
+		this_fill = get<2>(fillList[index_of_first_fill_with_larger_start_time-1]); //fill number
+	}
+	return this_fill;
+}
+
 void make_tree(TString fileName){
+	
+	loadFillList();
+
 	TString inFileName = fileName;
 	TFile *f = TFile::Open(inFileName, "READ");
 
+
+	TString baseFileName= ((TObjString*)inFileName.Tokenize("/")->Last())->String().Data();
+
+	//Get run number from file name
+	TString runNumber = ((TObjString*)baseFileName.Tokenize(".")->At(0))->String().Data();
+	runNumber.ReplaceAll("MilliQan_Run","");
+	runNum=atoi(runNumber.Data());
+
+	//Get file number from file name
+	TString fileNumber = ((TObjString*)baseFileName.Tokenize(".")->At(1))->String().Data();
+	fileNumber = ((TObjString*)fileNumber.Tokenize("_")->At(0))->String().Data();
+	fileNum=atoi(fileNumber.Data());
+
+	//Get config name from filename
+	TString configName = ((TObjString*)baseFileName.Tokenize(".")->At(1))->String().Data();
+	configName = ((TObjString*)configName.Tokenize("_")->At(1))->String().Data();
+	configName.ReplaceAll(".root","");
+
+
+	baseFileName="UX5"+baseFileName;
+	baseFileName.ReplaceAll(".root","");
+
+
+
+	TString treeDirectory= "trees_v"+version+"/Run"+to_string(runNum)+"_"+configName+"/";
+	TString linkDirectory="trees/Run"+to_string(runNum)+"_"+configName+"/";
+
+	cout<<"Run "<<runNum<<", file "<<fileNum<<endl;
 	if(milliDAQ) inTree = (TTree*)f->Get("Events"); 
 	else inTree = (TTree*)f->Get("data"); 
 
@@ -127,16 +202,15 @@ void make_tree(TString fileName){
 	else loadBranchesInteractiveDAQ();	
 
 
-	inFileName.ReplaceAll(".root","");
-	inFileName.ReplaceAll("..","");
-	inFileName.ReplaceAll("/net/cms6/cms6r0/milliqan/","");
-	inFileName.ReplaceAll("/","");
-
-	gSystem->mkdir("trees");	
-	TString outFileName = "trees/"+inFileName+".root";
+	gSystem->mkdir("trees_v"+version);	
+	gSystem->mkdir(treeDirectory);	
+	gSystem->mkdir(linkDirectory);
+	TString outFileName = treeDirectory+baseFileName+"_v"+version+".root";
 	TFile * outFile = new TFile(outFileName,"recreate");
 
-	displayDirectory = "displays/"+inFileName+"/";
+
+	displayDirectory = "displays/"+baseFileName+"/";
+	displayDirectory.ReplaceAll(".root","");
 	gSystem->mkdir(displayDirectory);
 
 	outTree = new TTree("t","t");
@@ -176,12 +250,17 @@ void make_tree(TString fileName){
 		}
 
 
-		//This defines the time in seconds since 00:00:00 on 18/09/2017 
 		if(milliDAQ) {
-			event_time = evt->DAQTimeStamp.GetSec() - 1505692800;
+			fillNum=0;
+			Long64_t secs = evt->DAQTimeStamp.GetSec();
+			fillNum = findFill(secs);
+			if(fillNum>0) beam=true;
+			else beam = false;
+			//This defines the time in seconds since 00:00:00 on 18/09/2017 
+			event_time = secs - 1505692800;
 			event_t_string = evt->DAQTimeStamp.AsString("s");
 		}
-		else{ event_time=0;event_t_string="";}
+		else{ event_time=0;event_t_string="";fillNum=0;beam=false;}
 
 		for(int ic=0;ic<numChan;ic++){
 			if(ic==13) continue;
@@ -197,6 +276,12 @@ void make_tree(TString fileName){
 	outTree->Write();
 	outFile->Close();
 	cout<<"Closed output tree."<<endl;
+	TString currentDir=gSystem->pwd();
+	TString target = currentDir+"/"+outFileName;
+	TString linkname =linkDirectory+baseFileName+".root";
+
+	gSystem->Symlink(target,linkname);
+	cout<<"Made link to "<<target<<" called "<<linkname<<endl;
 }
 
 
@@ -257,9 +342,9 @@ void processChannel(int ic){
 		v_sideband_RMS->push_back(sb_RMS);	
 
 
-		if(event<10 || eventsPrinted[ic]<5) displayPulse(ic,pulseBounds[ipulse][0],pulseBounds[ipulse][1],ipulse);
+		if(event<0 || eventsPrinted[ic]<0) displayPulse(ic,pulseBounds[ipulse][0],pulseBounds[ipulse][1],ipulse);
 	}
-	if(event<5 || (event<10 && npulses>0) || eventsPrinted[ic]<5) {displayEvent(ic,pulseBounds); eventsPrinted[ic]++;}
+	if(event<0 || (event<0 && npulses>0) || eventsPrinted[ic]<0) {displayEvent(ic,pulseBounds); eventsPrinted[ic]++;}
 }
 
 void displayPulse(int ic, float begin, float end, int ipulse){
@@ -380,12 +465,12 @@ vector< vector<float> > findPulses(int ic){
 				bounds.push_back({(float)waves[ic]->GetBinLowEdge(i_begin+1), (float)waves[ic]->GetBinLowEdge(i+1)}); //start and end of pulse
 				if(debug) cout<<"i_begin, i: "<<i_begin<<" "<<i<<endl;
 
-		    	inpulse = false; // End the pulse
-	      		nover = 0;
-	      		nunder = 0;
-	      		i_begin = i;
+				inpulse = false; // End the pulse
+				nover = 0;
+				nunder = 0;
+				i_begin = i;
 			}
-	 	}
+		}
 	}
 	return bounds;
 }
@@ -405,30 +490,30 @@ vector< vector<float> > findPulses_inside_out(int ic){
 
 	for (int i=istart; i<waves[ic]->GetNbinsX(); i++) { // Loop over all samples looking for pulses
 		float v = waves[ic]->GetBinContent(i);
-	  	if(v>thresh){
-	  		//Add a pulse, adding bins on either side starting from i
-	  		i_begin=i;
-	  		i_end=i;
+		if(v>thresh){
+			//Add a pulse, adding bins on either side starting from i
+			i_begin=i;
+			i_end=i;
 
-	  		//loop to find last previous sample beneath noise threshold
-	  		while(v>thresh_noise && i_begin>0){
-	  			i_begin--;
-	  			v = waves[ic]->GetBinContent(i_begin);
-	  		}
-	  		i_begin++; //start pulse at first sample ABOVE threshold.
+			//loop to find last previous sample beneath noise threshold
+			while(v>thresh_noise && i_begin>0){
+				i_begin--;
+				v = waves[ic]->GetBinContent(i_begin);
+			}
+			i_begin++; //start pulse at first sample ABOVE threshold.
 
-	  		//loop to find next sample beneath noise threshold
-	  		v = waves[ic]->GetBinContent(i);
-	  		while(v>thresh_noise && i_end<=waves[ic]->GetNbinsX()){
-	  			i_end++;
-	  			v = waves[ic]->GetBinContent(i_end);
-	  		}
-	  		i_end--; //end pulse at last sample ABOVE threshold.
+			//loop to find next sample beneath noise threshold
+			v = waves[ic]->GetBinContent(i);
+			while(v>thresh_noise && i_end<=waves[ic]->GetNbinsX()){
+				i_end++;
+				v = waves[ic]->GetBinContent(i_end);
+			}
+			i_end--; //end pulse at last sample ABOVE threshold.
 
-	  		i=i_end+1; //Start where we left off next time
+			i=i_end+1; //Start where we left off next time
 
-	  		bounds.push_back({(float)waves[ic]->GetBinLowEdge(i_begin), (float)waves[ic]->GetBinLowEdge(i_end+1)});
-	  	}
+			bounds.push_back({(float)waves[ic]->GetBinLowEdge(i_begin), (float)waves[ic]->GetBinLowEdge(i_end+1)});
+		}
 	}
 
 	return bounds;
@@ -437,6 +522,10 @@ vector< vector<float> > findPulses_inside_out(int ic){
 void prepareOutBranches(){
 
 	TBranch * b_event = outTree->Branch("event",&event,"event/I");
+	TBranch * b_run = outTree->Branch("run",&runNum,"run/I");
+	TBranch * b_file = outTree->Branch("file",&fileNum,"file/I");
+	TBranch * b_fill = outTree->Branch("fill",&fillNum,"fill/I");
+	TBranch * b_beam = outTree->Branch("beam",&beam,"beam/O");
 	TBranch * b_event_time = outTree->Branch("event_time",&event_time,"event_time/L");
 	TBranch * b_event_t_string = outTree->Branch("event_t_string",&event_t_string);
 
@@ -471,7 +560,12 @@ void prepareOutBranches(){
 
 
 	outTree->SetBranchAddress("event",&event,&b_event);
+	outTree->SetBranchAddress("run",&runNum,&b_run);
+	outTree->SetBranchAddress("file",&fileNum,&b_file);
 	outTree->SetBranchAddress("event_time",&event_time,&b_event_time);
+	outTree->SetBranchAddress("fill",&fillNum,&b_fill);
+	outTree->SetBranchAddress("beam",&beam,&b_beam);
+
 	//outTree->SetBranchAddress("event_t_string",&event_t_string,&b_event_t_string);
 	outTree->SetBranchAddress("chan",&v_chan,&b_chan);
 	outTree->SetBranchAddress("height",&v_height,&b_height);

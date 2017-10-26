@@ -3,6 +3,10 @@
 #include <vector>
 #include <sstream>
 #include <iomanip> // for setw()
+#include <time.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+
 
 #include "TSystem.h"
 #include "TROOT.h"
@@ -25,6 +29,8 @@
 #include "TSystemDirectory.h"
 #include "TSystemFile.h"
 #include "TGaxis.h"
+#include "TLegend.h"
+#include "TColor.h"
 #include "/net/cms6/cms6r0/milliqan/MilliDAQ/interface/Event.h"
 
 #include <string>
@@ -35,26 +41,57 @@
 #endif
 
 using namespace std;
+
+//////////////////////////////////////////
+
+// Compile like this:
+// g++ -o make_tree make_tree.C /net/cms6/cms6r0/milliqan/MilliDAQ/libMilliDAQ.so `root-config --cflags --glibs` -Wno-narrowing
+
+//////////////////////////////////////////
+
 //gSystem->Load("/net/cms6/cms6r0/milliqan/MilliDAQ/libMilliDAQ.so");
 
 //Configurable parameters
 int numChan=16;
 int maxEvents=-1; 
-int sideband_range[2] = {0,50}; //in ns
+float sideband_range[2] = {0,50}; //in ns
+float presampleStart= 17.5;
+float presampleEnd = 2.5; 
+//Measure presample from t0-17.5 to t0-2.5 ns
+
 float sample_rate = 1.6;
 bool debug=false;
-TString version = "3";
+TString version = "4";
 
 //Read output from new format instead of interactiveDAQ
 bool milliDAQ=true;
 
-
+//Activated to display specific events
+bool displayMode=false;
 
 vector<TString> tubeSpecies = {"ET","ET","ET","ET",             // 0 1 2 3 
 							   "R878","R878","R878","ET",       // 4 5 6 7	
 							   "R7725","R7725","R7725","R7725",	// 8 9 10 11
 							   "R878","R878","R878","R878"};    // 12 13 14 15
 
+/*vector<int> colors = {kBlack, kRed,
+		 kGreen+2, kBlue,
+		 kOrange-3, kPink-8,
+		 kAzure, kBlack,
+		 kGray+2, kBlue+1,
+		 kMagenta+1, kSpring+7,
+		 kBlack, kOrange+3,
+		 kBlue-7, kGreen-2};
+		 */
+
+
+
+vector<float> reds ={255./255.,31./255.,235./255.,111./255.,219./255.,151./255.,185./255.,194./255.,127./255.,98./255.,211./255.,69./255.,220./255.,72./255.,225./255.,145./255.,233./255.,125./255.,147./255.,110./255.,209./255.,44};
+vector<float> greens={255./255.,30./255.,205./255.,48./255.,106./255.,206./255.,32./255.,188./255.,128./255.,166./255.,134./255.,120./255.,132./255.,56./255.,161./255.,39./255.,232./255.,23./255.,173./255.,53./255.,45./255.,54};
+vector<float> blues={255./255.,30./255.,62./255.,139./255.,41./255.,230./255.,54./255.,130./255.,129./255.,71./255.,178./255.,179./255.,101./255.,150./255.,49./255.,139./255.,87./255.,22./255.,60./255.,21./255.,39./255.,23};
+
+vector<TColor *> palette;
+vector<int> colors;
 
 
 //Declare global variables
@@ -65,19 +102,24 @@ int event = 0;
 int fileNum=0;
 int runNum=0;
 Long64_t event_time=0;
+int t_since_fill_start=0;
 string event_t_string;
 int fillNum;
 bool beam;
 mdaq::Event * evt = new mdaq::Event(); //for MilliDAQ output only
-vector<int> * v_npulses; 
-vector<int> * v_ipulse;
-vector<int> * v_chan;
-vector<float> * v_height;
-vector<float> * v_time;
-vector<float> * v_area;
-vector<float> * v_duration;
-vector<float> * v_sideband_mean;
-vector<float> * v_sideband_RMS;
+vector<int> * v_npulses = new vector<int>(); 
+vector<int> * v_ipulse = new vector<int>();
+vector<int> * v_chan = new vector<int>();
+vector<float> * v_height = new vector<float>();
+vector<float> * v_time = new vector<float>();
+vector<float> * v_delay = new vector<float>();
+vector<float> * v_area = new vector<float>();
+vector<float> * v_duration =  new vector<float>();
+vector<bool> * v_quiet = new vector<bool>();
+vector<float> * v_presample_mean = new vector<float>();
+vector<float> * v_presample_RMS = new vector<float>();
+vector<float> * v_sideband_mean = new vector<float>();
+vector<float> * v_sideband_RMS = new vector<float>();
 
 
 //Temporary sanity check
@@ -98,66 +140,59 @@ float max_13;
 float max_14;
 float max_15;
 
+TString milliqanOfflineDir="/net/cms6/cms6r0/milliqan/milliqanOffline/";
 
-
-void loadFillList(TString fillFile="collisionsTimeList.txt");
-int findFill(int seconds);
+void make_tree(TString fileName, int eventNum=-1, TString tag="");
+void loadFillList(TString fillFile=milliqanOfflineDir+"collisionsTimeList.txt");
+pair<int,int> findFill(int seconds);
 void loadBranchesMilliDAQ();
 void loadWavesMilliDAQ();
 void loadBranchesInteractiveDAQ();
 void prepareOutBranches();
 void clearOutBranches();
-void processChannel(int ic);
+vector< vector<float> > processChannel(int ic);
 void prepareWave(int ic, float &sb_mean, float &sb_RMS);
 vector< vector<float> > findPulses(int ic);
 vector< vector<float> > findPulses_inside_out(int ic);
 void displayPulse(int ic, float begin, float end, int ipulse);
-void displayEvent(int ic, vector<vector<float> > bounds);
-void h1cosmetic(TH1D* hist);
-
+void displayEvent(vector<vector<vector<float> > > bounds,TString tag);
+void h1cosmetic(TH1D* hist,int ic);
+void getFileCreationTime(const char *path);
 vector<int> eventsPrinted(16,0);
 TString displayDirectory;
+
+pair<float,float> measureSideband(int ic, float start, float end);
+
+void defineColors(){
+	for(int icolor=0;icolor<reds.size();icolor++){
+		palette.push_back(new TColor(2000+icolor,reds[icolor],greens[icolor],blues[icolor]));
+		colors.push_back(2000+icolor);
+	}
+	colors[3] = 2013;
+	colors[12]= 2017;
+
+}
 
 //Fill list tuple format:
 //start time [s], end time [s], fill number, luminosity
 vector<std::tuple<int, int, int, float>> fillList; 
 
-void loadFillList(TString fillFile){
-
-	int fillnumber, start,end;
-	float lumi;
-	string date,time;
-	ifstream infile;
-	infile.open(fillFile); 
-
-	while(infile >> fillnumber >> start >> end >> lumi >> date >> time){
-		if(end<=start && end>0) cout<<"Error in fill time list"<<endl; //end == -1 indicates ongoing fill
-		else{
-			//cout<<Form("Appending %i %i %i %0.2f",start,end,fillnumber,lumi)<<endl;
-			fillList.push_back(make_tuple(start,end,fillnumber,lumi));
-		}
-	}
-	sort(fillList.begin(),fillList.end());
-	cout<<"First fill "<<get<2>(fillList[0])<<endl;
-	cout<<"Last fill "<<get<2>(fillList[fillList.size()-1])<<endl;
+# ifndef __CINT__  // the following code will be invisible for the interpreter
+int main(int argc, char **argv)
+{
+	if(argc==2) make_tree(argv[1]);
+	else if(argc==3) make_tree(argv[1],stoi(argv[2]));
+	else if(argc==4) make_tree(argv[1],stoi(argv[2]),argv[3]);
+ 
 }
+# endif
 
-int findFill(int seconds){
-	auto index_of_first_fill_with_larger_start_time = distance(fillList.begin(), lower_bound(fillList.begin(),fillList.end(), 
-       make_tuple(seconds, seconds, 0, 0.) ));
-	//cout<<"index "<<index_of_first_fill_with_larger_start_time<<endl;
-	int this_fill=0;
-	if(index_of_first_fill_with_larger_start_time > (int)fillList.size()) this_fill=-1;
-	//This event is during a fill if its time is less than the end time of the fill before the first fill with a larger start time
-	else if(seconds < get<1>(fillList[index_of_first_fill_with_larger_start_time-1]) || get<1>(fillList[index_of_first_fill_with_larger_start_time-1])==-1){
-		//end time == -1 indicates ongoing fill 
-		this_fill = get<2>(fillList[index_of_first_fill_with_larger_start_time-1]); //fill number
-	}
-	return this_fill;
-}
 
-void make_tree(TString fileName){
-	
+void make_tree(TString fileName, int eventNum, TString tag){
+//	gROOT->ProcessLine( "gErrorIgnoreLevel = kError");
+	defineColors();
+	if(eventNum>=0) displayMode=true;
+	cout<<"Tag is "<<tag<<endl;
 	loadFillList();
 
 	TString inFileName = fileName;
@@ -187,44 +222,50 @@ void make_tree(TString fileName){
 
 
 
-	TString treeDirectory= "trees_v"+version+"/Run"+to_string(runNum)+"_"+configName+"/";
-	TString linkDirectory="trees/Run"+to_string(runNum)+"_"+configName+"/";
+
+	TString treeDirectory= milliqanOfflineDir+"trees_v"+version+"/Run"+to_string(runNum)+"_"+configName+"/";
+	TString linkDirectory= milliqanOfflineDir+"trees/Run"+to_string(runNum)+"_"+configName+"/";
 
 	cout<<"Run "<<runNum<<", file "<<fileNum<<endl;
 	if(milliDAQ) inTree = (TTree*)f->Get("Events"); 
 	else inTree = (TTree*)f->Get("data"); 
 
 	if(maxEvents<0) maxEvents=inTree->GetEntries();
-	cout<<"Entries: "<<inTree->GetEntries()<<endl;
+	if(!displayMode) cout<<"Entries: "<<inTree->GetEntries()<<endl;
 	if((int)tubeSpecies.size()!=numChan) cout<<"Tube species map does not match number of channels"<<endl;
 	
 	if(milliDAQ) loadBranchesMilliDAQ();
 	else loadBranchesInteractiveDAQ();	
 
 
-	gSystem->mkdir("trees_v"+version);	
+	gSystem->mkdir(milliqanOfflineDir+"trees_v"+version);	
 	gSystem->mkdir(treeDirectory);	
 	gSystem->mkdir(linkDirectory);
 	TString outFileName = treeDirectory+baseFileName+"_v"+version+".root";
-	TFile * outFile = new TFile(outFileName,"recreate");
+	TFile * outFile;
+	if(!displayMode){
+		outFile = new TFile(outFileName,"recreate");
+		outTree = new TTree("t","t");
+		prepareOutBranches();
+	}
 
-
-	displayDirectory = "displays/"+baseFileName+"/";
-	displayDirectory.ReplaceAll(".root","");
+	displayDirectory = milliqanOfflineDir+"displays/Run"+to_string(runNum)+"_"+configName+"/";
 	gSystem->mkdir(displayDirectory);
 
-	outTree = new TTree("t","t");
+	
 
-	prepareOutBranches();
 
+	//if(!displayMode)
 	cout<<"Starting event loop"<<endl;
-	cout<<"Length of waves: "<<waves.size()<<endl;
+	
 
 	for(int i=0;i<maxEvents;i++){
+		if(displayMode && i!=eventNum) continue; //Find specified event
 		if(i%1000==0) cout<<"Processing event "<<i<<endl;
 		inTree->GetEntry(i);
 		//cout<<"Got entry "<<i<<endl;
 		if(milliDAQ) loadWavesMilliDAQ();
+		//if(!displayMode) 
 		clearOutBranches();
 		event=i;
 
@@ -252,8 +293,12 @@ void make_tree(TString fileName){
 
 		if(milliDAQ) {
 			fillNum=0;
+			t_since_fill_start= -1;
 			Long64_t secs = evt->DAQTimeStamp.GetSec();
-			fillNum = findFill(secs);
+			pair<int,int> fillInfo = findFill(secs);
+			fillNum= fillInfo.first;
+			t_since_fill_start=fillInfo.second;
+
 			if(fillNum>0) beam=true;
 			else beam = false;
 			//This defines the time in seconds since 00:00:00 on 18/09/2017 
@@ -262,26 +307,33 @@ void make_tree(TString fileName){
 		}
 		else{ event_time=0;event_t_string="";fillNum=0;beam=false;}
 
+		vector<vector<vector<float> > > allPulseBounds;
 		for(int ic=0;ic<numChan;ic++){
-			if(ic==13) continue;
+			if(ic==13){
+				vector<vector<float> > empty;
+				allPulseBounds.push_back(empty);
+				continue;
+			}
 		//	cout<<Form("Chan %i min: ",ic)<<waves[ic]->GetMinimum()<<endl;
-			processChannel(ic);		
+			allPulseBounds.push_back(processChannel(ic));
 		}
-
-
-		outTree->Fill();
+		if(displayMode) displayEvent(allPulseBounds,tag);
+		else outTree->Fill();
 	}
-	cout<<"Processed "<<maxEvents<<" events."<<endl;
+	if(!displayMode) cout<<"Processed "<<maxEvents<<" events."<<endl;
 
-	outTree->Write();
-	outFile->Close();
-	cout<<"Closed output tree."<<endl;
-	TString currentDir=gSystem->pwd();
-	TString target = currentDir+"/"+outFileName;
-	TString linkname =linkDirectory+baseFileName+".root";
-
-	gSystem->Symlink(target,linkname);
-	cout<<"Made link to "<<target<<" called "<<linkname<<endl;
+	if(!displayMode){
+		outTree->Write();
+		outFile->Close();
+		cout<<"Closed output tree."<<endl;
+		//TString currentDir=gSystem->pwd();
+		//TString target = currentDir+"/"+outFileName;
+		TString target = outFileName;
+		TString linkname =linkDirectory+baseFileName+".root";
+		remove(linkname); //remove if already exists
+		gSystem->Symlink(target,linkname);
+		cout<<"Made link to "<<target<<" called "<<linkname<<endl;
+	}
 }
 
 
@@ -296,34 +348,46 @@ void prepareWave(int ic, float &sb_mean, float &sb_RMS){
 	waves[ic]->Scale(-1.0);
 	convertXaxis(waves[ic]);
 
-	//Subtract sideband. Return sideband mean and RMS
+	//Find sideband
+	pair<float,float> mean_rms = measureSideband(ic,sideband_range[0],sideband_range[1]);
+	sb_mean = mean_rms.first;
+	sb_RMS = mean_rms.second;
+	//subtract sideband
+	for(int ibin = 1; ibin <= waves[ic]->GetNbinsX(); ibin++){
+		waves[ic]->SetBinContent(ibin,waves[ic]->GetBinContent(ibin)-sb_mean);
+	}
+}
+
+//Measure mean and RMS of samples in range from start to end (in ns)
+pair<float,float> measureSideband(int ic, float start, float end){
+
 	float sum_sb=0.;
 	float sum2_sb=0.;
-	int start = waves[ic]->FindBin(sideband_range[0]);
-	int end = waves[ic]->FindBin(sideband_range[1]);
-	int n_sb = end-start+1;
-	for(int ibin=start; ibin <= end; ibin++){
+	int startbin = waves[ic]->FindBin(start);
+    int endbin = waves[ic]->FindBin(end);
+	int n_sb = endbin-startbin+1;
+	for(int ibin=startbin; ibin <= endbin; ibin++){
 		sum_sb = sum_sb + waves[ic]->GetBinContent(ibin);
 		sum2_sb = sum2_sb + pow(waves[ic]->GetBinContent(ibin),2);
 		n_sb++;
 	}
 	if(n_sb == 0) n_sb = 1.;
-	sb_mean = sum_sb/n_sb;
-	sb_RMS =pow( sum2_sb/n_sb - pow(sb_mean,2), 0.5);
+	float mean = sum_sb/n_sb;
+	float RMS =pow( sum2_sb/n_sb - pow(mean,2), 0.5);
 
-	for(int ibin = 1; ibin <= waves[ic]->GetNbinsX(); ibin++){
-		waves[ic]->SetBinContent(ibin,waves[ic]->GetBinContent(ibin)-sb_mean);
-	}
+	return make_pair(mean,RMS);
+
 }
 	
 
-void processChannel(int ic){
+vector< vector<float> > processChannel(int ic){
 	float sb_mean, sb_RMS;
 	prepareWave(ic, sb_mean, sb_RMS);
 
 	vector<vector<float> > pulseBounds;
-	if(tubeSpecies[ic]!="ET") pulseBounds = findPulses(ic);
-	else pulseBounds = findPulses_inside_out(ic); //Use inside-out method for narrow ET pulses
+	//if(tubeSpecies[ic]!="ET") 
+	pulseBounds = findPulses(ic);
+	//else pulseBounds = findPulses_inside_out(ic); //Use inside-out method for narrow ET pulses
 
 	int npulses = pulseBounds.size();
 	for(int ipulse = 0; ipulse<npulses; ipulse++){
@@ -331,6 +395,7 @@ void processChannel(int ic){
 		waves[ic]->SetAxisRange(pulseBounds[ipulse][0],pulseBounds[ipulse][1]);
 		if(debug) cout<<"Chan "<<ic<<", pulse bounds: "<<pulseBounds[ipulse][0]<<" to "<<pulseBounds[ipulse][1]<<endl;
 		//Fill branches
+		
 		v_chan->push_back(ic);
 		v_height->push_back(waves[ic]->GetMaximum());
 		v_time->push_back(pulseBounds[ipulse][0]);
@@ -338,13 +403,23 @@ void processChannel(int ic){
 		v_ipulse->push_back(ipulse);
 		v_npulses->push_back(npulses);
 		v_duration->push_back(pulseBounds[ipulse][1] - pulseBounds[ipulse][0]);
+		if(ipulse>0) v_delay->push_back(pulseBounds[ipulse][0] - pulseBounds[ipulse-1][1]); //interval between end of previous pulse and start of this one
+		else v_delay->push_back(1999.);
+
 		v_sideband_mean->push_back(sb_mean);
 		v_sideband_RMS->push_back(sb_RMS);	
 
+		//get presample info
+		pair<float,float> presampleInfo = measureSideband(ic,pulseBounds[ipulse][0]-presampleStart,pulseBounds[ipulse][0]-presampleEnd);
+		v_presample_mean->push_back(presampleInfo.first);
+		v_presample_RMS->push_back(presampleInfo.second);	
+		bool quiet = fabs(presampleInfo.first)<1. && presampleInfo.second <2.0;
+		v_quiet->push_back(quiet); //preliminary: mean between -1 and 1, and RMS<2
 
 		if(event<0 || eventsPrinted[ic]<0) displayPulse(ic,pulseBounds[ipulse][0],pulseBounds[ipulse][1],ipulse);
 	}
-	if(event<0 || (event<0 && npulses>0) || eventsPrinted[ic]<0) {displayEvent(ic,pulseBounds); eventsPrinted[ic]++;}
+	//if(event<0 || (event<0 && npulses>0) || eventsPrinted[ic]<0) {displayEvent(ic,pulseBounds); eventsPrinted[ic]++;}
+	return pulseBounds;
 }
 
 void displayPulse(int ic, float begin, float end, int ipulse){
@@ -359,7 +434,7 @@ void displayPulse(int ic, float begin, float end, int ipulse){
 	waves[ic]->SetAxisRange(begin-130,end+130);
 	waves[ic]->SetLineWidth(2);
 	waves[ic]->SetTitle(Form("Zoom on event %i, channel %i, pulse %i (%s);Time [ns];Amplitude [mV];",event,ic,ipulse,tubeSpecies[ic].Data()));
-	h1cosmetic(waves[ic]);	
+	h1cosmetic(waves[ic],ic);	
 	waves[ic]->Draw("hist");
 
 
@@ -380,45 +455,138 @@ void displayPulse(int ic, float begin, float end, int ipulse){
 	c.Print(displayDirectory+Form("Event%i_Chan%i_begin%0.0f.pdf",event,ic,begin));
 }
 
-void displayEvent(int ic, vector<vector<float> > bounds){
-	TCanvas c;
+void displayEvent(vector<vector<vector<float> > > bounds, TString tag){
+	TCanvas c("c1","",1400,800);
+	gPad->SetRightMargin(0.35);
 	gStyle->SetGridStyle(3);
 	gStyle->SetGridColor(13);
 	c.SetGrid();
+	
+	gStyle->SetTitleX(0.35);
+	vector<int> chanList;
+	float maxheight=0;
+	float timeRange[2];
+	timeRange[0]=1024./sample_rate; timeRange[1]=0.;
+	for(uint ic=0;ic<bounds.size();ic++){
+		if(bounds[ic].size()>0){
+			chanList.push_back(ic);
+			//Reset range to find correct maxima
+			waves[ic]->SetAxisRange(0,1024./sample_rate);
+			//Keep track of max amplitude
+			if(waves[ic]->GetMaximum()>maxheight) maxheight=waves[ic]->GetMaximum();
+			//keep track of earliest pulse start time
+			if(bounds[ic][0][0]<timeRange[0]) timeRange[0]=bounds[ic][0][0];
+			//keep track of latest pulse end time (pulses are ordered chronologicaly for each channel)
+			if(bounds[ic][bounds[ic].size()-1][1]>timeRange[1]) timeRange[1]=bounds[ic][bounds[ic].size()-1][1];
 
-	waves[ic]->SetAxisRange(0,1024./sample_rate);
-	waves[ic]->SetLineWidth(2);
-	waves[ic]->SetMaximum(100.);
-	waves[ic]->SetTitle(Form("Event %i, channel %i (%s);Time [ns];Amplitude [mV];",event,ic,tubeSpecies[ic].Data()));
-
-	h1cosmetic(waves[ic]);
-	waves[ic]->Draw("hist");
-
-
-	//Show boundaries of pulse
-	TLine line; line.SetLineWidth(4); line.SetLineStyle(7);	
-	for(uint ip=0; ip<bounds.size();ip++){
-		line.SetLineColor(kGreen-3);
-		line.DrawLine(bounds[ip][0],0,bounds[ip][0],0.4*waves[ic]->GetMaximum());
-		line.SetLineColor(kRed-4);
-		line.DrawLine(bounds[ip][1],0,bounds[ip][1],0.4*waves[ic]->GetMaximum());
+			TString beamState = "off";
+			if(beam) beamState="on";
+			waves[ic]->SetTitle(Form("Run %i, File %i, Event %i (beam %s);Time [ns];Amplitude [mV];",runNum,fileNum,event,beamState.Data()));
+		}
 	}
-	//Display values stored for this pulse
-	 TLatex tla;
-	tla.SetTextSize(0.045);
+	maxheight*=1.1;
+	timeRange[0]*=0.9;
+	timeRange[1]= min(1.1*timeRange[1],1024./sample_rate);
+	float depth = 0.075*chanList.size();
+	TLegend leg(0.45,0.9-depth,0.65,0.9);
+	for(uint i=0;i<chanList.size();i++){
+		int ic = chanList[i];	
+		waves[ic]->SetAxisRange(timeRange[0],timeRange[1]);
+		waves[ic]->SetMaximum(maxheight);
+
+		h1cosmetic(waves[ic],ic);
+		if(i==0) waves[ic]->Draw("hist");
+		else waves[ic]->Draw("hist same");
+
+		leg.AddEntry(waves[ic],Form("Channel %i",ic),"l");
+		//Show boundaries of pulse
+		TLine line; line.SetLineWidth(2); line.SetLineStyle(2);	line.SetLineColor(colors[ic]);
+		for(uint ip=0; ip<bounds[ic].size();ip++){
+			line.DrawLine(bounds[ic][ip][0],0,bounds[ic][ip][0],0.2*maxheight);
+			line.DrawLine(bounds[ic][ip][1],0,bounds[ic][ip][1],0.2*maxheight);
+		}
+		//Display values stored for this pulse
+	}
+	float boxw= 0.025;
+	float boxh=0.0438;
+	vector<float> xpos = {0.960,0.93,0.960,0.93,
+						  0.845,0.815,0.845,0.815,
+						  0.730,0.7,0.730,0.7,
+						  0.815-0.012-boxw,10.,0.7-0.012-boxw,0.93-0.012-boxw
+						};
+
+	vector<float> ypos = {0.871,0.871,0.924,0.924,
+						  0.871,0.871,0.924,0.924,
+						  0.871,0.871,0.924,0.924,
+						  0.86,0.86,0.86,0.86
+						};
+
+	TPave ETframe(xpos[1]-0.006,ypos[0]-0.01,xpos[0]+boxw+0.006,ypos[2]+boxh+0.01,1,"NDC");
+	ETframe.SetFillColor(0);
+	ETframe.SetLineWidth(2);
+	ETframe.Draw();
+
+	TPave R8frame(xpos[5]-0.006,ypos[0]-0.01,xpos[4]+boxw+0.006,ypos[2]+boxh+0.01,1,"NDC");
+	R8frame.SetFillColor(0);
+	R8frame.SetLineWidth(2);
+	R8frame.Draw();
+
+	TPave R7frame(xpos[9]-0.006,ypos[0]-0.01,xpos[8]+boxw+0.006,ypos[2]+boxh+0.01,1,"NDC");
+	R7frame.SetFillColor(0);
+	R7frame.SetLineWidth(2);
+	R7frame.Draw();
+
+
+	TLatex tla;
+	tla.SetTextSize(0.04);
 	tla.SetTextFont(42);
-	tla.DrawLatexNDC(0.13,0.83,Form("Number of pulses: %i",(int)bounds.size()));
+	float height= 0.06;
+	//tla.DrawLatexNDC(0.13,0.83,Form("Number of pulses: %i",(int)bounds.size()));
+	float currentYpos=0.79;
+	float headerX=0.67;
+	float rowX=0.69;
+	int pulseIndex=0; // Keep track of pulse index, since all pulses for all channels are actually stored in the same 1D vectors
+	int maxPerChannel = 12/chanList.size();
+
+	for(int i=0;i<16;i++){
+		if(i==13) continue;
+		 if(bounds[i].size()>0){//if this channel has a pulse
+			TPave * pave = new TPave(xpos[i],ypos[i],xpos[i]+boxw,ypos[i]+boxh,0,"NDC");
+			pave->SetFillColor(colors[i]);
+			pave->Draw();
+			tla.SetTextColor(colors[i]);
+			tla.SetTextSize(0.04);
+			tla.DrawLatexNDC(headerX,currentYpos,Form("Channel %i, N_{pulses}= %i",i,(int)bounds[i].size()));
+			tla.SetTextColor(kBlack);
+			currentYpos-=height;
+			tla.SetTextSize(0.035);
+			for(int ip=0;ip<bounds[i].size();ip++){
+				TString digis="%.1f";
+				if(v_height->at(pulseIndex)>10) digis = "%.0f";
+				TString row = Form("%.0f ns: "+digis+" mV, %.0f pVs, %.0f ns",v_time->at(pulseIndex),v_height->at(pulseIndex),v_area->at(pulseIndex),v_duration->at(pulseIndex));
+				pulseIndex++; 
+				if(ip < maxPerChannel){			
+					tla.DrawLatexNDC(rowX,currentYpos,row);
+					currentYpos-=height*0.8;
+				}
+			}
+			currentYpos-=height*0.2;
+		}
+	}
+
+	
 	// tla.DrawLatexNDC(0.13,0.78,Form("Area: %0.2f",v_area->back()));
 	// tla.DrawLatexNDC(0.13,0.73,Form("Duration: %0.2f",v_duration->back()));
-
-	c.Print(Form(displayDirectory+"Full_Event%i_Chan%i_npulses%i.pdf",event,ic,(int)bounds.size()));
+	leg.Draw();
+	cout<<"Display directory is "<<displayDirectory<<endl;
+	c.Print(Form(displayDirectory+"Run%i_File%i_Event%i_%s.pdf",runNum,fileNum,event,tag.Data()));
 }
 
 vector< vector<float> > findPulses(int ic){
 	//Configurable:
-	int Nconsec = 3;
+	int Nconsec = 4;
 	int NconsecEnd = 3;
-	float thresh = 5; //mV
+	float thresh = 2.5; //mV
 
 	vector<vector<float> > bounds;
 	float tstart = sideband_range[1]+1;
@@ -462,7 +630,7 @@ vector< vector<float> > findPulses(int ic){
 				//cout<<"DEBUG: i_begin "<<i_begin<<endl;
 				// cout<<"DEBUG: tWindow 0 and 1: "<<w.t[i_begin]<<" "<<w.t[i]<<endl;
 
-				bounds.push_back({(float)waves[ic]->GetBinLowEdge(i_begin+1), (float)waves[ic]->GetBinLowEdge(i+1)}); //start and end of pulse
+				bounds.push_back({(float)waves[ic]->GetBinLowEdge(i_begin), (float)waves[ic]->GetBinLowEdge(i+1)-0.01}); //start and end of pulse
 				if(debug) cout<<"i_begin, i: "<<i_begin<<" "<<i<<endl;
 
 				inpulse = false; // End the pulse
@@ -521,21 +689,29 @@ vector< vector<float> > findPulses_inside_out(int ic){
 
 void prepareOutBranches(){
 
+
+	//MAKE SURE TO ALWAYS ADD BRANCHES TO CLEAR FUNCTION AS WELL
+
 	TBranch * b_event = outTree->Branch("event",&event,"event/I");
 	TBranch * b_run = outTree->Branch("run",&runNum,"run/I");
 	TBranch * b_file = outTree->Branch("file",&fileNum,"file/I");
 	TBranch * b_fill = outTree->Branch("fill",&fillNum,"fill/I");
 	TBranch * b_beam = outTree->Branch("beam",&beam,"beam/O");
 	TBranch * b_event_time = outTree->Branch("event_time",&event_time,"event_time/L");
+	TBranch * b_t_since_fill_start = outTree->Branch("t_since_fill_start",&t_since_fill_start,"t_since_fill_start/I");
 	TBranch * b_event_t_string = outTree->Branch("event_t_string",&event_t_string);
 
 	TBranch * b_chan = outTree->Branch("chan",&v_chan);
 	TBranch * b_height = outTree->Branch("height",&v_height);
 	TBranch * b_time = outTree->Branch("time",&v_time);
+	TBranch * b_delay = outTree->Branch("delay",&v_delay);
 	TBranch * b_area = outTree->Branch("area",&v_area);
 	TBranch * b_ipulse = outTree->Branch("ipulse",&v_ipulse);
 	TBranch * b_npulses = outTree->Branch("npulses",&v_npulses);
 	TBranch * b_duration = outTree->Branch("duration",&v_duration);
+	TBranch * b_quiet = outTree->Branch("quiet",&v_quiet);
+	TBranch * b_presample_mean = outTree->Branch("presample_mean",&v_presample_mean);
+	TBranch * b_presample_RMS = outTree->Branch("presample_RMS",&v_presample_RMS);
 	TBranch * b_sideband_mean = outTree->Branch("sideband_mean",&v_sideband_mean);
 	TBranch * b_sideband_RMS = outTree->Branch("sideband_RMS",&v_sideband_RMS);
 
@@ -563,6 +739,7 @@ void prepareOutBranches(){
 	outTree->SetBranchAddress("run",&runNum,&b_run);
 	outTree->SetBranchAddress("file",&fileNum,&b_file);
 	outTree->SetBranchAddress("event_time",&event_time,&b_event_time);
+	outTree->SetBranchAddress("t_since_fill_start",&t_since_fill_start,&b_t_since_fill_start);
 	outTree->SetBranchAddress("fill",&fillNum,&b_fill);
 	outTree->SetBranchAddress("beam",&beam,&b_beam);
 
@@ -570,10 +747,14 @@ void prepareOutBranches(){
 	outTree->SetBranchAddress("chan",&v_chan,&b_chan);
 	outTree->SetBranchAddress("height",&v_height,&b_height);
 	outTree->SetBranchAddress("time",&v_time,&b_time);
+	outTree->SetBranchAddress("delay",&v_delay,&b_delay);
 	outTree->SetBranchAddress("area",&v_area,&b_area);
 	outTree->SetBranchAddress("ipulse",&v_ipulse,&b_ipulse);
 	outTree->SetBranchAddress("npulses",&v_npulses,&b_npulses);
 	outTree->SetBranchAddress("duration",&v_duration,&b_duration);
+	outTree->SetBranchAddress("quiet",&v_quiet,&b_quiet);
+	outTree->SetBranchAddress("presample_mean",&v_presample_mean,&b_presample_mean);
+	outTree->SetBranchAddress("presample_RMS",&v_presample_RMS,&b_presample_RMS);
 	outTree->SetBranchAddress("sideband_mean",&v_sideband_mean,&b_sideband_mean);
 	outTree->SetBranchAddress("sideband_RMS",&v_sideband_RMS,&b_sideband_RMS);
 
@@ -604,13 +785,19 @@ void clearOutBranches(){
 	v_ipulse->clear();
 	v_npulses->clear();
 	v_duration->clear();
+	v_delay->clear();
 	v_sideband_mean->clear();
 	v_sideband_RMS->clear();
+	v_quiet->clear();
+	v_presample_mean->clear();
+	v_presample_RMS->clear();
 }
 
 
-void h1cosmetic(TH1D *hist){
-   
+void h1cosmetic(TH1D *hist,int ic){
+  hist->SetLineWidth(2);
+  hist->SetLineColor(colors[ic]);
+  hist->SetStats(0);
   hist->GetXaxis()->SetTitleSize(0.045);
   hist->GetXaxis()->SetLabelSize(0.04);
   hist->GetYaxis()->SetTitleSize(0.045);
@@ -672,4 +859,50 @@ void loadBranchesInteractiveDAQ(){
 	branch14->SetAddress(&(waves[14]));
 	branch15->SetAddress(&(waves[15]));
 
+}
+
+void getFileCreationTime(const char *path) {
+    struct stat attr;
+    stat(path, &attr);
+    printf("Fill list last updated on %s", ctime(&attr.st_mtime));
+}
+
+void loadFillList(TString fillFile){
+
+	int fillnumber, start,end;
+	float lumi;
+	string date,time;
+
+	getFileCreationTime(fillFile.Data());
+
+	ifstream infile;
+	infile.open(fillFile); 
+
+	while(infile >> fillnumber >> start >> end >> lumi >> date >> time){
+		if(end<=start && end>0) cout<<"Error in fill time list"<<endl; //end == -1 indicates ongoing fill
+		else{
+			//cout<<Form("Appending %i %i %i %0.2f",start,end,fillnumber,lumi)<<endl;
+			fillList.push_back(make_tuple(start,end,fillnumber,lumi));
+		}
+	}
+	sort(fillList.begin(),fillList.end());
+	cout<<"First fill "<<get<2>(fillList[0])<<endl;
+	cout<<"Last fill "<<get<2>(fillList[fillList.size()-1])<<endl;
+	
+}
+
+pair<int,int> findFill(int seconds){
+	auto index_of_first_fill_with_larger_start_time = distance(fillList.begin(), lower_bound(fillList.begin(),fillList.end(), 
+       make_tuple(seconds, seconds, 0, 0.) ));
+	//cout<<"index "<<index_of_first_fill_with_larger_start_time<<endl;
+	int this_fill=0;
+	int time_since_start=-1;
+	if(index_of_first_fill_with_larger_start_time > (int)fillList.size()) this_fill=-1;
+	//This event is during a fill if its time is less than the end time of the fill before the first fill with a larger start time
+	else if(seconds < get<1>(fillList[index_of_first_fill_with_larger_start_time-1]) || get<1>(fillList[index_of_first_fill_with_larger_start_time-1])==-1){
+		//end time == -1 indicates ongoing fill 
+		this_fill = get<2>(fillList[index_of_first_fill_with_larger_start_time-1]); //fill number
+		time_since_start = seconds - get<0>(fillList[index_of_first_fill_with_larger_start_time-1]); //time of this event - start time of fill
+	}
+	return make_pair(this_fill,time_since_start);
 }

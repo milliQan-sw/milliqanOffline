@@ -23,7 +23,8 @@ def main(arg1):
 		script.write("#!/bin/bash\n")
 		for i in range(15):
 			if iFile>=nFiles: break
-			script.write("root -b -q 'make_tree.C+(\""+fileList[iFile]+"\""")'\n")
+			#script.write("root -b -q 'make_tree.C+(\""+fileList[iFile]+"\""")'\n")
+			script.write("make_tree "+fileList[iFile]+"\n")
 			iFile = iFile+1
 
 		script.close()
@@ -33,6 +34,7 @@ def main(arg1):
 
 
 if __name__ == "__main__":
+	print "This script was called by hand."
 	main(sys.argv[1])
 
 

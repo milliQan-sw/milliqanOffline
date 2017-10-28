@@ -401,7 +401,8 @@ vector< vector<float> > processChannel(int ic){
 	//else pulseBounds = findPulses_inside_out(ic); //Use inside-out method for narrow ET pulses
 
 	int npulses = pulseBounds.size();
-	float channelCalibrations[] = {0.,0.,-2.0,-7.5,0.5,0.,0.88,12.58,1.22,0.,-6.51,-4.75,1.2,0.,25.7,6.8};
+	float channelCalibrations[] = {0.,0.,-2.17,-7.49,0.48,0.,1.17,11.44,1.15,0.,-6.41,-4.81,1.2,0.,25.7,6.8};
+	//float channelCalibrations[] = {0.,0.,-2.0,-7.5,0.5,0.,0.88,12.58,1.22,0.,-6.51,-4.75,1.2,0.,25.7,6.8};
 	float channelSPEAreas[] = {1.,81.5,64.5,48.7,55.2,84.8,57.0,57.2,159.3,181.6,576.6,689.1,77.5,1.,52.6,50.4};
 
 	for(int ipulse = 0; ipulse<npulses; ipulse++){

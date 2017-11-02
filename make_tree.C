@@ -96,6 +96,10 @@ vector<int> colors;
 
 //Declare global variables
 vector<TH1D*> waves;
+float intraModuleCalibrations[] = {0.,0.,-2.69,-7.25,0.5,0.,2.0,9.92,1.37,0.,-3.85,-3.67,-1.65,0.,-24.21,-5.05};
+float interModuleCalibrations[] = {0.,0.,0.,0.,-6.07,-6.07,-6.07,-6.07,8.38,8.38,8.38,8.38,-6.07,0.,8.38,0.};
+float channelCalibrations[16];
+// float channelCalibrations[] = {0.,0.,-2.17,-7.49,0.48,0.,1.17,11.44,1.15,0.,-6.41,-4.81,1.2,0.,25.7,6.8};
 TTree * inTree;
 TTree * outTree;
 int event = 0;
@@ -160,7 +164,7 @@ void prepareWave(int ic, float &sb_mean, float &sb_RMS);
 vector< vector<float> > findPulses(int ic);
 vector< vector<float> > findPulses_inside_out(int ic);
 void displayPulse(int ic, float begin, float end, int ipulse);
-void displayEvent(vector<vector<vector<float> > > bounds,TString tag,float rangeMin,float rangeMax);
+void displayEvent(vector<vector<vector<float> > > bounds,TString tag,float rangeMin,float rangeMax,bool calibrateDisplay);
 void h1cosmetic(TH1D* hist,int ic);
 void getFileCreationTime(const char *path);
 vector<int> eventsPrinted(16,0);
@@ -173,6 +177,8 @@ void defineColors(){
 		palette.push_back(new TColor(2000+icolor,reds[icolor],greens[icolor],blues[icolor]));
 		colors.push_back(2000+icolor);
 	}
+	colors[9] = 419; //kGreen+3;
+        colors[2] = 2009;
 	colors[3] = 2013;
 	colors[12]= 2017;
 
@@ -196,6 +202,9 @@ int main(int argc, char **argv)
 
 void make_tree(TString fileName, int eventNum, TString tag, float rangeMin,float rangeMax){
 //	gROOT->ProcessLine( "gErrorIgnoreLevel = kError");
+	for (int i=0;i<=15;i++) {channelCalibrations[i] = interModuleCalibrations[i]+intraModuleCalibrations[i];
+	    std::cout << i <<" "<< channelCalibrations[i] << std::endl;}
+	bool calibrateDisplay = true;
 	defineColors();
 	if(eventNum>=0) displayMode=true;
 	cout<<"Tag is "<<tag<<endl;
@@ -328,7 +337,7 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMin,float
 		//	cout<<Form("Chan %i min: ",ic)<<waves[ic]->GetMinimum()<<endl;
 			allPulseBounds.push_back(processChannel(ic));
 		}
-		if(displayMode) displayEvent(allPulseBounds,tag,rangeMin,rangeMax);
+		if(displayMode) displayEvent(allPulseBounds,tag,rangeMin,rangeMax,calibrateDisplay);
 		else outTree->Fill();
 	}
 	if(!displayMode) cout<<"Processed "<<maxEvents<<" events."<<endl;
@@ -401,7 +410,6 @@ vector< vector<float> > processChannel(int ic){
 	//else pulseBounds = findPulses_inside_out(ic); //Use inside-out method for narrow ET pulses
 
 	int npulses = pulseBounds.size();
-	float channelCalibrations[] = {0.,0.,-2.17,-7.49,0.48,0.,1.17,11.44,1.15,0.,-6.41,-4.81,1.2,0.,25.7,6.8};
 	//float channelCalibrations[] = {0.,0.,-2.0,-7.5,0.5,0.,0.88,12.58,1.22,0.,-6.51,-4.75,1.2,0.,25.7,6.8};
 	float channelSPEAreas[] = {1.,81.5,64.5,48.7,55.2,84.8,57.0,57.2,159.3,181.6,576.6,689.1,77.5,1.,52.6,50.4};
 
@@ -472,7 +480,7 @@ void displayPulse(int ic, float begin, float end, int ipulse){
 	c.Print(displayDirectory+Form("Event%i_Chan%i_begin%0.0f.pdf",event,ic,begin));
 }
 
-void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rangeMin,float rangeMax){
+void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rangeMin,float rangeMax,bool calibrateDisplay){
 	TCanvas c("c1","",1400,800);
 	gPad->SetRightMargin(0.35);
 	gStyle->SetGridStyle(3);
@@ -484,22 +492,45 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
 	float maxheight=0;
 	float timeRange[2];
 	timeRange[0]=1024./sample_rate; timeRange[1]=0.;
+	vector<vector<vector<float>>> boundsShifted;
+	vector<TH1D*> wavesShifted;
 	for(uint ic=0;ic<bounds.size();ic++){
-		if(bounds[ic].size()>0){
+	    vector<vector<float>> boundShifted = bounds[ic];
+	    TH1D * waveShifted = (TH1D*) waves[ic]->Clone();
+	    if(calibrateDisplay){
+		waveShifted->Reset();
+
+		for (uint iBin = 1;iBin <= waves[ic]->GetNbinsX();iBin++)
+		{
+		    float binLowEdgeShifted = waves[ic]->GetBinLowEdge(iBin) + channelCalibrations[ic];
+		    int iBinShifted = waveShifted->FindBin(binLowEdgeShifted + 1E-4);
+		    if (iBinShifted > 0 && iBinShifted <= waves[ic]->GetNbinsX()){
+			waveShifted->SetBinContent(iBinShifted,waves[ic]->GetBinContent(iBin));
+			waveShifted->SetBinError(iBinShifted,waves[ic]->GetBinError(iBin));
+		    }
+
+		}
+		for(uint iBoundVec =0;iBoundVec < bounds[ic].size();iBoundVec++)
+		    for(uint iBoundVec2 =0;iBoundVec2 < bounds[ic][iBoundVec].size();iBoundVec2++)
+			boundShifted[iBoundVec][iBoundVec2] += channelCalibrations[ic]; 
+	    }
+	    if(boundShifted.size()>0){
 			chanList.push_back(ic);
 			//Reset range to find correct maxima
-			waves[ic]->SetAxisRange(0,1024./sample_rate);
+			waveShifted->SetAxisRange(0,1024./sample_rate);
 			//Keep track of max amplitude
-			if(waves[ic]->GetMaximum()>maxheight) maxheight=waves[ic]->GetMaximum();
+			if(waveShifted->GetMaximum()>maxheight) maxheight=waveShifted->GetMaximum();
 			//keep track of earliest pulse start time
-			if(bounds[ic][0][0]<timeRange[0]) timeRange[0]=bounds[ic][0][0];
+			if(boundShifted[0][0]<timeRange[0]) timeRange[0]=boundShifted[0][0];
 			//keep track of latest pulse end time (pulses are ordered chronologicaly for each channel)
-			if(bounds[ic][bounds[ic].size()-1][1]>timeRange[1]) timeRange[1]=bounds[ic][bounds[ic].size()-1][1];
+			if(boundShifted[boundShifted.size()-1][1]>timeRange[1]) timeRange[1]=boundShifted[boundShifted.size()-1][1];
 
 			TString beamState = "off";
 			if(beam) beamState="on";
-			waves[ic]->SetTitle(Form("Run %i, File %i, Event %i (beam %s);Time [ns];Amplitude [mV];",runNum,fileNum,event,beamState.Data()));
+			waveShifted->SetTitle(Form("Run %i, File %i, Event %i (beam %s);Time [ns];Amplitude [mV];",runNum,fileNum,event,beamState.Data()));
 		}
+	    wavesShifted.push_back(waveShifted);
+	    boundsShifted.push_back(boundShifted);
 	}
 	maxheight*=1.1;
 	if (rangeMin < 0) timeRange[0]*=0.9;
@@ -511,20 +542,20 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
 	TLegend leg(0.45,0.9-depth,0.65,0.9);
 	for(uint i=0;i<chanList.size();i++){
 		int ic = chanList[i];	
-		waves[ic]->SetAxisRange(timeRange[0],timeRange[1]);
-		waves[ic]->SetMaximum(maxheight);
+		wavesShifted[ic]->SetAxisRange(timeRange[0],timeRange[1]);
+		wavesShifted[ic]->SetMaximum(maxheight);
 
-		h1cosmetic(waves[ic],ic);
-		if(i==0) waves[ic]->Draw("hist");
-		else waves[ic]->Draw("hist same");
+		h1cosmetic(wavesShifted[ic],ic);
+		if(i==0) wavesShifted[ic]->Draw("hist");
+		else wavesShifted[ic]->Draw("hist same");
 
-		leg.AddEntry(waves[ic],Form("Channel %i",ic),"l");
+		leg.AddEntry(wavesShifted[ic],Form("Channel %i",ic),"l");
 		//Show boundaries of pulse
 		TLine line; line.SetLineWidth(2); line.SetLineStyle(2);	line.SetLineColor(colors[ic]);
-		for(uint ip=0; ip<bounds[ic].size();ip++){
-			if (bounds[ic][ip][0] > timeRange[0] && bounds[ic][ip][1] < timeRange[1]){
-				line.DrawLine(bounds[ic][ip][0],0,bounds[ic][ip][0],0.2*maxheight);
-				line.DrawLine(bounds[ic][ip][1],0,bounds[ic][ip][1],0.2*maxheight);
+		for(uint ip=0; ip<boundsShifted[ic].size();ip++){
+			if (boundsShifted[ic][ip][0] > timeRange[0] && boundsShifted[ic][ip][1] < timeRange[1]){
+				line.DrawLine(boundsShifted[ic][ip][0],0,boundsShifted[ic][ip][0],0.2*maxheight);
+				line.DrawLine(boundsShifted[ic][ip][1],0,boundsShifted[ic][ip][1],0.2*maxheight);
 			}
 		}
 		//Display values stored for this pulse
@@ -572,20 +603,22 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
 
 	for(int i=0;i<16;i++){
 		if(i==13) continue;
-		 if(bounds[i].size()>0){//if this channel has a pulse
+		 if(boundsShifted[i].size()>0){//if this channel has a pulse
 			TPave * pave = new TPave(xpos[i],ypos[i],xpos[i]+boxw,ypos[i]+boxh,0,"NDC");
 			pave->SetFillColor(colors[i]);
 			pave->Draw();
 			tla.SetTextColor(colors[i]);
 			tla.SetTextSize(0.04);
-			tla.DrawLatexNDC(headerX,currentYpos,Form("Channel %i, N_{pulses}= %i",i,(int)bounds[i].size()));
+			tla.DrawLatexNDC(headerX,currentYpos,Form("Channel %i, N_{pulses}= %i",i,(int)boundsShifted[i].size()));
 			tla.SetTextColor(kBlack);
 			currentYpos-=height;
 			tla.SetTextSize(0.035);
-			for(int ip=0;ip<bounds[i].size();ip++){
+			for(int ip=0;ip<boundsShifted[i].size();ip++){
 				TString digis="%.1f";
 				if(v_height->at(pulseIndex)>10) digis = "%.0f";
-				TString row = Form("%.0f ns: "+digis+" mV, %.0f pVs, %.0f ns",v_time->at(pulseIndex),v_height->at(pulseIndex),v_area->at(pulseIndex),v_duration->at(pulseIndex));
+				TString row;
+				if (calibrateDisplay) row = Form("%.0f ns: "+digis+" mV, %.0f pVs, %.0f ns",v_time_module_calibrated->at(pulseIndex),v_height->at(pulseIndex),v_area->at(pulseIndex),v_duration->at(pulseIndex));
+				else row = Form("%.0f ns: "+digis+" mV, %.0f pVs, %.0f ns",v_time->at(pulseIndex),v_height->at(pulseIndex),v_area->at(pulseIndex),v_duration->at(pulseIndex));
 				pulseIndex++; 
 				if(ip < maxPerChannel){			
 					tla.DrawLatexNDC(rowX,currentYpos,row);
@@ -599,7 +632,7 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
 	
 	// tla.DrawLatexNDC(0.13,0.78,Form("Area: %0.2f",v_area->back()));
 	// tla.DrawLatexNDC(0.13,0.73,Form("Duration: %0.2f",v_duration->back()));
-	leg.Draw();
+	// leg.Draw();
 	cout<<"Display directory is "<<displayDirectory<<endl;
 	c.Print(Form(displayDirectory+"Run%i_File%i_Event%i_%s.pdf",runNum,fileNum,event,tag.Data()));
 }

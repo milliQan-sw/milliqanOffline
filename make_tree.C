@@ -202,8 +202,7 @@ int main(int argc, char **argv)
 
 void make_tree(TString fileName, int eventNum, TString tag, float rangeMin,float rangeMax){
 //	gROOT->ProcessLine( "gErrorIgnoreLevel = kError");
-	for (int i=0;i<=15;i++) {channelCalibrations[i] = interModuleCalibrations[i]+intraModuleCalibrations[i];
-	    std::cout << i <<" "<< channelCalibrations[i] << std::endl;}
+	for (int i=0;i<=15;i++) {channelCalibrations[i] = interModuleCalibrations[i]+intraModuleCalibrations[i];}
 	bool calibrateDisplay = true;
 	defineColors();
 	if(eventNum>=0) displayMode=true;
@@ -527,7 +526,8 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
 
 			TString beamState = "off";
 			if(beam) beamState="on";
-			waveShifted->SetTitle(Form("Run %i, File %i, Event %i (beam %s);Time [ns];Amplitude [mV];",runNum,fileNum,event,beamState.Data()));
+			if (calibrateDisplay) waveShifted->SetTitle(Form("Run %i, File %i, Event %i (beam %s);Time [ns];Amplitude [mV];",runNum,fileNum,event,beamState.Data()));
+			else waveShifted->SetTitle(Form("Run %i, File %i, Event %i (beam %s);Uncalibrated Time [ns];Amplitude [mV];",runNum,fileNum,event,beamState.Data()));
 		}
 	    wavesShifted.push_back(waveShifted);
 	    boundsShifted.push_back(boundShifted);

@@ -61,7 +61,7 @@ float presampleEnd = 2.5;
 
 float sample_rate = 1.6;
 bool debug=false;
-TString version = "5";
+TString version = "6";
 
 //Read output from new format instead of interactiveDAQ
 bool milliDAQ=true;
@@ -73,6 +73,11 @@ vector<TString> tubeSpecies = {"ET","ET","ET","ET",             // 0 1 2 3
 							   "R878","R878","R878","ET",       // 4 5 6 7	
 							   "R7725","R7725","R7725","R7725",	// 8 9 10 11
 							   "R878","R878","R878","R878"};    // 12 13 14 15
+
+vector<int> layerMap = {1,1,1,1,    // 0 1 2 3 
+					    2,2,2,2,   // 4 5 6 7	
+					    3,3,3,3,	// 8 9 10 11
+					   -2,0,-3,-1};    // 12 13 14 15
 
 /*vector<int> colors = {kBlack, kRed,
 		 kGreen+2, kBlue,
@@ -115,6 +120,7 @@ mdaq::Event * evt = new mdaq::Event(); //for MilliDAQ output only
 vector<int> * v_npulses = new vector<int>(); 
 vector<int> * v_ipulse = new vector<int>();
 vector<int> * v_chan = new vector<int>();
+vector<int> * v_layer = new vector<int>();
 vector<float> * v_height = new vector<float>();
 vector<float> * v_time = new vector<float>();
 vector<float> * v_time_module_calibrated = new vector<float>();
@@ -418,7 +424,9 @@ vector< vector<float> > processChannel(int ic){
 		if(debug) cout<<"Chan "<<ic<<", pulse bounds: "<<pulseBounds[ipulse][0]<<" to "<<pulseBounds[ipulse][1]<<endl;
 		//Fill branches
 		
+
 		v_chan->push_back(ic);
+		v_layer->push_back(layerMap[ic]);
 		v_height->push_back(waves[ic]->GetMaximum());
 		v_time->push_back(pulseBounds[ipulse][0]);
 		v_time_module_calibrated->push_back(pulseBounds[ipulse][0]+channelCalibrations[ic]);
@@ -758,6 +766,7 @@ void prepareOutBranches(){
 	TBranch * b_event_trigger_time_tag = outTree->Branch("event_trigger_time_tag",&event_trigger_time_tag,"event_trigger_time_tag/L");
 
 	TBranch * b_chan = outTree->Branch("chan",&v_chan);
+	TBranch * b_layer = outTree->Branch("layer",&v_layer);
 	TBranch * b_height = outTree->Branch("height",&v_height);
 	TBranch * b_time = outTree->Branch("time",&v_time);
 	TBranch * b_time_module_calibrated = outTree->Branch("time_module_calibrated",&v_time_module_calibrated);
@@ -806,6 +815,7 @@ void prepareOutBranches(){
 
 	//outTree->SetBranchAddress("event_t_string",&event_t_string,&b_event_t_string);
 	outTree->SetBranchAddress("chan",&v_chan,&b_chan);
+	outTree->SetBranchAddress("layer",&v_layer,&b_layer);
 	outTree->SetBranchAddress("height",&v_height,&b_height);
 	outTree->SetBranchAddress("time_module_calibrated",&v_time_module_calibrated,&b_time_module_calibrated);
 	outTree->SetBranchAddress("time",&v_time,&b_time);
@@ -844,6 +854,7 @@ void prepareOutBranches(){
 
 void clearOutBranches(){
 	v_chan->clear();
+	v_layer->clear();
 	v_height->clear();
 	v_time->clear();
 	v_time_module_calibrated->clear();

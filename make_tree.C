@@ -665,13 +665,13 @@ void findTriggerCandidates(int ic,float sb_mean){
     bool inTrigger = false;
     for (int i=istart; i<=waves[ic]->GetNbinsX(); i++) { // Loop over all samples looking for pulses
 	v = waves[ic]->GetBinContent(i);
+	// if (ic == 7) std::cout  << triggerThreshold << " "<< waves[ic]->GetMaximum()+ sb_mean << " "<< max_7  << std::endl;
 	// std::cout << sb_mean << std::endl;
 	// std::cout << waves[ic]->GetBinContent(i) << std::endl;
 	// std::cout << triggerThreshold << std::endl;
 	if (waves[ic]->GetBinContent(i) + sb_mean >= triggerThreshold){
 	    if (!inTrigger){
 		v_triggerCandidates->push_back((float)waves[ic]->GetBinLowEdge(i));
-		v_triggerCandidatesChannel->push_back(ic);
 		v_triggerCandidatesChannel->push_back(ic);
 		inTrigger = true;
 	    }

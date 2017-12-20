@@ -20,6 +20,7 @@ def findTrigger(iFile,oFile,triggerChannels,nCoinc=2,window=100):
     oFile = r.TFile(oFile,"RECREATE")
     tree = iFile.Get("t")
     newTree = tree.CloneTree(0)
+    nEventsTwentyPerc = tree.GetEntries()*0.2
     # leaves = "groupTDCZeroPrev/L"
     # leafValues = array.array("l",[0])
     v_triggerN = r.vector('double')()
@@ -91,8 +92,8 @@ def findTrigger(iFile,oFile,triggerChannels,nCoinc=2,window=100):
         newTree.Fill()
         if all(x for x in found.values()) == True:
             allPulseFound +=1
-        if (iE*100./tree.GetEntries()) % 20 == 0:
-            print "%s" % (iE*1./tree.GetEntries())
+        if iE % int(nEventsTwentyPerc) == 0:
+            print "Processed %.1f" % (iE*100./tree.GetEntries()) + "%"
     print "Found trigger cands %s of %s" %(allFound,tree.GetEntries())
     print "Found matched pulses %s of %s" %(allPulseFound,tree.GetEntries())
     newTree.AutoSave()

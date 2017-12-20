@@ -32,11 +32,9 @@ def findTrigger(iFile,oFile,triggerChannels,nCoinc=2,window=100):
         groups = list(set(triggerGroups))
         triggerChannels = range(16)
     else:
-        groups = [(x,y) for (x,y) in triggerGroups if x in triggerChannels]
-        groups += [(x,y) for (x,y) in triggerGroups if y in triggerChannels]
+        groups = [X for X in triggerGroups if len(set(X).intersection(set(triggerChannels))) > 0]
         groups = list(set(groups))
     print "Running with triggering channels:",triggerChannels
-    print groups
     if len(groups) < nCoinc:
         raise ValueError,"Not enough triggering groups! Check your channel selection"
     allFound = 0

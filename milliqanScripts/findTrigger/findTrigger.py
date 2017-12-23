@@ -18,11 +18,16 @@ def parse_args():
         parser.add_argument("--nCoinc",help="Number of coinc for trigger",type=int,default=2)
         parser.add_argument("--window",help="Trigger window",type=float,default=100.)
         parser.add_argument("--triggerChannels",nargs="+",help="Which channels to use (all if unspecified)",type=int)
+        parser.add_argument("--runRange",nargs="+",help="Run range",type=int)
         parser.add_argument("--maxSkip",help="Shift starting position maxSkip times incase window start position is causing issue",type=int,default=999)
         args = parser.parse_args()
         return args
 
-def findTrigger(iFile,oFile,triggerChannels,nCoinc=2,window=100,maxSkip=1):
+def findTrigger(iFile,oFile,triggerChannels,nCoinc=2,window=100,maxSkip=1,runRange=None):
+    if not runRange:
+        runRange = [-10000,10000]
+    elif len(runRange) != 2 or runRange[0] > runRange[1]:
+        raise ValueError,"Run range must be empty or format: lower upper"
     iFile = r.TFile(iFile)
     oFile = r.TFile(oFile,"RECREATE")
     tree = iFile.Get("t")
@@ -55,6 +60,10 @@ def findTrigger(iFile,oFile,triggerChannels,nCoinc=2,window=100,maxSkip=1):
     allPulseFound = 0
     # averageTimeBetweenPulses = 0
     for iE,event in enumerate(tree):
+        if iE % int(nEventsTwentyPerc) == 0:
+            print "Processed %.1f" % (iE*100./tree.GetEntries()) + "%"
+        if event.run < runRange[0] or event.run > runRange[1]:
+            continue
         if iE == 0:
             continue
         found = {}
@@ -123,8 +132,6 @@ def findTrigger(iFile,oFile,triggerChannels,nCoinc=2,window=100,maxSkip=1):
         newTree.Fill()
         if all(x for x in found.values()) == True:
             allPulseFound +=1
-        if iE % int(nEventsTwentyPerc) == 0:
-            print "Processed %.1f" % (iE*100./tree.GetEntries()) + "%"
     print "Found trigger cands %s of %s" %(allFound,tree.GetEntries())
     print "Found matched pulses %s of %s" %(allPulseFound,tree.GetEntries())
     newTree.AutoSave()

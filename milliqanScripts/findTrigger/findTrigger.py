@@ -19,13 +19,18 @@ def parse_args():
         parser.add_argument("--window",help="Trigger window",type=float,default=100.)
         parser.add_argument("--triggerChannels",nargs="+",help="Which channels to use (all if unspecified)",type=int)
         parser.add_argument("--runRange",nargs="+",help="Run range",type=int)
+        parser.add_argument("--fileRange",nargs="+",help="File range",type=int)
         parser.add_argument("--maxSkip",help="Shift starting position maxSkip times incase window start position is causing issue",type=int,default=999)
         args = parser.parse_args()
         return args
 
-def findTrigger(iFile,oFile,triggerChannels,nCoinc=2,window=100,maxSkip=1,runRange=None):
+def findTrigger(iFile,oFile,triggerChannels,nCoinc=2,window=100,maxSkip=1,runRange=None,fileRange=None):
+    if not fileRange:
+        fileRange = [-1,int(1E6)]
+    elif len(fileRange) != 2 or fileRange[0] > fileRange[1]:
+        raise ValueError,"File range must be empty or format: lower upper"
     if not runRange:
-        runRange = [-10000,10000]
+        runRange = [-1,int(1E6)]
     elif len(runRange) != 2 or runRange[0] > runRange[1]:
         raise ValueError,"Run range must be empty or format: lower upper"
     iFile = r.TFile(iFile)
@@ -63,6 +68,8 @@ def findTrigger(iFile,oFile,triggerChannels,nCoinc=2,window=100,maxSkip=1,runRan
         if iE % int(nEventsTwentyPerc) == 0:
             print "Processed %.1f" % (iE*100./tree.GetEntries()) + "%"
         if event.run < runRange[0] or event.run > runRange[1]:
+            continue
+        if event.file < fileRange[0] or event.file > fileRange[1]:
             continue
         if iE == 0:
             continue

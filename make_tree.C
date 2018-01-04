@@ -45,11 +45,11 @@ using namespace std;
 //////////////////////////////////////////
 
 // Compile like this:
-// g++ -o make_tree make_tree.C /net/cms6/cms6r0/milliqan/MilliDAQ/libMilliDAQ.so `root-config --cflags --glibs` -Wno-narrowing
+// g++ -o make_tree make_tree.C /net/cms26/cms26r0/milliqan/MilliDAQ/libMilliDAQ.so `root-config --cflags --glibs` -Wno-narrowing
 
 //////////////////////////////////////////
 
-//gSystem->Load("/net/cms6/cms6r0/milliqan/MilliDAQ/libMilliDAQ.so");
+//gSystem->Load("/net/cms26/cms26r0/milliqan/MilliDAQ/libMilliDAQ.so");
 
 //Configurable parameters
 int numChan=16;

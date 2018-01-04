@@ -9,7 +9,7 @@ def main(run,cuts,nevents):
 
 	ROOT.PyConfig.IgnoreCommandLineOptions = True # avoid bizarre crash when constructing TChain
 	t = ROOT.TChain("t")
-	treeList=glob.glob("/net/cms6/cms6r0/milliqan/milliqanOffline/trees/Run"+run+"*/*.root")
+	treeList=glob.glob("/net/cms26/cms26r0/milliqan/milliqanOffline/trees/Run"+run+"*/*.root")
 	for f in treeList: 
 		t.Add(f)
 
@@ -23,7 +23,7 @@ def main(run,cuts,nevents):
 
 	cuts = cuts.replace(">=","ge").replace("<=","le").replace(">","gt").replace("<","lt").replace("==","e")
 	cuts = cuts.replace("&&","_").replace("||","_").replace("$","_of").replace("(","_").replace(")","_")
-	outFileName = "/net/cms6/cms6r0/milliqan/milliqanOffline/eventLists/eventList_Run%s_n%s_%s.txt" % (run,nevents,cuts)
+	outFileName = "/net/cms26/cms26r0/milliqan/milliqanOffline/eventLists/eventList_Run%s_n%s_%s.txt" % (run,nevents,cuts)
 
 	outFile = open(outFileName,"w")
 	runs=t.GetV1()

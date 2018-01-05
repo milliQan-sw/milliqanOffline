@@ -10,7 +10,7 @@ def main(arg1):
 	run = str(arg1)
 
 	filesPerJob=15.
-	fileList=glob.glob("/net/cms6/cms6r0/milliqan/UX5/*"+run+".*.root")
+	fileList=glob.glob("/net/cms26/cms26r0/milliqan/UX5/*"+run+".*.root")
 	nFiles=len(fileList)
 	iFile=0
 	nJobs= int(math.ceil(nFiles/filesPerJob))

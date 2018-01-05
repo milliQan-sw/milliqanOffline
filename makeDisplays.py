@@ -24,7 +24,7 @@ def main(runNumber, selection, nEvents,tag="",rangeForTime=None):
 	for i in range(len(table)):
 		fileNumber= str(table[i][1])
 		eventNumber= str(table[i][2])
-		treeList=glob.glob("/net/cms6/cms6r0/milliqan/UX5/MilliQan_Run"+runNumber+"."+fileNumber+"_*.root")
+		treeList=glob.glob("/net/cms26/cms26r0/milliqan/UX5/MilliQan_Run"+runNumber+"."+fileNumber+"_*.root")
 		if len(treeList)>0: treeName=treeList[0]
 		else: print "Base file not found."	
 		print "make_tree",treeName,eventNumber,tag

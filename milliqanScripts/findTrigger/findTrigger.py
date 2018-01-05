@@ -94,17 +94,17 @@ def findTrigger(iFile,oFile,triggerChannels,nCoinc=2,window=100,maxSkip=1,runRan
             iT = 0
             groupsTemp = groups + []
             for triggerChan,triggerTime in zip(triggerCandidatesChannel[skip:],triggerCandidates[skip:]):
+                timeInWindow = triggerTime-startTime
+                if timeInWindow > window:
+                    startTime = triggerTime
+                    triggerDetails = []
+                    iT = 0
+                    groupsTemp = groups+[]
+                    timeInWindow = 0
                 if triggerChan not in triggerChannels: continue
                 inGroup = [triggerChan in x for x in groupsTemp]
                 # print triggerChan,triggerTime
                 if any(inGroup):
-                    timeInWindow = triggerTime-startTime
-                    if timeInWindow > window:
-                        startTime = triggerTime
-                        triggerDetails = []
-                        iT = 0
-                        groupsTemp = groups+[]
-                        timeInWindow = 0
                     iGroup = inGroup.index(True)
                     del groupsTemp[iGroup]
                     triggerDetails.append((iT,triggerChan,triggerTime,triggerTime+totalCalib[triggerChan]))

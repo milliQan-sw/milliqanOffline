@@ -10,7 +10,7 @@ def main(arg1):
 	run = str(arg1)
 
 	filesPerJob=15.
-	fileList=glob.glob("/net/cms26/cms26r0/milliqan/UX5/*"+run+".*.root")
+	fileList=glob.glob("/net/cms26/cms26r0/milliqan/UX5/Run"+run+"_*/*.root")
 	nFiles=len(fileList)
 	iFile=0
 	nJobs= int(math.ceil(nFiles/filesPerJob))
@@ -29,7 +29,8 @@ def main(arg1):
 
 		script.close()
 		os.chmod(scriptName,0777)
-		call(["JobSubmit.csh","./wrapper.sh",scriptName])
+		#print ["JobSubmit.csh","wrapper.sh",scriptName]
+		call(["JobSubmit.csh","wrapper.sh",scriptName])
 
 
 

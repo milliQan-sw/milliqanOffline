@@ -4,21 +4,30 @@ import ROOT
 import glob
 import math
 from subprocess import call
+import moveRawToFolders
+import config as cfg
 
+
+#### This script will submit jobs to reprocess a run and overwrite existing files. ####
 
 def main(arg1):
 	run = str(arg1)
 
+	moveRawToFolders.main()
+
 	filesPerJob=15.
-	fileList=glob.glob("/net/cms26/cms26r0/milliqan/UX5/Run"+run+"_*/*.root")
+	fileList=glob.glob(cfg.rawDir+"Run"+run+"_*/*.root")
 	nFiles=len(fileList)
 	iFile=0
 	nJobs= int(math.ceil(nFiles/filesPerJob))
-	if not os.path.exists("run/Run"+run):
-	    os.makedirs("run/Run"+run)
+	runDir =cfg.offlineDir+"run/Run"+run
+	if not os.path.exists(runDir):
+		os.makedirs(runDir)
+#	if not os.path.exists("/net/cms26/cms26r0/milliqan/milliqanOffline/run/Run"+run):
+#	    os.makedirs("/net/cms26/cms26r0/milliqan/milliqanOffline/run/Run"+run)
 
 	for iJob in range(nJobs):
-		scriptName= "run/Run"+run+"/Job"+str(iJob)+".sh"
+		scriptName= runDir+"/Job"+str(iJob)+".sh"
 		script = open(scriptName,"w")
 		script.write("#!/bin/bash\n")
 		for i in range(15):
@@ -35,7 +44,6 @@ def main(arg1):
 
 
 if __name__ == "__main__":
-	print "This script was called by hand."
 	main(sys.argv[1])
 
 

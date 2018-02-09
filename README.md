@@ -2,7 +2,7 @@
 
 ### Compiling the code:
 
-g++ -o make_tree make_tree.C /net/cms26/cms26r0/milliqan/MilliDAQ/libMilliDAQ.so `root-config --cflags --glibs` -Wno-narrowing
+g++ -o make_tree make_tree.C /net/cms26/cms26r0/milliqan/MilliDAQ/libMilliDAQ.so ``root-config --cflags --glibs`` -Wno-narrowing
 
 ##To use common scripts, log onto milliqan username on SL6 machine (e.g. cms1, cms3, cms6, cms29)
 

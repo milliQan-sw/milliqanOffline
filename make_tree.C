@@ -61,7 +61,7 @@ float presampleEnd = 2.5;
 
 float sample_rate = 1.6;
 bool debug=false;
-TString version = "6";
+TString version = "7";
 
 //Read output from new format instead of interactiveDAQ
 bool milliDAQ=true;
@@ -455,7 +455,7 @@ vector< vector<float> > processChannel(int ic){
 	pair<float,float> presampleInfo = measureSideband(ic,pulseBounds[ipulse][0]-presampleStart,pulseBounds[ipulse][0]-presampleEnd);
 	v_presample_mean->push_back(presampleInfo.first);
 	v_presample_RMS->push_back(presampleInfo.second);	
-	bool quiet = fabs(presampleInfo.first)<1. && presampleInfo.second <2.0;
+	bool quiet = (fabs(presampleInfo.first)<1. && presampleInfo.second <2.0 )&& (pulseBounds[ipulse][1] < waves[ic]->GetBinLowEdge(waves[ic]->GetNbinsX())-0.01) ;
 	v_quiet->push_back(quiet); //preliminary: mean between -1 and 1, and RMS<2
 
 	if(event<0 || eventsPrinted[ic]<0) displayPulse(ic,pulseBounds[ipulse][0],pulseBounds[ipulse][1],ipulse);
@@ -698,9 +698,10 @@ vector< vector<float> > findPulses(int ic){
     int nover = 0; // Number of samples seen consecutively over threshold
     int nunder = 0; // Number of samples seen consecutively under threshold
     int i_begin = istart;
-
+    int i_stop_searching = waves[ic]->GetNbinsX()-Nconsec;
+    int i_stop_final_pulse = waves[ic]->GetNbinsX();
     // int tWindow[2];
-    for (int i=istart; i<waves[ic]->GetNbinsX()-Nconsec; i++) { // Loop over all samples looking for pulses
+    for (int i=istart; i<i_stop_searching || (inpulse && i<i_stop_final_pulse); i++) { // Loop over all samples looking for pulses
 	float v = waves[ic]->GetBinContent(i);
 	if (!inpulse) { // Not in a pulse?
 	    if (v<thresh) {
@@ -726,7 +727,7 @@ vector< vector<float> > findPulses(int ic){
 		nunder = 0;
 	    }
 	    //cout << "DEBUG: Inside pulse, t = "<< w.t[i] <<", v = "<<v<<", nunder = "<<nunder<<endl;
-	    if (nunder>NconsecEnd) { // The end of a pulse
+	    if (nunder>NconsecEnd || i==(i_stop_final_pulse-1)) { // The end of a pulse, or pulse has reached the end of range 
 
 		//cout<<"DEBUG: i_begin "<<i_begin<<endl;
 		// cout<<"DEBUG: tWindow 0 and 1: "<<w.t[i_begin]<<" "<<w.t[i]<<endl;

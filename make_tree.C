@@ -251,7 +251,7 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMin,float
     baseFileName.ReplaceAll(".root","");
 
 
-    TString version = GetStdoutFromCommand("git describe --tags");
+    TString version = GetStdoutFromCommand("git describe --tag --abbrev=0");
 
     TString treeDirectory= milliqanOfflineDir+"trees_"+version+"/Run"+to_string(runNum)+"_"+configName+"/";
     TString linkDirectory= milliqanOfflineDir+"trees/Run"+to_string(runNum)+"_"+configName+"/";

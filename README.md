@@ -27,6 +27,19 @@ From anywhere, you can:
 		                        Force time range for p
 
 
+
+##### Tags and versions #######
+To mark a new version number after pushing a commit, make a new "lightweight tag" like this:
+`git tag v7`
+`git push --tags`
+
+This tag name is used to define the version number and the tree directory name.
+The full tag (output of git describe --tags --long )will be saved to the output root file, which will appear like this:
+`v7-0-g57ec693`
+This indicates the tagged version, the number of commits since the last tag was made, and the hash for the latest commit.
+
+
+
 ### Link dependencies
 The above scripts rely on the following links in `/homes/milliqan/bin`
 	findEvents.py  

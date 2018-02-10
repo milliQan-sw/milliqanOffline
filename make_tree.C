@@ -61,7 +61,6 @@ float presampleEnd = 2.5;
 
 float sample_rate = 1.6;
 bool debug=false;
-TString version = "7";
 
 //Read output from new format instead of interactiveDAQ
 bool milliDAQ=true;
@@ -184,6 +183,8 @@ void h1cosmetic(TH1D* hist,int ic);
 void getFileCreationTime(const char *path);
 vector<int> eventsPrinted(16,0);
 TString displayDirectory;
+void writeVersion();
+string GetStdoutFromCommand(string cmd);
 
 pair<float,float> measureSideband(int ic, float start, float end);
 
@@ -221,7 +222,7 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMin,float
     bool calibrateDisplay = true;
     defineColors();
     if(eventNum>=0) displayMode=true;
-    cout<<"Tag is "<<tag<<endl;
+    if(displayMode) cout<<"Display tag is "<<tag<<endl;
     loadFillList();
 
     TString inFileName = fileName;
@@ -250,9 +251,9 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMin,float
     baseFileName.ReplaceAll(".root","");
 
 
+    TString version = GetStdoutFromCommand("git describe --tags");
 
-
-    TString treeDirectory= milliqanOfflineDir+"trees_v"+version+"/Run"+to_string(runNum)+"_"+configName+"/";
+    TString treeDirectory= milliqanOfflineDir+"trees_"+version+"/Run"+to_string(runNum)+"_"+configName+"/";
     TString linkDirectory= milliqanOfflineDir+"trees/Run"+to_string(runNum)+"_"+configName+"/";
 
     cout<<"Run "<<runNum<<", file "<<fileNum<<endl;
@@ -267,16 +268,20 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMin,float
     else loadBranchesInteractiveDAQ();	
 
 
-    gSystem->mkdir(milliqanOfflineDir+"trees_v"+version);	
+    gSystem->mkdir(milliqanOfflineDir+"trees_"+version);	
     gSystem->mkdir(treeDirectory);	
     gSystem->mkdir(linkDirectory);
-    TString outFileName = treeDirectory+baseFileName+"_v"+version+".root";
+    TString outFileName = treeDirectory+baseFileName+"_"+version+".root";
     TFile * outFile;
+
     if(!displayMode){
-	outFile = new TFile(outFileName,"recreate");
-	outTree = new TTree("t","t");
-	prepareOutBranches();
+    	outFile = new TFile(outFileName,"recreate");
+    	outTree = new TTree("t","t");
+    	prepareOutBranches();
+        writeVersion();
     }
+
+   
 
     displayDirectory = milliqanOfflineDir+"displays/Run"+to_string(runNum)+"_"+configName+"/";
     gSystem->mkdir(displayDirectory);
@@ -359,6 +364,7 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMin,float
     if(!displayMode){
 	outTree->Write();
 	outFile->Close();
+    
 	cout<<"Closed output tree."<<endl;
 	//TString currentDir=gSystem->pwd();
 	//TString target = currentDir+"/"+outFileName;
@@ -934,6 +940,13 @@ void h1cosmetic(TH1D *hist,int ic){
 
 }
 
+void writeVersion(){
+    string version = GetStdoutFromCommand("git describe --tags --long");
+    cout<<"Git tag is "<<version<<endl;
+    TNamed v("tag",version);
+    v.Write();
+
+}
 
 void loadBranchesMilliDAQ(){
     inTree->SetBranchAddress("event", &evt);
@@ -1032,4 +1045,28 @@ pair<int,int> findFill(int seconds){
 	time_since_start = seconds - get<0>(fillList[index_of_first_fill_with_larger_start_time-1]); //time of this event - start time of fill
     }
     return make_pair(this_fill,time_since_start);
+}
+
+static inline void rtrim(std::string &s) {
+    s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) {
+        return !std::isspace(ch);
+    }).base(), s.end());
+}
+string GetStdoutFromCommand(string cmd) {
+    string data;
+    FILE * stream;
+    const int max_buffer = 256;
+    char buffer[max_buffer];
+    cmd.append(" 2>&1");
+
+    stream = popen(cmd.c_str(), "r");
+    if (stream) {
+    while (!feof(stream))
+    if (fgets(buffer, max_buffer, stream) != NULL) data.append(buffer);
+    pclose(stream);
+    }
+
+    //Strip new lines
+    rtrim(data);
+    return data;
 }

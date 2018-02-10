@@ -47,8 +47,7 @@ def main(arg1):
 			script.write("#!/bin/bash\n")
 			for i in range(15):
 				if iFile>=nFiles: break
-				#script.write("root -b -q 'make_tree.C+(\""+fileList[iFile]+"\""")'\n")
-				script.write("make_tree_backup_feb8 "+fileList[iFile]+"\n")
+				script.write("make_tree_v7 "+fileList[iFile]+"\n")
 				iFile = iFile+1
 
 			script.close()

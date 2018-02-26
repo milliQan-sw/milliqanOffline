@@ -13,7 +13,7 @@ for beam in [True,False]:
         timeDictNoBeam = {(0,97):1065410,(30,50):294719,(50,70):176245.,(70,80):238232.,(80,97):356214}
         timeDictBeam =   {(0,97):2085690,(30,50):564790,(50,70):446647,(70,80):513800,(80,97):560453}
         # inputFile = r.TFile("realTripleCoincOneBarPerLayerBeam.root")
-        inputFileName = "/Users/mcitron/milliqanOffline/milliqanScripts/inputs/realTripleCoincOneBarPerLayerNotBeam.root"
+        inputFileName = "./inputs/realTripleCoincOneBarPerLayerNotBeam.root"
 
         timeDict = timeDictNoBeam
         if beam:

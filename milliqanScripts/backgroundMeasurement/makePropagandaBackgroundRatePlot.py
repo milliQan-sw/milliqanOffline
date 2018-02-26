@@ -3,19 +3,17 @@ import pickle
 import os
 r.gROOT.SetBatch(True)
 r.gStyle.SetOptStat(0)
+#THIS SCRIPT ASSUMES YOU ARE USING THE OUTPUT WHICH PRESELECTS AS MaxIf$(chan,layer==1)==MinIf$(chan,layer==1)&&MaxIf$(chan,layer==2)==MinIf$(chan,layer==2)&&MaxIf$(chan,layer==3)==MinIf$(chan,layer==3)&&Sum$(layer==1)>0&&Sum$(layer==2)>0&&Sum$(layer==3)>0
 for beam in [True,False]:
     for blind in [True,False]:
-        # if beam and not blind: continue
+        if beam and not blind: continue
 
-        outputFolder = "outputPropagandaSplitFullDatasetAddL2Timing"
-        #THIS SCRIPT ASSUMES YOU ARE USING THE OUTPUT WHICH PRESELECTS AS MaxIf$(chan,layer==1)==MinIf$(chan,layer==1)&&MaxIf$(chan,layer==2)==MinIf$(chan,layer==2)&&MaxIf$(chan,layer==3)==MinIf$(chan,layer==3)&&Sum$(layer==1)>0&&Sum$(layer==2)>0&&Sum$(layer==3)>0
-
-        # timeDictNoBeam = {(0,100):1065410,(30,50):294719,(50,70):176245.,(70,80):238232.,(80,100):356214}
-        # timeDictBeam =   {(0,100):2085690,(30,50):564790,(50,70):446647,(70,80):513800,(80,100):560453}
+        outputFolder = "ratePerNPEPlots"
+        #Length of time (for rates) of each section of runs
         timeDictNoBeam = {(0,97):1065410,(30,50):294719,(50,70):176245.,(70,80):238232.,(80,97):356214}
         timeDictBeam =   {(0,97):2085690,(30,50):564790,(50,70):446647,(70,80):513800,(80,97):560453}
         # inputFile = r.TFile("realTripleCoincOneBarPerLayerBeam.root")
-        inputFileName = "realTripleCoincOneBarPerLayerNotBeam.root"
+        inputFileName = "/Users/mcitron/milliqanOffline/milliqanScripts/inputs/realTripleCoincOneBarPerLayerNotBeam.root"
 
         timeDict = timeDictNoBeam
         if beam:
@@ -37,9 +35,7 @@ for beam in [True,False]:
 
         bins = (4000,0,2000)
         scales = [2,5,10]
-        #Select real triple coinc
         colors = {2:1,5:2,10:5}
-        #For different scalings of problematic bars (10 and 11)
         onePulseReq = False
         checkPathString = ""
         checkOnePulseString = ""
@@ -160,6 +156,8 @@ for beam in [True,False]:
                                 timeHist.Fill(timeLayer3-timeLayer1)
                                 if chanSet in allPaths:
                                     pathHist.Fill(allPaths.index(chanSet))
+
+                                #Not sure how to calibrate nPE in chan 10/11 so present three options 
                                 nPEsNotProbChannel = max([npe for npe,chan in zip(event.nPE,event.chan) if (chan != 10 and chan != 11)]+[-1])
                                 nPEsProbChannel = max([npe for npe,chan in zip(event.nPE,event.chan) if (chan == 10 or chan == 11)]+[-1])
                                 for iS in range(len(scales)):
@@ -174,6 +172,7 @@ for beam in [True,False]:
                                 histsCumu.append(histCumu)
                                 hist.Scale(3600./timeDict[runs])
                                 hist.SetMaximum(hist.GetMaximum()*1.2)
+
                             tempCanvas = r.TCanvas()
                             hists[0].Draw("e")
                             hists[0].GetXaxis().SetRangeUser(0,2000)

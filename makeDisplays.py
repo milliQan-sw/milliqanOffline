@@ -22,7 +22,7 @@ def parse_args():
 
 def main(runNumber, selection, nEvents,tag="",rangeForTime=None):
 	runNumber = str(runNumber)
-	table = findEvents.main(runNumber,selection,nEvents)
+	table = findEvents.main(runNumber,selection,nEvents,tag)
 	for i in range(len(table)):
 		fileNumber= str(table[i][1])
 		eventNumber= str(table[i][2])

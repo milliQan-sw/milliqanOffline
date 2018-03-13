@@ -42,9 +42,12 @@ def main(arg1):
 			os.makedirs(runDir)
 
 		for iJob in range(nJobs):
+                        #Don't make a new submit job if all files already included!
+			if iFile>=nFiles: break
 			scriptName= runDir+"Job"+str(iJob)+".sh"
 			script = open(scriptName,"w")
 			script.write("#!/bin/bash\n")
+			script.write("cd /net/cms26/cms26r0/milliqan/milliqanOffline\n")
 			for i in range(15):
 				if iFile>=nFiles: break
 				script.write("make_tree_v7 "+fileList[iFile]+"\n")

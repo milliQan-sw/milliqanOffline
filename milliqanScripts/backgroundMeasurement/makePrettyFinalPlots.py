@@ -125,8 +125,8 @@ def getABCDInfo(inputFileBlind,inputFile,timeDict):
 
 
 if __name__ == "__main__":
-    # makeTimeSplitPlots('outputPropagandaSplit.root','finalPlotsTimeSplit') 
-    # makeTimeSplitPlots('outputPropagandaSplitFullDatasetBeamBlind.root','finalPlotsTimeSplitFullDatasetBeam',True) 
-    # getABCDInfo('outputPropagandaSplitBeamBlind.root','outputPropagandaSplit.root',timeDictBeam)
-    # getABCDInfo('outputPropagandaSplitFullDatasetBlind.root','outputPropagandaSplitFullDataset.root',timeDictNoBeam)
-    getABCDInfo('outputPropagandaSplitFullDatasetBlind.root','outputPropagandaSplitFullDataset.root',timeDictNoBeam)
+    makeTimeSplitPlots('ratePerNPEPlots.root','finalPlotsTimeSplit',False) 
+    # makeTimeSplitPlots('ratePerNPEPlotsSplitBeamBlind.root','finalPlotsTimeSplitBeam',True) 
+    # getABCDInfo('ratePerNPEPlotsSplitBeamBlind.root','ratePerNPEPlotsSplit.root',timeDictBeam)
+    # getABCDInfo('ratePerNPEPlotsSplitBlind.root','ratePerNPEPlotsSplit.root',timeDictNoBeam)
+    # getABCDInfo('ratePerNPEPlotsSplitBlind.root','ratePerNPEPlotsSplit.root',timeDictNoBeam)

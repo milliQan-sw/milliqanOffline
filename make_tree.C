@@ -70,13 +70,41 @@ bool displayMode=false;
 
 vector<TString> tubeSpecies = {"ET","ET","ET","ET",             // 0 1 2 3 
     "R878","R878","R878","ET",       // 4 5 6 7	
-    "R7725","R7725","R7725","R7725",	// 8 9 10 11
+    "R878","R7725","R7725","R878",	// 8 9 10 11
     "R878","R878","R878","R878"};    // 12 13 14 15
 
-vector<int> layerMap = {1,1,1,1,    // 0 1 2 3 
-    2,2,2,2,   // 4 5 6 7	
-    3,3,3,3,	// 8 9 10 11
-    -2,0,-3,-1};    // 12 13 14 15
+// vector<int> layerMap = {1,1,1,1,    // 0 1 2 3 
+//     2,2,2,2,   // 4 5 6 7	
+//     3,3,3,3,	// 8 9 10 11
+//     -2,0,-3,-1};    // 12 13 14 15
+
+vector<int> layerMap = {1,1,1,1,1,1,    // 0 1 2 3 4 5 
+    2,2,2,2,   // 6 7 8 9
+    3,3, //10 11
+    2,2, //12,13
+    3,3}; //14,15    
+   
+
+vector<int> chanNumToPositionNum =
+{0,1,  
+ 2,3,
+ 4,5,
+ 6,7,
+ 10,11,  //chan 8 and 9 are in position 10,11
+ 14,15,  //ch 10 and ch11 are in pos 14,15
+ 8,9,    //ch 12,13 are in pos 8,9
+ 12,13};  //ch 14,15 are in pos 12,13
+
+//given channel number, this returns position index running through positions in physical order
+   // this config corresponds to 
+   // Layer 1   Layer 2    Layer 3
+   // ch0 ch1   ch6 ch7    ch14 ch15
+   // ch2 ch3   ch12 ch13  ch10 ch11
+   // ch4 ch5   ch8 ch9    none none
+ 
+
+
+
 
 /*vector<int> colors = {kBlack, kRed,
   kGreen+2, kBlue,
@@ -195,8 +223,9 @@ void defineColors(){
     }
     colors[9] = 419; //kGreen+3;
     colors[2] = 2009;
-    colors[3] = 2013;
+    //colors[3] = 2013;
     colors[12]= 2017;
+    colors[0]=28;
 
 }
 
@@ -348,11 +377,11 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMin,float
 
 	vector<vector<vector<float> > > allPulseBounds;
 	for(int ic=0;ic<numChan;ic++){
-	    if(ic==13){
-		vector<vector<float> > empty;
-		allPulseBounds.push_back(empty);
-		continue;
-	    }
+	 //    if(ic==13){
+		// vector<vector<float> > empty;
+		// allPulseBounds.push_back(empty);
+		// continue;
+	 //    }
 	    //	cout<<Form("Chan %i min: ",ic)<<waves[ic]->GetMinimum()<<endl;
 	    allPulseBounds.push_back(processChannel(ic));
 	}
@@ -432,7 +461,9 @@ vector< vector<float> > processChannel(int ic){
 
     int npulses = pulseBounds.size();
     //float channelCalibrations[] = {0.,0.,-2.0,-7.5,0.5,0.,0.88,12.58,1.22,0.,-6.51,-4.75,1.2,0.,25.7,6.8};
-    float channelSPEAreas[] = {1.,81.5,64.5,48.7,55.2,84.8,57.0,57.2,159.3,181.6,576.6,689.1,77.5,1.,52.6,50.4};
+    float channelSPEAreas[] = {60.,81.5,64.5,48.7,55.2,84.8,57.0,57.2,60.,181.6,576.6,60.,77.5,60.,52.6,50.4};
+    //NB: v8 march13- currently approximate guess (60 nVs) for unmeasured ch0,ch8,ch11,ch13
+
 
     for(int ipulse = 0; ipulse<npulses; ipulse++){
 	//Set waveform range to this pulse
@@ -537,7 +568,7 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
 		for(uint iBoundVec2 =0;iBoundVec2 < bounds[ic][iBoundVec].size();iBoundVec2++)
 		    boundShifted[iBoundVec][iBoundVec2] += channelCalibrations[ic]; 
 	}
-	if(boundShifted.size()>0 || waveShifted->GetMaximum()>5 && ic!=13){
+	if(boundShifted.size()>0 || waveShifted->GetMaximum()>5){
 	    chanList.push_back(ic);
 	    //Reset range to find correct maxima
 	    waveShifted->SetAxisRange(0,1024./sample_rate);
@@ -559,7 +590,7 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
     }
     maxheight*=1.1;
 
-    maxheight=50;
+    //maxheight=30;
     if (rangeMin < 0) timeRange[0]*=0.9;
     else timeRange[0] = rangeMin;
     if (rangeMax < 0) timeRange[1]= min(1.1*timeRange[1],1024./sample_rate);
@@ -589,32 +620,31 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
     }
     float boxw= 0.025;
     float boxh=0.0438;
-    vector<float> xpos = {0.960,0.93,0.960,0.93,
-	0.845,0.815,0.845,0.815,
-	0.730,0.7,0.730,0.7,
-	0.815-0.012-boxw,10.,0.7-0.012-boxw,0.93-0.012-boxw
+    vector<float> xpos = {0.93,0.96,0.93,0.96,0.93,0.96,
+	0.815,0.845,0.815,0.845,0.815,0.845,
+	0.7,0.73,0.7,0.73,0.7,0.73
     };
 
-    vector<float> ypos = {0.871,0.871,0.924,0.924,
-	0.871,0.871,0.924,0.924,
-	0.871,0.871,0.924,0.924,
-	0.86,0.86,0.86,0.86
+    vector<float> ypos = 
+    {0.924,0.924,0.871,0.871,0.818,0.818,
+        0.924,0.924,0.871,0.871,0.818,0.818,
+        0.924,0.924,0.871,0.871,0.818,0.818
     };
 
-    TPave ETframe(xpos[1]-0.006,ypos[0]-0.01,xpos[0]+boxw+0.006,ypos[2]+boxh+0.01,1,"NDC");
-    ETframe.SetFillColor(0);
-    ETframe.SetLineWidth(2);
-    ETframe.Draw();
+    TPave L1frame(xpos[0]-0.006,ypos[4]-0.01,xpos[1]+boxw+0.006,ypos[0]+boxh+0.01,1,"NDC");
+    L1frame.SetFillColor(0);
+    L1frame.SetLineWidth(2);
+    L1frame.Draw();
 
-    TPave R8frame(xpos[5]-0.006,ypos[0]-0.01,xpos[4]+boxw+0.006,ypos[2]+boxh+0.01,1,"NDC");
-    R8frame.SetFillColor(0);
-    R8frame.SetLineWidth(2);
-    R8frame.Draw();
+    TPave L2frame(xpos[6]-0.006,ypos[4]-0.01,xpos[7]+boxw+0.006,ypos[0]+boxh+0.01,1,"NDC");
+    L2frame.SetFillColor(0);
+    L2frame.SetLineWidth(2);
+    L2frame.Draw();
 
-    TPave R7frame(xpos[9]-0.006,ypos[0]-0.01,xpos[8]+boxw+0.006,ypos[2]+boxh+0.01,1,"NDC");
-    R7frame.SetFillColor(0);
-    R7frame.SetLineWidth(2);
-    R7frame.Draw();
+    TPave L3frame(xpos[12]-0.006,ypos[4]-0.01,xpos[13]+boxw+0.006,ypos[0]+boxh+0.01,1,"NDC");
+    L3frame.SetFillColor(0);
+    L3frame.SetLineWidth(2);
+    L3frame.Draw();
 
 
     TLatex tla;
@@ -622,16 +652,16 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
     tla.SetTextFont(42);
     float height= 0.06;
     //tla.DrawLatexNDC(0.13,0.83,Form("Number of pulses: %i",(int)bounds.size()));
-    float currentYpos=0.79;
+    float currentYpos=0.737;
     float headerX=0.67;
     float rowX=0.69;
     int pulseIndex=0; // Keep track of pulse index, since all pulses for all channels are actually stored in the same 1D vectors
-    int maxPerChannel = 12/chanList.size();
+    int maxPerChannel = 10/chanList.size();
 
     for(int i=0;i<16;i++){
-	if(i==13) continue;
-	if(boundsShifted[i].size()>0 || wavesShifted[i]->GetMaximum()>5){//if this channel has a pulse
-	    TPave * pave = new TPave(xpos[i],ypos[i],xpos[i]+boxw,ypos[i]+boxh,0,"NDC");
+	if(boundsShifted[i].size()>0 || wavesShifted[i]->GetMaximum()>10){//if this channel has a pulse
+	    int physPos= chanNumToPositionNum[i];
+        TPave * pave = new TPave(xpos[physPos],ypos[physPos],xpos[physPos]+boxw,ypos[physPos]+boxh,0,"NDC");
 	    pave->SetFillColor(colors[i]);
 	    pave->Draw();
 	    tla.SetTextColor(colors[i]);
@@ -845,7 +875,7 @@ void prepareOutBranches(){
     TBranch * b_max_10 = outTree->Branch("max_10",&max_10,"max_10/F");	
     TBranch * b_max_11 = outTree->Branch("max_11",&max_11,"max_11/F");	
     TBranch * b_max_12 = outTree->Branch("max_12",&max_12,"max_12/F");	
-    //TBranch * b_max_13 = outTree->Branch("max_13",&max_13,"max_13/F");	
+    TBranch * b_max_13 = outTree->Branch("max_13",&max_13,"max_13/F");	
     TBranch * b_max_14 = outTree->Branch("max_14",&max_14,"max_14/F");	
     TBranch * b_max_15 = outTree->Branch("max_15",&max_15,"max_15/F");	
 
@@ -896,7 +926,7 @@ void prepareOutBranches(){
     outTree->SetBranchAddress("max_10",&max_10,&b_max_10);
     outTree->SetBranchAddress("max_11",&max_11,&b_max_11);
     outTree->SetBranchAddress("max_12",&max_12,&b_max_12);
-    //outTree->SetBranchAddress("max_13",&max_13,&b_max_13);
+    outTree->SetBranchAddress("max_13",&max_13,&b_max_13);
     outTree->SetBranchAddress("max_14",&max_14,&b_max_14);
     outTree->SetBranchAddress("max_15",&max_15,&b_max_15);
 
@@ -978,7 +1008,7 @@ void loadBranchesInteractiveDAQ(){
     auto branch10 = inTree->GetBranch("channel_10");
     auto branch11 = inTree->GetBranch("channel_11");
     auto branch12 = inTree->GetBranch("channel_12");
-    //auto branch13 = inTree->GetBranch("channel_13");
+    auto branch13 = inTree->GetBranch("channel_13");
     auto branch14 = inTree->GetBranch("channel_14");
     auto branch15 = inTree->GetBranch("channel_15");
 
@@ -995,7 +1025,7 @@ void loadBranchesInteractiveDAQ(){
     branch10->SetAddress(&(waves[10]));
     branch11->SetAddress(&(waves[11]));
     branch12->SetAddress(&(waves[12]));
-    //branch13->SetAddress(&(waves[13]));
+    branch13->SetAddress(&(waves[13]));
     branch14->SetAddress(&(waves[14]));
     branch15->SetAddress(&(waves[15]));
 

@@ -6,7 +6,7 @@ import math
 from subprocess import call
 import config as cfg
 
-def main(run,cuts,nevents):
+def main(run,cuts,nevents,tag):
 
 	ROOT.PyConfig.IgnoreCommandLineOptions = True # avoid bizarre crash when constructing TChain
 	t = ROOT.TChain("t")
@@ -25,7 +25,8 @@ def main(run,cuts,nevents):
 	cuts = cuts.replace(">=","ge").replace("<=","le").replace(">","gt").replace("<","lt").replace("==","e")
 	cuts = cuts.replace("&&","_").replace("||","_").replace("$","_of").replace("(","_").replace(")","_")
 	outFileName = cfg.offlineDir+"eventLists/eventList_Run%s_n%s_%s.txt" % (run,nevents,cuts)
-
+	if len(outFileName)>120:
+		outFileName=cfg.offlineDir+"eventLists/eventList_Run%s_n%s_%s.txt" % (run,nevents,tag)
 	outFile = open(outFileName,"w")
 	runs=t.GetV1()
 	files=t.GetV2()

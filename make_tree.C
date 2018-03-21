@@ -31,7 +31,7 @@
 #include "TGaxis.h"
 #include "TLegend.h"
 #include "TColor.h"
-#include "/net/cms26/cms26r0/milliqan/MilliDAQ/interface/Event.h"
+#include "/net/cms26/cms26r0/milliqan/MilliDAQ_legacy/interface/Event.h"
 
 #include <string>
 
@@ -45,7 +45,7 @@ using namespace std;
 //////////////////////////////////////////
 
 // Compile like this:
-// g++ -o make_tree make_tree.C /net/cms26/cms26r0/milliqan/MilliDAQ/libMilliDAQ.so `root-config --cflags --glibs` -Wno-narrowing
+// g++ -o make_tree make_tree.C /net/cms26/cms26r0/milliqan/MilliDAQ_legacy/libMilliDAQ.so `root-config --cflags --glibs` -Wno-narrowing
 
 //////////////////////////////////////////
 

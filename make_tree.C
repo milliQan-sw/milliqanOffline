@@ -31,7 +31,7 @@
 #include "TGaxis.h"
 #include "TLegend.h"
 #include "TColor.h"
-#include "/net/cms26/cms26r0/milliqan/MilliDAQ/interface/Event.h"
+#include "/net/cms26/cms26r0/milliqan/milliDAQ/interface/GlobalEvent.h"
 
 #include <string>
 
@@ -45,14 +45,14 @@ using namespace std;
 //////////////////////////////////////////
 
 // Compile like this:
-// g++ -o make_tree make_tree.C /net/cms26/cms26r0/milliqan/MilliDAQ/libMilliDAQ.so `root-config --cflags --glibs` -Wno-narrowing
+// g++ -o make_tree_dual make_tree_dual.C /net/cms26/cms26r0/milliqan/milliDAQ/libMilliDAQ.so `root-config --cflags --glibs` -Wno-narrowing
 
 //////////////////////////////////////////
 
 //gSystem->Load("/net/cms26/cms26r0/milliqan/MilliDAQ/libMilliDAQ.so");
 
 //Configurable parameters
-int numChan=16;
+int numChan=32;
 int maxEvents=-1; 
 float sideband_range[2] = {0,50}; //in ns
 float presampleStart= 17.5;
@@ -78,22 +78,54 @@ vector<TString> tubeSpecies = {"ET","ET","ET","ET",             // 0 1 2 3
 //     3,3,3,3,	// 8 9 10 11
 //     -2,0,-3,-1};    // 12 13 14 15
 
-vector<int> layerMap = {1,1,1,1,1,1,    // 0 1 2 3 4 5 
-    2,2,2,2,   // 6 7 8 9
-    3,3, //10 11
-    2,2, //12,13
-    3,3}; //14,15    
    
 
-vector<int> chanNumToPositionNum =
-{0,1,  
- 2,3,
- 4,5,
- 6,7,
- 10,11,  //chan 8 and 9 are in position 10,11
- 14,15,  //ch 10 and ch11 are in pos 14,15
- 8,9,    //ch 12,13 are in pos 8,9
- 12,13};  //ch 14,15 are in pos 12,13
+
+vector< vector<int> > chanMap =
+//col,row,layer,type (xyz) 
+
+//types- bars:0, slabs:1, sheets=2
+//for sheets: column is -1,0,+1 for left, top, right
+//for slabs: column is 0
+//For slabs/sheets: row is redundant with type (= -1*type) 
+{{1,3,1,0}, //0.0
+ {2,3,1,0}, //0.1
+ {1,3,3,0}, //0.2
+ {2,3,3,0}, //0.3
+ {1,1,3,0}, //0.4
+ {2,1,3,0}, //0.5
+ {1,3,2,0}, //0.6
+ {2,3,2,0}, //0.7
+ {1,1,1,0}, //0.8
+ {2,1,1,0}, //0.9
+ {0,-2,1,2}, //0.10
+ {0,-2,2,2}, //0.11
+ {1,1,2,0}, //0.12
+ {2,1,2,0}, //0.13
+ {0,-2,3,2}, //0.14
+ {0,0,0,3}, //0.15, timing card
+ {1,2,2,0}, //1.0
+ {2,2,2,0}, //1.1
+ {0,-1,0,1}, //1.2
+ {1,-2,2,2}, //1.3
+ {0,-1,1,1}, //1.4
+ {0,-1,3,1}, //1.5
+ {1,2,3,0}, //1.6
+ {2,2,3,0}, //1.7
+ {1,2,1,0}, //1.8
+ {2,2,1,0}, //1.9
+ {1,-2,3,2}, //1.10
+ {-1,-2,1,2}, //1.11
+ {0,-1,2,1}, //1.12
+ {1,-2,1,2}, //1.13
+ {-1,-2,2,2}, //1.14
+ {-1,-2,3,2} //1.15
+ };
+
+
+
+
+
 
 //given channel number, this returns position index running through positions in physical order
    // this config corresponds to 
@@ -139,17 +171,24 @@ TTree * outTree;
 int event = 0;
 int fileNum=0;
 int runNum=0;
-Long64_t event_time=0;
+Long64_t event_time_b0=0;
+Long64_t event_time_b1=0;
+bool present_b0;
+bool present_b1;
 int t_since_fill_start=0;
 string event_t_string;
-Long64_t event_trigger_time_tag;
+Long64_t event_trigger_time_tag_b0;
+Long64_t event_trigger_time_tag_b1;
 int fillNum;
 bool beam;
-mdaq::Event * evt = new mdaq::Event(); //for MilliDAQ output only
+mdaq::GlobalEvent * evt = new mdaq::GlobalEvent(); //for MilliDAQ output only
 vector<int> * v_npulses = new vector<int>(); 
 vector<int> * v_ipulse = new vector<int>();
 vector<int> * v_chan = new vector<int>();
 vector<int> * v_layer = new vector<int>();
+vector<int> * v_row = new vector<int>();
+vector<int> * v_column = new vector<int>();
+vector<int> * v_type = new vector<int>();
 vector<float> * v_height = new vector<float>();
 vector<float> * v_time = new vector<float>();
 vector<float> * v_triggerCandidates = new vector<float>();
@@ -166,7 +205,8 @@ vector<float> * v_presample_RMS = new vector<float>();
 vector<float> * v_sideband_mean = new vector<float>();
 vector<float> * v_sideband_RMS = new vector<float>();
 
-vector<Long64_t> * v_groupTDC = new vector<Long64_t>();
+vector<Long64_t> * v_groupTDC_b0 = new vector<Long64_t>();
+vector<Long64_t> * v_groupTDC_b1 = new vector<Long64_t>();
 
 float triggerThreshold = 5;
 bool addTriggerTimes = true;
@@ -189,6 +229,22 @@ float max_12;
 float max_13;
 float max_14;
 float max_15;
+float max_16;
+float max_17;
+float max_18;
+float max_19;
+float max_20;
+float max_21;
+float max_22;
+float max_23;
+float max_24;
+float max_25;
+float max_26;
+float max_27;
+float max_28;
+float max_29;
+float max_30;
+float max_31;
 
 TString milliqanOfflineDir="/net/cms26/cms26r0/milliqan/milliqanOffline/";
 
@@ -209,7 +265,7 @@ void displayPulse(int ic, float begin, float end, int ipulse);
 void displayEvent(vector<vector<vector<float> > > bounds,TString tag,float rangeMin,float rangeMax,bool calibrateDisplay);
 void h1cosmetic(TH1D* hist,int ic);
 void getFileCreationTime(const char *path);
-vector<int> eventsPrinted(16,0);
+vector<int> eventsPrinted(32,0);
 TString displayDirectory;
 void writeVersion();
 string GetStdoutFromCommand(string cmd);
@@ -224,7 +280,7 @@ void defineColors(){
     colors[9] = 419; //kGreen+3;
     colors[2] = 2009;
     //colors[3] = 2013;
-    colors[12]= 2017;
+    colors[12]= 30;
     colors[0]=28;
 
 }
@@ -350,6 +406,22 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMin,float
 	    max_13= -1.*waves[13]->GetMinimum();
 	    max_14= -1.*waves[14]->GetMinimum();
 	    max_15= -1.*waves[15]->GetMinimum();
+        max_16= -1.*waves[16]->GetMinimum();
+        max_17= -1.*waves[17]->GetMinimum();
+        max_18= -1.*waves[18]->GetMinimum();
+        max_19= -1.*waves[19]->GetMinimum();
+        max_20= -1.*waves[20]->GetMinimum();
+        max_21= -1.*waves[21]->GetMinimum();
+        max_22= -1.*waves[22]->GetMinimum();
+        max_23= -1.*waves[23]->GetMinimum();
+        max_24= -1.*waves[24]->GetMinimum();
+        max_25= -1.*waves[25]->GetMinimum();
+        max_26= -1.*waves[26]->GetMinimum();
+        max_27= -1.*waves[27]->GetMinimum();
+        max_28= -1.*waves[28]->GetMinimum();
+        max_29= -1.*waves[29]->GetMinimum();
+        max_30= -1.*waves[30]->GetMinimum();
+        max_31= -1.*waves[31]->GetMinimum();
 
 	}
 
@@ -357,7 +429,7 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMin,float
 	if(milliDAQ) {
 	    fillNum=0;
 	    t_since_fill_start= -1;
-	    Long64_t secs = evt->DAQTimeStamp.GetSec();
+	    Long64_t secs = evt->digitizers[0].DAQTimeStamp.GetSec();
 	    pair<int,int> fillInfo = findFill(secs);
 	    fillNum= fillInfo.first;
 	    t_since_fill_start=fillInfo.second;
@@ -365,24 +437,37 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMin,float
 	    if(fillNum>0) beam=true;
 	    else beam = false;
 	    //This defines the time in seconds since 00:00:00 on 18/09/2017 
-	    event_time = secs - 1505692800;
-	    event_trigger_time_tag = evt->TriggerTimeTag;
-	    event_t_string = evt->DAQTimeStamp.AsString("s");
+	    event_time_b0 = secs - 1505692800;
+
+        //in case second digitizer has different time
+        secs = evt->digitizers[1].DAQTimeStamp.GetSec();
+        event_time_b1 = secs - 1505692800;
+
+	    event_trigger_time_tag_b0 = evt->digitizers[0].TriggerTimeTag;
+        event_trigger_time_tag_b1 = evt->digitizers[1].TriggerTimeTag;
+
+	    event_t_string = evt->digitizers[0].DAQTimeStamp.AsString("s");
 
 	    for(int ig=0; ig<8; ig++){
-		v_groupTDC->push_back(evt->TDC[ig]);
+    		v_groupTDC_b0->push_back(evt->digitizers[0].TDC[ig]);
+            v_groupTDC_b1->push_back(evt->digitizers[1].TDC[ig]);
 	    }	
+
+        present_b0 = evt->digitizers[0].DataPresent;
+        present_b1 = evt->digitizers[1].DataPresent;
+
 	}
-	else{ event_time=0;event_t_string="";fillNum=0;beam=false;}
+	else{ event_time_b0=0;event_time_b1=0;event_t_string="";fillNum=0;beam=false;}
 
 	vector<vector<vector<float> > > allPulseBounds;
 	for(int ic=0;ic<numChan;ic++){
-	 //    if(ic==13){
-		// vector<vector<float> > empty;
-		// allPulseBounds.push_back(empty);
-		// continue;
-	 //    }
+	    if(ic==15){//skip timing card channel
+    		vector<vector<float> > empty;
+    		allPulseBounds.push_back(empty);
+    		continue;
+	    }
 	    //	cout<<Form("Chan %i min: ",ic)<<waves[ic]->GetMinimum()<<endl;
+
 	    allPulseBounds.push_back(processChannel(ic));
 	}
 	if(displayMode) displayEvent(allPulseBounds,tag,rangeMin,rangeMax,calibrateDisplay);
@@ -473,7 +558,12 @@ vector< vector<float> > processChannel(int ic){
 
 
 	v_chan->push_back(ic);
-	v_layer->push_back(layerMap[ic]);
+    //chanMap: col,row,layer,type
+    v_column->push_back(chanMap[ic][0]);
+    v_row->push_back(chanMap[ic][1]);
+    v_layer->push_back(chanMap[ic][2]);
+	v_type->push_back(chanMap[ic][3]);
+
 	v_height->push_back(waves[ic]->GetMaximum());
 	v_time->push_back(pulseBounds[ipulse][0]);
 	v_time_module_calibrated->push_back(pulseBounds[ipulse][0]+channelCalibrations[ic]);
@@ -495,7 +585,7 @@ vector< vector<float> > processChannel(int ic){
 	bool quiet = (fabs(presampleInfo.first)<1. && presampleInfo.second <2.0 )&& (pulseBounds[ipulse][1] < waves[ic]->GetBinLowEdge(waves[ic]->GetNbinsX())-0.01) ;
 	v_quiet->push_back(quiet); //preliminary: mean between -1 and 1, and RMS<2
 
-	if(event<0 || eventsPrinted[ic]<0) displayPulse(ic,pulseBounds[ipulse][0],pulseBounds[ipulse][1],ipulse);
+	//if(event<0 || eventsPrinted[ic]<0) displayPulse(ic,pulseBounds[ipulse][0],pulseBounds[ipulse][1],ipulse);
     }
     //if(event<0 || (event<0 && npulses>0) || eventsPrinted[ic]<0) {displayEvent(ic,pulseBounds); eventsPrinted[ic]++;}
     return pulseBounds;
@@ -536,7 +626,7 @@ void displayPulse(int ic, float begin, float end, int ipulse){
 
 void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rangeMin,float rangeMax,bool calibrateDisplay){
     TCanvas c("c1","",1400,800);
-    gPad->SetRightMargin(0.35);
+    gPad->SetRightMargin(0.39);
     gStyle->SetGridStyle(3);
     gStyle->SetGridColor(13);
     c.SetGrid();
@@ -600,6 +690,7 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
     TLegend leg(0.45,0.9-depth,0.65,0.9);
     for(uint i=0;i<chanList.size();i++){
 	int ic = chanList[i];	
+    if(ic==15) continue;
 	wavesShifted[ic]->SetAxisRange(timeRange[0],timeRange[1]);
 	wavesShifted[ic]->SetMaximum(maxheight);
 
@@ -620,28 +711,47 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
     }
     float boxw= 0.025;
     float boxh=0.0438;
-    vector<float> xpos = {0.93,0.96,0.93,0.96,0.93,0.96,
-	0.815,0.845,0.815,0.845,0.815,0.845,
-	0.7,0.73,0.7,0.73,0.7,0.73
-    };
+    float barw=0.03;
+    float barh=0.53;
+ //    vector<float> xpos = {0.93,0.96,0.93,0.96,0.93,0.96,
+	// 0.815,0.845,0.815,0.845,0.815,0.845,
+	// 0.7,0.73,0.7,0.73,0.7,0.73
+ //    };
 
-    vector<float> ypos = 
-    {0.924,0.924,0.871,0.871,0.818,0.818,
-        0.924,0.924,0.871,0.871,0.818,0.818,
-        0.924,0.924,0.871,0.871,0.818,0.818
-    };
+    vector<float> xstart = {0.66,0.78,0.9};
+    vector<float> ystart= {0.798,0.851,0.904};
 
-    TPave L1frame(xpos[0]-0.006,ypos[4]-0.01,xpos[1]+boxw+0.006,ypos[0]+boxh+0.01,1,"NDC");
+    float sheet_width = 0.006;
+    float sheet_offset= 0.013+sheet_width/2.;
+    float sheet_left_to_right = 4*0.006+barw+boxw+0.002;
+    vector<float> xstart_leftsheets = {xstart[0]-sheet_offset,xstart[1]-sheet_offset,xstart[2]-sheet_offset}; 
+    vector<float> xstart_topsheets = {xstart[0]-0.002,xstart[1]-0.002,xstart[2]-0.002};
+    float ystart_topsheets = ystart[2]+boxh+0.017;
+    float ystart_sidesheets = ystart[0]-0.006;
+    float vert_sheet_length = ystart[2]-ystart[0]+boxh+0.01;
+    float hori_sheet_length= barw+boxw+0.004;
+    
+    float slab_width = 0.015;
+    vector<float> slab_xstart = {xstart_leftsheets[0]-0.008-slab_width,xstart_leftsheets[1]-0.008-slab_width,xstart_leftsheets[2]-0.008-slab_width,xstart_leftsheets[2]+0.01+sheet_left_to_right}; 
+    float slab_height = vert_sheet_length-0.02;
+    float slab_ystart = ystart_sidesheets+0.01;
+    // vector<float> ypos = 
+    // {0.924,0.924,0.871,0.871,0.818,0.818,
+    //     0.924,0.924,0.871,0.871,0.818,0.818,
+    //     0.924,0.924,0.871,0.871,0.818,0.818
+    // };
+
+    TPave L1frame(xstart[0]-0.006,ystart[0]-0.01,xstart[0]+barw+boxw+0.006,ystart[2]+boxh+0.01,1,"NDC");
     L1frame.SetFillColor(0);
     L1frame.SetLineWidth(2);
     L1frame.Draw();
 
-    TPave L2frame(xpos[6]-0.006,ypos[4]-0.01,xpos[7]+boxw+0.006,ypos[0]+boxh+0.01,1,"NDC");
+    TPave L2frame(xstart[1]-0.006,ystart[0]-0.01,xstart[1]+barw+boxw+0.006,ystart[2]+boxh+0.01,1,"NDC");
     L2frame.SetFillColor(0);
     L2frame.SetLineWidth(2);
     L2frame.Draw();
 
-    TPave L3frame(xpos[12]-0.006,ypos[4]-0.01,xpos[13]+boxw+0.006,ypos[0]+boxh+0.01,1,"NDC");
+    TPave L3frame(xstart[2]-0.006,ystart[0]-0.01,xstart[2]+barw+boxw+0.006,ystart[2]+boxh+0.01,1,"NDC");
     L3frame.SetFillColor(0);
     L3frame.SetLineWidth(2);
     L3frame.Draw();
@@ -658,13 +768,53 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
     int pulseIndex=0; // Keep track of pulse index, since all pulses for all channels are actually stored in the same 1D vectors
     int maxPerChannel = 10/chanList.size();
 
-    for(int i=0;i<16;i++){
-	if(boundsShifted[i].size()>0 || wavesShifted[i]->GetMaximum()>10){//if this channel has a pulse
-	    int physPos= chanNumToPositionNum[i];
-        TPave * pave = new TPave(xpos[physPos],ypos[physPos],xpos[physPos]+boxw,ypos[physPos]+boxh,0,"NDC");
-	    pave->SetFillColor(colors[i]);
+    for(int i=0;i<32;i++){
+	if(boundsShifted[i].size()>0 || wavesShifted[i]->GetMaximum()>10 ){//if this channel has a pulse
+	    if(i==15) continue;
+        //xyz
+        int column= chanMap[i][0];
+        int row= chanMap[i][1];
+        int layer= chanMap[i][2];
+        int type= chanMap[i][3];
+        if (type==1){
+            float xpos,ypos;
+            ypos = slab_ystart;
+            xpos = slab_xstart[layer];
+            TPave * pave = new TPave(xpos,ypos,xpos+slab_width,ypos+slab_height,0,"NDC");
+            pave->SetFillColor(kBlack);
+            //pave->Draw();
+        }
+
+        else if (type==2){
+            float xpos,ypos;
+            TPave * pave;
+            if (column!=0){
+                xpos= xstart_leftsheets[layer-1];
+                if(column>0) xpos += sheet_left_to_right;
+                ypos = ystart_sidesheets;
+                pave = new TPave(xpos,ypos,xpos+sheet_width,ypos+vert_sheet_length,0,"NDC");
+            }
+            else{
+                xpos = xstart_topsheets[layer-1];
+                ypos = ystart_topsheets;
+                pave = new TPave(xpos,ypos,xpos+hori_sheet_length,ypos+1.4/0.8*sheet_width,0,"NDC");
+            }
+           
+            pave->SetFillColor(kBlack);
+           // pave->Draw();
+
+        }
+        else if(type==0){
+        float xpos = xstart[layer-1]+(column-1)*barw;
+        float ypos= ystart[row-1];
+
+        int oldChanPos = 4-2*(row-1)+column-1+6*(layer-1);
+        
+
+        TPave * pave = new TPave(xpos,ypos,xpos+boxw,ypos+boxh,0,"NDC");
+	    pave->SetFillColor(colors[oldChanPos]);
 	    pave->Draw();
-	    tla.SetTextColor(colors[i]);
+	    tla.SetTextColor(colors[oldChanPos]);
 	    tla.SetTextSize(0.04);
 	    tla.DrawLatexNDC(headerX,currentYpos,Form("Channel %i, N_{pulses}= %i",i,(int)boundsShifted[i].size()));
 	    tla.SetTextColor(kBlack);
@@ -684,6 +834,7 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
 	    }
 	    currentYpos-=height*0.2;
 	}
+    }
     }
 
 
@@ -835,16 +986,23 @@ void prepareOutBranches(){
     TBranch * b_file = outTree->Branch("file",&fileNum,"file/I");
     TBranch * b_fill = outTree->Branch("fill",&fillNum,"fill/I");
     TBranch * b_beam = outTree->Branch("beam",&beam,"beam/O");
-    TBranch * b_event_time = outTree->Branch("event_time",&event_time,"event_time/L");
+    TBranch * b_present_b0 = outTree->Branch("present_b0",&present_b0,"present_b0/O");
+    TBranch * b_present_b1 = outTree->Branch("present_b1",&present_b1,"present_b1/O");
+    TBranch * b_event_time_b0 = outTree->Branch("event_time_b0",&event_time_b0,"event_time_b0/L");
+    TBranch * b_event_time_b1 = outTree->Branch("event_time_b1",&event_time_b1,"event_time_b1/L");
     TBranch * b_t_since_fill_start = outTree->Branch("t_since_fill_start",&t_since_fill_start,"t_since_fill_start/I");
     TBranch * b_event_t_string = outTree->Branch("event_t_string",&event_t_string);
-    TBranch * b_event_trigger_time_tag = outTree->Branch("event_trigger_time_tag",&event_trigger_time_tag,"event_trigger_time_tag/L");
+    TBranch * b_event_trigger_time_tag_b0 = outTree->Branch("event_trigger_time_tag_b0",&event_trigger_time_tag_b0,"event_trigger_time_tag_b0/L");
+    TBranch * b_event_trigger_time_tag_b1 = outTree->Branch("event_trigger_time_tag_b1",&event_trigger_time_tag_b1,"event_trigger_time_tag_b1/L");
 
     TBranch * b_chan = outTree->Branch("chan",&v_chan);
     TBranch * b_triggerCandidates = outTree->Branch("triggerCandidates",&v_triggerCandidates);
     TBranch * b_triggerCandidatesEnd = outTree->Branch("triggerCandidatesEnd",&v_triggerCandidatesEnd);
     TBranch * b_triggerCandidatesChannel = outTree->Branch("triggerCandidatesChannel",&v_triggerCandidatesChannel);
     TBranch * b_layer = outTree->Branch("layer",&v_layer);
+    TBranch * b_row = outTree->Branch("row",&v_row);
+    TBranch * b_column = outTree->Branch("column",&v_column);
+    TBranch * b_type = outTree->Branch("type",&v_type);
     TBranch * b_height = outTree->Branch("height",&v_height);
     TBranch * b_time = outTree->Branch("time",&v_time);
     TBranch * b_time_module_calibrated = outTree->Branch("time_module_calibrated",&v_time_module_calibrated);
@@ -860,7 +1018,8 @@ void prepareOutBranches(){
     TBranch * b_sideband_mean = outTree->Branch("sideband_mean",&v_sideband_mean);
     TBranch * b_sideband_RMS = outTree->Branch("sideband_RMS",&v_sideband_RMS);
 
-    TBranch * b_groupTDC = outTree->Branch("groupTDC",&v_groupTDC);
+    TBranch * b_groupTDC_b0 = outTree->Branch("groupTDC_b0",&v_groupTDC_b0);
+    TBranch * b_groupTDC_b1 = outTree->Branch("groupTDC_b1",&v_groupTDC_b1);
 
     TBranch * b_max_0 = outTree->Branch("max_0",&max_0,"max_0/F");	
     TBranch * b_max_1 = outTree->Branch("max_1",&max_1,"max_1/F");	
@@ -878,6 +1037,22 @@ void prepareOutBranches(){
     TBranch * b_max_13 = outTree->Branch("max_13",&max_13,"max_13/F");	
     TBranch * b_max_14 = outTree->Branch("max_14",&max_14,"max_14/F");	
     TBranch * b_max_15 = outTree->Branch("max_15",&max_15,"max_15/F");	
+    TBranch * b_max_16 = outTree->Branch("max_16",&max_16,"max_16/F");  
+    TBranch * b_max_17 = outTree->Branch("max_17",&max_17,"max_17/F");  
+    TBranch * b_max_18 = outTree->Branch("max_18",&max_18,"max_18/F");  
+    TBranch * b_max_19 = outTree->Branch("max_19",&max_19,"max_19/F");  
+    TBranch * b_max_20 = outTree->Branch("max_20",&max_20,"max_20/F");  
+    TBranch * b_max_21 = outTree->Branch("max_21",&max_21,"max_21/F");  
+    TBranch * b_max_22 = outTree->Branch("max_22",&max_22,"max_22/F");  
+    TBranch * b_max_23 = outTree->Branch("max_23",&max_23,"max_23/F");  
+    TBranch * b_max_24 = outTree->Branch("max_24",&max_24,"max_24/F");  
+    TBranch * b_max_25 = outTree->Branch("max_25",&max_25,"max_25/F");  
+    TBranch * b_max_26 = outTree->Branch("max_26",&max_26,"max_26/F");  
+    TBranch * b_max_27 = outTree->Branch("max_27",&max_27,"max_27/F");  
+    TBranch * b_max_28 = outTree->Branch("max_28",&max_28,"max_28/F");  
+    TBranch * b_max_29 = outTree->Branch("max_29",&max_29,"max_29/F");  
+    TBranch * b_max_30 = outTree->Branch("max_30",&max_30,"max_30/F");  
+    TBranch * b_max_31 = outTree->Branch("max_31",&max_31,"max_31/F");  
 
 
 
@@ -885,11 +1060,15 @@ void prepareOutBranches(){
     outTree->SetBranchAddress("event",&event,&b_event);
     outTree->SetBranchAddress("run",&runNum,&b_run);
     outTree->SetBranchAddress("file",&fileNum,&b_file);
-    outTree->SetBranchAddress("event_time",&event_time,&b_event_time);
+    outTree->SetBranchAddress("event_time_b0",&event_time_b0,&b_event_time_b0);
+    outTree->SetBranchAddress("event_time_b1",&event_time_b1,&b_event_time_b1);
     outTree->SetBranchAddress("t_since_fill_start",&t_since_fill_start,&b_t_since_fill_start);
     outTree->SetBranchAddress("fill",&fillNum,&b_fill);
     outTree->SetBranchAddress("beam",&beam,&b_beam);
-    outTree->SetBranchAddress("event_trigger_time_tag",&event_trigger_time_tag,&b_event_trigger_time_tag);
+    outTree->SetBranchAddress("present_b0",&present_b0,&b_present_b0);
+    outTree->SetBranchAddress("present_b1",&present_b1,&b_present_b1);
+    outTree->SetBranchAddress("event_trigger_time_tag_b0",&event_trigger_time_tag_b0,&b_event_trigger_time_tag_b0);
+    outTree->SetBranchAddress("event_trigger_time_tag_b1",&event_trigger_time_tag_b1,&b_event_trigger_time_tag_b1);
 
     //outTree->SetBranchAddress("event_t_string",&event_t_string,&b_event_t_string);
     outTree->SetBranchAddress("chan",&v_chan,&b_chan);
@@ -897,6 +1076,9 @@ void prepareOutBranches(){
     outTree->SetBranchAddress("triggerCandidatesEnd",&v_triggerCandidatesEnd,&b_triggerCandidatesEnd);
     outTree->SetBranchAddress("triggerCandidatesChannel",&v_triggerCandidatesChannel,&b_triggerCandidatesChannel);
     outTree->SetBranchAddress("layer",&v_layer,&b_layer);
+    outTree->SetBranchAddress("row",&v_row,&b_row);
+    outTree->SetBranchAddress("column",&v_column,&b_column);
+    outTree->SetBranchAddress("type",&v_type,&b_type);
     outTree->SetBranchAddress("height",&v_height,&b_height);
     outTree->SetBranchAddress("time_module_calibrated",&v_time_module_calibrated,&b_time_module_calibrated);
     outTree->SetBranchAddress("time",&v_time,&b_time);
@@ -912,7 +1094,8 @@ void prepareOutBranches(){
     outTree->SetBranchAddress("sideband_mean",&v_sideband_mean,&b_sideband_mean);
     outTree->SetBranchAddress("sideband_RMS",&v_sideband_RMS,&b_sideband_RMS);
 
-    outTree->SetBranchAddress("groupTDC",&v_groupTDC,&b_groupTDC);
+    outTree->SetBranchAddress("groupTDC_b0",&v_groupTDC_b0,&b_groupTDC_b0);
+    outTree->SetBranchAddress("groupTDC_b1",&v_groupTDC_b1,&b_groupTDC_b1);
 
     outTree->SetBranchAddress("max_0",&max_0,&b_max_0);
     outTree->SetBranchAddress("max_1",&max_1,&b_max_1);
@@ -923,12 +1106,29 @@ void prepareOutBranches(){
     outTree->SetBranchAddress("max_6",&max_6,&b_max_6);
     outTree->SetBranchAddress("max_7",&max_7,&b_max_7);
     outTree->SetBranchAddress("max_8",&max_8,&b_max_8);
+    outTree->SetBranchAddress("max_9",&max_9,&b_max_9);
     outTree->SetBranchAddress("max_10",&max_10,&b_max_10);
     outTree->SetBranchAddress("max_11",&max_11,&b_max_11);
     outTree->SetBranchAddress("max_12",&max_12,&b_max_12);
     outTree->SetBranchAddress("max_13",&max_13,&b_max_13);
     outTree->SetBranchAddress("max_14",&max_14,&b_max_14);
     outTree->SetBranchAddress("max_15",&max_15,&b_max_15);
+    outTree->SetBranchAddress("max_16",&max_16,&b_max_16);
+    outTree->SetBranchAddress("max_17",&max_17,&b_max_17);
+    outTree->SetBranchAddress("max_18",&max_18,&b_max_18);
+    outTree->SetBranchAddress("max_19",&max_19,&b_max_19);
+    outTree->SetBranchAddress("max_20",&max_20,&b_max_20);
+    outTree->SetBranchAddress("max_21",&max_21,&b_max_21);
+    outTree->SetBranchAddress("max_22",&max_22,&b_max_22);
+    outTree->SetBranchAddress("max_23",&max_23,&b_max_23);
+    outTree->SetBranchAddress("max_24",&max_24,&b_max_24);
+    outTree->SetBranchAddress("max_25",&max_25,&b_max_25);
+    outTree->SetBranchAddress("max_26",&max_26,&b_max_26);
+    outTree->SetBranchAddress("max_27",&max_27,&b_max_27);
+    outTree->SetBranchAddress("max_28",&max_28,&b_max_28);
+    outTree->SetBranchAddress("max_29",&max_29,&b_max_29);
+    outTree->SetBranchAddress("max_30",&max_30,&b_max_30);
+    outTree->SetBranchAddress("max_31",&max_31,&b_max_31);
 
 
 }
@@ -939,6 +1139,9 @@ void clearOutBranches(){
     v_triggerCandidatesEnd->clear();
     v_triggerCandidatesChannel->clear();
     v_layer->clear();
+    v_row->clear();
+    v_column->clear();
+    v_type->clear();
     v_height->clear();
     v_time->clear();
     v_time_module_calibrated->clear();
@@ -953,7 +1156,9 @@ void clearOutBranches(){
     v_quiet->clear();
     v_presample_mean->clear();
     v_presample_RMS->clear();
-    v_groupTDC->clear();
+    v_groupTDC_b0->clear();
+    v_groupTDC_b1->clear();
+
 }
 
 
@@ -985,9 +1190,13 @@ void loadBranchesMilliDAQ(){
 }
 
 void loadWavesMilliDAQ(){
+    int board,chan;
     for(int i=0;i<numChan;i++){
-	if(waves[i]) delete waves[i];
-	waves[i] = (TH1D*) evt->GetWaveform(i, Form("h%i",i));
+    	if(waves[i]) delete waves[i];
+        //waves[i] = (TH1D*) evt->GetWaveform(i, Form("h%i",i));
+        board = i<=15 ? 0 : 1;
+        chan = i<=15 ? i : i-16;
+        waves[i] = (TH1D*)evt->GetWaveform(board, chan, Form("h%i",i));
     }
 }
 

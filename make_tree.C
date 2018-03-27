@@ -45,7 +45,7 @@ using namespace std;
 //////////////////////////////////////////
 
 // Compile like this:
-// g++ -o make_tree_dual make_tree_dual.C /net/cms26/cms26r0/milliqan/milliDAQ/libMilliDAQ.so `root-config --cflags --glibs` -Wno-narrowing
+// g++ -o make_tree make_tree.C /net/cms26/cms26r0/milliqan/milliDAQ/libMilliDAQ.so `root-config --cflags --glibs` -Wno-narrowing
 
 //////////////////////////////////////////
 
@@ -168,11 +168,18 @@ float channelCalibrations[16];
 // float channelCalibrations[] = {0.,0.,-2.17,-7.49,0.48,0.,1.17,11.44,1.15,0.,-6.41,-4.81,1.2,0.,25.7,6.8};
 TTree * inTree;
 TTree * outTree;
+
+Long64_t initTDC=-1;
+Long64_t initSecs=-1;
+Long64_t prevTDC=-1;
+int nRollOvers=0;
+
 int event = 0;
 int fileNum=0;
 int runNum=0;
 Long64_t event_time_b0=0;
 Long64_t event_time_b1=0;
+double event_time_fromTDC=0;
 bool present_b0;
 bool present_b1;
 int t_since_fill_start=0;
@@ -207,6 +214,11 @@ vector<float> * v_sideband_RMS = new vector<float>();
 
 vector<Long64_t> * v_groupTDC_b0 = new vector<Long64_t>();
 vector<Long64_t> * v_groupTDC_b1 = new vector<Long64_t>();
+
+vector<float> * v_bx;
+vector<float> * v_by;
+vector<float> * v_bz;
+
 
 float triggerThreshold = 5;
 bool addTriggerTimes = true;
@@ -250,7 +262,9 @@ TString milliqanOfflineDir="/net/cms26/cms26r0/milliqan/milliqanOffline/";
 
 void make_tree(TString fileName, int eventNum=-1, TString tag="",float rangeMin=-1.,float rangeMax=-1.);
 void loadFillList(TString fillFile=milliqanOfflineDir+"collisionsTimeList.txt");
+void loadFieldList(TString fieldFile=milliqanOfflineDir+"environ_data_timestamp.txt");
 pair<int,int> findFill(int seconds);
+int findField(int seconds);
 void loadBranchesMilliDAQ();
 void loadWavesMilliDAQ();
 void loadBranchesInteractiveDAQ();
@@ -289,6 +303,9 @@ void defineColors(){
 //start time [s], end time [s], fill number, luminosity
 vector<std::tuple<int, int, int, float>> fillList; 
 
+//timestamp x1 y1 z1 ... x4 y4 z4
+vector<std::tuple<int, float,float,float,float,float,float,float,float,float,float,float,float >> fieldList; 
+
 # ifndef __CINT__  // the following code will be invisible for the interpreter
 int main(int argc, char **argv)
 {
@@ -309,6 +326,7 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMin,float
     if(eventNum>=0) displayMode=true;
     if(displayMode) cout<<"Display tag is "<<tag<<endl;
     loadFillList();
+    loadFieldList();
 
     TString inFileName = fileName;
     TFile *f = TFile::Open(inFileName, "READ");
@@ -427,26 +445,40 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMin,float
 
 
 	if(milliDAQ) {
-	    fillNum=0;
-	    t_since_fill_start= -1;
-	    Long64_t secs = evt->digitizers[0].DAQTimeStamp.GetSec();
-	    pair<int,int> fillInfo = findFill(secs);
-	    fillNum= fillInfo.first;
-	    t_since_fill_start=fillInfo.second;
+        if(initSecs<0){ //if timestamps for first event are uninitialized
+            if(evt->digitizers[0].DataPresent){ //If this event exists
+                initSecs=evt->digitizers[0].DAQTimeStamp.GetSec();
+                initTDC=evt->digitizers[0].TDC[0];
+                prevTDC=initTDC;
+            }
+        }
 
-	    if(fillNum>0) beam=true;
-	    else beam = false;
-	    //This defines the time in seconds since 00:00:00 on 18/09/2017 
-	    event_time_b0 = secs - 1505692800;
+        int secs = evt->digitizers[0].DAQTimeStamp.GetSec();
+	    //This defines the time in seconds in standard unix epoch since 1970
+	    event_time_b0 = secs;
+
+        Long64_t thisTDC = evt->digitizers[0].TDC[0];
+        
+        //Check if rollover has happened since last event: if previous time is more than 10 minutes later than current time 
+        //NB events are not written strictly in chronological order
+        Long64_t diff = prevTDC - thisTDC;
+        if(diff > 1.2e+11) nRollOvers++;
+        //For each tDC rollover: add max value: pow(2,40)
+        event_time_fromTDC = 5.0e-9*(thisTDC+nRollOvers*pow(2,40)-initTDC)+initSecs;
+        //update previous TDC holder for next event
+        prevTDC = thisTDC;
+
 
         //in case second digitizer has different time
         secs = evt->digitizers[1].DAQTimeStamp.GetSec();
-        event_time_b1 = secs - 1505692800;
+        event_time_b1 = secs ;
+
 
 	    event_trigger_time_tag_b0 = evt->digitizers[0].TriggerTimeTag;
         event_trigger_time_tag_b1 = evt->digitizers[1].TriggerTimeTag;
 
-	    event_t_string = evt->digitizers[0].DAQTimeStamp.AsString("s");
+	    //event_t_string = evt->digitizers[0].DAQTimeStamp.AsString("s");
+        event_t_string = TTimeStamp(event_time_fromTDC).AsString("s");
 
 	    for(int ig=0; ig<8; ig++){
     		v_groupTDC_b0->push_back(evt->digitizers[0].TDC[ig]);
@@ -455,6 +487,36 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMin,float
 
         present_b0 = evt->digitizers[0].DataPresent;
         present_b1 = evt->digitizers[1].DataPresent;
+
+        fillNum=0;
+        t_since_fill_start= -1;
+        secs = round(event_time_fromTDC);
+        pair<int,int> fillInfo = findFill(secs);
+        fillNum= fillInfo.first;
+        t_since_fill_start=fillInfo.second;
+
+        if(fillNum>0) beam=true;
+        else beam = false;
+
+
+        int fieldPoint =  findField(secs);
+        v_bx->push_back(get<1>(fieldList[fieldPoint]));
+        v_bx->push_back(get<4>(fieldList[fieldPoint]));
+        v_bx->push_back(get<7>(fieldList[fieldPoint]));
+        v_bx->push_back(get<10>(fieldList[fieldPoint]));
+
+        v_by->push_back(get<2>(fieldList[fieldPoint]));
+        v_by->push_back(get<5>(fieldList[fieldPoint]));
+        v_by->push_back(get<8>(fieldList[fieldPoint]));
+        v_by->push_back(get<11>(fieldList[fieldPoint]));
+
+        v_bz->push_back(get<3>(fieldList[fieldPoint]));
+        v_bz->push_back(get<6>(fieldList[fieldPoint]));
+        v_bz->push_back(get<9>(fieldList[fieldPoint]));
+        v_bz->push_back(get<12>(fieldList[fieldPoint]));
+
+        //get<2>(fillList[index_of_first_fill_with_larger_start_time-1])
+
 
 	}
 	else{ event_time_b0=0;event_time_b1=0;event_t_string="";fillNum=0;beam=false;}
@@ -693,14 +755,20 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
     if(ic==15) continue;
 	wavesShifted[ic]->SetAxisRange(timeRange[0],timeRange[1]);
 	wavesShifted[ic]->SetMaximum(maxheight);
-
-	h1cosmetic(wavesShifted[ic],ic);
+    int column= chanMap[ic][0];
+    int row= chanMap[ic][1];
+    int layer= chanMap[ic][2];
+    int type= chanMap[ic][3];
+    int oldChanPos = 4-2*(row-1)+column-1+6*(layer-1);
+    if(type!=0) continue;
+	h1cosmetic(wavesShifted[ic],oldChanPos);
 	if(i==0) wavesShifted[ic]->Draw("hist");
 	else wavesShifted[ic]->Draw("hist same");
 
 	leg.AddEntry(wavesShifted[ic],Form("Channel %i",ic),"l");
 	//Show boundaries of pulse
-	TLine line; line.SetLineWidth(2); line.SetLineStyle(2);	line.SetLineColor(colors[ic]);
+
+	TLine line; line.SetLineWidth(2); line.SetLineStyle(2);	line.SetLineColor(colors[oldChanPos]);
 	for(uint ip=0; ip<boundsShifted[ic].size();ip++){
 	    if (boundsShifted[ic][ip][0] > timeRange[0] && boundsShifted[ic][ip][1] < timeRange[1]){
 		line.DrawLine(boundsShifted[ic][ip][0],0,boundsShifted[ic][ip][0],0.2*maxheight);
@@ -985,11 +1053,13 @@ void prepareOutBranches(){
     TBranch * b_run = outTree->Branch("run",&runNum,"run/I");
     TBranch * b_file = outTree->Branch("file",&fileNum,"file/I");
     TBranch * b_fill = outTree->Branch("fill",&fillNum,"fill/I");
+    TBranch * b_nRollOvers = outTree->Branch("nRollOvers",&nRollOvers,"nRollOvers/I");
     TBranch * b_beam = outTree->Branch("beam",&beam,"beam/O");
     TBranch * b_present_b0 = outTree->Branch("present_b0",&present_b0,"present_b0/O");
     TBranch * b_present_b1 = outTree->Branch("present_b1",&present_b1,"present_b1/O");
     TBranch * b_event_time_b0 = outTree->Branch("event_time_b0",&event_time_b0,"event_time_b0/L");
     TBranch * b_event_time_b1 = outTree->Branch("event_time_b1",&event_time_b1,"event_time_b1/L");
+    TBranch * b_event_time_fromTDC = outTree->Branch("event_time_fromTDC",&event_time_fromTDC,"event_time_fromTDC/D");
     TBranch * b_t_since_fill_start = outTree->Branch("t_since_fill_start",&t_since_fill_start,"t_since_fill_start/I");
     TBranch * b_event_t_string = outTree->Branch("event_t_string",&event_t_string);
     TBranch * b_event_trigger_time_tag_b0 = outTree->Branch("event_trigger_time_tag_b0",&event_trigger_time_tag_b0,"event_trigger_time_tag_b0/L");
@@ -1020,6 +1090,10 @@ void prepareOutBranches(){
 
     TBranch * b_groupTDC_b0 = outTree->Branch("groupTDC_b0",&v_groupTDC_b0);
     TBranch * b_groupTDC_b1 = outTree->Branch("groupTDC_b1",&v_groupTDC_b1);
+
+    TBranch * b_bx = outTree->Branch("bx",&v_bx);
+    TBranch * b_by = outTree->Branch("by",&v_by);
+    TBranch * b_bz = outTree->Branch("bz",&v_bz);
 
     TBranch * b_max_0 = outTree->Branch("max_0",&max_0,"max_0/F");	
     TBranch * b_max_1 = outTree->Branch("max_1",&max_1,"max_1/F");	
@@ -1060,8 +1134,10 @@ void prepareOutBranches(){
     outTree->SetBranchAddress("event",&event,&b_event);
     outTree->SetBranchAddress("run",&runNum,&b_run);
     outTree->SetBranchAddress("file",&fileNum,&b_file);
+    outTree->SetBranchAddress("nRollOvers",&nRollOvers,&b_nRollOvers);
     outTree->SetBranchAddress("event_time_b0",&event_time_b0,&b_event_time_b0);
     outTree->SetBranchAddress("event_time_b1",&event_time_b1,&b_event_time_b1);
+    outTree->SetBranchAddress("event_time_fromTDC",&event_time_fromTDC,&b_event_time_fromTDC);
     outTree->SetBranchAddress("t_since_fill_start",&t_since_fill_start,&b_t_since_fill_start);
     outTree->SetBranchAddress("fill",&fillNum,&b_fill);
     outTree->SetBranchAddress("beam",&beam,&b_beam);
@@ -1096,6 +1172,10 @@ void prepareOutBranches(){
 
     outTree->SetBranchAddress("groupTDC_b0",&v_groupTDC_b0,&b_groupTDC_b0);
     outTree->SetBranchAddress("groupTDC_b1",&v_groupTDC_b1,&b_groupTDC_b1);
+
+    outTree->SetBranchAddress("bx",&v_bx,&b_bx);
+    outTree->SetBranchAddress("by",&v_by,&b_by);
+    outTree->SetBranchAddress("bz",&v_bz,&b_bz);
 
     outTree->SetBranchAddress("max_0",&max_0,&b_max_0);
     outTree->SetBranchAddress("max_1",&max_1,&b_max_1);
@@ -1158,6 +1238,10 @@ void clearOutBranches(){
     v_presample_RMS->clear();
     v_groupTDC_b0->clear();
     v_groupTDC_b1->clear();
+    v_bx->clear();
+    v_by->clear();
+    v_bz->clear();
+
 
 }
 
@@ -1284,6 +1368,44 @@ pair<int,int> findFill(int seconds){
 	time_since_start = seconds - get<0>(fillList[index_of_first_fill_with_larger_start_time-1]); //time of this event - start time of fill
     }
     return make_pair(this_fill,time_since_start);
+}
+
+
+
+void loadFieldList(TString fieldFile){
+    string timestamp;
+    int seconds;
+    float x1,y1,z1,x2,y2,z2,x3,y3,z3,x4,y4,z4;
+    
+
+    ifstream infile;
+    infile.open(fieldFile); 
+    if(!infile.good()){
+        cout<<"Bad field file: "<<fieldFile<<endl;
+        return;}
+    infile.ignore(10000,'\n'); //skip first line
+    while(infile >> timestamp >> std::setprecision(5) >> x1>>y1>>z1>>x2>>y2>>z2>>x3>>y3>>z3>>x4>>y4>>z4>>seconds){
+//    if(end<=start && end>0) cout<<"Error in fill time list"<<endl; //end == -1 indicates ongoing fill
+        //cout<<Form("Appending %i %i %i %0.2f",start,end,fillnumber,lumi)<<endl;
+        fieldList.push_back(make_tuple(seconds,x1,y1,z1,x2,y2,z2,x3,y3,z3,x4,y4,z4));
+//        cout<<timestamp<<" "<< x1<<" "<<y1<<" "<<z1<<" "<<x2<<" "<<y2<<" "<<z2<<" "<<x3<<" "<<y3<<" "<<z3<<" "<<x4<<" "<<y4<<" "<<z4<<endl;
+    }
+    sort(fieldList.begin(),fieldList.end());
+    cout<<"Loaded "<<fieldList.size()<<" field measurements from "<<fieldFile<<endl;
+
+}
+int findField(int seconds){
+    auto index_of_first_point_with_larger_time = distance(fieldList.begin(), lower_bound(fieldList.begin(),fieldList.end(), 
+        make_tuple(seconds, 0., 0.,0., 0.,0., 0.,0., 0.,0., 0.,0., 0.) ));
+    //cout<<"index "<<index_of_first_fill_with_larger_start_time<<endl;
+    int this_point=0;
+
+    if(fabs(seconds-get<0>(fieldList[index_of_first_point_with_larger_time -1])) < fabs(seconds-get<0>(fieldList[index_of_first_point_with_larger_time])))
+        this_point = index_of_first_point_with_larger_time -1;
+    else
+        this_point = index_of_first_point_with_larger_time;
+
+    return this_point;
 }
 
 static inline void rtrim(std::string &s) {

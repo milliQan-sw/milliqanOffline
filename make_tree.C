@@ -172,6 +172,7 @@ TTree * outTree;
 Long64_t initTDC=-1;
 Long64_t initSecs=-1;
 Long64_t prevTDC=-1;
+
 int nRollOvers=0;
 
 int event = 0;
@@ -262,7 +263,8 @@ TString milliqanOfflineDir="/net/cms26/cms26r0/milliqan/milliqanOffline/";
 
 void make_tree(TString fileName, int eventNum=-1, TString tag="",float rangeMin=-1.,float rangeMax=-1.);
 void loadFillList(TString fillFile=milliqanOfflineDir+"collisionsTimeList.txt");
-void loadFieldList(TString fieldFile=milliqanOfflineDir+"environ_data_timestamp.txt");
+vector<TString> getFieldFileList(TString location);
+void loadFieldList(TString fieldFile);
 pair<int,int> findFill(int seconds);
 int findField(int seconds);
 void loadBranchesMilliDAQ();
@@ -326,7 +328,7 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMin,float
     if(eventNum>=0) displayMode=true;
     if(displayMode) cout<<"Display tag is "<<tag<<endl;
     loadFillList();
-    loadFieldList();
+
 
     TString inFileName = fileName;
     TFile *f = TFile::Open(inFileName, "READ");
@@ -395,6 +397,13 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMin,float
     //if(!displayMode)
     cout<<"Starting event loop"<<endl;
 
+    //Load entry 0 in order to get timestamp of first event to find corret field information
+    inTree->GetEntry(0);
+    TString fieldFileLocation ="/net/cms26/cms26r0/milliqan/EnvironSensorData";
+    vector<TString> fieldFiles = getFieldFileList(fieldFileLocation);
+    for(int i=0;i<fieldFiles.size();i++){
+        loadFieldList(fieldFiles[i]);
+    }
 
     for(int i=0;i<maxEvents;i++){
 	if(displayMode && i!=eventNum) continue; //Find specified event
@@ -442,8 +451,7 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMin,float
         max_31= -1.*waves[31]->GetMinimum();
 
 	}
-
-
+    
 	if(milliDAQ) {
         if(initSecs<0){ //if timestamps for first event are uninitialized
             if(evt->digitizers[0].DataPresent){ //If this event exists
@@ -471,7 +479,7 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMin,float
 
         //in case second digitizer has different time
         secs = evt->digitizers[1].DAQTimeStamp.GetSec();
-        event_time_b1 = secs ;
+        event_time_b1 = secs;
 
 
 	    event_trigger_time_tag_b0 = evt->digitizers[0].TriggerTimeTag;
@@ -498,23 +506,41 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMin,float
         if(fillNum>0) beam=true;
         else beam = false;
 
-
+       // cout<<"This secs "<<secs<<endl;
         int fieldPoint =  findField(secs);
-        v_bx->push_back(get<1>(fieldList[fieldPoint]));
-        v_bx->push_back(get<4>(fieldList[fieldPoint]));
-        v_bx->push_back(get<7>(fieldList[fieldPoint]));
-        v_bx->push_back(get<10>(fieldList[fieldPoint]));
+        //cout<<"This field point "<<fieldPoint<<endl;
+        if(fieldPoint>=0){
+            v_bx->push_back(get<1>(fieldList[fieldPoint]));
+            v_bx->push_back(get<4>(fieldList[fieldPoint]));
+            v_bx->push_back(get<7>(fieldList[fieldPoint]));
+            v_bx->push_back(get<10>(fieldList[fieldPoint]));
 
-        v_by->push_back(get<2>(fieldList[fieldPoint]));
-        v_by->push_back(get<5>(fieldList[fieldPoint]));
-        v_by->push_back(get<8>(fieldList[fieldPoint]));
-        v_by->push_back(get<11>(fieldList[fieldPoint]));
+            v_by->push_back(get<2>(fieldList[fieldPoint]));
+            v_by->push_back(get<5>(fieldList[fieldPoint]));
+            v_by->push_back(get<8>(fieldList[fieldPoint]));
+            v_by->push_back(get<11>(fieldList[fieldPoint]));
 
-        v_bz->push_back(get<3>(fieldList[fieldPoint]));
-        v_bz->push_back(get<6>(fieldList[fieldPoint]));
-        v_bz->push_back(get<9>(fieldList[fieldPoint]));
-        v_bz->push_back(get<12>(fieldList[fieldPoint]));
+            v_bz->push_back(get<3>(fieldList[fieldPoint]));
+            v_bz->push_back(get<6>(fieldList[fieldPoint]));
+            v_bz->push_back(get<9>(fieldList[fieldPoint]));
+            v_bz->push_back(get<12>(fieldList[fieldPoint]));
+        }
+        else{
+            v_bx->push_back(-50);
+            v_bx->push_back(-50);
+            v_bx->push_back(-50);
+            v_bx->push_back(-50);
 
+            v_by->push_back(-50);
+            v_by->push_back(-50);
+            v_by->push_back(-50);
+            v_by->push_back(-50);
+
+            v_bz->push_back(-50);
+            v_bz->push_back(-50);
+            v_bz->push_back(-50);
+            v_bz->push_back(-50);
+        }
         //get<2>(fillList[index_of_first_fill_with_larger_start_time-1])
 
 
@@ -1371,6 +1397,18 @@ pair<int,int> findFill(int seconds){
 }
 
 
+vector<TString> getFieldFileList(TString location){
+    vector<TString> files;
+    TTimeStamp startOfFile = evt->digitizers[0].DAQTimeStamp;
+    int date = startOfFile.GetDate();
+    files.push_back(Form("%s/environ_data_%i.txt",location.Data(),date));
+
+    //Also include day after, in case it spans two days.
+    startOfFile.Add(86400); //add 24*3600 seconds
+    date = startOfFile.GetDate();
+    files.push_back(Form("%s/environ_data_%i.txt",location.Data(),date));
+    return files;
+}
 
 void loadFieldList(TString fieldFile){
     string timestamp;
@@ -1381,18 +1419,21 @@ void loadFieldList(TString fieldFile){
     ifstream infile;
     infile.open(fieldFile); 
     if(!infile.good()){
-        cout<<"Bad field file: "<<fieldFile<<endl;
+        cout<<"Field file doesn't exist: "<<fieldFile<<endl;
         return;}
     infile.ignore(10000,'\n'); //skip first line
-    while(infile >> timestamp >> std::setprecision(5) >> x1>>y1>>z1>>x2>>y2>>z2>>x3>>y3>>z3>>x4>>y4>>z4>>seconds){
+    while(infile >> seconds>> timestamp >> x1>>y1>>z1>>x2>>y2>>z2>>x3>>y3>>z3>>x4>>y4>>z4){
 //    if(end<=start && end>0) cout<<"Error in fill time list"<<endl; //end == -1 indicates ongoing fill
         //cout<<Form("Appending %i %i %i %0.2f",start,end,fillnumber,lumi)<<endl;
         fieldList.push_back(make_tuple(seconds,x1,y1,z1,x2,y2,z2,x3,y3,z3,x4,y4,z4));
 //        cout<<timestamp<<" "<< x1<<" "<<y1<<" "<<z1<<" "<<x2<<" "<<y2<<" "<<z2<<" "<<x3<<" "<<y3<<" "<<z3<<" "<<x4<<" "<<y4<<" "<<z4<<endl;
     }
     sort(fieldList.begin(),fieldList.end());
-    cout<<"Loaded "<<fieldList.size()<<" field measurements from "<<fieldFile<<endl;
+    cout<<"Loaded "<<fieldFile<<", "<<fieldList.size()<<" field measurements so far."<<endl;
+    // for (int i=0;i<10;i++){
+    //     cout<<get<0>(fieldList[i])<<" "<<get<1>(fieldList[i])<<" "<<get<2>(fieldList[i])<<endl;
 
+    // }
 }
 int findField(int seconds){
     auto index_of_first_point_with_larger_time = distance(fieldList.begin(), lower_bound(fieldList.begin(),fieldList.end(), 
@@ -1404,6 +1445,9 @@ int findField(int seconds){
         this_point = index_of_first_point_with_larger_time -1;
     else
         this_point = index_of_first_point_with_larger_time;
+
+    //Give garbage value if closest point is more than an hour away.
+    if(fabs(seconds - get<0>(fieldList[this_point])) > 3600) this_point=-1;
 
     return this_point;
 }

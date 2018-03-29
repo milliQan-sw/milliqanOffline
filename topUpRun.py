@@ -50,7 +50,7 @@ def main(arg1):
 			script.write("cd /net/cms26/cms26r0/milliqan/milliqanOffline\n")
 			for i in range(15):
 				if iFile>=nFiles: break
-				script.write("make_tree_v9 "+fileList[iFile]+"\n")
+				script.write("make_tree_v10 "+fileList[iFile]+"\n")
 				iFile = iFile+1
 
 			script.close()

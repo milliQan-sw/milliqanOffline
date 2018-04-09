@@ -463,10 +463,12 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMin,float
 
         int secs = evt->digitizers[0].DAQTimeStamp.GetSec();
 	    //This defines the time in seconds in standard unix epoch since 1970
-	    event_time_b0 = secs;
+	event_time_b0 = secs;
 
-        Long64_t thisTDC = evt->digitizers[0].TDC[0];
-        
+        Long64_t thisTDC;
+	if(evt->digitizers[0].DataPresent) thisTDC = evt->digitizers[0].TDC[0];
+        else thisTDC=prevTDC;
+
         //Check if rollover has happened since last event: if previous time is more than 10 minutes later than current time 
         //NB events are not written strictly in chronological order
         Long64_t diff = prevTDC - thisTDC;
@@ -507,7 +509,7 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMin,float
         else beam = false;
 
        // cout<<"This secs "<<secs<<endl;
-        int fieldPoint =  findField(secs);
+        int fieldPoint = findField(secs);
         //cout<<"This field point "<<fieldPoint<<endl;
         if(fieldPoint>=0){
             v_bx->push_back(get<1>(fieldList[fieldPoint]));

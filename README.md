@@ -18,8 +18,12 @@ The offline trees are automatically made at UCSB with the latest stable tag. The
 
 ### Compiling the code:
 ```bash
-g++ -o make_tree make_tree.C /net/cms26/cms26r0/milliqan/MilliDAQ/libMilliDAQ.so ``root-config --cflags --glibs`` -Wno-narrowing
+
+./compile.sh <target macro name>
+
 ```
+make_tree and make_tree_vN are both used by processRun and topUpRun, so both should be remade for official updates.
+
 ##To use common scripts, log onto milliqan username on SL6 machine (e.g. cms1, cms3, cms6, cms29)
 
 From anywhere, you can:
@@ -41,13 +45,15 @@ From anywhere, you can:
 		  -t TAG, --tag TAG     Filename tag
 		  -r RANGEFORTIME RANGEFORTIME, --rangeForTime RANGEFORTIME RANGEFORTIME
 		                        Force time range for p
+		  -b --displayPulseBounds:	 Show pulsefinding boundaries. Default is 1, use 0 to turn them off.
+		  -c --forceChans		Give list of channels to force them to appear in the display (e.g. -c 1 3 5 6 26 27)					  Otherwise only plotted if they reach 5 mV.
 
 
 
 ##### Tags and versions #######
 To mark a new version number after pushing a commit, make a new "lightweight tag" like this:
 ```bash
-git tag v7
+git tag v11
 git push --tags
 ```
 This tag name is used to define the version number and the tree directory name.

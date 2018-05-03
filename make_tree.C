@@ -225,6 +225,8 @@ vector<Long64_t> * v_groupTDC_b1 = new vector<Long64_t>();
 vector<float> * v_bx = new vector<float>();
 vector<float> * v_by = new vector<float>();
 vector<float> * v_bz = new vector<float>();
+vector<float> * v_max = new vector<float>();
+vector<float> * v_min = new vector<float>();
 
 
 float triggerThreshold = 5;
@@ -232,38 +234,6 @@ bool addTriggerTimes = true;
 
 
 //Temporary sanity check
-float max_0;
-float max_1;
-float max_2;
-float max_3;
-float max_4;
-float max_5;
-float max_6;
-float max_7;
-float max_8;
-float max_9;
-float max_10;
-float max_11;
-float max_12;
-float max_13;
-float max_14;
-float max_15;
-float max_16;
-float max_17;
-float max_18;
-float max_19;
-float max_20;
-float max_21;
-float max_22;
-float max_23;
-float max_24;
-float max_25;
-float max_26;
-float max_27;
-float max_28;
-float max_29;
-float max_30;
-float max_31;
 
 TString milliqanOfflineDir="/net/cms26/cms26r0/milliqan/milliqanOffline/";
 
@@ -454,38 +424,10 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMin,float
 
 	if(milliDAQ){
 	    //Waveforms are not inverted yet- done in processChannel
-	    max_0= -1.*waves[0]->GetMinimum();
-	    max_1= -1.*waves[1]->GetMinimum();
-	    max_2= -1.*waves[2]->GetMinimum();
-	    max_3= -1.*waves[3]->GetMinimum();
-	    max_4= -1.*waves[4]->GetMinimum();
-	    max_5= -1.*waves[5]->GetMinimum();
-	    max_6= -1.*waves[6]->GetMinimum();
-	    max_7= -1.*waves[7]->GetMinimum();
-	    max_8= -1.*waves[8]->GetMinimum();
-	    max_9= -1.*waves[9]->GetMinimum();
-	    max_10= -1.*waves[10]->GetMinimum();
-	    max_11= -1.*waves[11]->GetMinimum();
-	    max_12= -1.*waves[12]->GetMinimum();
-	    max_13= -1.*waves[13]->GetMinimum();
-	    max_14= -1.*waves[14]->GetMinimum();
-	    max_15= -1.*waves[15]->GetMinimum();
-        max_16= -1.*waves[16]->GetMinimum();
-        max_17= -1.*waves[17]->GetMinimum();
-        max_18= -1.*waves[18]->GetMinimum();
-        max_19= -1.*waves[19]->GetMinimum();
-        max_20= -1.*waves[20]->GetMinimum();
-        max_21= -1.*waves[21]->GetMinimum();
-        max_22= -1.*waves[22]->GetMinimum();
-        max_23= -1.*waves[23]->GetMinimum();
-        max_24= -1.*waves[24]->GetMinimum();
-        max_25= -1.*waves[25]->GetMinimum();
-        max_26= -1.*waves[26]->GetMinimum();
-        max_27= -1.*waves[27]->GetMinimum();
-        max_28= -1.*waves[28]->GetMinimum();
-        max_29= -1.*waves[29]->GetMinimum();
-        max_30= -1.*waves[30]->GetMinimum();
-        max_31= -1.*waves[31]->GetMinimum();
+	    for (int iTemp = 0; iTemp < 32; iTemp++){
+		v_max->push_back(-1.*waves[iTemp]->GetMinimum());
+		v_min->push_back(-1.*waves[iTemp]->GetMaximum());
+	    }
 
 	}
     
@@ -822,7 +764,7 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
 	int ic = chanList[i];	
     if(ic==15) continue;
 	wavesShifted[ic]->SetAxisRange(timeRange[0],timeRange[1]);
-	wavesShifted[ic]->SetMaximum(maxheight);
+	wavesShifted[ic]->SetMaximum(10);//maxheight);
     int column= chanMap[ic][0];
     int row= chanMap[ic][1];
     int layer= chanMap[ic][2];
@@ -1178,42 +1120,13 @@ void prepareOutBranches(){
     TBranch * b_groupTDC_b0 = outTree->Branch("groupTDC_b0",&v_groupTDC_b0);
     TBranch * b_groupTDC_b1 = outTree->Branch("groupTDC_b1",&v_groupTDC_b1);
 
+    TBranch * b_max = outTree->Branch("max",&v_max);
+    TBranch * b_min = outTree->Branch("min",&v_min);
+
     TBranch * b_bx = outTree->Branch("bx",&v_bx);
     TBranch * b_by = outTree->Branch("by",&v_by);
     TBranch * b_bz = outTree->Branch("bz",&v_bz);
 
-    TBranch * b_max_0 = outTree->Branch("max_0",&max_0,"max_0/F");	
-    TBranch * b_max_1 = outTree->Branch("max_1",&max_1,"max_1/F");	
-    TBranch * b_max_2 = outTree->Branch("max_2",&max_2,"max_2/F");	
-    TBranch * b_max_3 = outTree->Branch("max_3",&max_3,"max_3/F");	
-    TBranch * b_max_4 = outTree->Branch("max_4",&max_4,"max_4/F");	
-    TBranch * b_max_5 = outTree->Branch("max_5",&max_5,"max_5/F");	
-    TBranch * b_max_6 = outTree->Branch("max_6",&max_6,"max_6/F");	
-    TBranch * b_max_7 = outTree->Branch("max_7",&max_7,"max_7/F");	
-    TBranch * b_max_8 = outTree->Branch("max_8",&max_8,"max_8/F");	
-    TBranch * b_max_9 = outTree->Branch("max_9",&max_9,"max_9/F");	
-    TBranch * b_max_10 = outTree->Branch("max_10",&max_10,"max_10/F");	
-    TBranch * b_max_11 = outTree->Branch("max_11",&max_11,"max_11/F");	
-    TBranch * b_max_12 = outTree->Branch("max_12",&max_12,"max_12/F");	
-    TBranch * b_max_13 = outTree->Branch("max_13",&max_13,"max_13/F");	
-    TBranch * b_max_14 = outTree->Branch("max_14",&max_14,"max_14/F");	
-    TBranch * b_max_15 = outTree->Branch("max_15",&max_15,"max_15/F");	
-    TBranch * b_max_16 = outTree->Branch("max_16",&max_16,"max_16/F");  
-    TBranch * b_max_17 = outTree->Branch("max_17",&max_17,"max_17/F");  
-    TBranch * b_max_18 = outTree->Branch("max_18",&max_18,"max_18/F");  
-    TBranch * b_max_19 = outTree->Branch("max_19",&max_19,"max_19/F");  
-    TBranch * b_max_20 = outTree->Branch("max_20",&max_20,"max_20/F");  
-    TBranch * b_max_21 = outTree->Branch("max_21",&max_21,"max_21/F");  
-    TBranch * b_max_22 = outTree->Branch("max_22",&max_22,"max_22/F");  
-    TBranch * b_max_23 = outTree->Branch("max_23",&max_23,"max_23/F");  
-    TBranch * b_max_24 = outTree->Branch("max_24",&max_24,"max_24/F");  
-    TBranch * b_max_25 = outTree->Branch("max_25",&max_25,"max_25/F");  
-    TBranch * b_max_26 = outTree->Branch("max_26",&max_26,"max_26/F");  
-    TBranch * b_max_27 = outTree->Branch("max_27",&max_27,"max_27/F");  
-    TBranch * b_max_28 = outTree->Branch("max_28",&max_28,"max_28/F");  
-    TBranch * b_max_29 = outTree->Branch("max_29",&max_29,"max_29/F");  
-    TBranch * b_max_30 = outTree->Branch("max_30",&max_30,"max_30/F");  
-    TBranch * b_max_31 = outTree->Branch("max_31",&max_31,"max_31/F");  
 
 
 
@@ -1259,48 +1172,20 @@ void prepareOutBranches(){
 
     outTree->SetBranchAddress("groupTDC_b0",&v_groupTDC_b0,&b_groupTDC_b0);
     outTree->SetBranchAddress("groupTDC_b1",&v_groupTDC_b1,&b_groupTDC_b1);
+    outTree->SetBranchAddress("max",&v_max,&b_max);
+    outTree->SetBranchAddress("min",&v_min,&b_min);
 
     outTree->SetBranchAddress("bx",&v_bx,&b_bx);
     outTree->SetBranchAddress("by",&v_by,&b_by);
     outTree->SetBranchAddress("bz",&v_bz,&b_bz);
 
-    outTree->SetBranchAddress("max_0",&max_0,&b_max_0);
-    outTree->SetBranchAddress("max_1",&max_1,&b_max_1);
-    outTree->SetBranchAddress("max_2",&max_2,&b_max_2);
-    outTree->SetBranchAddress("max_3",&max_3,&b_max_3);
-    outTree->SetBranchAddress("max_4",&max_4,&b_max_4);
-    outTree->SetBranchAddress("max_5",&max_5,&b_max_5);
-    outTree->SetBranchAddress("max_6",&max_6,&b_max_6);
-    outTree->SetBranchAddress("max_7",&max_7,&b_max_7);
-    outTree->SetBranchAddress("max_8",&max_8,&b_max_8);
-    outTree->SetBranchAddress("max_9",&max_9,&b_max_9);
-    outTree->SetBranchAddress("max_10",&max_10,&b_max_10);
-    outTree->SetBranchAddress("max_11",&max_11,&b_max_11);
-    outTree->SetBranchAddress("max_12",&max_12,&b_max_12);
-    outTree->SetBranchAddress("max_13",&max_13,&b_max_13);
-    outTree->SetBranchAddress("max_14",&max_14,&b_max_14);
-    outTree->SetBranchAddress("max_15",&max_15,&b_max_15);
-    outTree->SetBranchAddress("max_16",&max_16,&b_max_16);
-    outTree->SetBranchAddress("max_17",&max_17,&b_max_17);
-    outTree->SetBranchAddress("max_18",&max_18,&b_max_18);
-    outTree->SetBranchAddress("max_19",&max_19,&b_max_19);
-    outTree->SetBranchAddress("max_20",&max_20,&b_max_20);
-    outTree->SetBranchAddress("max_21",&max_21,&b_max_21);
-    outTree->SetBranchAddress("max_22",&max_22,&b_max_22);
-    outTree->SetBranchAddress("max_23",&max_23,&b_max_23);
-    outTree->SetBranchAddress("max_24",&max_24,&b_max_24);
-    outTree->SetBranchAddress("max_25",&max_25,&b_max_25);
-    outTree->SetBranchAddress("max_26",&max_26,&b_max_26);
-    outTree->SetBranchAddress("max_27",&max_27,&b_max_27);
-    outTree->SetBranchAddress("max_28",&max_28,&b_max_28);
-    outTree->SetBranchAddress("max_29",&max_29,&b_max_29);
-    outTree->SetBranchAddress("max_30",&max_30,&b_max_30);
-    outTree->SetBranchAddress("max_31",&max_31,&b_max_31);
 
 
 }
 
 void clearOutBranches(){
+    v_max->clear();
+    v_min->clear();
     v_chan->clear();
     v_triggerCandidates->clear();
     v_triggerCandidatesEnd->clear();

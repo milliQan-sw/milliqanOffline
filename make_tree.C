@@ -192,6 +192,7 @@ string event_t_string;
 Long64_t event_trigger_time_tag_b0;
 Long64_t event_trigger_time_tag_b1;
 int fillNum;
+float fillAvgLumi=0;
 bool beam;
 mdaq::GlobalEvent * evt = new mdaq::GlobalEvent(); //for MilliDAQ output only
 mdaq::DemonstratorConfiguration * cfg = new mdaq::DemonstratorConfiguration(); 
@@ -238,10 +239,10 @@ bool addTriggerTimes = true;
 TString milliqanOfflineDir="/net/cms26/cms26r0/milliqan/milliqanOffline/";
 
 void make_tree(TString fileName, int eventNum=-1, TString tag="",float rangeMin=-1.,float rangeMax=-1., int displayPulseBounds=1, set<int> forceChan={});
-void loadFillList(TString fillFile=milliqanOfflineDir+"collisionsTimeList.txt");
+void loadFillList(TString fillFile=milliqanOfflineDir+"processedFillList2018.txt");
 vector<TString> getFieldFileList(TString location);
 void loadFieldList(TString fieldFile);
-pair<int,int> findFill(int seconds);
+tuple<int,int,float> findFill(int seconds);
 int findField(int seconds);
 void loadBranchesMilliDAQ();
 void loadWavesMilliDAQ();
@@ -278,8 +279,8 @@ void defineColors(){
 }
 
 //Fill list tuple format:
-//start time [s], end time [s], fill number, luminosity
-vector<std::tuple<int, int, int, float>> fillList; 
+//start time [s], end time [s], fill number, luminosity, average instantaneous lumi
+vector<std::tuple<int, int, int, float,float>> fillList; 
 
 //timestamp x1 y1 z1 ... x4 y4 z4
 vector<std::tuple<int, float,float,float,float,float,float,float,float,float,float,float,float >> fieldList; 
@@ -316,7 +317,6 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMin,float
     TString inFileName = fileName;
     TFile *f = TFile::Open(inFileName, "READ");
 
-    cout<<"Run "<<runNum<<", file "<<fileNum<<endl;
     if(milliDAQ){ 
         inTree = (TTree*)f->Get("Events"); 
 
@@ -357,7 +357,7 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMin,float
     baseFileName="UX5"+baseFileName;
     baseFileName.ReplaceAll(".root","");
 
-
+    cout<<"Run "<<runNum<<", file "<<fileNum<<endl;
     //TString version = GetStdoutFromCommand("git describe --tag --abbrev=0"); //fixme- this is currently evaluated at runtime, instead of compile time
     TString version = "shorttagplaceholder";
     if(version.Contains("placeholder")){cout<<"This macro was compiled incorrectly. Please compile this macro using compile.sh"<<endl;return;}
@@ -368,7 +368,7 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMin,float
 
     if(maxEvents<0) maxEvents=inTree->GetEntries();
     if(!displayMode) cout<<"Entries: "<<inTree->GetEntries()<<endl;
-    if((int)tubeSpecies.size()!=numChan) cout<<"Tube species map does not match number of channels"<<endl;
+    //if((int)tubeSpecies.size()!=numChan) cout<<"Tube species map does not match number of channels"<<endl;
 
     if(milliDAQ) loadBranchesMilliDAQ();
     else loadBranchesInteractiveDAQ();	
@@ -400,7 +400,7 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMin,float
 
 
     //if(!displayMode)
-    cout<<"Starting event loop"<<endl;
+    
 
     //Load entry 0 in order to get timestamp of first event to find corret field information
     inTree->GetEntry(0);
@@ -411,7 +411,7 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMin,float
     }
 
     if(debug) maxEvents=10;
-
+    cout<<"Starting event loop"<<endl;  
     for(int i=0;i<maxEvents;i++){
 	if(displayMode && i!=eventNum) continue; //Find specified event
 	if(i%1000==0) cout<<"Processing event "<<i<<endl;
@@ -479,10 +479,12 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMin,float
 
         fillNum=0;
         t_since_fill_start= -1;
+        fillAvgLumi=-1;
         secs = round(event_time_fromTDC);
-        pair<int,int> fillInfo = findFill(secs);
-        fillNum= fillInfo.first;
-        t_since_fill_start=fillInfo.second;
+        tuple<int,int,float> fillInfo = findFill(secs);
+        fillNum= get<0>(fillInfo);
+        t_since_fill_start= get<1>(fillInfo);
+        fillAvgLumi = get<2>(fillInfo);
 
         if(fillNum>0) beam=true;
         else beam = false;
@@ -526,7 +528,7 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMin,float
 
 
 	}
-	else{ event_time_b0=0;event_time_b1=0;event_t_string="";fillNum=0;beam=false;}
+	else{ event_time_b0=0;event_time_b1=0;event_t_string="";fillNum=0;beam=false;fillAvgLumi=-1;}
 
 	vector<vector<vector<float> > > allPulseBounds;
 	for(int ic=0;ic<numChan;ic++){
@@ -1084,6 +1086,7 @@ void prepareOutBranches(){
     TBranch * b_fill = outTree->Branch("fill",&fillNum,"fill/I");
     TBranch * b_nRollOvers = outTree->Branch("nRollOvers",&nRollOvers,"nRollOvers/I");
     TBranch * b_beam = outTree->Branch("beam",&beam,"beam/O");
+    TBranch * b_fillAvgLumi = outTree->Branch("fillAvgLumi",&fillAvgLumi,"fillAvgLumi/F");
     TBranch * b_present_b0 = outTree->Branch("present_b0",&present_b0,"present_b0/O");
     TBranch * b_present_b1 = outTree->Branch("present_b1",&present_b1,"present_b1/O");
     TBranch * b_event_time_b0 = outTree->Branch("event_time_b0",&event_time_b0,"event_time_b0/L");
@@ -1141,6 +1144,7 @@ void prepareOutBranches(){
     outTree->SetBranchAddress("t_since_fill_start",&t_since_fill_start,&b_t_since_fill_start);
     outTree->SetBranchAddress("fill",&fillNum,&b_fill);
     outTree->SetBranchAddress("beam",&beam,&b_beam);
+    outTree->SetBranchAddress("fillAvgLumi",&fillAvgLumi,&b_fillAvgLumi);
     outTree->SetBranchAddress("present_b0",&present_b0,&b_present_b0);
     outTree->SetBranchAddress("present_b1",&present_b1,&b_present_b1);
     outTree->SetBranchAddress("event_trigger_time_tag_b0",&event_trigger_time_tag_b0,&b_event_trigger_time_tag_b0);
@@ -1306,7 +1310,7 @@ void getFileCreationTime(const char *path) {
 void loadFillList(TString fillFile){
 
     int fillnumber, start,end;
-    float lumi;
+    float lumi,inst_lumi;
     string date,time;
 
     getFileCreationTime(fillFile.Data());
@@ -1314,11 +1318,11 @@ void loadFillList(TString fillFile){
     ifstream infile;
     infile.open(fillFile); 
 
-    while(infile >> fillnumber >> start >> end >> lumi >> date >> time){
+    while(infile >> fillnumber >> start >> end >> lumi >> date >> time >> inst_lumi){
 	if(end<=start && end>0) cout<<"Error in fill time list"<<endl; //end == -1 indicates ongoing fill
 	else{
 	    //cout<<Form("Appending %i %i %i %0.2f",start,end,fillnumber,lumi)<<endl;
-	    fillList.push_back(make_tuple(start,end,fillnumber,lumi));
+	    fillList.push_back(make_tuple(start,end,fillnumber,lumi,inst_lumi));
 	}
     }
     sort(fillList.begin(),fillList.end());
@@ -1327,20 +1331,22 @@ void loadFillList(TString fillFile){
 
 }
 
-pair<int,int> findFill(int seconds){
+tuple<int,int,float> findFill(int seconds){
     auto index_of_first_fill_with_larger_start_time = distance(fillList.begin(), lower_bound(fillList.begin(),fillList.end(), 
-		make_tuple(seconds, seconds, 0, 0.) ));
+		make_tuple(seconds, seconds, 0, 0.,0.) ));
     //cout<<"index "<<index_of_first_fill_with_larger_start_time<<endl;
     int this_fill=0;
     int time_since_start=-1;
+    float average_instantaneous_lumi=-1;
     if(index_of_first_fill_with_larger_start_time > (int)fillList.size()) this_fill=-1;
     //This event is during a fill if its time is less than the end time of the fill before the first fill with a larger start time
     else if(seconds < get<1>(fillList[index_of_first_fill_with_larger_start_time-1]) || get<1>(fillList[index_of_first_fill_with_larger_start_time-1])==-1){
 	//end time == -1 indicates ongoing fill 
 	this_fill = get<2>(fillList[index_of_first_fill_with_larger_start_time-1]); //fill number
 	time_since_start = seconds - get<0>(fillList[index_of_first_fill_with_larger_start_time-1]); //time of this event - start time of fill
+    average_instantaneous_lumi = get<4>(fillList[index_of_first_fill_with_larger_start_time-1]);
     }
-    return make_pair(this_fill,time_since_start);
+    return make_tuple(this_fill,time_since_start,average_instantaneous_lumi);
 }
 
 

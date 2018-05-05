@@ -18,7 +18,7 @@ def parse_args():
 	parser.add_argument("-t","--tag",help="Filename tag",default="")
 	parser.add_argument("-r","--rangeForTime",nargs=2,help="Force time range for plots (default is zoomed to pulses)",type=float)
 	parser.add_argument("-b","--displayPulseBounds",help="Show pulsefinding bounds (default True)",type=bool,default=True)
-	parser.add_argument("-c","--forceChans",nargs='+',help="List of channels to force in display.")
+	parser.add_argument("-c","--forceChans",nargs='+',help="List of channels to force in display (space separated, any length)")
 	args = parser.parse_args()
 	return args
 
@@ -33,9 +33,12 @@ def main(runNumber, selection, nEvents,tag="",rangeForTime=None,displayPulseBoun
 		else: print "Base file not found."	
 		#print "make_tree",treeName,eventNumber,tag
 		if rangeForTime != None:
-			args = ["make_tree",treeName,eventNumber,tag,str(rangeForTime[0]),str(rangeForTime[1]),str(int(displayPulseBounds))]+forceChans
+			args = ["make_tree",treeName,eventNumber,tag,str(rangeForTime[0]),str(rangeForTime[1]),str(int(displayPulseBounds))]
 		else:
-			args = ["make_tree",treeName,eventNumber,tag,"-1","-1",str(int(displayPulseBounds))]+forceChans
+			args = ["make_tree",treeName,eventNumber,tag,"-1","-1",str(int(displayPulseBounds))]
+		
+		if forceChans != None:
+			args = args + forceChans
 		
 		call(args)
 

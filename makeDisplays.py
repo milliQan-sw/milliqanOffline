@@ -17,12 +17,14 @@ def parse_args():
 	parser.add_argument("nEvents",help="Number of diplays to make",type=int)
 	parser.add_argument("-t","--tag",help="Filename tag",default="")
 	parser.add_argument("-r","--rangeForTime",nargs=2,help="Force time range for plots (default is zoomed to pulses)",type=float)
-	parser.add_argument("-b","--displayPulseBounds",help="Show pulsefinding bounds (default True)",type=bool,default=True)
+	parser.add_argument("--noBounds",help="Disable display of pulsefinding bounds.",action='store_true',default=False)
 	parser.add_argument("-c","--forceChans",nargs='+',help="List of channels to force in display (space separated, any length)")
 	args = parser.parse_args()
+	#print args
 	return args
 
-def main(runNumber, selection, nEvents,tag="",rangeForTime=None,displayPulseBounds=True,forceChans=[]):
+def main(runNumber, selection, nEvents,tag="",rangeForTime=None,noBounds=False,forceChans=[]):
+	displayPulseBounds = not noBounds
 	runNumber = str(runNumber)
 	table = findEvents.main(runNumber,selection,nEvents,tag)
 	for i in range(len(table)):
@@ -39,7 +41,7 @@ def main(runNumber, selection, nEvents,tag="",rangeForTime=None,displayPulseBoun
 		
 		if forceChans != None:
 			args = args + forceChans
-		
+	#	print args
 		call(args)
 
 if __name__ == "__main__":

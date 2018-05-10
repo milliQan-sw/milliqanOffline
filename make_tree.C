@@ -766,7 +766,7 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
 	int ic = chanList[i];	
     if(ic==15) continue;
 	wavesShifted[ic]->SetAxisRange(timeRange[0],timeRange[1]);
-	wavesShifted[ic]->SetMaximum(10);//maxheight);
+	//wavesShifted[ic]->SetMaximum(10);//maxheight);
     int column= chanMap[ic][0];
     int row= chanMap[ic][1];
     int layer= chanMap[ic][2];

@@ -532,11 +532,11 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMin,float
 
 	vector<vector<vector<float> > > allPulseBounds;
 	for(int ic=0;ic<numChan;ic++){
-	    if(ic==15){//skip timing card channel
+	   /* if(ic==15){//skip timing card channel
     		vector<vector<float> > empty;
     		allPulseBounds.push_back(empty);
     		continue;
-	    }
+	    }*/
 	    //	cout<<Form("Chan %i min: ",ic)<<waves[ic]->GetMinimum()<<endl;
 
 	    allPulseBounds.push_back(processChannel(ic));
@@ -733,21 +733,24 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
 		    boundShifted[iBoundVec][iBoundVec2] += channelCalibrations[ic]; 
 	}
 	if(boundShifted.size()>0 || waveShifted->GetMaximum()>drawThresh || forceChan.find(ic)!=forceChan.end()){
-	    chanList.push_back(ic);
-	    //Reset range to find correct maxima
-	    waveShifted->SetAxisRange(0,1024./sample_rate[ic/16]);
-	    //Keep track of max amplitude
-	    if(waveShifted->GetMaximum()>maxheight) maxheight=waveShifted->GetMaximum();
-	    if(boundShifted.size()>0){
-		//keep track of earliest pulse start time
-		if(boundShifted[0][0]<timeRange[0]) timeRange[0]=boundShifted[0][0];
-		//keep track of latest pulse end time (pulses are ordered chronologicaly for each channel)
-		if(boundShifted[boundShifted.size()-1][1]>timeRange[1]) timeRange[1]=boundShifted[boundShifted.size()-1][1];
+	    //if(ic==15 && forceChan.find(ic)==forceChan.end()) continue;
+        chanList.push_back(ic);
+        TString beamState = "off";
+        if(beam) beamState="on";
+        if (calibrateDisplay) waveShifted->SetTitle(Form("Run %i, File %i, Event %i (beam %s);Time [ns];Amplitude [mV];",runNum,fileNum,event,beamState.Data()));
+        else waveShifted->SetTitle(Form("Run %i, File %i, Event %i (beam %s);Uncalibrated Time [ns];Amplitude [mV];",runNum,fileNum,event,beamState.Data()));
+        if(ic!=15){ 
+    	    //Reset range to find correct maxima
+    	    waveShifted->SetAxisRange(0,1024./sample_rate[ic/16]);
+    	    //Keep track of max amplitude
+    	    if(waveShifted->GetMaximum()>maxheight) maxheight=waveShifted->GetMaximum();
+    	    if(boundShifted.size()>0){
+    		//keep track of earliest pulse start time
+    		if(boundShifted[0][0]<timeRange[0]) timeRange[0]=boundShifted[0][0];
+    		//keep track of latest pulse end time (pulses are ordered chronologicaly for each channel)
+    		if(boundShifted[boundShifted.size()-1][1]>timeRange[1]) timeRange[1]=boundShifted[boundShifted.size()-1][1];
 	    }
-	    TString beamState = "off";
-	    if(beam) beamState="on";
-	    if (calibrateDisplay) waveShifted->SetTitle(Form("Run %i, File %i, Event %i (beam %s);Time [ns];Amplitude [mV];",runNum,fileNum,event,beamState.Data()));
-	    else waveShifted->SetTitle(Form("Run %i, File %i, Event %i (beam %s);Uncalibrated Time [ns];Amplitude [mV];",runNum,fileNum,event,beamState.Data()));
+	    }
 	}
 	wavesShifted.push_back(waveShifted);
 	boundsShifted.push_back(boundShifted);
@@ -764,7 +767,8 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
     TLegend leg(0.45,0.9-depth,0.65,0.9);
     for(uint i=0;i<chanList.size();i++){
 	int ic = chanList[i];	
-    if(ic==15) continue;
+
+    if(ic==15 && forceChan.find(ic)==forceChan.end()) continue;
 	wavesShifted[ic]->SetAxisRange(timeRange[0],timeRange[1]);
 	//wavesShifted[ic]->SetMaximum(10);//maxheight);
     int column= chanMap[ic][0];
@@ -775,7 +779,7 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
 
     if(type==1) colorIndex = layer; //slabs: 0-3
     if(type==2) colorIndex = 4 + 3*(layer-1) + (column+1); //sheets
-
+    if(ic==15) colorIndex=1;
     //if(type!=0) continue;
 	h1cosmetic(wavesShifted[ic],colorIndex);
     if(type==1) wavesShifted[ic]->SetLineStyle(3);
@@ -856,8 +860,10 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
     int maxPerChannel = 10/chanList.size();
 
     for(int i=0;i<32;i++){
+
 	if(boundsShifted[i].size()>0 || wavesShifted[i]->GetMaximum()>drawThresh || forceChan.find(i)!=forceChan.end()){//if this channel has a pulse
-	    if(i==15) continue;
+        if(i==15 && forceChan.find(i)==forceChan.end()) continue;
+        //if(i==15) continue;
         //xyz
         int column= chanMap[i][0];
         int row= chanMap[i][1];
@@ -867,6 +873,8 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
         int colorIndex = 4-2*(row-1)+column-1+6*(layer-1);
         if(type==1) colorIndex = layer; //slabs: 0-3
         else if(type==2) colorIndex = 4 + 3*(layer-1) + (column+1); //sheets
+
+        if(i==15) colorIndex=1;
 
         TPave * pave;
         if (type==1){
@@ -911,6 +919,7 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
 	    tla.SetTextColor(kBlack);
 	    currentYpos-=height;
 	    tla.SetTextSize(0.035);
+
 	    for(int ip=0;ip<boundsShifted[i].size();ip++){
 		TString digis="%.1f";
 		if(v_height->at(pulseIndex)>10) digis = "%.0f";
@@ -927,7 +936,6 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
 	
     }
     }
-
 
     // tla.DrawLatexNDC(0.13,0.78,Form("Area: %0.2f",v_area->back()));
     // tla.DrawLatexNDC(0.13,0.73,Form("Duration: %0.2f",v_duration->back()));

@@ -712,6 +712,7 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
     timeRange[0]=1024./min(sample_rate[0],sample_rate[1]); timeRange[1]=0.;
     vector<vector<vector<float>>> boundsShifted;
     vector<TH1D*> wavesShifted;
+    float originalMaxHeights[32];
     for(uint ic=0;ic<bounds.size();ic++){
 	vector<vector<float>> boundShifted = bounds[ic];
 	TH1D * waveShifted = (TH1D*) waves[ic]->Clone();
@@ -770,7 +771,9 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
 
     if(ic==15 && forceChan.find(ic)==forceChan.end()) continue;
 	wavesShifted[ic]->SetAxisRange(timeRange[0],timeRange[1]);
-	//wavesShifted[ic]->SetMaximum(10);//maxheight);
+
+    originalMaxHeights[ic] = wavesShifted[ic]->GetMaximum();
+	wavesShifted[ic]->SetMaximum(maxheight);//maxheight);
     int column= chanMap[ic][0];
     int row= chanMap[ic][1];
     int layer= chanMap[ic][2];
@@ -915,7 +918,7 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
 
 	    tla.SetTextColor(colors[colorIndex]);
 	    tla.SetTextSize(0.04);
-	    tla.DrawLatexNDC(headerX,currentYpos,Form("Channel %i, N_{pulses}= %i",i,(int)boundsShifted[i].size()));
+	    tla.DrawLatexNDC(headerX,currentYpos,Form("Channel %i, V_{max} = %0.0f, N_{pulses}= %i",i,originalMaxHeights[i],(int)boundsShifted[i].size()));
 	    tla.SetTextColor(kBlack);
 	    currentYpos-=height;
 	    tla.SetTextSize(0.035);

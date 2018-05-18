@@ -12,14 +12,19 @@ import config as cfg
 
 def main(arg1):
 	run = str(arg1)
-
+#	print run
 	filesPerJob=10.
-	rawFileNumList=[ x.split("MilliQan_Run%s."%run)[1].split("_")[0] for x in glob.glob(cfg.rawDir+"Run"+run+"_*/*.root")]
+	rawFileNumList=[]
+	for x in glob.glob(cfg.rawDir+"Run"+run+"_*/*.root"):
+		if len(x.split("MilliQan_Run%s."%run))>1:
+			rawFileNumList.append(x.split("MilliQan_Run%s."%run)[1].split("_")[0])
+#	print rawFileNumList
+#	rawFileNumList=[ x.split("MilliQan_Run%s."%run)[1].split("_")[0] for x in glob.glob(cfg.rawDir+"Run"+run+"_*/*.root")]
 	processedFileNumList=[ x.split("MilliQan_Run%s."%run)[1].split("_")[0] for x in glob.glob(cfg.offlineDir+"trees/Run"+run+"_*/*.root")]
 	#glob.glob("/net/cms26/cms26r0/milliqan/UX5/Run"+run+"_*/*.root")
 	
 	missingFilenumbers= set(rawFileNumList) - set(processedFileNumList)
-	
+#	print missingFilenumbers
 	nFiles=len(missingFilenumbers)
 
 	if nFiles > 0: 
@@ -50,7 +55,7 @@ def main(arg1):
 			script.write("cd /net/cms26/cms26r0/milliqan/milliqanOffline\n")
 			for i in range(15):
 				if iFile>=nFiles: break
-				script.write("make_tree_v11 "+fileList[iFile]+"\n")
+				script.write("make_tree_v12 "+fileList[iFile]+"\n")
 				iFile = iFile+1
 
 			script.close()

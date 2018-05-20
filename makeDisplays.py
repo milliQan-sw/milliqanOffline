@@ -17,10 +17,12 @@ def parse_args():
 	parser.add_argument("nEvents",help="Number of diplays to make",type=int)
 	parser.add_argument("-t","--tag",help="Filename tag",default="")
 	parser.add_argument("-r","--rangeForTime",nargs=2,help="Force time range for plots (default is zoomed to pulses)",type=float)
+	parser.add_argument("-b","--displayPulseBounds",help="Show pulsefinding bounds (default True)",type=bool,default=True)
+	parser.add_argument("-c","--forceChans",nargs='+',help="List of channels to force in display.")
 	args = parser.parse_args()
 	return args
 
-def main(runNumber, selection, nEvents,tag="",rangeForTime=None):
+def main(runNumber, selection, nEvents,tag="",rangeForTime=None,displayPulseBounds=True,forceChans=[]):
 	runNumber = str(runNumber)
 	table = findEvents.main(runNumber,selection,nEvents,tag)
 	for i in range(len(table)):
@@ -29,11 +31,13 @@ def main(runNumber, selection, nEvents,tag="",rangeForTime=None):
 		treeList=glob.glob(cfg.rawDir+"Run"+runNumber+"_*/MilliQan_Run"+runNumber+"."+fileNumber+"_*.root")
 		if len(treeList)>0: treeName=treeList[0]
 		else: print "Base file not found."	
-		print "make_tree",treeName,eventNumber,tag
+		#print "make_tree",treeName,eventNumber,tag
 		if rangeForTime != None:
-			call(["make_tree",treeName,eventNumber,tag,str(rangeForTime[0]),str(rangeForTime[1])])
+			args = ["make_tree",treeName,eventNumber,tag,str(rangeForTime[0]),str(rangeForTime[1]),str(int(displayPulseBounds))]+forceChans
 		else:
-			call(["make_tree",treeName,eventNumber,tag])
+			args = ["make_tree",treeName,eventNumber,tag,"-1","-1",str(int(displayPulseBounds))]+forceChans
+		
+		call(args)
 
 if __name__ == "__main__":
 	#if len(sys.argv)<4:

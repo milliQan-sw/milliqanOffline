@@ -30,6 +30,7 @@ def main(arg1):
 		scriptName= runDir+"/Job"+str(iJob)+".sh"
 		script = open(scriptName,"w")
 		script.write("#!/bin/bash\n")
+		script.write("cd /net/cms26/cms26r0/milliqan/milliqanOffline\n")
 		for i in range(15):
 			if iFile>=nFiles: break
 			#script.write("root -b -q 'make_tree.C+(\""+fileList[iFile]+"\""")'\n")

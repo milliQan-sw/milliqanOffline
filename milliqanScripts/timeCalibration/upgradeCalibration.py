@@ -5,7 +5,8 @@ import copy
 r.gROOT.SetBatch(True)
 r.gStyle.SetOptFit(11111)
 
-fNameTag = '423'
+fNameTag = '816'
+# fNameTag = '423'
 cosmicHeightSelections = {}
 b2Delta = 16
 for i in range(32):
@@ -17,7 +18,8 @@ cosmicHeightSelections[9] = 1150
 cosmicHeightSelections[1+b2Delta] = 1150
 cosmicHeightSelections[5] = 1150
 cosmicHeightSelections[6+b2Delta] = 1150
-inputFile = r.TFile("./Run423.root")
+inputFile = r.TFile("~/Run816.root")
+# inputFile = r.TFile("./Run423.root")
 def upgradeCalibrationIntraLayerPlots(allSlices):
     inputTree = inputFile.Get("t")
     #800

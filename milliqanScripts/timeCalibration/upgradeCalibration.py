@@ -6,7 +6,7 @@ r.gROOT.SetBatch(True)
 r.gStyle.SetOptFit(11111)
 
 beamOn = False
-fNameTag = '842'
+fNameTag = '834'
 # fNameTag = '423'
 cosmicHeightSelections = {}
 b2Delta = 16
@@ -14,33 +14,33 @@ topPanels = [10,14,30]
 for i in range(32):
     cosmicHeightSelections[i] = 500
 #878 + 7725s 
-cosmicHeightSelections[8+b2Delta] = 1150
-cosmicHeightSelections[9+b2Delta] = 1150
-cosmicHeightSelections[8] = 1150
-cosmicHeightSelections[9] = 1150
-cosmicHeightSelections[1+b2Delta] = 1150
-cosmicHeightSelections[5] = 1150
-cosmicHeightSelections[6+b2Delta] = 1150
+cosmicHeightSelections[8+b2Delta] = 90
+cosmicHeightSelections[9+b2Delta] = 80
+cosmicHeightSelections[8] = 10
+cosmicHeightSelections[9] = 140
+cosmicHeightSelections[1+b2Delta] = 100
+cosmicHeightSelections[5] = 700
+cosmicHeightSelections[6+b2Delta] = 500
 #Panels
 #Top
-cosmicHeightSelections[10] = 20
-cosmicHeightSelections[14] = 20
-cosmicHeightSelections[14+b2Delta] = 20
+cosmicHeightSelections[10] = 8
+cosmicHeightSelections[14] = 8
+cosmicHeightSelections[14+b2Delta] = 8
 #Left
-cosmicHeightSelections[11] = 20
-cosmicHeightSelections[11+b2Delta] = 20
-cosmicHeightSelections[15+b2Delta] = 20
+cosmicHeightSelections[11] = 8
+cosmicHeightSelections[11+b2Delta] = 8
+cosmicHeightSelections[15+b2Delta] = 8
 #Right
-cosmicHeightSelections[13+b2Delta] = 20
-cosmicHeightSelections[3+b2Delta] = 20
-cosmicHeightSelections[10+b2Delta] = 20
+cosmicHeightSelections[13+b2Delta] = 6
+cosmicHeightSelections[3+b2Delta] = 8
+cosmicHeightSelections[10+b2Delta] = 8
 #Slabs
 cosmicHeightSelections[2+b2Delta] = 200
 cosmicHeightSelections[4+b2Delta] = 200
-cosmicHeightSelections[5+b2Delta] = 200
-cosmicHeightSelections[12+b2Delta] = 200
-inputFile = r.TFile("/net/cms26/cms26r0/milliqan/milliqanOffline/testCalibration.root")
-# inputFile = r.TFile("./Run423.root")
+cosmicHeightSelections[5+b2Delta] = 300
+cosmicHeightSelections[12+b2Delta] = 60
+# inputFile = r.TFile("/net/cms26/cms26r0/milliqan/milliqanOffline/testCalibration.root")
+inputFile = r.TFile("./Run834.root")
 def upgradeCalibrationIntraLayerPlots(allSlices,sliceExtraSelections,ignoreChans):
     inputTree = inputFile.Get("t")
     #800
@@ -236,14 +236,14 @@ def upgradeCalibrationInterLayer(calibConstantsIntraLayer,allLayerPaths,layerExt
     for pathNum,layers in allLayerPaths.iteritems():
         for higherLayer in layers[1:]:
             calibHistos[higherLayer,layers[0]].Write()
-            calibMeans[higherLayer] = (calibHistos[higherLayer,layers[0]].GetMean()/0.625)*0.625
+            calibMeans[higherLayer,layers[0]] = (calibHistos[higherLayer,layers[0]].GetMean()/0.625)*0.625
 
     for layer,chans in layerToChannel.iteritems():
         for chan in chans:
             if layer == 2 or layer == 3:
-                calibConstantsInterLayer[chan] -= calibMeans[2]
+                calibConstantsInterLayer[chan] -= calibMeans[2,1]
             if layer == 3:
-                calibConstantsInterLayer[chan] -= calibMeans[3]
+                calibConstantsInterLayer[chan] -= calibMeans[3,2]
             calibConstantsInterLayer[chan] = round(calibConstantsInterLayer[chan]/0.625)*0.625
 
     return calibConstantsInterLayer
@@ -255,7 +255,7 @@ if __name__=="__main__":
     # allSlices["slicesBent2"] = {1:(1,9+b2Delta,8),2:(0,8+b2Delta,9),3:(7,1+b2Delta,12),4:(6,0+b2Delta,13),5:(3,7+b2Delta,4),6:(2,6+b2Delta,5)}
     # allSlices["slicesBent3"] = {1:(1,8+b2Delta,9+b2Delta,8),2:(0,8+b2Delta,9+b2Delta,9),3:(7,0+b2Delta,1+b2Delta,12),4:(6,0+b2Delta,1+b2Delta,13),5:(3,6+b2Delta,7+b2Delta,4),6:(2,6+b2Delta,7+b2Delta,5)}
     #using 10
-    layerExtraSelections=[]#2+b2Delta]#,4+b2Delta,12+b2Delta,5+b2Delta]
+    layerExtraSelections=[]#4+b2Delta,12+b2Delta]#2+b2Delta]#,4+b2Delta,12+b2Delta,5+b2Delta]
     allSlabs=[2+b2Delta,4+b2Delta,12+b2Delta,5+b2Delta]
     allPanels=[11+b2Delta,11,15+b2Delta,13+b2Delta,3+b2Delta,10+b2Delta,10,14+b2Delta,14]
     slabExtraSelections = {}
@@ -272,7 +272,7 @@ if __name__=="__main__":
     allSlices["slicesBent2"] = {1:[1,9+b2Delta],2:[0,8+b2Delta,9],3:[7,1+b2Delta,12],4:[6,0+b2Delta,13],5:[3,7+b2Delta,4],6:[2,6+b2Delta,5]}
     allSlices["slicesBent3"] = {1:[1,8+b2Delta,9+b2Delta],2:[0,8+b2Delta,9+b2Delta,9],3:[7,0+b2Delta,1+b2Delta,12],4:[6,0+b2Delta,1+b2Delta,13],5:[3,6+b2Delta,7+b2Delta,4],6:[2,6+b2Delta,7+b2Delta,5]}
     # allSlices["slicesBent3"] = {1:(1,2,3,4),2:(0,2,3,5),3:(7,12,13,8),4:(6,12,13,9)}
-    allLayerPaths = {1:(1,2),2:(2,3)}
+    allLayerPaths = {1:(1,2),2:(2,3),3:(1,3)}
 
     slabCalibrations={2+b2Delta:[1,2],4+b2Delta:[1,2],12+b2Delta:[2,3],5+b2Delta:[2,3]}
     panelCalibrations={11+b2Delta:[1],11:[2],15+b2Delta:[3],13+b2Delta:[1],3+b2Delta:[2],10+b2Delta:[3],10:[1],14+b2Delta:[2],14:[3]}

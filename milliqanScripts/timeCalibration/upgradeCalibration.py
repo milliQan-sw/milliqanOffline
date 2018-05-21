@@ -7,7 +7,6 @@ r.gStyle.SetOptFit(11111)
 
 beamOn = False
 fNameTag = '834'
-# fNameTag = '423'
 cosmicHeightSelections = {}
 b2Delta = 16
 topPanels = [10,14,30]

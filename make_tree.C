@@ -166,8 +166,8 @@ vector<TH1D*> waves;
 // float interModuleCalibrations[] = {0.,0.,0.,0.,-6.07,-6.07,-6.07,-6.07,8.38,8.38,8.38,8.38,-6.07,0.,8.38,0.};
 // float intraModuleCalibrations[] = {0.0, 0.0, -2.5, -7.5, 0.625, 0.0, 1.875, 10.0, 1.25, 0.0, -3.75, -3.75, -1.875, 0.0, -24.375, -5.0};
 // float interModuleCalibrations[] = {0.0, 0.0, 0.0, 0.0, -6.25, -6.25, -6.25, -6.25, 8.125, 8.125, 8.125, 8.125, -6.25, 0.0, 8.125, 0.0};
-float intraModuleCalibrations[32];
-float interModuleCalibrations[32];
+// float intraModuleCalibrations[32];
+float interModuleCalibrations[32] = {33.750, 33.125, 15.000, 25.000, 25.625, 32.500, 30.000, 28.750, 0.00  , 31.250, 3.750 , 13.750, 26.250, 33.750, 10.000, 0.00  , 28.125, 28.750, 0.000 , 12.500, 7.500 , 13.750, 25.000, 21.875, 31.250, 24.375, -0.625, 8.750 , 13.125, 2.500 , 16.250, -0.000,};
 float channelCalibrations[32];
 // float channelCalibrations[] = {0.,0.,-2.17,-7.49,0.48,0.,1.17,11.44,1.15,0.,-6.41,-4.81,1.2,0.,25.7,6.8};
 TTree * inTree;
@@ -306,7 +306,7 @@ int main(int argc, char **argv)
 
 void make_tree(TString fileName, int eventNum, TString tag, float rangeMin,float rangeMax, int displayPulseBounds, set<int> forceChan){
     //	gROOT->ProcessLine( "gErrorIgnoreLevel = kError");
-    for (int i=0;i<=31;i++) {channelCalibrations[i] = interModuleCalibrations[i]+intraModuleCalibrations[i];}
+    for (int i=0;i<=31;i++) {channelCalibrations[i] = interModuleCalibrations[i];}//+intraModuleCalibrations[i];}
     bool calibrateDisplay = true;
     defineColors();
     if(eventNum>=0) displayMode=true;

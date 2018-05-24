@@ -1400,6 +1400,7 @@ void loadFieldList(TString fieldFile){
     // }
 }
 int findField(int seconds){
+    if(fieldList.size()==0) return -1;
     auto index_of_first_point_with_larger_time = distance(fieldList.begin(), lower_bound(fieldList.begin(),fieldList.end(), 
         make_tuple(seconds, 0., 0.,0., 0.,0., 0.,0., 0.,0., 0.,0., 0.) ));
     //cout<<"index "<<index_of_first_fill_with_larger_start_time<<endl;

@@ -572,18 +572,18 @@ void convertXaxis(TH1D *h, int ic){
     h->ResetStats();
 }
 
-void prepareWave(int ic, float &sb_mean, float &sb_RMS){
+void prepareWave(int ic, float &sb_meanPerEvent, float &sb_RMSPerEvent){
     //Invert waveform and convert x-axis to ns
     waves[ic]->Scale(-1.0);
     convertXaxis(waves[ic],ic);
 
     //Find sideband
-    pair<float,float> mean_rms = make_pair(meanCalib[ic],rmsCalib[ic])//measureSideband(ic,sideband_range[0],sideband_range[1]);
-    sb_mean = mean_rms.first;
-    sb_RMS = mean_rms.second;
+    pair<float,float> mean_rms = measureSideband(ic,sideband_range[0],sideband_range[1]);
+    sb_meanPerEvent = mean_rms.first;
+    sb_RMSPerEvent = mean_rms.second;
     //subtract sideband
     for(int ibin = 1; ibin <= waves[ic]->GetNbinsX(); ibin++){
-	waves[ic]->SetBinContent(ibin,waves[ic]->GetBinContent(ibin)-sb_mean);
+	waves[ic]->SetBinContent(ibin,waves[ic]->GetBinContent(ibin)-meanCalib[ic]);
     }
 }
 
@@ -610,8 +610,10 @@ pair<float,float> measureSideband(int ic, float start, float end){
 
 
 vector< vector<float> > processChannel(int ic){
-    float sb_mean, sb_RMS;
-    prepareWave(ic, sb_mean, sb_RMS);
+    float sb_meanPerEvent, sb_RMSPerEvent;
+    prepareWave(ic, sb_meanPerEvent, sb_RMSPerEvent);
+    float sb_mean = meanCalib[ic];
+    float sb_RMS = rmsCalib[ic];
 
     vector<vector<float> > pulseBounds;
     //if(tubeSpecies[ic]!="ET") 
@@ -651,8 +653,8 @@ vector< vector<float> > processChannel(int ic){
 	if(ipulse>0) v_delay->push_back(pulseBounds[ipulse][0] - pulseBounds[ipulse-1][1]); //interval between end of previous pulse and start of this one
 	else v_delay->push_back(1999.);
 
-	v_sideband_mean->push_back(sb_mean);
-	v_sideband_RMS->push_back(sb_RMS);	
+	v_sideband_mean->push_back(sb_meanPerEvent);
+	v_sideband_RMS->push_back(sb_RMSPerEvent);	
 
 	//get presample info
 	pair<float,float> presampleInfo = measureSideband(ic,pulseBounds[ipulse][0]-presampleStart,pulseBounds[ipulse][0]-presampleEnd);
@@ -983,12 +985,9 @@ vector< vector<float> > findPulses(int ic){
     // int Nconsec = 4;
     // int NconsecEnd = 3;
     // float thresh = 2.5; //mV
-    int NconsecConfig[] = {6, 6, 6, 6, 6, 4, 6, 6, 6, 3, 6, 6, 6, 6, 6, 6, 6, 3, 6, 6, 6, 6, 4, 6, 3, 3, 6, 6, 6, 6, 6, 6}
-    int NconsecEndConfig[] = {12, 12, 12, 12, 12, 3, 12, 12, 12, 3, 12, 12, 12, 12, 12, 12, 12, 3, 12, 12, 12, 12, 3, 12, 3, 3, 12, 12, 12, 12, 12, 12}
-    float threshConfig[] = {2.0, 2.0, 2.0, 2.0, 2.0, 2.5, 2.0, 2.0, 2.0, 2.5, 2.0, 2.0, 2.0, 2.0, 2.0, 2.5, 2.0, 2.5, 2.0, 2.0, 2.0, 2.0, 3.0, 2.0, 2.5, 2.5, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0}
-    int Nconsec = NconsecConfig[ic];
-    int NconsecEnd = NconsecEndConf[ic];
-    float thresh = threshConfig[ic];
+    int NconsecConfig[] = {6, 6, 6, 6, 6, 4, 6, 6, 6, 3, 6, 6, 6, 6, 6, 6, 6, 3, 6, 6, 6, 6, 4, 6, 3, 3, 6, 6, 6, 6, 6, 6};
+    int NconsecEndConfig[] = {12, 12, 12, 12, 12, 3, 12, 12, 12, 3, 12, 12, 12, 12, 12, 12, 12, 3, 12, 12, 12, 12, 3, 12, 3, 3, 12, 12, 12, 12, 12, 12};
+    float threshConfig[] = {2.0, 2.0, 2.0, 2.0, 2.0, 2.5, 2.0, 2.0, 2.0, 2.5, 2.0, 2.0, 2.0, 2.0, 2.0, 2.5, 2.0, 2.5, 2.0, 2.0, 2.0, 2.0, 3.0, 2.0, 2.5, 2.5, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0};
 
 
     // if(sample_rate[ic/16]<1.6){

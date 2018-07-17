@@ -167,7 +167,10 @@ vector<TH1D*> waves;
 // float intraModuleCalibrations[] = {0.0, 0.0, -2.5, -7.5, 0.625, 0.0, 1.875, 10.0, 1.25, 0.0, -3.75, -3.75, -1.875, 0.0, -24.375, -5.0};
 // float interModuleCalibrations[] = {0.0, 0.0, 0.0, 0.0, -6.25, -6.25, -6.25, -6.25, 8.125, 8.125, 8.125, 8.125, -6.25, 0.0, 8.125, 0.0};
 // float intraModuleCalibrations[32];
-float interModuleCalibrations[32] = {33.750, 33.125, 15.000, 25.000, 25.625, 32.500, 30.000, 28.750, 0.00  , 31.250, 3.750 , 13.750, 26.250, 33.750, 10.000, 0.00  , 28.125, 28.750, 0.000 , 12.500, 7.500 , 13.750, 25.000, 21.875, 31.250, 24.375, -0.625, 8.750 , 13.125, 2.500 , 16.250, -0.000,};
+float meanCalib[] = {-0.1222, 0.00734, -0.00887, -0.0335, -0.3331, -0.1285, 0.0401, -0.1079, -0.5073, -0.0824, 0.5879, -0.4461, -0.1944, -0.5297, -0.262, 0., -0.188, -0.4175, -0.1464, -0.1361, -0.116, -0.1456, -0.2236, -0.3024, -0.3784, -0.1012, -0.2877, -0.2189, -0.353, -0.2148, -0.1388, -0.2293};
+
+float rmsCalib[] = {0.6221, 0.5617, 0.6411, 0.5373, 0.7078, 0.5723, 0.6171, 0.5638, 0.7758, 0.5698, 0.9166, 0.7173, 0.6784, 0.7846, 0.7275, 1., 0.655, 0.7229, 0.6454, 0.5832, 0.6056, 0.6445, 0.7817, 0.6482, 0.7659, 0.588, 0.7053, 0.5925, 0.7009, 0.6863, 0.6905, 0.6138};
+float interModuleCalibrations[32] = { 33.125, 33.125, 11.875, 23.125, 22.5, 33.75, 29.375, 28.75, 23.75, 33.75, 3.125, 14.375, 25.625, 33.125, 7.5, 0.0, 26.875, 30.0, 0.0, 10.0, 6.25, 11.25, 26.875, 18.75, 33.125, 26.875, -5.0, 8.75, 11.875, -0.0, 13.75};
 float channelCalibrations[32];
 // float channelCalibrations[] = {0.,0.,-2.17,-7.49,0.48,0.,1.17,11.44,1.15,0.,-6.41,-4.81,1.2,0.,25.7,6.8};
 TTree * inTree;
@@ -575,7 +578,7 @@ void prepareWave(int ic, float &sb_mean, float &sb_RMS){
     convertXaxis(waves[ic],ic);
 
     //Find sideband
-    pair<float,float> mean_rms = measureSideband(ic,sideband_range[0],sideband_range[1]);
+    pair<float,float> mean_rms = make_pair(meanCalib[ic],rmsCalib[ic])//measureSideband(ic,sideband_range[0],sideband_range[1]);
     sb_mean = mean_rms.first;
     sb_RMS = mean_rms.second;
     //subtract sideband
@@ -622,6 +625,7 @@ vector< vector<float> > processChannel(int ic){
     //NB: v8 march13- currently approximate guess (60 nVs) for unmeasured ch0,ch8,ch11,ch13
 
 
+
     for(int ipulse = 0; ipulse<npulses; ipulse++){
 	//Set waveform range to this pulse
 	waves[ic]->SetAxisRange(pulseBounds[ipulse][0],pulseBounds[ipulse][1]);
@@ -630,10 +634,10 @@ vector< vector<float> > processChannel(int ic){
 
 
 	v_chan->push_back(ic);
-    //chanMap: col,row,layer,type
-    v_column->push_back(chanMap[ic][0]);
-    v_row->push_back(chanMap[ic][1]);
-    v_layer->push_back(chanMap[ic][2]);
+	//chanMap: col,row,layer,type
+	v_column->push_back(chanMap[ic][0]);
+	v_row->push_back(chanMap[ic][1]);
+	v_layer->push_back(chanMap[ic][2]);
 	v_type->push_back(chanMap[ic][3]);
 
 	v_height->push_back(waves[ic]->GetMaximum());
@@ -735,22 +739,22 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
 	}
 	if(boundShifted.size()>0 || waveShifted->GetMaximum()>drawThresh || forceChan.find(ic)!=forceChan.end()){
 	    //if(ic==15 && forceChan.find(ic)==forceChan.end()) continue;
-        chanList.push_back(ic);
-        TString beamState = "off";
-        if(beam) beamState="on";
-        if (calibrateDisplay) waveShifted->SetTitle(Form("Run %i, File %i, Event %i (beam %s);Time [ns];Amplitude [mV];",runNum,fileNum,event,beamState.Data()));
-        else waveShifted->SetTitle(Form("Run %i, File %i, Event %i (beam %s);Uncalibrated Time [ns];Amplitude [mV];",runNum,fileNum,event,beamState.Data()));
-        if(ic!=15){ 
-    	    //Reset range to find correct maxima
-    	    waveShifted->SetAxisRange(0,1024./sample_rate[ic/16]);
-    	    //Keep track of max amplitude
-    	    if(waveShifted->GetMaximum()>maxheight) maxheight=waveShifted->GetMaximum();
-    	    if(boundShifted.size()>0){
-    		//keep track of earliest pulse start time
-    		if(boundShifted[0][0]<timeRange[0]) timeRange[0]=boundShifted[0][0];
-    		//keep track of latest pulse end time (pulses are ordered chronologicaly for each channel)
-    		if(boundShifted[boundShifted.size()-1][1]>timeRange[1]) timeRange[1]=boundShifted[boundShifted.size()-1][1];
-	    }
+	    chanList.push_back(ic);
+	    TString beamState = "off";
+	    if(beam) beamState="on";
+	    if (calibrateDisplay) waveShifted->SetTitle(Form("Run %i, File %i, Event %i (beam %s);Time [ns];Amplitude [mV];",runNum,fileNum,event,beamState.Data()));
+	    else waveShifted->SetTitle(Form("Run %i, File %i, Event %i (beam %s);Uncalibrated Time [ns];Amplitude [mV];",runNum,fileNum,event,beamState.Data()));
+	    if(ic!=15){ 
+		//Reset range to find correct maxima
+		waveShifted->SetAxisRange(0,1024./sample_rate[ic/16]);
+		//Keep track of max amplitude
+		if(waveShifted->GetMaximum()>maxheight) maxheight=waveShifted->GetMaximum();
+		if(boundShifted.size()>0){
+		    //keep track of earliest pulse start time
+		    if(boundShifted[0][0]<timeRange[0]) timeRange[0]=boundShifted[0][0];
+		    //keep track of latest pulse end time (pulses are ordered chronologicaly for each channel)
+		    if(boundShifted[boundShifted.size()-1][1]>timeRange[1]) timeRange[1]=boundShifted[boundShifted.size()-1][1];
+		}
 	    }
 	}
 	wavesShifted.push_back(waveShifted);
@@ -769,48 +773,48 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
     for(uint i=0;i<chanList.size();i++){
 	int ic = chanList[i];	
 
-    if(ic==15 && forceChan.find(ic)==forceChan.end()) continue;
+	if(ic==15 && forceChan.find(ic)==forceChan.end()) continue;
 	wavesShifted[ic]->SetAxisRange(timeRange[0],timeRange[1]);
 
-    originalMaxHeights[ic] = wavesShifted[ic]->GetMaximum();
+	originalMaxHeights[ic] = wavesShifted[ic]->GetMaximum();
 	wavesShifted[ic]->SetMaximum(maxheight);//maxheight);
-    int column= chanMap[ic][0];
-    int row= chanMap[ic][1];
-    int layer= chanMap[ic][2];
-    int type= chanMap[ic][3];
-    int colorIndex = 4-2*(row-1)+column-1+6*(layer-1);
+	int column= chanMap[ic][0];
+	int row= chanMap[ic][1];
+	int layer= chanMap[ic][2];
+	int type= chanMap[ic][3];
+	int colorIndex = 4-2*(row-1)+column-1+6*(layer-1);
 
-    if(type==1) colorIndex = layer; //slabs: 0-3
-    if(type==2) colorIndex = 4 + 3*(layer-1) + (column+1); //sheets
-    if(ic==15) colorIndex=1;
-    //if(type!=0) continue;
+	if(type==1) colorIndex = layer; //slabs: 0-3
+	if(type==2) colorIndex = 4 + 3*(layer-1) + (column+1); //sheets
+	if(ic==15) colorIndex=1;
+	//if(type!=0) continue;
 	h1cosmetic(wavesShifted[ic],colorIndex);
-    if(type==1) wavesShifted[ic]->SetLineStyle(3);
-    if(type==2) wavesShifted[ic]->SetLineStyle(7);
+	if(type==1) wavesShifted[ic]->SetLineStyle(3);
+	if(type==2) wavesShifted[ic]->SetLineStyle(7);
 	if(i==0) wavesShifted[ic]->Draw("hist");
 	else wavesShifted[ic]->Draw("hist same");
 
 	leg.AddEntry(wavesShifted[ic],Form("Channel %i",ic),"l");
 	//Show boundaries of pulse
-    if(displayPulseBounds){
-    	TLine line; line.SetLineWidth(2); line.SetLineStyle(3);	line.SetLineColor(colors[colorIndex]);
-    	for(uint ip=0; ip<boundsShifted[ic].size();ip++){
-    	    if (boundsShifted[ic][ip][0] > timeRange[0] && boundsShifted[ic][ip][1] < timeRange[1]){
-    		line.DrawLine(boundsShifted[ic][ip][0],0,boundsShifted[ic][ip][0],0.2*maxheight);
-    		line.DrawLine(boundsShifted[ic][ip][1],0,boundsShifted[ic][ip][1],0.2*maxheight);
-    	    }
-    	}
-    }   
+	if(displayPulseBounds){
+	    TLine line; line.SetLineWidth(2); line.SetLineStyle(3);	line.SetLineColor(colors[colorIndex]);
+	    for(uint ip=0; ip<boundsShifted[ic].size();ip++){
+		if (boundsShifted[ic][ip][0] > timeRange[0] && boundsShifted[ic][ip][1] < timeRange[1]){
+		    line.DrawLine(boundsShifted[ic][ip][0],0,boundsShifted[ic][ip][0],0.2*maxheight);
+		    line.DrawLine(boundsShifted[ic][ip][1],0,boundsShifted[ic][ip][1],0.2*maxheight);
+		}
+	    }
+	}   
 	//Display values stored for this pulse
     }
     float boxw= 0.025;
     float boxh=0.0438;
     float barw=0.03;
     float barh=0.53;
- //    vector<float> xpos = {0.93,0.96,0.93,0.96,0.93,0.96,
-	// 0.815,0.845,0.815,0.845,0.815,0.845,
-	// 0.7,0.73,0.7,0.73,0.7,0.73
- //    };
+    //    vector<float> xpos = {0.93,0.96,0.93,0.96,0.93,0.96,
+    // 0.815,0.845,0.815,0.845,0.815,0.845,
+    // 0.7,0.73,0.7,0.73,0.7,0.73
+    //    };
 
     vector<float> xstart = {0.66,0.78,0.9};
     vector<float> ystart= {0.798,0.851,0.904};
@@ -824,7 +828,7 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
     float ystart_sidesheets = ystart[0]-0.006;
     float vert_sheet_length = ystart[2]-ystart[0]+boxh+0.01;
     float hori_sheet_length= barw+boxw+0.004;
-    
+
     float slab_width = 0.015;
     vector<float> slab_xstart = {xstart_leftsheets[0]-0.008-slab_width,xstart_leftsheets[1]-0.008-slab_width,xstart_leftsheets[2]-0.008-slab_width,xstart_leftsheets[2]+0.01+sheet_left_to_right}; 
     float slab_height = vert_sheet_length-0.02;
@@ -865,56 +869,56 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
     for(int i=0;i<32;i++){
 
 	if(boundsShifted[i].size()>0 || wavesShifted[i]->GetMaximum()>drawThresh || forceChan.find(i)!=forceChan.end()){//if this channel has a pulse
-        if(i==15 && forceChan.find(i)==forceChan.end()) continue;
-        //if(i==15) continue;
-        //xyz
-        int column= chanMap[i][0];
-        int row= chanMap[i][1];
-        int layer= chanMap[i][2];
-        int type= chanMap[i][3];
+	    if(i==15 && forceChan.find(i)==forceChan.end()) continue;
+	    //if(i==15) continue;
+	    //xyz
+	    int column= chanMap[i][0];
+	    int row= chanMap[i][1];
+	    int layer= chanMap[i][2];
+	    int type= chanMap[i][3];
 
-        int colorIndex = 4-2*(row-1)+column-1+6*(layer-1);
-        if(type==1) colorIndex = layer; //slabs: 0-3
-        else if(type==2) colorIndex = 4 + 3*(layer-1) + (column+1); //sheets
+	    int colorIndex = 4-2*(row-1)+column-1+6*(layer-1);
+	    if(type==1) colorIndex = layer; //slabs: 0-3
+	    else if(type==2) colorIndex = 4 + 3*(layer-1) + (column+1); //sheets
 
-        if(i==15) colorIndex=1;
+	    if(i==15) colorIndex=1;
 
-        TPave * pave;
-        if (type==1){
-            float xpos,ypos;
-            ypos = slab_ystart;
-            xpos = slab_xstart[layer];
-            pave = new TPave(xpos,ypos,xpos+slab_width,ypos+slab_height,0,"NDC");
-            pave->SetFillColor(colors[colorIndex]);
-            pave->Draw();
-        }
+	    TPave * pave;
+	    if (type==1){
+		float xpos,ypos;
+		ypos = slab_ystart;
+		xpos = slab_xstart[layer];
+		pave = new TPave(xpos,ypos,xpos+slab_width,ypos+slab_height,0,"NDC");
+		pave->SetFillColor(colors[colorIndex]);
+		pave->Draw();
+	    }
 
-        else if (type==2){
-            float xpos,ypos;
-            
-            if (column!=0){
-                xpos= xstart_leftsheets[layer-1];
-                if(column>0) xpos += sheet_left_to_right;
-                ypos = ystart_sidesheets;
-                pave = new TPave(xpos,ypos,xpos+sheet_width,ypos+vert_sheet_length,0,"NDC");
-            }
-            else{
-                xpos = xstart_topsheets[layer-1];
-                ypos = ystart_topsheets;
-                pave = new TPave(xpos,ypos,xpos+hori_sheet_length,ypos+1.4/0.8*sheet_width,0,"NDC");
-            }
-           
-            pave->SetFillColor(colors[colorIndex]);
-            pave->Draw();
+	    else if (type==2){
+		float xpos,ypos;
 
-        }
-        else if(type==0){
-            float xpos = xstart[layer-1]+(column-1)*barw;
-            float ypos= ystart[row-1];
-            pave = new TPave(xpos,ypos,xpos+boxw,ypos+boxh,0,"NDC");
-            pave->SetFillColor(colors[colorIndex]);
-            pave->Draw();
-        }
+		if (column!=0){
+		    xpos= xstart_leftsheets[layer-1];
+		    if(column>0) xpos += sheet_left_to_right;
+		    ypos = ystart_sidesheets;
+		    pave = new TPave(xpos,ypos,xpos+sheet_width,ypos+vert_sheet_length,0,"NDC");
+		}
+		else{
+		    xpos = xstart_topsheets[layer-1];
+		    ypos = ystart_topsheets;
+		    pave = new TPave(xpos,ypos,xpos+hori_sheet_length,ypos+1.4/0.8*sheet_width,0,"NDC");
+		}
+
+		pave->SetFillColor(colors[colorIndex]);
+		pave->Draw();
+
+	    }
+	    else if(type==0){
+		float xpos = xstart[layer-1]+(column-1)*barw;
+		float ypos= ystart[row-1];
+		pave = new TPave(xpos,ypos,xpos+boxw,ypos+boxh,0,"NDC");
+		pave->SetFillColor(colors[colorIndex]);
+		pave->Draw();
+	    }
 
 	    tla.SetTextColor(colors[colorIndex]);
 	    tla.SetTextSize(0.04);
@@ -936,8 +940,8 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
 		}
 	    }
 	    currentYpos-=height*0.2;
-	
-    }
+
+	}
     }
 
     // tla.DrawLatexNDC(0.13,0.78,Form("Area: %0.2f",v_area->back()));
@@ -946,7 +950,7 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
     cout<<"Display directory is "<<displayDirectory<<endl;
     TString displayName=Form(displayDirectory+"Run%i_File%i_Event%i_%s.pdf",runNum,fileNum,event,tag.Data());
     c.Print(displayName);
-    
+
 }
 
 void findTriggerCandidates(int ic,float sb_mean){
@@ -967,24 +971,31 @@ void findTriggerCandidates(int ic,float sb_mean){
 		inTrigger = true;
 	    }
 	}
-	    else {
-		if (inTrigger) v_triggerCandidatesEnd->push_back((float)waves[ic]->GetBinLowEdge(i));
-		inTrigger = false;
-	    }
+	else {
+	    if (inTrigger) v_triggerCandidatesEnd->push_back((float)waves[ic]->GetBinLowEdge(i));
+	    inTrigger = false;
+	}
     }
     if (inTrigger) v_triggerCandidatesEnd->push_back((float)waves[ic]->GetBinLowEdge(waves[ic]->GetNbinsX()));
 }
 vector< vector<float> > findPulses(int ic){
     //Configurable:
-    int Nconsec = 4;
-    int NconsecEnd = 3;
-    float thresh = 2.5; //mV
+    // int Nconsec = 4;
+    // int NconsecEnd = 3;
+    // float thresh = 2.5; //mV
+    int NconsecConfig[] = {6, 6, 6, 6, 6, 4, 6, 6, 6, 3, 6, 6, 6, 6, 6, 6, 6, 3, 6, 6, 6, 6, 4, 6, 3, 3, 6, 6, 6, 6, 6, 6}
+    int NconsecEndConfig[] = {12, 12, 12, 12, 12, 3, 12, 12, 12, 3, 12, 12, 12, 12, 12, 12, 12, 3, 12, 12, 12, 12, 3, 12, 3, 3, 12, 12, 12, 12, 12, 12}
+    float threshConfig[] = {2.0, 2.0, 2.0, 2.0, 2.0, 2.5, 2.0, 2.0, 2.0, 2.5, 2.0, 2.0, 2.0, 2.0, 2.0, 2.5, 2.0, 2.5, 2.0, 2.0, 2.0, 2.0, 3.0, 2.0, 2.5, 2.5, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0}
+    int Nconsec = NconsecConfig[ic];
+    int NconsecEnd = NconsecEndConf[ic];
+    float thresh = threshConfig[ic];
 
-    if(sample_rate[ic/16]<1.6){
-        Nconsec-=1;
-        NconsecEnd-=1;
-        thresh+=1;
-    }
+
+    // if(sample_rate[ic/16]<1.6){
+	// Nconsec-=1;
+	// NconsecEnd-=1;
+	// thresh+=1;
+    // }
 
     vector<vector<float> > bounds;
     float tstart = sideband_range[1]+1;
@@ -995,36 +1006,36 @@ vector< vector<float> > findPulses(int ic){
     int nover = 0; // Number of samples seen consecutively over threshold
     int nunder = 0; // Number of samples seen consecutively under threshold
     int i_begin = istart;
-    int i_stop_searching = waves[ic]->GetNbinsX()-Nconsec;
+    int i_stop_searching = waves[ic]->GetNbinsX()-NconsecConfig[ic];
     int i_stop_final_pulse = waves[ic]->GetNbinsX();
     // int tWindow[2];
     for (int i=istart; i<i_stop_searching || (inpulse && i<i_stop_final_pulse); i++) { // Loop over all samples looking for pulses
 	float v = waves[ic]->GetBinContent(i);
 	if (!inpulse) { // Not in a pulse?
-	    if (v<thresh) {
+	    if (v<threshConfig[ic]-rmsCalib[ic]) {
 		// Reset any prepulse counters
 		nover = 0;
 		i_begin = i; // most recent sample below threshold
 	    }
-	    else{		
+	    else if (v>=threshConfig[ic]){		
 		nover++; // Another sample over threshold
 		//cout << "DEBUG: Over pulse, t = "<< w.t[i] <<", v = "<<v<<", nover = "<<nover<<endl;
 	    }
 
-	    if (nover>Nconsec) {
+	    if (nover>NconsecConfig[ic]) {
 		//cout << "DEBUG: Starting pulse, t = "<< w.t[i] <<", v = "<<v<<endl;
 		inpulse = true; // Start a pulse
 		nunder = 0; // Counts number of samples underthreshold to end a pulse
 	    }
 	} // Not in a pulse?
 	else { // In a pulse?
-	    if (v<thresh) nunder++;
-	    else{
+	    if (v<threshConfig[ic]-rmsCalib[ic]) nunder++;
+	    else if (v >= threshConfig[ic]){
 		//nover++;
 		nunder = 0;
 	    }
 	    //cout << "DEBUG: Inside pulse, t = "<< w.t[i] <<", v = "<<v<<", nunder = "<<nunder<<endl;
-	    if (nunder>NconsecEnd || i==(i_stop_final_pulse-1)) { // The end of a pulse, or pulse has reached the end of range 
+	    if (nunder>NconsecEndConfig[ic] || i==(i_stop_final_pulse-1)) { // The end of a pulse, or pulse has reached the end of range 
 
 		//cout<<"DEBUG: i_begin "<<i_begin<<endl;
 		// cout<<"DEBUG: tWindow 0 and 1: "<<w.t[i_begin]<<" "<<w.t[i]<<endl;
@@ -1264,11 +1275,11 @@ void loadBranchesMilliDAQ(){
 void loadWavesMilliDAQ(){
     int board,chan;
     for(int i=0;i<numChan;i++){
-    	if(waves[i]) delete waves[i];
-        //waves[i] = (TH1D*) evt->GetWaveform(i, Form("h%i",i));
-        board = i<=15 ? 0 : 1;
-        chan = i<=15 ? i : i-16;
-        waves[i] = (TH1D*)evt->GetWaveform(board, chan, Form("h%i",i));
+	if(waves[i]) delete waves[i];
+	//waves[i] = (TH1D*) evt->GetWaveform(i, Form("h%i",i));
+	board = i<=15 ? 0 : 1;
+	chan = i<=15 ? i : i-16;
+	waves[i] = (TH1D*)evt->GetWaveform(board, chan, Form("h%i",i));
     }
 }
 
@@ -1355,7 +1366,7 @@ tuple<int,int,float> findFill(int seconds){
 	//end time == -1 indicates ongoing fill 
 	this_fill = get<2>(fillList[index_of_first_fill_with_larger_start_time-1]); //fill number
 	time_since_start = seconds - get<0>(fillList[index_of_first_fill_with_larger_start_time-1]); //time of this event - start time of fill
-    average_instantaneous_lumi = get<4>(fillList[index_of_first_fill_with_larger_start_time-1]);
+	average_instantaneous_lumi = get<4>(fillList[index_of_first_fill_with_larger_start_time-1]);
     }
     return make_tuple(this_fill,time_since_start,average_instantaneous_lumi);
 }
@@ -1378,19 +1389,19 @@ void loadFieldList(TString fieldFile){
     string timestamp;
     int seconds;
     float x1,y1,z1,x2,y2,z2,x3,y3,z3,x4,y4,z4;
-    
+
 
     ifstream infile;
     infile.open(fieldFile); 
     if(!infile.good()){
-        cout<<"Field file doesn't exist: "<<fieldFile<<endl;
-        return;}
+	cout<<"Field file doesn't exist: "<<fieldFile<<endl;
+	return;}
     infile.ignore(10000,'\n'); //skip first line
     while(infile >> seconds>> timestamp >> x1>>y1>>z1>>x2>>y2>>z2>>x3>>y3>>z3>>x4>>y4>>z4){
-//    if(end<=start && end>0) cout<<"Error in fill time list"<<endl; //end == -1 indicates ongoing fill
-        //cout<<Form("Appending %i %i %i %0.2f",start,end,fillnumber,lumi)<<endl;
-        fieldList.push_back(make_tuple(seconds,x1,y1,z1,x2,y2,z2,x3,y3,z3,x4,y4,z4));
-//        cout<<timestamp<<" "<< x1<<" "<<y1<<" "<<z1<<" "<<x2<<" "<<y2<<" "<<z2<<" "<<x3<<" "<<y3<<" "<<z3<<" "<<x4<<" "<<y4<<" "<<z4<<endl;
+	//    if(end<=start && end>0) cout<<"Error in fill time list"<<endl; //end == -1 indicates ongoing fill
+	//cout<<Form("Appending %i %i %i %0.2f",start,end,fillnumber,lumi)<<endl;
+	fieldList.push_back(make_tuple(seconds,x1,y1,z1,x2,y2,z2,x3,y3,z3,x4,y4,z4));
+	//        cout<<timestamp<<" "<< x1<<" "<<y1<<" "<<z1<<" "<<x2<<" "<<y2<<" "<<z2<<" "<<x3<<" "<<y3<<" "<<z3<<" "<<x4<<" "<<y4<<" "<<z4<<endl;
     }
     sort(fieldList.begin(),fieldList.end());
     cout<<"Loaded "<<fieldFile<<", "<<fieldList.size()<<" field measurements so far."<<endl;
@@ -1402,14 +1413,14 @@ void loadFieldList(TString fieldFile){
 int findField(int seconds){
     if(fieldList.size()==0) return -1;
     auto index_of_first_point_with_larger_time = distance(fieldList.begin(), lower_bound(fieldList.begin(),fieldList.end(), 
-        make_tuple(seconds, 0., 0.,0., 0.,0., 0.,0., 0.,0., 0.,0., 0.) ));
+		make_tuple(seconds, 0., 0.,0., 0.,0., 0.,0., 0.,0., 0.,0., 0.) ));
     //cout<<"index "<<index_of_first_fill_with_larger_start_time<<endl;
     int this_point=0;
 
     if(fabs(seconds-get<0>(fieldList[index_of_first_point_with_larger_time -1])) < fabs(seconds-get<0>(fieldList[index_of_first_point_with_larger_time])))
-        this_point = index_of_first_point_with_larger_time -1;
+	this_point = index_of_first_point_with_larger_time -1;
     else
-        this_point = index_of_first_point_with_larger_time;
+	this_point = index_of_first_point_with_larger_time;
 
     //Give garbage value if closest point is more than an hour away.
     if(fabs(seconds - get<0>(fieldList[this_point])) > 3600) this_point=-1;
@@ -1419,8 +1430,8 @@ int findField(int seconds){
 
 static inline void rtrim(std::string &s) {
     s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) {
-        return !std::isspace(ch);
-    }).base(), s.end());
+		return !std::isspace(ch);
+		}).base(), s.end());
 }
 string GetStdoutFromCommand(string cmd) {
     string data;
@@ -1431,9 +1442,9 @@ string GetStdoutFromCommand(string cmd) {
 
     stream = popen(cmd.c_str(), "r");
     if (stream) {
-    while (!feof(stream))
-    if (fgets(buffer, max_buffer, stream) != NULL) data.append(buffer);
-    pclose(stream);
+	while (!feof(stream))
+	    if (fgets(buffer, max_buffer, stream) != NULL) data.append(buffer);
+	pclose(stream);
     }
 
     //Strip new lines

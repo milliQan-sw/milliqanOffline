@@ -167,10 +167,9 @@ vector<TH1D*> waves;
 // float intraModuleCalibrations[] = {0.0, 0.0, -2.5, -7.5, 0.625, 0.0, 1.875, 10.0, 1.25, 0.0, -3.75, -3.75, -1.875, 0.0, -24.375, -5.0};
 // float interModuleCalibrations[] = {0.0, 0.0, 0.0, 0.0, -6.25, -6.25, -6.25, -6.25, 8.125, 8.125, 8.125, 8.125, -6.25, 0.0, 8.125, 0.0};
 // float intraModuleCalibrations[32];
-float meanCalib[] = {-0.1222, 0.00734, -0.00887, -0.0335, -0.3331, -0.1285, 0.0401, -0.1079, -0.5073, -0.0824, 0.5879, -0.4461, -0.1944, -0.5297, -0.262, 0., -0.188, -0.4175, -0.1464, -0.1361, -0.116, -0.1456, -0.2236, -0.3024, -0.3784, -0.1012, -0.2877, -0.2189, -0.353, -0.2148, -0.1388, -0.2293};
-
-float rmsCalib[] = {0.6221, 0.5617, 0.6411, 0.5373, 0.7078, 0.5723, 0.6171, 0.5638, 0.7758, 0.5698, 0.9166, 0.7173, 0.6784, 0.7846, 0.7275, 1., 0.655, 0.7229, 0.6454, 0.5832, 0.6056, 0.6445, 0.7817, 0.6482, 0.7659, 0.588, 0.7053, 0.5925, 0.7009, 0.6863, 0.6905, 0.6138};
-float interModuleCalibrations[32] = { 33.125, 33.125, 11.875, 23.125, 22.5, 33.75, 29.375, 28.75, 23.75, 33.75, 3.125, 14.375, 25.625, 33.125, 7.5, 0.0, 26.875, 30.0, 0.0, 10.0, 6.25, 11.25, 26.875, 18.75, 33.125, 26.875, -5.0, 8.75, 11.875, -0.0, 13.75};
+float meanCalib[] = {-0.2453, 0.009, -0.007, -0.07, -0.661, -0.252, 0.080, -0.214, -1.04, -0.160, 1.18, -0.910, -0.3789, -1.09, -0.53, 0., -0.367, -0.837, -0.283, -0.275, -0.235, -0.295, -0.443, -0.606, -0.762, -0.201, -0.576, -0.440, -0.706, -0.426, -0.280, -0.458};
+float rmsCalib[] = {0.8637, 0.7901, 0.9028, 0.7561, 0.8741, 0.7857, 0.8706, 0.7795, 0.8098, 0.7954, 0.9941, 0.7833, 0.9148, 0.7899, 0.9600, 1., 0.8829, 0.8828, 0.8908, 0.8005, 0.8400, 0.8863, 1.061, 0.8085, 0.9275, 0.8194, 0.9087, 0.7757, 0.8507, 0.9169, 0.9577, 0.8018};
+float interModuleCalibrations[32] = { 33.125, 33.125, 13.75, 25.0, 24.375, 35.0, 30.0, 29.375, 24.375, 33.75, 3.125, 15.625, 26.875, 34.375, 9.375, 0.0, 27.5, 30.0, 0.0, 11.25, 7.5, 12.5, 28.125, 20.625, 33.75, 26.875, -3.125, 8.75, 13.75, 0.0, 14.375};
 float channelCalibrations[32];
 // float channelCalibrations[] = {0.,0.,-2.17,-7.49,0.48,0.,1.17,11.44,1.15,0.,-6.41,-4.81,1.2,0.,25.7,6.8};
 TTree * inTree;
@@ -577,14 +576,16 @@ void prepareWave(int ic, float &sb_meanPerEvent, float &sb_RMSPerEvent){
     waves[ic]->Scale(-1.0);
     convertXaxis(waves[ic],ic);
 
-    //Find sideband
-    pair<float,float> mean_rms = measureSideband(ic,sideband_range[0],sideband_range[1]);
-    sb_meanPerEvent = mean_rms.first;
-    sb_RMSPerEvent = mean_rms.second;
-    //subtract sideband
+    //subtract calibrated mean
     for(int ibin = 1; ibin <= waves[ic]->GetNbinsX(); ibin++){
 	waves[ic]->SetBinContent(ibin,waves[ic]->GetBinContent(ibin)-meanCalib[ic]);
     }
+
+    //Measure event by event mean and RMS from the sideband
+    pair<float,float> mean_rms = measureSideband(ic,sideband_range[0],sideband_range[1]);
+    sb_meanPerEvent = mean_rms.first;
+    sb_RMSPerEvent = mean_rms.second;
+
 }
 
 //Measure mean and RMS of samples in range from start to end (in ns)
@@ -594,7 +595,7 @@ pair<float,float> measureSideband(int ic, float start, float end){
     float sum2_sb=0.;
     int startbin = waves[ic]->FindBin(start);
     int endbin = waves[ic]->FindBin(end);
-    int n_sb = endbin-startbin+1;
+    int n_sb = 0;
     for(int ibin=startbin; ibin <= endbin; ibin++){
 	sum_sb = sum_sb + waves[ic]->GetBinContent(ibin);
 	sum2_sb = sum2_sb + pow(waves[ic]->GetBinContent(ibin),2);
@@ -623,7 +624,8 @@ vector< vector<float> > processChannel(int ic){
 
     int npulses = pulseBounds.size();
     //float channelCalibrations[] = {0.,0.,-2.0,-7.5,0.5,0.,0.88,12.58,1.22,0.,-6.51,-4.75,1.2,0.,25.7,6.8};
-    float channelSPEAreas[] = {60.,81.5,64.5,48.7,55.2,84.8,57.0,57.2,60.,181.6,576.6,60.,77.5,60.,52.6,50.4};
+    //Replaced after pulse finding modification postTS1   float channelSPEAreas[] = {60.,81.5,64.5,48.7,55.2,84.8,57.0,57.2,60.,181.6,576.6,60.,77.5,60.,52.6,50.4};
+    float channelSPEAreas[] = {65.,70.,85.,70.,73.,83.,75.,80.,100.,65.,90.,80.,73.,95.,75.,1.,65.,45.,95.,85.,68.,90.,100.,58.,48.,33.,78.,75.,80.,62.,68.,70.};
     //NB: v8 march13- currently approximate guess (60 nVs) for unmeasured ch0,ch8,ch11,ch13
 
 
@@ -1011,7 +1013,7 @@ vector< vector<float> > findPulses(int ic){
     for (int i=istart; i<i_stop_searching || (inpulse && i<i_stop_final_pulse); i++) { // Loop over all samples looking for pulses
 	float v = waves[ic]->GetBinContent(i);
 	if (!inpulse) { // Not in a pulse?
-	    if (v<threshConfig[ic]-rmsCalib[ic]) {
+	    if (v<threshConfig[ic]-rmsCalib[ic]/2) {
 		// Reset any prepulse counters
 		nover = 0;
 		i_begin = i; // most recent sample below threshold
@@ -1028,9 +1030,9 @@ vector< vector<float> > findPulses(int ic){
 	    }
 	} // Not in a pulse?
 	else { // In a pulse?
-	    if (v<threshConfig[ic]-rmsCalib[ic]) nunder++;
-	    else if (v >= threshConfig[ic]){
-		//nover++;
+	    if (v<threshConfig[ic]) nunder++;
+	    else if (v >= threshConfig[ic]+rmsCalib[ic]/2){
+		// Restart the tail counting
 		nunder = 0;
 	    }
 	    //cout << "DEBUG: Inside pulse, t = "<< w.t[i] <<", v = "<<v<<", nunder = "<<nunder<<endl;

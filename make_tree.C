@@ -195,6 +195,7 @@ Long64_t event_trigger_time_tag_b0;
 Long64_t event_trigger_time_tag_b1;
 int fillNum;
 float fillAvgLumi=0;
+float fillTotalLumi=0;
 bool beam;
 mdaq::GlobalEvent * evt = new mdaq::GlobalEvent(); //for MilliDAQ output only
 mdaq::DemonstratorConfiguration * cfg = new mdaq::DemonstratorConfiguration(); 
@@ -221,6 +222,8 @@ vector<float> * v_presample_mean = new vector<float>();
 vector<float> * v_presample_RMS = new vector<float>();
 vector<float> * v_sideband_mean = new vector<float>();
 vector<float> * v_sideband_RMS = new vector<float>();
+vector<float> * v_sideband_mean_calib = new vector<float>();
+vector<float> * v_sideband_RMS_calib = new vector<float>();
 
 vector<Long64_t> * v_groupTDC_b0 = new vector<Long64_t>();
 vector<Long64_t> * v_groupTDC_b1 = new vector<Long64_t>();
@@ -244,7 +247,7 @@ void make_tree(TString fileName, int eventNum=-1, TString tag="",float rangeMin=
 void loadFillList(TString fillFile=milliqanOfflineDir+"processedFillList2018.txt");
 vector<TString> getFieldFileList(TString location);
 void loadFieldList(TString fieldFile);
-tuple<int,int,float> findFill(int seconds);
+tuple<int,int,float,float> findFill(int seconds);
 int findField(int seconds);
 void loadBranchesMilliDAQ();
 void loadWavesMilliDAQ();
@@ -482,11 +485,13 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMin,float
         fillNum=0;
         t_since_fill_start= -1;
         fillAvgLumi=-1;
+        fillTotalLumi=-1;
         secs = round(event_time_fromTDC);
-        tuple<int,int,float> fillInfo = findFill(secs);
+        tuple<int,int,float,float> fillInfo = findFill(secs);
         fillNum= get<0>(fillInfo);
         t_since_fill_start= get<1>(fillInfo);
         fillAvgLumi = get<2>(fillInfo);
+        fillTotalLumi = get<3>(fillInfo);
 
         if(fillNum>0) beam=true;
         else beam = false;
@@ -530,7 +535,7 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMin,float
 
 
 	}
-	else{ event_time_b0=0;event_time_b1=0;event_t_string="";fillNum=0;beam=false;fillAvgLumi=-1;}
+	else{ event_time_b0=0;event_time_b1=0;event_t_string="";fillNum=0;beam=false;fillAvgLumi=-1; fillTotalLumi=-1;}
 
 	vector<vector<vector<float> > > allPulseBounds;
 	for(int ic=0;ic<numChan;ic++){
@@ -573,6 +578,7 @@ void convertXaxis(TH1D *h, int ic){
 
 void prepareWave(int ic, float &sb_meanPerEvent, float &sb_RMSPerEvent){
     //Invert waveform and convert x-axis to ns
+
     waves[ic]->Scale(-1.0);
     convertXaxis(waves[ic],ic);
 
@@ -628,6 +634,11 @@ vector< vector<float> > processChannel(int ic){
     float channelSPEAreas[] = {65.,70.,85.,70.,73.,83.,75.,80.,100.,65.,90.,80.,73.,95.,75.,1.,65.,45.,95.,85.,68.,90.,100.,58.,48.,33.,78.,75.,80.,62.,68.,70.};
     //NB: v8 march13- currently approximate guess (60 nVs) for unmeasured ch0,ch8,ch11,ch13
 
+    v_sideband_mean->push_back(sb_meanPerEvent);
+    v_sideband_RMS->push_back(sb_RMSPerEvent);	
+    v_sideband_mean_calib->push_back(sb_mean);
+    v_sideband_RMS_calib->push_back(sb_RMS);	
+
 
 
     for(int ipulse = 0; ipulse<npulses; ipulse++){
@@ -654,9 +665,6 @@ vector< vector<float> > processChannel(int ic){
 	v_duration->push_back(pulseBounds[ipulse][1] - pulseBounds[ipulse][0]);
 	if(ipulse>0) v_delay->push_back(pulseBounds[ipulse][0] - pulseBounds[ipulse-1][1]); //interval between end of previous pulse and start of this one
 	else v_delay->push_back(1999.);
-
-	v_sideband_mean->push_back(sb_meanPerEvent);
-	v_sideband_RMS->push_back(sb_RMSPerEvent);	
 
 	//get presample info
 	pair<float,float> presampleInfo = measureSideband(ic,pulseBounds[ipulse][0]-presampleStart,pulseBounds[ipulse][0]-presampleEnd);
@@ -1110,6 +1118,7 @@ void prepareOutBranches(){
     TBranch * b_nRollOvers = outTree->Branch("nRollOvers",&nRollOvers,"nRollOvers/I");
     TBranch * b_beam = outTree->Branch("beam",&beam,"beam/O");
     TBranch * b_fillAvgLumi = outTree->Branch("fillAvgLumi",&fillAvgLumi,"fillAvgLumi/F");
+    TBranch * b_fillTotalLumi = outTree->Branch("fillTotalLumi",&fillTotalLumi,"fillTotalLumi/F");
     TBranch * b_present_b0 = outTree->Branch("present_b0",&present_b0,"present_b0/O");
     TBranch * b_present_b1 = outTree->Branch("present_b1",&present_b1,"present_b1/O");
     TBranch * b_event_time_b0 = outTree->Branch("event_time_b0",&event_time_b0,"event_time_b0/L");
@@ -1142,6 +1151,8 @@ void prepareOutBranches(){
     TBranch * b_presample_RMS = outTree->Branch("presample_RMS",&v_presample_RMS);
     TBranch * b_sideband_mean = outTree->Branch("sideband_mean",&v_sideband_mean);
     TBranch * b_sideband_RMS = outTree->Branch("sideband_RMS",&v_sideband_RMS);
+    TBranch * b_sideband_mean_calib = outTree->Branch("sideband_mean_calib",&v_sideband_mean_calib);
+    TBranch * b_sideband_RMS_calib = outTree->Branch("sideband_RMS_calib",&v_sideband_RMS_calib);
 
     TBranch * b_groupTDC_b0 = outTree->Branch("groupTDC_b0",&v_groupTDC_b0);
     TBranch * b_groupTDC_b1 = outTree->Branch("groupTDC_b1",&v_groupTDC_b1);
@@ -1168,6 +1179,7 @@ void prepareOutBranches(){
     outTree->SetBranchAddress("fill",&fillNum,&b_fill);
     outTree->SetBranchAddress("beam",&beam,&b_beam);
     outTree->SetBranchAddress("fillAvgLumi",&fillAvgLumi,&b_fillAvgLumi);
+    outTree->SetBranchAddress("fillTotalLumi",&fillTotalLumi,&b_fillTotalLumi);
     outTree->SetBranchAddress("present_b0",&present_b0,&b_present_b0);
     outTree->SetBranchAddress("present_b1",&present_b1,&b_present_b1);
     outTree->SetBranchAddress("event_trigger_time_tag_b0",&event_trigger_time_tag_b0,&b_event_trigger_time_tag_b0);
@@ -1196,6 +1208,8 @@ void prepareOutBranches(){
     outTree->SetBranchAddress("presample_RMS",&v_presample_RMS,&b_presample_RMS);
     outTree->SetBranchAddress("sideband_mean",&v_sideband_mean,&b_sideband_mean);
     outTree->SetBranchAddress("sideband_RMS",&v_sideband_RMS,&b_sideband_RMS);
+    outTree->SetBranchAddress("sideband_mean_calib",&v_sideband_mean_calib,&b_sideband_mean_calib);
+    outTree->SetBranchAddress("sideband_RMS_calib",&v_sideband_RMS_calib,&b_sideband_RMS_calib);
 
     outTree->SetBranchAddress("groupTDC_b0",&v_groupTDC_b0,&b_groupTDC_b0);
     outTree->SetBranchAddress("groupTDC_b1",&v_groupTDC_b1,&b_groupTDC_b1);
@@ -1232,6 +1246,8 @@ void clearOutBranches(){
     v_delay->clear();
     v_sideband_mean->clear();
     v_sideband_RMS->clear();
+    v_sideband_mean_calib->clear();
+    v_sideband_RMS_calib->clear();
     v_quiet->clear();
     v_presample_mean->clear();
     v_presample_RMS->clear();
@@ -1354,22 +1370,24 @@ void loadFillList(TString fillFile){
 
 }
 
-tuple<int,int,float> findFill(int seconds){
+tuple<int,int,float,float> findFill(int seconds){
     auto index_of_first_fill_with_larger_start_time = distance(fillList.begin(), lower_bound(fillList.begin(),fillList.end(), 
 		make_tuple(seconds, seconds, 0, 0.,0.) ));
     //cout<<"index "<<index_of_first_fill_with_larger_start_time<<endl;
     int this_fill=0;
     int time_since_start=-1;
     float average_instantaneous_lumi=-1;
+    float total_lumi=-1;
     if(index_of_first_fill_with_larger_start_time > (int)fillList.size()) this_fill=-1;
     //This event is during a fill if its time is less than the end time of the fill before the first fill with a larger start time
     else if(seconds < get<1>(fillList[index_of_first_fill_with_larger_start_time-1]) || get<1>(fillList[index_of_first_fill_with_larger_start_time-1])==-1){
 	//end time == -1 indicates ongoing fill 
 	this_fill = get<2>(fillList[index_of_first_fill_with_larger_start_time-1]); //fill number
 	time_since_start = seconds - get<0>(fillList[index_of_first_fill_with_larger_start_time-1]); //time of this event - start time of fill
+	total_lumi = get<3>(fillList[index_of_first_fill_with_larger_start_time-1]);
 	average_instantaneous_lumi = get<4>(fillList[index_of_first_fill_with_larger_start_time-1]);
     }
-    return make_tuple(this_fill,time_since_start,average_instantaneous_lumi);
+    return make_tuple(this_fill,time_since_start,average_instantaneous_lumi,total_lumi);
 }
 
 

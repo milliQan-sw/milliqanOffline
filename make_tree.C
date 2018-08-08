@@ -592,6 +592,13 @@ void prepareWave(int ic, float &sb_meanPerEvent, float &sb_RMSPerEvent){
     sb_meanPerEvent = mean_rms.first;
     sb_RMSPerEvent = mean_rms.second;
 
+    // Subtract dynamically measured pedestal for CH30, which has time dependent variations
+    if (ic == 30) {
+      for(int ibin = 1; ibin <= waves[ic]->GetNbinsX(); ibin++){
+	waves[ic]->SetBinContent(ibin,waves[ic]->GetBinContent(ibin)-mean_rms.first);
+      }
+     }
+
 }
 
 //Measure mean and RMS of samples in range from start to end (in ns)

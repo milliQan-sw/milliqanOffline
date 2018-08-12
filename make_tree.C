@@ -666,7 +666,7 @@ vector< vector<float> > processChannel(int ic){
 	v_time->push_back(pulseBounds[ipulse][0]);
 	v_time_module_calibrated->push_back(pulseBounds[ipulse][0]+channelCalibrations[ic]);
 	v_area->push_back(waves[ic]->Integral());
-	v_nPE->push_back(waves[ic]->Integral()/channelSPEAreas[ic]);
+	v_nPE->push_back((waves[ic]->Integral()/(channelSPEAreas[ic]))*(1.6/sample_rate[ic/16]));
 	v_ipulse->push_back(ipulse);
 	v_npulses->push_back(npulses);
 	v_duration->push_back(pulseBounds[ipulse][1] - pulseBounds[ipulse][0]);

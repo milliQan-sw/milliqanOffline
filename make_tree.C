@@ -1006,12 +1006,18 @@ vector< vector<float> > findPulses(int ic){
     int NconsecEndConfig[] = {12, 12, 12, 12, 12, 3, 12, 12, 12, 3, 12, 12, 12, 12, 12, 12, 12, 3, 12, 12, 12, 12, 3, 12, 3, 3, 12, 12, 12, 12, 12, 12};
     float threshConfig[] = {2.0, 2.0, 2.0, 2.0, 2.0, 2.5, 2.0, 2.0, 2.0, 2.5, 2.0, 2.0, 2.0, 2.0, 2.0, 2.5, 2.0, 2.5, 2.0, 2.0, 2.0, 2.0, 3.0, 2.0, 2.5, 2.5, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0};
 
+    int Nconsec = NconsecConfig[ic];
+    int NconsecEnd = NconsecEndConfig[ic];
 
-    // if(sample_rate[ic/16]<1.6){
-	// Nconsec-=1;
-	// NconsecEnd-=1;
-	// thresh+=1;
-    // }
+    float scaling = sample_rate[ic/16]/1.6;
+
+
+    // if(scaling)<1.{
+    Nconsec = int(ceil(Nconsec*scaling)+0.1);
+    NconsecEnd = int(ceil(NconsecEnd*scaling)+0.1);
+    if (Nconsec < 2 && Nconsec < NconsecConfig[ic]) Nconsec = 2;
+    if (NconsecEnd < 2 && NconsecEnd < NconsecEndConfig[ic]) NconsecEnd = 2;
+     // }
 
     vector<vector<float> > bounds;
     float tstart = sideband_range[1]+1;
@@ -1022,7 +1028,7 @@ vector< vector<float> > findPulses(int ic){
     int nover = 0; // Number of samples seen consecutively over threshold
     int nunder = 0; // Number of samples seen consecutively under threshold
     int i_begin = istart;
-    int i_stop_searching = waves[ic]->GetNbinsX()-NconsecConfig[ic];
+    int i_stop_searching = waves[ic]->GetNbinsX()-Nconsec;
     int i_stop_final_pulse = waves[ic]->GetNbinsX();
     // int tWindow[2];
     for (int i=istart; i<i_stop_searching || (inpulse && i<i_stop_final_pulse); i++) { // Loop over all samples looking for pulses
@@ -1038,7 +1044,7 @@ vector< vector<float> > findPulses(int ic){
 		//cout << "DEBUG: Over pulse, t = "<< w.t[i] <<", v = "<<v<<", nover = "<<nover<<endl;
 	    }
 
-	    if (nover>NconsecConfig[ic]) {
+	    if (nover>Nconsec) {
 		//cout << "DEBUG: Starting pulse, t = "<< w.t[i] <<", v = "<<v<<endl;
 		inpulse = true; // Start a pulse
 		nunder = 0; // Counts number of samples underthreshold to end a pulse
@@ -1051,7 +1057,7 @@ vector< vector<float> > findPulses(int ic){
 		nunder = 0;
 	    }
 	    //cout << "DEBUG: Inside pulse, t = "<< w.t[i] <<", v = "<<v<<", nunder = "<<nunder<<endl;
-	    if (nunder>NconsecEndConfig[ic] || i==(i_stop_final_pulse-1)) { // The end of a pulse, or pulse has reached the end of range 
+	    if (nunder>NconsecEnd || i==(i_stop_final_pulse-1)) { // The end of a pulse, or pulse has reached the end of range 
 
 		//cout<<"DEBUG: i_begin "<<i_begin<<endl;
 		// cout<<"DEBUG: tWindow 0 and 1: "<<w.t[i_begin]<<" "<<w.t[i]<<endl;

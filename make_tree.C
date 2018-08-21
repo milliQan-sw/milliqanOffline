@@ -13,6 +13,7 @@
 #include "TF1.h"
 #include "TMath.h"
 #include "TFile.h"
+#include "TVirtualFFT.h"
 #include "TTree.h"
 #include "TChain.h"
 #include "TMath.h"
@@ -42,6 +43,13 @@
 #endif
 
 using namespace std;
+TF1 *fsin = new TF1("fsin", "sin(2*x)", 0, 4*TMath::Pi());
+TH1D * doFFT(TH1D * hrIn){
+    TH1 *hr = 0;
+    TVirtualFFT::SetTransform(0);
+    hr = hrIn->FFT(hr, "MAG");
+    return (TH1D *) hr;
+}
 
 //////////////////////////////////////////
 
@@ -83,7 +91,6 @@ vector<TString> tubeSpecies = {"ET","ET","ET","ET",             // 0 1 2 3
 //     -2,0,-3,-1};    // 12 13 14 15
 
    
-
 
 vector< vector<int> > chanMap =
 //col,row,layer,type (xyz) 
@@ -248,7 +255,7 @@ bool addTriggerTimes = true;
 
 TString milliqanOfflineDir="/net/cms26/cms26r0/milliqan/milliqanOffline/";
 
-void make_tree(TString fileName, int eventNum=-1, TString tag="",float rangeMinX=-1.,float rangeMaxX=-1.,float rangeMinY=-1000.,float rangeMaxY=-1000., int displayPulseBounds=1, int onlyForceChans=0, set<int> forceChan={});
+void make_tree(TString fileName, int eventNum=-1, TString tag="",float rangeMinX=-1.,float rangeMaxX=-1.,float rangeMinY=-1000.,float rangeMaxY=-1000., int displayPulseBounds=1, int onlyForceChans=0, int runFFT=0 ,set<int> forceChan={});
 void loadFillList(TString fillFile=milliqanOfflineDir+"processedFillList2018.txt");
 vector<TString> getFieldFileList(TString location);
 void loadFieldList(TString fieldFile);
@@ -265,7 +272,7 @@ vector< vector<float> > findPulses(int ic);
 void findTriggerCandidates(int ic, float sb_mean);
 vector< vector<float> > findPulses_inside_out(int ic);
 void displayPulse(int ic, float begin, float end, int ipulse);
-void displayEvent(vector<vector<vector<float> > > bounds,TString tag,float rangeMinX,float rangeMaxX,float rangeMinY,float rangeMaxY,bool calibrateDisplay, bool displayPulseBounds, bool onlyForceChans, set<int> forceChan={});
+void displayEvent(vector<vector<vector<float> > > bounds,TString tag,float rangeMinX,float rangeMaxX,float rangeMinY,float rangeMaxY,bool calibrateDisplay, bool displayPulseBounds, bool onlyForceChans, bool runFFT, set<int> forceChan={});
 void h1cosmetic(TH1D* hist,int ic);
 void getFileCreationTime(const char *path);
 vector<int> eventsPrinted(32,0);
@@ -306,23 +313,22 @@ int main(int argc, char **argv)
     else if(argc==7) make_tree(argv[1],stoi(argv[2]),argv[3],stof(argv[4]),stof(argv[5]),stoi(argv[6]));
     else if(argc==8) make_tree(argv[1],stoi(argv[2]),argv[3],stof(argv[4]),stof(argv[5]),stoi(argv[6]),stoi(argv[7]));
     else if(argc==9) make_tree(argv[1],stoi(argv[2]),argv[3],stof(argv[4]),stof(argv[5]),stoi(argv[6]),stoi(argv[7]),stoi(argv[8]));
-    else if(argc==10) {
-	make_tree(argv[1],stoi(argv[2]),argv[3],stof(argv[4]),stof(argv[5]),stoi(argv[6]),stoi(argv[7]),stoi(argv[8]),stoi(argv[9]));
-    }
-    else if(argc>=11) {
+    else if(argc==10) make_tree(argv[1],stoi(argv[2]),argv[3],stof(argv[4]),stof(argv[5]),stoi(argv[6]),stoi(argv[7]),stoi(argv[8]),stoi(argv[9]));
+    else if(argc==11) make_tree(argv[1],stoi(argv[2]),argv[3],stof(argv[4]),stof(argv[5]),stoi(argv[6]),stoi(argv[7]),stoi(argv[8]),stoi(argv[9]),stoi(argv[10]));
+    else if(argc>=12) {
         //the arguments after index 10 are channels to be forced for the display.
         set<int> forceChans;
-        for(int i=10;i<argc;i++){
+        for(int i=11;i<argc;i++){
             forceChans.insert(stoi(argv[i]));
         }
-        make_tree(argv[1],stoi(argv[2]),argv[3],stof(argv[4]),stof(argv[5]),stoi(argv[6]),stoi(argv[7]),stoi(argv[8]),stoi(argv[9]),forceChans);
+	make_tree(argv[1],stoi(argv[2]),argv[3],stof(argv[4]),stof(argv[5]),stoi(argv[6]),stoi(argv[7]),stoi(argv[8]),stoi(argv[9]),stoi(argv[10]),forceChans);
     }
 
 }
 # endif
 
 
-void make_tree(TString fileName, int eventNum, TString tag, float rangeMinX,float rangeMaxX, float rangeMinY,float rangeMaxY, int displayPulseBounds, int onlyForceChans, set<int> forceChan){
+void make_tree(TString fileName, int eventNum, TString tag, float rangeMinX,float rangeMaxX, float rangeMinY,float rangeMaxY, int displayPulseBounds, int onlyForceChans,int runFFT, set<int> forceChan){
     //	gROOT->ProcessLine( "gErrorIgnoreLevel = kError");
     for (int i=0;i<=31;i++) {channelCalibrations[i] = interModuleCalibrations[i];}//+intraModuleCalibrations[i];}
     bool calibrateDisplay = true;
@@ -561,7 +567,9 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMinX,floa
 
 	    allPulseBounds.push_back(processChannel(ic));
 	}
-	if(displayMode) displayEvent(allPulseBounds,tag,rangeMinX,rangeMaxX,rangeMinY,rangeMaxY,calibrateDisplay,displayPulseBounds,onlyForceChans,forceChan);
+	if(displayMode){
+	    displayEvent(allPulseBounds,tag,rangeMinX,rangeMaxX,rangeMinY,rangeMaxY,calibrateDisplay,displayPulseBounds,onlyForceChans,runFFT,forceChan);
+	}
 	else outTree->Fill();
     }
     if(!displayMode) cout<<"Processed "<<maxEvents<<" events."<<endl;
@@ -582,13 +590,19 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMinX,floa
 }
 
 
+void scaleXaxis(TH1D *h, double scaling){
+    TAxis * a = h->GetXaxis();
+    a->Set( a->GetNbins(), a->GetXmin()*scaling, a->GetXmax()*scaling );
+
+    h->ResetStats();
+}
+
 void convertXaxis(TH1D *h, int ic){
     TAxis * a = h->GetXaxis();
     a->Set( a->GetNbins(), a->GetXmin()/sample_rate[ic/16], a->GetXmax()/sample_rate[ic/16] );
 
     h->ResetStats();
 }
-
 void prepareWave(int ic, float &sb_meanPerEvent, float &sb_RMSPerEvent, float &sb_triggerMeanPerEvent, float &sb_triggerRMSPerEvent,
 	float &sb_triggerMaxPerEvent,float &sb_timeTriggerMaxPerEvent){
     //Invert waveform and convert x-axis to ns
@@ -765,7 +779,8 @@ void displayPulse(int ic, float begin, float end, int ipulse){
     c.Print(displayDirectory+Form("Event%i_Chan%i_begin%0.0f.pdf",event,ic,begin));
 }
 
-void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rangeMinX,float rangeMaxX,float rangeMinY,float rangeMaxY,bool calibrateDisplay, bool displayPulseBounds,bool onlyForceChans, set<int> forceChan){
+void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rangeMinX,float rangeMaxX,float rangeMinY,float rangeMaxY,bool calibrateDisplay, bool displayPulseBounds,bool onlyForceChans,bool runFFT, set<int> forceChan){
+    if (runFFT) displayPulseBounds = false;
     TCanvas c("c1","",1400,800);
     gPad->SetRightMargin(0.39);
     gStyle->SetGridStyle(3);
@@ -778,9 +793,11 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
     vector<int> chanList;
     float maxheight=0;
     float timeRange[2];
-    timeRange[0]=1024./min(sample_rate[0],sample_rate[1]); timeRange[1]=0.;
+    timeRange[1]=1024./min(sample_rate[0],sample_rate[1]); timeRange[0]=0.;
+    if (runFFT) {timeRange[1]=max(sample_rate[0],sample_rate[1])/2.; timeRange[0]=0.;}
     vector<vector<vector<float>>> boundsShifted;
     vector<TH1D*> wavesShifted;
+    vector<TH1D*> wavesShiftedTemp;
     float originalMaxHeights[32];
     for(uint ic=0;ic<bounds.size();ic++){
 	vector<vector<float>> boundShifted = bounds[ic];
@@ -804,27 +821,55 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
 	}
 	if(boundShifted.size()>0 || waveShifted->GetMaximum()>drawThresh || forceChan.find(ic)!=forceChan.end()){
 	    //if(ic==15 && forceChan.find(ic)==forceChan.end()) continue;
-            if (onlyForceChans && forceChan.find(ic)==forceChan.end()) continue;
-	    chanList.push_back(ic);
-	    TString beamState = "off";
-	    if(beam) beamState="on";
-	    if (calibrateDisplay) waveShifted->SetTitle(Form("Run %i, File %i, Event %i (beam %s);Time [ns];Amplitude [mV];",runNum,fileNum,event,beamState.Data()));
-	    else waveShifted->SetTitle(Form("Run %i, File %i, Event %i (beam %s);Uncalibrated Time [ns];Amplitude [mV];",runNum,fileNum,event,beamState.Data()));
-	    if(ic!=15){ 
-		//Reset range to find correct maxima
-		waveShifted->SetAxisRange(0,1024./sample_rate[ic/16]);
-		//Keep track of max amplitude
-		if(waveShifted->GetMaximum()>maxheight) maxheight=waveShifted->GetMaximum();
-		if(boundShifted.size()>0){
-		    //keep track of earliest pulse start time
-		    if(boundShifted[0][0]<timeRange[0]) timeRange[0]=boundShifted[0][0];
-		    //keep track of latest pulse end time (pulses are ordered chronologicaly for each channel)
-		    if(boundShifted[boundShifted.size()-1][1]>timeRange[1]) timeRange[1]=boundShifted[boundShifted.size()-1][1];
+	    if (!(onlyForceChans && forceChan.find(ic)==forceChan.end())){
+		chanList.push_back(ic);
+		TString beamState = "off";
+		if(beam) beamState="on";
+		if (calibrateDisplay) waveShifted->SetTitle(Form("Run %i, File %i, Event %i (beam %s);Time [ns];Amplitude [mV];",runNum,fileNum,event,beamState.Data()));
+		else waveShifted->SetTitle(Form("Run %i, File %i, Event %i (beam %s);Uncalibrated Time [ns];Amplitude [mV];",runNum,fileNum,event,beamState.Data()));
+		if(ic!=15){ 
+		    //Reset range to find correct maxima
+		    waveShifted->SetAxisRange(0,1024./sample_rate[ic/16]);
+		    //Keep track of max amplitude
+		    if(waveShifted->GetMaximum()>maxheight) maxheight=waveShifted->GetMaximum();
+		    if(boundShifted.size()>0){
+			//keep track of earliest pulse start time
+			if(boundShifted[0][0]<timeRange[0]) timeRange[0]=boundShifted[0][0];
+			//keep track of latest pulse end time (pulses are ordered chronologicaly for each channel)
+			if(boundShifted[boundShifted.size()-1][1]>timeRange[1]) timeRange[1]=boundShifted[boundShifted.size()-1][1];
+		    }
 		}
 	    }
 	}
-	wavesShifted.push_back(waveShifted);
+	if (runFFT) wavesShiftedTemp.push_back(waveShifted);
+	else wavesShifted.push_back(waveShifted);
 	boundsShifted.push_back(boundShifted);
+    }
+    int maxheightbin = -1;
+    if (runFFT){
+	maxheight = -999;
+	boundsShifted = bounds;
+	for(uint ic=0;ic<bounds.size();ic++){
+	    // if (std::find(chanList.begin(), chanList.end(), ic) == chanList.end()) continue;
+	    float binSize = wavesShiftedTemp[ic]->GetBinCenter(2)-wavesShiftedTemp[ic]->GetBinCenter(1);
+	    float totalRange = wavesShiftedTemp[ic]->GetXaxis()->GetBinUpEdge(wavesShiftedTemp[ic]->GetNbinsX());
+	    TString name; name.Form("%d",ic); 
+	    TH1D * hist_transformT = doFFT(wavesShiftedTemp[ic]);
+	    hist_transformT->SetName(name+"Temp");
+	    scaleXaxis(hist_transformT,1./totalRange);
+	    TH1D * hist_transform = new TH1D (name,"",int(hist_transformT->GetNbinsX()/2),0,hist_transformT->GetXaxis()->GetBinUpEdge(hist_transformT->GetNbinsX()));
+	    for (uint iBin = 1; iBin <= hist_transform->GetNbinsX(); iBin ++){
+		hist_transform->SetBinContent(iBin,TMath::Sqrt(hist_transformT->GetBinContent(iBin)));
+	    }
+	    wavesShifted.push_back(hist_transformT);
+	    if (!(onlyForceChans && forceChan.find(ic)==forceChan.end())){
+		wavesShifted[ic]->GetXaxis()->SetRange(2,wavesShifted[ic]->GetNbinsX()-1);
+		if(wavesShifted[ic]->GetMaximum()>maxheight) maxheight=wavesShifted[ic]->GetMaximum();
+		if(wavesShifted[ic]->GetMaximum()>maxheight) maxheightbin=wavesShifted[ic]->GetMaximumBin();
+		wavesShifted[ic]->GetXaxis()->SetRange(1,wavesShifted[ic]->GetNbinsX());
+	    }
+	    wavesShifted[ic]->SetTitle(wavesShiftedTemp[ic]->GetTitle());
+	}
     }
     maxheight*=1.1;
 
@@ -832,21 +877,26 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
     if (rangeMaxY > -999) maxheight = rangeMaxY;
     if (rangeMinX < 0) timeRange[0]*=0.9;
     else timeRange[0] = rangeMinX;
-    if (rangeMaxX < 0) timeRange[1]= min(1.1*timeRange[1],1024./min(sample_rate[0],sample_rate[1]));
-    else timeRange[1] = rangeMaxX;
+    if (runFFT){
+	if (rangeMaxX < 0) timeRange[1]= max(sample_rate[0],sample_rate[1])/2.;
+	else timeRange[1] = rangeMaxX;
+    }
+    else {
+	if (rangeMaxX < 0) timeRange[1]= min(1.1*timeRange[1],1024./min(sample_rate[0],sample_rate[1]));
+	else timeRange[1] = rangeMaxX;
+    }
 
     float depth = 0.075*chanList.size();
     TLegend leg(0.45,0.9-depth,0.65,0.9);
     for(uint i=0;i<chanList.size();i++){
 	int ic = chanList[i];	
-        if (onlyForceChans && forceChan.find(ic)==forceChan.end()) continue;
-
+	if (onlyForceChans && forceChan.find(ic)==forceChan.end()) continue;
 	if(ic==15 && forceChan.find(ic)==forceChan.end()) continue;
 	wavesShifted[ic]->SetAxisRange(timeRange[0],timeRange[1]);
 
 	originalMaxHeights[ic] = wavesShifted[ic]->GetMaximum();
-        if (rangeMinY > -999) wavesShifted[ic]->SetMinimum(rangeMinY);
-        wavesShifted[ic]->SetMaximum(maxheight);
+	if (rangeMinY > -999) wavesShifted[ic]->SetMinimum(rangeMinY);
+	wavesShifted[ic]->SetMaximum(maxheight);
 	int column= chanMap[ic][0];
 	int row= chanMap[ic][1];
 	int layer= chanMap[ic][2];
@@ -884,6 +934,8 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
     // 0.815,0.845,0.815,0.845,0.815,0.845,
     // 0.7,0.73,0.7,0.73,0.7,0.73
     //    };
+    //    
+
 
     vector<float> xstart = {0.66,0.78,0.9};
     vector<float> ystart= {0.798,0.851,0.904};
@@ -936,89 +988,90 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
     int maxPerChannel = 0;
     if (chanList.size() > 0) maxPerChannel = 10/chanList.size();
 
-    for(int i=0;i<32;i++){
-        if (onlyForceChans && forceChan.find(i)==forceChan.end()) continue;
-	if(boundsShifted[i].size()>0 || wavesShifted[i]->GetMaximum()>drawThresh || forceChan.find(i)!=forceChan.end()){//if this channel has a pulse
-	    if(i==15 && forceChan.find(i)==forceChan.end()) continue;
-	    //if(i==15) continue;
-	    //xyz
-	    int column= chanMap[i][0];
-	    int row= chanMap[i][1];
-	    int layer= chanMap[i][2];
-	    int type= chanMap[i][3];
+    for(uint i=0;i<chanList.size();i++){
+	int ic = chanList[i];	
+	if (onlyForceChans && forceChan.find(ic)==forceChan.end()) continue;
+	if(ic==15 && forceChan.find(ic)==forceChan.end()) continue;
+	//if(i==15) continue;
+	//xyz
+	int column= chanMap[ic][0];
+	int row= chanMap[ic][1];
+	int layer= chanMap[ic][2];
+	int type= chanMap[ic][3];
 
-	    int colorIndex = 4-2*(row-1)+column-1+6*(layer-1);
-	    if(type==1) colorIndex = layer; //slabs: 0-3
-	    else if(type==2) colorIndex = 4 + 3*(layer-1) + (column+1); //sheets
+	int colorIndex = 4-2*(row-1)+column-1+6*(layer-1);
+	if(type==1) colorIndex = layer; //slabs: 0-3
+	else if(type==2) colorIndex = 4 + 3*(layer-1) + (column+1); //sheets
 
-	    if(i==15) colorIndex=1;
+	if(ic==15) colorIndex=1;
 
-	    TPave * pave;
-	    if (type==1){
-		float xpos,ypos;
-		ypos = slab_ystart;
-		xpos = slab_xstart[layer];
-		pave = new TPave(xpos,ypos,xpos+slab_width,ypos+slab_height,0,"NDC");
-		pave->SetFillColor(colors[colorIndex]);
-		pave->Draw();
+	TPave * pave;
+	if (type==1){
+	    float xpos,ypos;
+	    ypos = slab_ystart;
+	    xpos = slab_xstart[layer];
+	    pave = new TPave(xpos,ypos,xpos+slab_width,ypos+slab_height,0,"NDC");
+	    pave->SetFillColor(colors[colorIndex]);
+	    pave->Draw();
+	}
+
+	else if (type==2){
+	    float xpos,ypos;
+
+	    if (column!=0){
+		xpos= xstart_leftsheets[layer-1];
+		if(column>0) xpos += sheet_left_to_right;
+		ypos = ystart_sidesheets;
+		pave = new TPave(xpos,ypos,xpos+sheet_width,ypos+vert_sheet_length,0,"NDC");
+	    }
+	    else{
+		xpos = xstart_topsheets[layer-1];
+		ypos = ystart_topsheets;
+		pave = new TPave(xpos,ypos,xpos+hori_sheet_length,ypos+1.4/0.8*sheet_width,0,"NDC");
 	    }
 
-	    else if (type==2){
-		float xpos,ypos;
-
-		if (column!=0){
-		    xpos= xstart_leftsheets[layer-1];
-		    if(column>0) xpos += sheet_left_to_right;
-		    ypos = ystart_sidesheets;
-		    pave = new TPave(xpos,ypos,xpos+sheet_width,ypos+vert_sheet_length,0,"NDC");
-		}
-		else{
-		    xpos = xstart_topsheets[layer-1];
-		    ypos = ystart_topsheets;
-		    pave = new TPave(xpos,ypos,xpos+hori_sheet_length,ypos+1.4/0.8*sheet_width,0,"NDC");
-		}
-
-		pave->SetFillColor(colors[colorIndex]);
-		pave->Draw();
-
-	    }
-	    else if(type==0){
-		float xpos = xstart[layer-1]+(column-1)*barw;
-		float ypos= ystart[row-1];
-		pave = new TPave(xpos,ypos,xpos+boxw,ypos+boxh,0,"NDC");
-		pave->SetFillColor(colors[colorIndex]);
-		pave->Draw();
-	    }
-
-	    tla.SetTextColor(colors[colorIndex]);
-	    tla.SetTextSize(0.04);
-	    tla.DrawLatexNDC(headerX,currentYpos,Form("Channel %i, V_{max} = %0.0f, N_{pulses}= %i",i,originalMaxHeights[i],(int)boundsShifted[i].size()));
-	    tla.SetTextColor(kBlack);
-	    currentYpos-=height;
-	    tla.SetTextSize(0.035);
-
-	    for(int ip=0;ip<boundsShifted[i].size();ip++){
-		TString digis="%.1f";
-		if(v_height->at(pulseIndex)>10) digis = "%.0f";
-		TString row;
-		if (calibrateDisplay) row = Form("%.0f ns: "+digis+" mV, %.0f pVs, %.0f ns",v_time_module_calibrated->at(pulseIndex),v_height->at(pulseIndex),v_area->at(pulseIndex),v_duration->at(pulseIndex));
-		else row = Form("%.0f ns: "+digis+" mV, %.0f pVs, %.0f ns",v_time->at(pulseIndex),v_height->at(pulseIndex),v_area->at(pulseIndex),v_duration->at(pulseIndex));
-		pulseIndex++; 
-		if(ip < maxPerChannel){			
-		    tla.DrawLatexNDC(rowX,currentYpos,row);
-		    currentYpos-=height*0.8;
-		}
-	    }
-	    currentYpos-=height*0.2;
+	    pave->SetFillColor(colors[colorIndex]);
+	    pave->Draw();
 
 	}
+	else if(type==0){
+	    float xpos = xstart[layer-1]+(column-1)*barw;
+	    float ypos= ystart[row-1];
+	    pave = new TPave(xpos,ypos,xpos+boxw,ypos+boxh,0,"NDC");
+	    pave->SetFillColor(colors[colorIndex]);
+	    pave->Draw();
+	}
+
+	tla.SetTextColor(colors[colorIndex]);
+	tla.SetTextSize(0.04);
+	tla.DrawLatexNDC(headerX,currentYpos,Form("Channel %i, V_{max} = %0.0f, N_{pulses}= %i",i,originalMaxHeights[ic],(int)boundsShifted[ic].size()));
+	tla.SetTextColor(kBlack);
+	currentYpos-=height;
+	tla.SetTextSize(0.035);
+
+	for(int ip=0;ip<boundsShifted[ic].size();ip++){
+	    TString digis="%.1f";
+	    if(v_height->at(pulseIndex)>10) digis = "%.0f";
+	    TString row;
+	    if (calibrateDisplay) row = Form("%.0f ns: "+digis+" mV, %.0f pVs, %.0f ns",v_time_module_calibrated->at(pulseIndex),v_height->at(pulseIndex),v_area->at(pulseIndex),v_duration->at(pulseIndex));
+	    else row = Form("%.0f ns: "+digis+" mV, %.0f pVs, %.0f ns",v_time->at(pulseIndex),v_height->at(pulseIndex),v_area->at(pulseIndex),v_duration->at(pulseIndex));
+	    pulseIndex++; 
+	    if(ip < maxPerChannel){			
+		tla.DrawLatexNDC(rowX,currentYpos,row);
+		currentYpos-=height*0.8;
+	    }
+	}
+	currentYpos-=height*0.2;
+
     }
 
     // tla.DrawLatexNDC(0.13,0.78,Form("Area: %0.2f",v_area->back()));
     // tla.DrawLatexNDC(0.13,0.73,Form("Duration: %0.2f",v_duration->back()));
     // leg.Draw();
     cout<<"Display directory is "<<displayDirectory<<endl;
-    TString displayName=Form(displayDirectory+"Run%i_File%i_Event%i_%s.pdf",runNum,fileNum,event,tag.Data());
+    TString displayName;
+    if (runFFT) displayName=Form(displayDirectory+"Run%i_File%i_Event%i_%s_FFT.pdf",runNum,fileNum,event,tag.Data()); 
+    else displayName=Form(displayDirectory+"Run%i_File%i_Event%i_%s.pdf",runNum,fileNum,event,tag.Data());
     c.Print(displayName);
 
 }
@@ -1068,17 +1121,17 @@ vector< vector<float> > findPulses(int ic){
 
     if (int(sample_rate[ic/16]/0.4+0.1) == 4)
     {
-        Nconsec = NconsecConfig1p6[ic];
-        NconsecEnd = NconsecEndConfig1p6[ic];
-        thresh = threshConfig1p6[ic];
-        lowThresh = thresh - rmsCalib[ic]/2;
+	Nconsec = NconsecConfig1p6[ic];
+	NconsecEnd = NconsecEndConfig1p6[ic];
+	thresh = threshConfig1p6[ic];
+	lowThresh = thresh - rmsCalib[ic]/2;
     }
     else if (int(sample_rate[ic/16]/0.4+0.1) == 2)
     {
-        Nconsec = NconsecConfig0p8[ic];
-        NconsecEnd = NconsecEndConfig0p8[ic];
-        thresh = threshConfig0p8[ic];
-        lowThresh = thresh - rmsCalib[ic];
+	Nconsec = NconsecConfig0p8[ic];
+	NconsecEnd = NconsecEndConfig0p8[ic];
+	thresh = threshConfig0p8[ic];
+	lowThresh = thresh - rmsCalib[ic];
     }
     // if (event==264) {
     //   cout << "Debug "<< thresh << " " << lowThresh<< " "<< Nconsec << " " << NconsecEnd<<endl;
@@ -1092,7 +1145,7 @@ vector< vector<float> > findPulses(int ic){
     // NconsecEnd = int(ceil(NconsecEnd*scaling)+0.1);
     // if (Nconsec < 2 && Nconsec < NconsecConfig[ic]) Nconsec = 2;
     // if (NconsecEnd < 2 && NconsecEnd < NconsecEndConfig[ic]) NconsecEnd = 2;
-     // }
+    // }
 
     vector<vector<float> > bounds;
     float tstart = sideband_range[1]+1;

@@ -56,6 +56,7 @@ using namespace std;
 int numChan=32;
 int maxEvents=-1; 
 float sideband_range[2] = {0,50}; //in ns
+float triggerBand_range[2] = {360,390}; //in ns
 float presampleStart= 17.5;
 float presampleEnd = 2.5; 
 //Measure presample from t0-17.5 to t0-2.5 ns
@@ -222,6 +223,10 @@ vector<float> * v_presample_mean = new vector<float>();
 vector<float> * v_presample_RMS = new vector<float>();
 vector<float> * v_sideband_mean = new vector<float>();
 vector<float> * v_sideband_RMS = new vector<float>();
+vector<float> * v_triggerBand_mean = new vector<float>();
+vector<float> * v_triggerBand_max = new vector<float>();
+vector<float> * v_triggerBand_maxTime = new vector<float>();
+vector<float> * v_triggerBand_RMS = new vector<float>();
 vector<float> * v_sideband_mean_calib = new vector<float>();
 vector<float> * v_sideband_RMS_calib = new vector<float>();
 
@@ -243,7 +248,7 @@ bool addTriggerTimes = true;
 
 TString milliqanOfflineDir="/net/cms26/cms26r0/milliqan/milliqanOffline/";
 
-void make_tree(TString fileName, int eventNum=-1, TString tag="",float rangeMin=-1.,float rangeMax=-1., int displayPulseBounds=1, set<int> forceChan={});
+void make_tree(TString fileName, int eventNum=-1, TString tag="",float rangeMinX=-1.,float rangeMaxX=-1.,float rangeMinY=-1000.,float rangeMaxY=-1000., int displayPulseBounds=1, int onlyForceChans=0, set<int> forceChan={});
 void loadFillList(TString fillFile=milliqanOfflineDir+"processedFillList2018.txt");
 vector<TString> getFieldFileList(TString location);
 void loadFieldList(TString fieldFile);
@@ -255,12 +260,12 @@ void loadBranchesInteractiveDAQ();
 void prepareOutBranches();
 void clearOutBranches();
 vector< vector<float> > processChannel(int ic);
-void prepareWave(int ic, float &sb_mean, float &sb_RMS);
+void prepareWave(int ic, float &sb_mean, float &sb_RMS, float &tb_mean, float &tb_RMS, float &tb_max, float &tb_maxTime);
 vector< vector<float> > findPulses(int ic);
 void findTriggerCandidates(int ic, float sb_mean);
 vector< vector<float> > findPulses_inside_out(int ic);
 void displayPulse(int ic, float begin, float end, int ipulse);
-void displayEvent(vector<vector<vector<float> > > bounds,TString tag,float rangeMin,float rangeMax,bool calibrateDisplay, bool displayPulseBounds, set<int> forceChan={});
+void displayEvent(vector<vector<vector<float> > > bounds,TString tag,float rangeMinX,float rangeMaxX,float rangeMinY,float rangeMaxY,bool calibrateDisplay, bool displayPulseBounds, bool onlyForceChans, set<int> forceChan={});
 void h1cosmetic(TH1D* hist,int ic);
 void getFileCreationTime(const char *path);
 vector<int> eventsPrinted(32,0);
@@ -269,6 +274,7 @@ void writeVersion();
 string GetStdoutFromCommand(string cmd);
 
 pair<float,float> measureSideband(int ic, float start, float end);
+pair<float,float> getMaxInRange(int ic, float start, float end);
 
 void defineColors(){
     for(int icolor=0;icolor<reds.size();icolor++){
@@ -298,18 +304,25 @@ int main(int argc, char **argv)
     else if(argc==4) make_tree(argv[1],stoi(argv[2]),argv[3]);
     else if(argc==6) make_tree(argv[1],stoi(argv[2]),argv[3],stof(argv[4]),stof(argv[5]));
     else if(argc==7) make_tree(argv[1],stoi(argv[2]),argv[3],stof(argv[4]),stof(argv[5]),stoi(argv[6]));
-    else if(argc>=8) {
-        //the arguments after index 6 are channels to be forced for the display.
+    else if(argc==8) make_tree(argv[1],stoi(argv[2]),argv[3],stof(argv[4]),stof(argv[5]),stoi(argv[6]),stoi(argv[7]));
+    else if(argc==9) make_tree(argv[1],stoi(argv[2]),argv[3],stof(argv[4]),stof(argv[5]),stoi(argv[6]),stoi(argv[7]),stoi(argv[8]));
+    else if(argc==10) {
+	make_tree(argv[1],stoi(argv[2]),argv[3],stof(argv[4]),stof(argv[5]),stoi(argv[6]),stoi(argv[7]),stoi(argv[8]),stoi(argv[9]));
+    }
+    else if(argc>=11) {
+        //the arguments after index 10 are channels to be forced for the display.
         set<int> forceChans;
-        for(int i=7;i<argc;i++){forceChans.insert(stoi(argv[i]));}
-        make_tree(argv[1],stoi(argv[2]),argv[3],stof(argv[4]),stof(argv[5]),stoi(argv[6]),forceChans);
+        for(int i=10;i<argc;i++){
+            forceChans.insert(stoi(argv[i]));
+        }
+        make_tree(argv[1],stoi(argv[2]),argv[3],stof(argv[4]),stof(argv[5]),stoi(argv[6]),stoi(argv[7]),stoi(argv[8]),stoi(argv[9]),forceChans);
     }
 
 }
 # endif
 
 
-void make_tree(TString fileName, int eventNum, TString tag, float rangeMin,float rangeMax, int displayPulseBounds, set<int> forceChan){
+void make_tree(TString fileName, int eventNum, TString tag, float rangeMinX,float rangeMaxX, float rangeMinY,float rangeMaxY, int displayPulseBounds, int onlyForceChans, set<int> forceChan){
     //	gROOT->ProcessLine( "gErrorIgnoreLevel = kError");
     for (int i=0;i<=31;i++) {channelCalibrations[i] = interModuleCalibrations[i];}//+intraModuleCalibrations[i];}
     bool calibrateDisplay = true;
@@ -548,7 +561,7 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMin,float
 
 	    allPulseBounds.push_back(processChannel(ic));
 	}
-	if(displayMode) displayEvent(allPulseBounds,tag,rangeMin,rangeMax,calibrateDisplay,displayPulseBounds,forceChan);
+	if(displayMode) displayEvent(allPulseBounds,tag,rangeMinX,rangeMaxX,rangeMinY,rangeMaxY,calibrateDisplay,displayPulseBounds,onlyForceChans,forceChan);
 	else outTree->Fill();
     }
     if(!displayMode) cout<<"Processed "<<maxEvents<<" events."<<endl;
@@ -576,7 +589,8 @@ void convertXaxis(TH1D *h, int ic){
     h->ResetStats();
 }
 
-void prepareWave(int ic, float &sb_meanPerEvent, float &sb_RMSPerEvent){
+void prepareWave(int ic, float &sb_meanPerEvent, float &sb_RMSPerEvent, float &sb_triggerMeanPerEvent, float &sb_triggerRMSPerEvent,
+	float &sb_triggerMaxPerEvent,float &sb_timeTriggerMaxPerEvent){
     //Invert waveform and convert x-axis to ns
 
     waves[ic]->Scale(-1.0);
@@ -592,6 +606,16 @@ void prepareWave(int ic, float &sb_meanPerEvent, float &sb_RMSPerEvent){
     sb_meanPerEvent = mean_rms.first;
     sb_RMSPerEvent = mean_rms.second;
 
+    //Measure event by event mean and RMS from the sideband
+    pair<float,float> mean_rms_trigger = measureSideband(ic,triggerBand_range[0],triggerBand_range[1]);
+    sb_triggerMeanPerEvent = mean_rms_trigger.first;
+    sb_triggerRMSPerEvent = mean_rms_trigger.second;
+
+    //Measure event by event mean and RMS from the sideband
+    pair<float,float> max_timeMax_trigger = getMaxInRange(ic,triggerBand_range[0],triggerBand_range[1]);
+    sb_triggerMaxPerEvent = max_timeMax_trigger.first;
+    sb_timeTriggerMaxPerEvent = max_timeMax_trigger.second;
+
     // Subtract dynamically measured pedestal for CH30, which has time dependent variations
     if (ic == 30) {
       for(int ibin = 1; ibin <= waves[ic]->GetNbinsX(); ibin++){
@@ -601,6 +625,24 @@ void prepareWave(int ic, float &sb_meanPerEvent, float &sb_RMSPerEvent){
 
 }
 
+//Measure mean and RMS of samples in range from start to end (in ns)
+pair<float,float> getMaxInRange(int ic, float start, float end){
+
+    float sum_sb=0.;
+    float sum2_sb=0.;
+    int startbin = waves[ic]->FindBin(start);
+    int endbin = waves[ic]->FindBin(end);
+    float maxInRange = -9999;
+    float timeMaxInRange = -1;
+    for(int ibin=startbin; ibin <= endbin; ibin++){
+	if (waves[ic]->GetBinContent(ibin) > maxInRange){
+	    maxInRange = waves[ic]->GetBinContent(ibin);
+	    timeMaxInRange = waves[ic]->GetBinLowEdge(ibin);
+	}
+    }
+    return make_pair(maxInRange,timeMaxInRange);
+
+}
 //Measure mean and RMS of samples in range from start to end (in ns)
 pair<float,float> measureSideband(int ic, float start, float end){
 
@@ -624,8 +666,8 @@ pair<float,float> measureSideband(int ic, float start, float end){
 
 
 vector< vector<float> > processChannel(int ic){
-    float sb_meanPerEvent, sb_RMSPerEvent;
-    prepareWave(ic, sb_meanPerEvent, sb_RMSPerEvent);
+    float sb_meanPerEvent, sb_RMSPerEvent, sb_triggerMeanPerEvent, sb_triggerRMSPerEvent,  sb_triggerMaxPerEvent, sb_timeTriggerMaxPerEvent;
+    prepareWave(ic, sb_meanPerEvent, sb_RMSPerEvent,sb_triggerMeanPerEvent, sb_triggerRMSPerEvent, sb_triggerMaxPerEvent, sb_timeTriggerMaxPerEvent); 
     float sb_mean = meanCalib[ic];
     float sb_RMS = rmsCalib[ic];
 
@@ -643,6 +685,10 @@ vector< vector<float> > processChannel(int ic){
 
     v_sideband_mean->push_back(sb_meanPerEvent);
     v_sideband_RMS->push_back(sb_RMSPerEvent);	
+    v_triggerBand_mean->push_back(sb_triggerMeanPerEvent);
+    v_triggerBand_RMS->push_back(sb_triggerRMSPerEvent);	
+    v_triggerBand_max->push_back(sb_triggerMaxPerEvent);
+    v_triggerBand_maxTime->push_back(sb_timeTriggerMaxPerEvent);	
     v_sideband_mean_calib->push_back(sb_mean);
     v_sideband_RMS_calib->push_back(sb_RMS);	
 
@@ -719,7 +765,7 @@ void displayPulse(int ic, float begin, float end, int ipulse){
     c.Print(displayDirectory+Form("Event%i_Chan%i_begin%0.0f.pdf",event,ic,begin));
 }
 
-void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rangeMin,float rangeMax,bool calibrateDisplay, bool displayPulseBounds, set<int> forceChan){
+void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rangeMinX,float rangeMaxX,float rangeMinY,float rangeMaxY,bool calibrateDisplay, bool displayPulseBounds,bool onlyForceChans, set<int> forceChan){
     TCanvas c("c1","",1400,800);
     gPad->SetRightMargin(0.39);
     gStyle->SetGridStyle(3);
@@ -758,6 +804,7 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
 	}
 	if(boundShifted.size()>0 || waveShifted->GetMaximum()>drawThresh || forceChan.find(ic)!=forceChan.end()){
 	    //if(ic==15 && forceChan.find(ic)==forceChan.end()) continue;
+            if (onlyForceChans && forceChan.find(ic)==forceChan.end()) continue;
 	    chanList.push_back(ic);
 	    TString beamState = "off";
 	    if(beam) beamState="on";
@@ -782,21 +829,24 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
     maxheight*=1.1;
 
     //maxheight=30;
-    if (rangeMin < 0) timeRange[0]*=0.9;
-    else timeRange[0] = rangeMin;
-    if (rangeMax < 0) timeRange[1]= min(1.1*timeRange[1],1024./min(sample_rate[0],sample_rate[1]));
-    else timeRange[1] = rangeMax;
+    if (rangeMaxY > -999) maxheight = rangeMaxY;
+    if (rangeMinX < 0) timeRange[0]*=0.9;
+    else timeRange[0] = rangeMinX;
+    if (rangeMaxX < 0) timeRange[1]= min(1.1*timeRange[1],1024./min(sample_rate[0],sample_rate[1]));
+    else timeRange[1] = rangeMaxX;
 
     float depth = 0.075*chanList.size();
     TLegend leg(0.45,0.9-depth,0.65,0.9);
     for(uint i=0;i<chanList.size();i++){
 	int ic = chanList[i];	
+        if (onlyForceChans && forceChan.find(ic)==forceChan.end()) continue;
 
 	if(ic==15 && forceChan.find(ic)==forceChan.end()) continue;
 	wavesShifted[ic]->SetAxisRange(timeRange[0],timeRange[1]);
 
 	originalMaxHeights[ic] = wavesShifted[ic]->GetMaximum();
-	wavesShifted[ic]->SetMaximum(maxheight);//maxheight);
+        if (rangeMinY > -999) wavesShifted[ic]->SetMinimum(rangeMinY);
+        wavesShifted[ic]->SetMaximum(maxheight);
 	int column= chanMap[ic][0];
 	int row= chanMap[ic][1];
 	int layer= chanMap[ic][2];
@@ -883,10 +933,11 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
     float headerX=0.67;
     float rowX=0.69;
     int pulseIndex=0; // Keep track of pulse index, since all pulses for all channels are actually stored in the same 1D vectors
-    int maxPerChannel = 10/chanList.size();
+    int maxPerChannel = 0;
+    if (chanList.size() > 0) maxPerChannel = 10/chanList.size();
 
     for(int i=0;i<32;i++){
-
+        if (onlyForceChans && forceChan.find(i)==forceChan.end()) continue;
 	if(boundsShifted[i].size()>0 || wavesShifted[i]->GetMaximum()>drawThresh || forceChan.find(i)!=forceChan.end()){//if this channel has a pulse
 	    if(i==15 && forceChan.find(i)==forceChan.end()) continue;
 	    //if(i==15) continue;
@@ -1002,21 +1053,45 @@ vector< vector<float> > findPulses(int ic){
     // int Nconsec = 4;
     // int NconsecEnd = 3;
     // float thresh = 2.5; //mV
-    int NconsecConfig[] = {6, 6, 6, 6, 6, 4, 6, 6, 6, 3, 6, 6, 6, 6, 6, 6, 6, 3, 6, 6, 6, 6, 4, 6, 3, 3, 6, 6, 6, 6, 6, 6};
-    int NconsecEndConfig[] = {12, 12, 12, 12, 12, 3, 12, 12, 12, 3, 12, 12, 12, 12, 12, 12, 12, 3, 12, 12, 12, 12, 3, 12, 3, 3, 12, 12, 12, 12, 12, 12};
-    float threshConfig[] = {2.0, 2.0, 2.0, 2.0, 2.0, 2.5, 2.0, 2.0, 2.0, 2.5, 2.0, 2.0, 2.0, 2.0, 2.0, 2.5, 2.0, 2.5, 2.0, 2.0, 2.0, 2.0, 3.0, 2.0, 2.5, 2.5, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0};
+    int NconsecConfig1p6[] = {7, 7, 7, 7, 7, 5, 7, 7, 7, 4, 7, 7, 7, 7, 7, 7, 7, 4, 7, 7, 7, 7, 5, 7, 4, 4, 7, 7, 7, 7, 7, 7};
+    int NconsecEndConfig1p6[] = {13, 13, 13, 13, 13, 4, 13, 13, 13, 4, 13, 13, 13, 13, 13, 13, 13, 4, 13, 13, 13, 13, 4, 13, 4, 4, 13, 13, 13, 13, 13, 13};
+    float threshConfig1p6[] = {2.0, 2.0, 2.0, 2.0, 2.0, 2.5, 2.0, 2.0, 2.0, 2.5, 2.0, 2.0, 2.0, 2.0, 2.0, 2.5, 2.0, 2.5, 2.0, 2.0, 2.0, 2.0, 3.0, 2.0, 2.5, 2.5, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0};
 
-    int Nconsec = NconsecConfig[ic];
-    int NconsecEnd = NconsecEndConfig[ic];
+    int NconsecConfig0p8[] = {3, 3, 3, 3, 3, 2, 3, 3, 3, 2, 3, 3, 3, 3, 3, 3, 3, 2, 3, 3, 3, 3, 2, 3, 2, 2, 3, 3, 3, 3, 3, 3};
+    int NconsecEndConfig0p8[] = {6, 6, 6, 6, 6, 3, 6, 6, 6, 3, 6, 6, 6, 6, 6, 6, 6, 3, 6, 6, 6, 6, 3, 6, 3, 3, 6, 6, 6, 6, 6, 6};
+    float threshConfig0p8[] = {2.0, 2.0, 2.0, 2.0, 2.0, 2.5, 2.0, 2.0, 2.0, 2.5, 2.0, 2.0, 2.0, 2.0, 2.0, 2.5, 2.0, 2.5, 2.0, 2.0, 2.0, 2.0, 3.0, 2.0, 2.5, 2.5, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0};
 
-    float scaling = sample_rate[ic/16]/1.6;
+    int Nconsec = 6;
+    int NconsecEnd = 12;
+    float thresh = 2.0;
+    float lowThresh = 1.0;
+
+    if (int(sample_rate[ic/16]/0.4+0.1) == 4)
+    {
+        Nconsec = NconsecConfig1p6[ic];
+        NconsecEnd = NconsecEndConfig1p6[ic];
+        thresh = threshConfig1p6[ic];
+        lowThresh = thresh - rmsCalib[ic]/2;
+    }
+    else if (int(sample_rate[ic/16]/0.4+0.1) == 2)
+    {
+        Nconsec = NconsecConfig0p8[ic];
+        NconsecEnd = NconsecEndConfig0p8[ic];
+        thresh = threshConfig0p8[ic];
+        lowThresh = thresh - rmsCalib[ic];
+    }
+    // if (event==264) {
+    //   cout << "Debug "<< thresh << " " << lowThresh<< " "<< Nconsec << " " << NconsecEnd<<endl;
+    // }
+
+    // float scaling = sample_rate[ic/16]/1.6;
 
 
     // if(scaling)<1.{
-    Nconsec = int(ceil(Nconsec*scaling)+0.1);
-    NconsecEnd = int(ceil(NconsecEnd*scaling)+0.1);
-    if (Nconsec < 2 && Nconsec < NconsecConfig[ic]) Nconsec = 2;
-    if (NconsecEnd < 2 && NconsecEnd < NconsecEndConfig[ic]) NconsecEnd = 2;
+    // Nconsec = int(ceil(Nconsec*scaling)+0.1);
+    // NconsecEnd = int(ceil(NconsecEnd*scaling)+0.1);
+    // if (Nconsec < 2 && Nconsec < NconsecConfig[ic]) Nconsec = 2;
+    // if (NconsecEnd < 2 && NconsecEnd < NconsecEndConfig[ic]) NconsecEnd = 2;
      // }
 
     vector<vector<float> > bounds;
@@ -1034,30 +1109,30 @@ vector< vector<float> > findPulses(int ic){
     for (int i=istart; i<i_stop_searching || (inpulse && i<i_stop_final_pulse); i++) { // Loop over all samples looking for pulses
 	float v = waves[ic]->GetBinContent(i);
 	if (!inpulse) { // Not in a pulse?
-	    if (v<threshConfig[ic]-rmsCalib[ic]/2) {
+	    if (v<lowThresh) {
 		// Reset any prepulse counters
 		nover = 0;
 		i_begin = i; // most recent sample below threshold
 	    }
-	    else if (v>=threshConfig[ic]){		
+	    else if (v>=thresh){		
 		nover++; // Another sample over threshold
 		//cout << "DEBUG: Over pulse, t = "<< w.t[i] <<", v = "<<v<<", nover = "<<nover<<endl;
 	    }
 
-	    if (nover>Nconsec) {
+	    if (nover>=Nconsec) {
 		//cout << "DEBUG: Starting pulse, t = "<< w.t[i] <<", v = "<<v<<endl;
 		inpulse = true; // Start a pulse
 		nunder = 0; // Counts number of samples underthreshold to end a pulse
 	    }
 	} // Not in a pulse?
 	else { // In a pulse?
-	    if (v<threshConfig[ic]) nunder++;
-	    else if (v >= threshConfig[ic]+rmsCalib[ic]/2){
+	    if (v<thresh) nunder++;
+	    else if (v >= thresh+rmsCalib[ic]/2){
 		// Restart the tail counting
 		nunder = 0;
 	    }
 	    //cout << "DEBUG: Inside pulse, t = "<< w.t[i] <<", v = "<<v<<", nunder = "<<nunder<<endl;
-	    if (nunder>NconsecEnd || i==(i_stop_final_pulse-1)) { // The end of a pulse, or pulse has reached the end of range 
+	    if (nunder>=NconsecEnd || i==(i_stop_final_pulse-1)) { // The end of a pulse, or pulse has reached the end of range 
 
 		//cout<<"DEBUG: i_begin "<<i_begin<<endl;
 		// cout<<"DEBUG: tWindow 0 and 1: "<<w.t[i_begin]<<" "<<w.t[i]<<endl;
@@ -1164,6 +1239,10 @@ void prepareOutBranches(){
     TBranch * b_presample_RMS = outTree->Branch("presample_RMS",&v_presample_RMS);
     TBranch * b_sideband_mean = outTree->Branch("sideband_mean",&v_sideband_mean);
     TBranch * b_sideband_RMS = outTree->Branch("sideband_RMS",&v_sideband_RMS);
+    TBranch * b_triggerBand_mean = outTree->Branch("triggerBand_mean",&v_triggerBand_mean);
+    TBranch * b_triggerBand_max = outTree->Branch("triggerBand_max",&v_triggerBand_max);
+    TBranch * b_triggerBand_maxTime = outTree->Branch("triggerBand_maxTime",&v_triggerBand_maxTime);
+    TBranch * b_triggerBand_RMS = outTree->Branch("triggerBand_RMS",&v_triggerBand_RMS);
     TBranch * b_sideband_mean_calib = outTree->Branch("sideband_mean_calib",&v_sideband_mean_calib);
     TBranch * b_sideband_RMS_calib = outTree->Branch("sideband_RMS_calib",&v_sideband_RMS_calib);
 
@@ -1221,6 +1300,10 @@ void prepareOutBranches(){
     outTree->SetBranchAddress("presample_RMS",&v_presample_RMS,&b_presample_RMS);
     outTree->SetBranchAddress("sideband_mean",&v_sideband_mean,&b_sideband_mean);
     outTree->SetBranchAddress("sideband_RMS",&v_sideband_RMS,&b_sideband_RMS);
+    outTree->SetBranchAddress("triggerBand_mean",&v_triggerBand_mean,&b_triggerBand_mean);
+    outTree->SetBranchAddress("triggerBand_max",&v_triggerBand_max,&b_triggerBand_max);
+    outTree->SetBranchAddress("triggerBand_maxTime",&v_triggerBand_maxTime,&b_triggerBand_maxTime);
+    outTree->SetBranchAddress("triggerBand_RMS",&v_triggerBand_RMS,&b_triggerBand_RMS);
     outTree->SetBranchAddress("sideband_mean_calib",&v_sideband_mean_calib,&b_sideband_mean_calib);
     outTree->SetBranchAddress("sideband_RMS_calib",&v_sideband_RMS_calib,&b_sideband_RMS_calib);
 
@@ -1259,6 +1342,10 @@ void clearOutBranches(){
     v_delay->clear();
     v_sideband_mean->clear();
     v_sideband_RMS->clear();
+    v_triggerBand_mean->clear();
+    v_triggerBand_max->clear();
+    v_triggerBand_maxTime->clear();
+    v_triggerBand_RMS->clear();
     v_sideband_mean_calib->clear();
     v_sideband_RMS_calib->clear();
     v_quiet->clear();

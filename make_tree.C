@@ -44,7 +44,6 @@
 #endif
 
 using namespace std;
-TF1 *fsin = new TF1("fsin", "sin(2*x)", 0, 4*TMath::Pi());
 void scaleXaxis(TH1D *h, double scaling){
     TAxis * a = h->GetXaxis();
     a->Set( a->GetNbins(), a->GetXmin()*scaling, a->GetXmax()*scaling );
@@ -512,7 +511,7 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMinX,floa
     cout<<"Starting event loop"<<endl;  
     for(int i=0;i<maxEvents;i++){
 	if(displayMode && i!=eventNum) continue; //Find specified event
-	if(i%10==0) cout<<"Processing event "<<i<<endl;
+	if(i%200==0) cout<<"Processing event "<<i<<endl;
 	inTree->GetEntry(i);
 	//cout<<"Got entry "<<i<<endl;
 	if(milliDAQ) loadWavesMilliDAQ();

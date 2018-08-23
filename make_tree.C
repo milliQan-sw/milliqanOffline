@@ -32,6 +32,7 @@
 #include "TGaxis.h"
 #include "TLegend.h"
 #include "TColor.h"
+#include "TComplex.h"
 #include "/net/cms26/cms26r0/milliqan/milliDAQ/interface/GlobalEvent.h"
 #include "/net/cms26/cms26r0/milliqan/milliDAQ/interface/DemonstratorConfiguration.h"
 
@@ -44,11 +45,84 @@
 
 using namespace std;
 TF1 *fsin = new TF1("fsin", "sin(2*x)", 0, 4*TMath::Pi());
+void scaleXaxis(TH1D *h, double scaling){
+    TAxis * a = h->GetXaxis();
+    a->Set( a->GetNbins(), a->GetXmin()*scaling, a->GetXmax()*scaling );
+
+    h->ResetStats();
+}
+
 TH1D * doFFT(TH1D * hrIn){
     TH1 *hr = 0;
     TVirtualFFT::SetTransform(0);
     hr = hrIn->FFT(hr, "MAG");
-    return (TH1D *) hr;
+    TH1D * hrOut = (TH1D *) hr;
+    scaleXaxis(hrOut,1./hrIn->GetXaxis()->GetBinUpEdge(hrIn->GetNbinsX()));
+    return hrOut;
+}
+
+TH1D * LPFilter(TH1D * hrIn,float filterMin=0.049,bool butterworth=true){
+    TH1 * hr = 0;
+    TF1 *butterworthFilter = new TF1("butterworth", "1/sqrt(1+[0]*(x/[1])^(2*[2]))");
+    butterworthFilter->SetParameters(1,filterMin,2);
+    TVirtualFFT::SetTransform(0);
+    hr = hrIn->FFT(hr, "MAG");
+    hr->SetName(TString(hrIn->GetName())+"Transform");
+    TVirtualFFT *fft = TVirtualFFT::GetCurrentTransform();
+    //Maximum frequency is half of the distribution (+ve and -ve compents sep)
+    float inputBinWidth = hrIn->GetXaxis()->GetBinCenter(2)-hrIn->GetXaxis()->GetBinCenter(1);
+
+    Double_t maxFreq = 1./(2*inputBinWidth);
+    Double_t freqBinWidth = maxFreq/hrIn->GetNbinsX();
+
+    Int_t n = hrIn->GetNbinsX();
+
+    Double_t *re_full = new Double_t[n];
+    Double_t *im_full = new Double_t[n];
+    fft->GetPointsComplex(re_full,im_full);
+
+    //Now let's make a backward transform:
+    TVirtualFFT *fft_back = TVirtualFFT::FFT(1, &n, "C2R M K");
+    fft_back->SetPointsComplex(re_full,im_full);
+    TComplex complex_zero = 0.;
+    // std::cout << n << std::endl;
+    //Desired filter in MHz
+    Double_t re,im;
+    int stop = round(filterMin/(2*freqBinWidth));
+    if (butterworth){
+	// Butterworth filter
+	for (int kk=0; kk <= n/2; kk++) {
+	    float multiplier=butterworthFilter->Eval(kk*2*freqBinWidth);
+	    fft->GetPointComplex(kk, re,im);
+	    TComplex complex_post_filter =  TComplex(re*multiplier,-im*multiplier);
+
+	    fft_back->SetPointComplex(kk, complex_post_filter);
+	    fft_back->SetPointComplex(n-kk, complex_post_filter);
+
+	}
+    }
+    else{
+	// //Brick wall filter
+	for (int kk=0; kk <= n; kk++) {
+	    fft->GetPointComplex(kk, re,im);
+	    if (kk>=stop && kk<=n-stop)
+	    {
+		fft_back->SetPointComplex(kk, complex_zero);
+	    }
+	}
+    }
+    fft_back->Transform();
+    TH1 *hb = 0;
+    //Let's look at the output
+    hb = TH1::TransformHisto(fft_back,hb,"Re");
+    hb->Scale(1./n);
+    TH1D * hbOut = (TH1D *) hb;
+    hb->SetName(TString(hrIn->GetName())+"TransformBack");
+    scaleXaxis(hbOut,hrIn->GetXaxis()->GetBinUpEdge(hrIn->GetNbinsX())/hrIn->GetNbinsX());
+    //Need this or things get sloooow
+    delete hrIn;
+    delete hr;
+    return hbOut;
 }
 
 //////////////////////////////////////////
@@ -90,7 +164,7 @@ vector<TString> tubeSpecies = {"ET","ET","ET","ET",             // 0 1 2 3
 //     3,3,3,3,	// 8 9 10 11
 //     -2,0,-3,-1};    // 12 13 14 15
 
-   
+
 
 vector< vector<int> > chanMap =
 //col,row,layer,type (xyz) 
@@ -100,50 +174,50 @@ vector< vector<int> > chanMap =
 //for slabs: column is 0
 //For slabs/sheets: row is redundant with type (= -1*type) 
 {{1,3,1,0}, //0.0
- {2,3,1,0}, //0.1
- {1,3,3,0}, //0.2
- {2,3,3,0}, //0.3
- {1,1,3,0}, //0.4
- {2,1,3,0}, //0.5
- {1,3,2,0}, //0.6
- {2,3,2,0}, //0.7
- {1,1,1,0}, //0.8
- {2,1,1,0}, //0.9
- {0,-2,1,2}, //0.10
- {0,-2,2,2}, //0.11
- {1,1,2,0}, //0.12
- {2,1,2,0}, //0.13
- {0,-2,3,2}, //0.14 
- {0,0,0,3}, //0.15, timing card
- {1,2,2,0}, //1.0
- {2,2,2,0}, //1.1
- {0,-1,0,1}, //1.2
- {1,-2,2,2}, //1.3
- {0,-1,1,1}, //1.4
- {0,-1,3,1}, //1.5
- {1,2,3,0}, //1.6
- {2,2,3,0}, //1.7
- {1,2,1,0}, //1.8
- {2,2,1,0}, //1.9
- {1,-2,3,2}, //1.10
- {-1,-2,1,2}, //1.11
- {0,-1,2,1}, //1.12
- {1,-2,1,2}, //1.13
- {-1,-2,2,2}, //1.14
- {-1,-2,3,2} //1.15
- };
+    {2,3,1,0}, //0.1
+    {1,3,3,0}, //0.2
+    {2,3,3,0}, //0.3
+    {1,1,3,0}, //0.4
+    {2,1,3,0}, //0.5
+    {1,3,2,0}, //0.6
+    {2,3,2,0}, //0.7
+    {1,1,1,0}, //0.8
+    {2,1,1,0}, //0.9
+    {0,-2,1,2}, //0.10
+    {0,-2,2,2}, //0.11
+    {1,1,2,0}, //0.12
+    {2,1,2,0}, //0.13
+    {0,-2,3,2}, //0.14 
+    {0,0,0,3}, //0.15, timing card
+    {1,2,2,0}, //1.0
+    {2,2,2,0}, //1.1
+    {0,-1,0,1}, //1.2
+    {1,-2,2,2}, //1.3
+    {0,-1,1,1}, //1.4
+    {0,-1,3,1}, //1.5
+    {1,2,3,0}, //1.6
+    {2,2,3,0}, //1.7
+    {1,2,1,0}, //1.8
+    {2,2,1,0}, //1.9
+    {1,-2,3,2}, //1.10
+    {-1,-2,1,2}, //1.11
+    {0,-1,2,1}, //1.12
+    {1,-2,1,2}, //1.13
+    {-1,-2,2,2}, //1.14
+    {-1,-2,3,2} //1.15
+};
 
 
 
 
 
 //given channel number, this returns position index running through positions in physical order
-   // this config corresponds to 
-   // Layer 1   Layer 2    Layer 3
-   // ch0 ch1   ch6 ch7    ch14 ch15
-   // ch2 ch3   ch12 ch13  ch10 ch11
-   // ch4 ch5   ch8 ch9    none none
- 
+// this config corresponds to 
+// Layer 1   Layer 2    Layer 3
+// ch0 ch1   ch6 ch7    ch14 ch15
+// ch2 ch3   ch12 ch13  ch10 ch11
+// ch4 ch5   ch8 ch9    none none
+
 
 
 
@@ -255,7 +329,7 @@ bool addTriggerTimes = true;
 
 TString milliqanOfflineDir="/net/cms26/cms26r0/milliqan/milliqanOffline/";
 
-void make_tree(TString fileName, int eventNum=-1, TString tag="",float rangeMinX=-1.,float rangeMaxX=-1.,float rangeMinY=-1000.,float rangeMaxY=-1000., int displayPulseBounds=1, int onlyForceChans=0, int runFFT=0 ,set<int> forceChan={});
+void make_tree(TString fileName, int eventNum=-1, TString tag="",float rangeMinX=-1.,float rangeMaxX=-1.,float rangeMinY=-1000.,float rangeMaxY=-1000., int displayPulseBounds=1, int onlyForceChans=0, int runFFT=0 , int applyLPFilter =1,set<int> forceChan={});
 void loadFillList(TString fillFile=milliqanOfflineDir+"processedFillList2018.txt");
 vector<TString> getFieldFileList(TString location);
 void loadFieldList(TString fieldFile);
@@ -266,9 +340,9 @@ void loadWavesMilliDAQ();
 void loadBranchesInteractiveDAQ();
 void prepareOutBranches();
 void clearOutBranches();
-vector< vector<float> > processChannel(int ic);
-void prepareWave(int ic, float &sb_mean, float &sb_RMS, float &tb_mean, float &tb_RMS, float &tb_max, float &tb_maxTime);
-vector< vector<float> > findPulses(int ic);
+vector< vector<float> > processChannel(int ic,bool applyLPFilter);
+void prepareWave(int ic, float &sb_mean, float &sb_RMS, float &tb_mean, float &tb_RMS, float &tb_max, float &tb_maxTime, bool applyLPFilter);
+vector< vector<float> > findPulses(int ic,bool applyLPFilter);
 void findTriggerCandidates(int ic, float sb_mean);
 vector< vector<float> > findPulses_inside_out(int ic);
 void displayPulse(int ic, float begin, float end, int ipulse);
@@ -315,20 +389,21 @@ int main(int argc, char **argv)
     else if(argc==9) make_tree(argv[1],stoi(argv[2]),argv[3],stof(argv[4]),stof(argv[5]),stoi(argv[6]),stoi(argv[7]),stoi(argv[8]));
     else if(argc==10) make_tree(argv[1],stoi(argv[2]),argv[3],stof(argv[4]),stof(argv[5]),stoi(argv[6]),stoi(argv[7]),stoi(argv[8]),stoi(argv[9]));
     else if(argc==11) make_tree(argv[1],stoi(argv[2]),argv[3],stof(argv[4]),stof(argv[5]),stoi(argv[6]),stoi(argv[7]),stoi(argv[8]),stoi(argv[9]),stoi(argv[10]));
-    else if(argc>=12) {
-        //the arguments after index 10 are channels to be forced for the display.
-        set<int> forceChans;
-        for(int i=11;i<argc;i++){
-            forceChans.insert(stoi(argv[i]));
-        }
-	make_tree(argv[1],stoi(argv[2]),argv[3],stof(argv[4]),stof(argv[5]),stoi(argv[6]),stoi(argv[7]),stoi(argv[8]),stoi(argv[9]),stoi(argv[10]),forceChans);
+    else if(argc==12) make_tree(argv[1],stoi(argv[2]),argv[3],stof(argv[4]),stof(argv[5]),stoi(argv[6]),stoi(argv[7]),stoi(argv[8]),stoi(argv[9]),stoi(argv[10]),stoi(argv[11]));
+    else if(argc>=13) {
+	//the arguments after index 10 are channels to be forced for the display.
+	set<int> forceChans;
+	for(int i=12;i<argc;i++){
+	    forceChans.insert(stoi(argv[i]));
+	}
+	make_tree(argv[1],stoi(argv[2]),argv[3],stof(argv[4]),stof(argv[5]),stoi(argv[6]),stoi(argv[7]),stoi(argv[8]),stoi(argv[9]),stoi(argv[10]),stoi(argv[11]),forceChans);
     }
 
 }
 # endif
 
 
-void make_tree(TString fileName, int eventNum, TString tag, float rangeMinX,float rangeMaxX, float rangeMinY,float rangeMaxY, int displayPulseBounds, int onlyForceChans,int runFFT, set<int> forceChan){
+void make_tree(TString fileName, int eventNum, TString tag, float rangeMinX,float rangeMaxX, float rangeMinY,float rangeMaxY, int displayPulseBounds, int onlyForceChans,int runFFT,int applyLPFilter, set<int> forceChan){
     //	gROOT->ProcessLine( "gErrorIgnoreLevel = kError");
     for (int i=0;i<=31;i++) {channelCalibrations[i] = interModuleCalibrations[i];}//+intraModuleCalibrations[i];}
     bool calibrateDisplay = true;
@@ -342,22 +417,21 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMinX,floa
     TFile *f = TFile::Open(inFileName, "READ");
 
     if(milliDAQ){ 
-        inTree = (TTree*)f->Get("Events"); 
+	inTree = (TTree*)f->Get("Events"); 
 
-        TTree * metadata = (TTree*)f->Get("Metadata");
-        metadata->SetBranchAddress("configuration", &cfg);
-        metadata->GetEntry(0);
+	TTree * metadata = (TTree*)f->Get("Metadata");
+	metadata->SetBranchAddress("configuration", &cfg);
+	metadata->GetEntry(0);
 
-        //SAMFrequency 1 -> 1.6 GHz
-        //SAMFrequency 2 -> 0.8 GHz
-        // actual rate = 3.2 / pow(2,SAMFrequency)
+	//SAMFrequency 1 -> 1.6 GHz
+	//SAMFrequency 2 -> 0.8 GHz
+	// actual rate = 3.2 / pow(2,SAMFrequency)
 
-        sample_rate[0] = 3.2 / pow(2,cfg->digitizers[0].SAMFrequency);
-        sample_rate[1] = 3.2 / pow(2,cfg->digitizers[1].SAMFrequency);
-        cout<<"Sample frequencies, boards 0 and 1: "<<sample_rate[0]<<" GHz and "<<sample_rate[1]<<" GHz."<<endl;
+	sample_rate[0] = 3.2 / pow(2,cfg->digitizers[0].SAMFrequency);
+	sample_rate[1] = 3.2 / pow(2,cfg->digitizers[1].SAMFrequency);
+	cout<<"Sample frequencies, boards 0 and 1: "<<sample_rate[0]<<" GHz and "<<sample_rate[1]<<" GHz."<<endl;
 
     }
-
     else inTree = (TTree*)f->Get("data"); 
 
     TString baseFileName= ((TObjString*)inFileName.Tokenize("/")->Last())->String().Data();
@@ -409,13 +483,13 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMinX,floa
     TFile * outFile;
 
     if(!displayMode){
-    	outFile = new TFile(outFileName,"recreate");
-    	outTree = new TTree("t","t");
-    	prepareOutBranches();
-        writeVersion();
+	outFile = new TFile(outFileName,"recreate");
+	outTree = new TTree("t","t");
+	prepareOutBranches();
+	writeVersion();
     }
 
-   
+
 
     displayDirectory = milliqanOfflineDir+"displays/Run"+to_string(runNum)+"_"+configName+"/";
     gSystem->mkdir(displayDirectory);
@@ -424,21 +498,21 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMinX,floa
 
 
     //if(!displayMode)
-    
+
 
     //Load entry 0 in order to get timestamp of first event to find corret field information
     inTree->GetEntry(0);
     TString fieldFileLocation ="/net/cms26/cms26r0/milliqan/EnvironSensorData";
     vector<TString> fieldFiles = getFieldFileList(fieldFileLocation);
     for(int i=0;i<fieldFiles.size();i++){
-       loadFieldList(fieldFiles[i]);
+	loadFieldList(fieldFiles[i]);
     }
 
     if(debug) maxEvents=10;
     cout<<"Starting event loop"<<endl;  
     for(int i=0;i<maxEvents;i++){
 	if(displayMode && i!=eventNum) continue; //Find specified event
-	if(i%1000==0) cout<<"Processing event "<<i<<endl;
+	if(i%10==0) cout<<"Processing event "<<i<<endl;
 	inTree->GetEntry(i);
 	//cout<<"Got entry "<<i<<endl;
 	if(milliDAQ) loadWavesMilliDAQ();
@@ -454,103 +528,103 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMinX,floa
 	    }
 
 	}
-    
+
 	if(milliDAQ) {
-        if(initSecs<0){ //if timestamps for first event are uninitialized
-            if(evt->digitizers[0].DataPresent){ //If this event exists
-                initSecs=evt->digitizers[0].DAQTimeStamp.GetSec();
-                initTDC=evt->digitizers[0].TDC[0];
-                prevTDC=initTDC;
-            }
-        }
+	    if(initSecs<0){ //if timestamps for first event are uninitialized
+		if(evt->digitizers[0].DataPresent){ //If this event exists
+		    initSecs=evt->digitizers[0].DAQTimeStamp.GetSec();
+		    initTDC=evt->digitizers[0].TDC[0];
+		    prevTDC=initTDC;
+		}
+	    }
 
-        int secs = evt->digitizers[0].DAQTimeStamp.GetSec();
+	    int secs = evt->digitizers[0].DAQTimeStamp.GetSec();
 	    //This defines the time in seconds in standard unix epoch since 1970
-	event_time_b0 = secs;
+	    event_time_b0 = secs;
 
-        Long64_t thisTDC;
-	if(evt->digitizers[0].DataPresent) thisTDC = evt->digitizers[0].TDC[0];
-        else thisTDC=prevTDC;
+	    Long64_t thisTDC;
+	    if(evt->digitizers[0].DataPresent) thisTDC = evt->digitizers[0].TDC[0];
+	    else thisTDC=prevTDC;
 
-        //Check if rollover has happened since last event: if previous time is more than 10 minutes later than current time 
-        //NB events are not written strictly in chronological order
-        Long64_t diff = prevTDC - thisTDC;
-        if(diff > 1.2e+11) nRollOvers++;
-        //For each tDC rollover: add max value: pow(2,40)
-        event_time_fromTDC = 5.0e-9*(thisTDC+nRollOvers*pow(2,40)-initTDC)+initSecs;
-        //update previous TDC holder for next event
-        prevTDC = thisTDC;
+	    //Check if rollover has happened since last event: if previous time is more than 10 minutes later than current time 
+	    //NB events are not written strictly in chronological order
+	    Long64_t diff = prevTDC - thisTDC;
+	    if(diff > 1.2e+11) nRollOvers++;
+	    //For each tDC rollover: add max value: pow(2,40)
+	    event_time_fromTDC = 5.0e-9*(thisTDC+nRollOvers*pow(2,40)-initTDC)+initSecs;
+	    //update previous TDC holder for next event
+	    prevTDC = thisTDC;
 
 
-        //in case second digitizer has different time
-        secs = evt->digitizers[1].DAQTimeStamp.GetSec();
-        event_time_b1 = secs;
+	    //in case second digitizer has different time
+	    secs = evt->digitizers[1].DAQTimeStamp.GetSec();
+	    event_time_b1 = secs;
 
 
 	    event_trigger_time_tag_b0 = evt->digitizers[0].TriggerTimeTag;
-        event_trigger_time_tag_b1 = evt->digitizers[1].TriggerTimeTag;
+	    event_trigger_time_tag_b1 = evt->digitizers[1].TriggerTimeTag;
 
 	    //event_t_string = evt->digitizers[0].DAQTimeStamp.AsString("s");
-        event_t_string = TTimeStamp(event_time_fromTDC).AsString("s");
+	    event_t_string = TTimeStamp(event_time_fromTDC).AsString("s");
 
 	    for(int ig=0; ig<8; ig++){
-    		v_groupTDC_b0->push_back(evt->digitizers[0].TDC[ig]);
-            v_groupTDC_b1->push_back(evt->digitizers[1].TDC[ig]);
+		v_groupTDC_b0->push_back(evt->digitizers[0].TDC[ig]);
+		v_groupTDC_b1->push_back(evt->digitizers[1].TDC[ig]);
 	    }	
 
-        present_b0 = evt->digitizers[0].DataPresent;
-        present_b1 = evt->digitizers[1].DataPresent;
+	    present_b0 = evt->digitizers[0].DataPresent;
+	    present_b1 = evt->digitizers[1].DataPresent;
 
-        fillNum=0;
-        t_since_fill_start= -1;
-        fillAvgLumi=-1;
-        fillTotalLumi=-1;
-        secs = round(event_time_fromTDC);
-        tuple<int,int,float,float> fillInfo = findFill(secs);
-        fillNum= get<0>(fillInfo);
-        t_since_fill_start= get<1>(fillInfo);
-        fillAvgLumi = get<2>(fillInfo);
-        fillTotalLumi = get<3>(fillInfo);
+	    fillNum=0;
+	    t_since_fill_start= -1;
+	    fillAvgLumi=-1;
+	    fillTotalLumi=-1;
+	    secs = round(event_time_fromTDC);
+	    tuple<int,int,float,float> fillInfo = findFill(secs);
+	    fillNum= get<0>(fillInfo);
+	    t_since_fill_start= get<1>(fillInfo);
+	    fillAvgLumi = get<2>(fillInfo);
+	    fillTotalLumi = get<3>(fillInfo);
 
-        if(fillNum>0) beam=true;
-        else beam = false;
+	    if(fillNum>0) beam=true;
+	    else beam = false;
 
-       // cout<<"This secs "<<secs<<endl;
-        int fieldPoint = findField(secs);
-        //cout<<"This field point "<<fieldPoint<<endl;
-        if(fieldPoint>=0){
-            v_bx->push_back(get<1>(fieldList[fieldPoint]));
-            v_bx->push_back(get<4>(fieldList[fieldPoint]));
-            v_bx->push_back(get<7>(fieldList[fieldPoint]));
-            v_bx->push_back(get<10>(fieldList[fieldPoint]));
+	    // cout<<"This secs "<<secs<<endl;
+	    int fieldPoint = findField(secs);
+	    //cout<<"This field point "<<fieldPoint<<endl;
+	    if(fieldPoint>=0){
+		v_bx->push_back(get<1>(fieldList[fieldPoint]));
+		v_bx->push_back(get<4>(fieldList[fieldPoint]));
+		v_bx->push_back(get<7>(fieldList[fieldPoint]));
+		v_bx->push_back(get<10>(fieldList[fieldPoint]));
 
-            v_by->push_back(get<2>(fieldList[fieldPoint]));
-            v_by->push_back(get<5>(fieldList[fieldPoint]));
-            v_by->push_back(get<8>(fieldList[fieldPoint]));
-            v_by->push_back(get<11>(fieldList[fieldPoint]));
+		v_by->push_back(get<2>(fieldList[fieldPoint]));
+		v_by->push_back(get<5>(fieldList[fieldPoint]));
+		v_by->push_back(get<8>(fieldList[fieldPoint]));
+		v_by->push_back(get<11>(fieldList[fieldPoint]));
 
-            v_bz->push_back(get<3>(fieldList[fieldPoint]));
-            v_bz->push_back(get<6>(fieldList[fieldPoint]));
-            v_bz->push_back(get<9>(fieldList[fieldPoint]));
-            v_bz->push_back(get<12>(fieldList[fieldPoint]));
-        }
-        else{
-            v_bx->push_back(-50);
-            v_bx->push_back(-50);
-            v_bx->push_back(-50);
-            v_bx->push_back(-50);
+		v_bz->push_back(get<3>(fieldList[fieldPoint]));
+		v_bz->push_back(get<6>(fieldList[fieldPoint]));
+		v_bz->push_back(get<9>(fieldList[fieldPoint]));
+		v_bz->push_back(get<12>(fieldList[fieldPoint]));
+	    }
+	    else{
+		v_bx->push_back(-50);
+		v_bx->push_back(-50);
+		v_bx->push_back(-50);
+		v_bx->push_back(-50);
 
-            v_by->push_back(-50);
-            v_by->push_back(-50);
-            v_by->push_back(-50);
-            v_by->push_back(-50);
+		v_by->push_back(-50);
+		v_by->push_back(-50);
+		v_by->push_back(-50);
+		v_by->push_back(-50);
 
-            v_bz->push_back(-50);
-            v_bz->push_back(-50);
-            v_bz->push_back(-50);
-            v_bz->push_back(-50);
-        }
-        //get<2>(fillList[index_of_first_fill_with_larger_start_time-1])
+		v_bz->push_back(-50);
+		v_bz->push_back(-50);
+		v_bz->push_back(-50);
+		v_bz->push_back(-50);
+	    }
+	    //get<2>(fillList[index_of_first_fill_with_larger_start_time-1])
 
 
 	}
@@ -558,14 +632,14 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMinX,floa
 
 	vector<vector<vector<float> > > allPulseBounds;
 	for(int ic=0;ic<numChan;ic++){
-	   /* if(ic==15){//skip timing card channel
-    		vector<vector<float> > empty;
-    		allPulseBounds.push_back(empty);
-    		continue;
-	    }*/
+	    /* if(ic==15){//skip timing card channel
+	       vector<vector<float> > empty;
+	       allPulseBounds.push_back(empty);
+	       continue;
+	       }*/
 	    //	cout<<Form("Chan %i min: ",ic)<<waves[ic]->GetMinimum()<<endl;
 
-	    allPulseBounds.push_back(processChannel(ic));
+	    allPulseBounds.push_back(processChannel(ic,applyLPFilter));
 	}
 	if(displayMode){
 	    displayEvent(allPulseBounds,tag,rangeMinX,rangeMaxX,rangeMinY,rangeMaxY,calibrateDisplay,displayPulseBounds,onlyForceChans,runFFT,forceChan);
@@ -577,7 +651,7 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMinX,floa
     if(!displayMode){
 	outTree->Write();
 	outFile->Close();
-    
+
 	cout<<"Closed output tree."<<endl;
 	//TString currentDir=gSystem->pwd();
 	//TString target = currentDir+"/"+outFileName;
@@ -590,13 +664,6 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMinX,floa
 }
 
 
-void scaleXaxis(TH1D *h, double scaling){
-    TAxis * a = h->GetXaxis();
-    a->Set( a->GetNbins(), a->GetXmin()*scaling, a->GetXmax()*scaling );
-
-    h->ResetStats();
-}
-
 void convertXaxis(TH1D *h, int ic){
     TAxis * a = h->GetXaxis();
     a->Set( a->GetNbins(), a->GetXmin()/sample_rate[ic/16], a->GetXmax()/sample_rate[ic/16] );
@@ -604,7 +671,7 @@ void convertXaxis(TH1D *h, int ic){
     h->ResetStats();
 }
 void prepareWave(int ic, float &sb_meanPerEvent, float &sb_RMSPerEvent, float &sb_triggerMeanPerEvent, float &sb_triggerRMSPerEvent,
-	float &sb_triggerMaxPerEvent,float &sb_timeTriggerMaxPerEvent){
+	float &sb_triggerMaxPerEvent,float &sb_timeTriggerMaxPerEvent,bool applyLPFilter){
     //Invert waveform and convert x-axis to ns
 
     waves[ic]->Scale(-1.0);
@@ -613,6 +680,9 @@ void prepareWave(int ic, float &sb_meanPerEvent, float &sb_RMSPerEvent, float &s
     //subtract calibrated mean
     for(int ibin = 1; ibin <= waves[ic]->GetNbinsX(); ibin++){
 	waves[ic]->SetBinContent(ibin,waves[ic]->GetBinContent(ibin)-meanCalib[ic]);
+    }
+    if (applyLPFilter){
+	waves[ic] = LPFilter(waves[ic]);
     }
 
     //Measure event by event mean and RMS from the sideband
@@ -632,10 +702,10 @@ void prepareWave(int ic, float &sb_meanPerEvent, float &sb_RMSPerEvent, float &s
 
     // Subtract dynamically measured pedestal for CH30, which has time dependent variations
     if (ic == 30) {
-      for(int ibin = 1; ibin <= waves[ic]->GetNbinsX(); ibin++){
-	waves[ic]->SetBinContent(ibin,waves[ic]->GetBinContent(ibin)-mean_rms.first);
-      }
-     }
+	for(int ibin = 1; ibin <= waves[ic]->GetNbinsX(); ibin++){
+	    waves[ic]->SetBinContent(ibin,waves[ic]->GetBinContent(ibin)-mean_rms.first);
+	}
+    }
 
 }
 
@@ -679,15 +749,15 @@ pair<float,float> measureSideband(int ic, float start, float end){
 }
 
 
-vector< vector<float> > processChannel(int ic){
+vector< vector<float> > processChannel(int ic,bool applyLPFilter){
     float sb_meanPerEvent, sb_RMSPerEvent, sb_triggerMeanPerEvent, sb_triggerRMSPerEvent,  sb_triggerMaxPerEvent, sb_timeTriggerMaxPerEvent;
-    prepareWave(ic, sb_meanPerEvent, sb_RMSPerEvent,sb_triggerMeanPerEvent, sb_triggerRMSPerEvent, sb_triggerMaxPerEvent, sb_timeTriggerMaxPerEvent); 
+    prepareWave(ic, sb_meanPerEvent, sb_RMSPerEvent,sb_triggerMeanPerEvent, sb_triggerRMSPerEvent, sb_triggerMaxPerEvent, sb_timeTriggerMaxPerEvent,applyLPFilter); 
     float sb_mean = meanCalib[ic];
     float sb_RMS = rmsCalib[ic];
 
     vector<vector<float> > pulseBounds;
     //if(tubeSpecies[ic]!="ET") 
-    pulseBounds = findPulses(ic);
+    pulseBounds = findPulses(ic,applyLPFilter);
     if (addTriggerTimes) findTriggerCandidates(ic,sb_mean);
     //else pulseBounds = findPulses_inside_out(ic); //Use inside-out method for narrow ET pulses
 
@@ -842,7 +912,11 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
 	    }
 	}
 	if (runFFT) wavesShiftedTemp.push_back(waveShifted);
-	else wavesShifted.push_back(waveShifted);
+	else {
+	    // TH1D * waveShiftedFiltered = LPFilter(waveShifted);
+	    // wavesShifted.push_back(waveShiftedFiltered);
+	    wavesShifted.push_back(waveShifted);
+	}
 	boundsShifted.push_back(boundShifted);
     }
     int maxheightbin = -1;
@@ -856,7 +930,7 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
 	    TString name; name.Form("%d",ic); 
 	    TH1D * hist_transformT = doFFT(wavesShiftedTemp[ic]);
 	    hist_transformT->SetName(name+"Temp");
-	    scaleXaxis(hist_transformT,1./totalRange);
+	    // scaleXaxis(hist_transformT,1./totalRange);
 	    TH1D * hist_transform = new TH1D (name,"",int(hist_transformT->GetNbinsX()/2),0,hist_transformT->GetXaxis()->GetBinUpEdge(hist_transformT->GetNbinsX()));
 	    for (uint iBin = 1; iBin <= hist_transform->GetNbinsX(); iBin ++){
 		hist_transform->SetBinContent(iBin,TMath::Sqrt(hist_transformT->GetBinContent(iBin)));
@@ -1044,7 +1118,7 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
 
 	tla.SetTextColor(colors[colorIndex]);
 	tla.SetTextSize(0.04);
-	tla.DrawLatexNDC(headerX,currentYpos,Form("Channel %i, V_{max} = %0.0f, N_{pulses}= %i",i,originalMaxHeights[ic],(int)boundsShifted[ic].size()));
+	tla.DrawLatexNDC(headerX,currentYpos,Form("Channel %i, V_{max} = %0.0f, N_{pulses}= %i",ic,originalMaxHeights[ic],(int)boundsShifted[ic].size()));
 	tla.SetTextColor(kBlack);
 	currentYpos-=height;
 	tla.SetTextSize(0.035);
@@ -1101,7 +1175,7 @@ void findTriggerCandidates(int ic,float sb_mean){
     }
     if (inTrigger) v_triggerCandidatesEnd->push_back((float)waves[ic]->GetBinLowEdge(waves[ic]->GetNbinsX()));
 }
-vector< vector<float> > findPulses(int ic){
+vector< vector<float> > findPulses(int ic, bool applyLPFilter){
     //Configurable:
     // int Nconsec = 4;
     // int NconsecEnd = 3;
@@ -1132,6 +1206,9 @@ vector< vector<float> > findPulses(int ic){
 	NconsecEnd = NconsecEndConfig0p8[ic];
 	thresh = threshConfig0p8[ic];
 	lowThresh = thresh - rmsCalib[ic];
+    }
+    if (applyLPFilter){
+	Nconsec = 2;
     }
     // if (event==264) {
     //   cout << "Debug "<< thresh << " " << lowThresh<< " "<< Nconsec << " " << NconsecEnd<<endl;

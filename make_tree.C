@@ -1208,6 +1208,8 @@ vector< vector<float> > findPulses(int ic, bool applyLPFilter){
     }
     if (applyLPFilter){
 	Nconsec = 2;
+	thresh = thresh - 0.5;
+	lowThresh = lowThresh - 0.5;
     }
     // if (event==264) {
     //   cout << "Debug "<< thresh << " " << lowThresh<< " "<< Nconsec << " " << NconsecEnd<<endl;

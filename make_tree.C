@@ -9,6 +9,7 @@
 
 
 #include "TSystem.h"
+#include "TRandom.h"
 #include "TROOT.h"
 #include "TF1.h"
 #include "TMath.h"
@@ -35,6 +36,7 @@
 #include "TComplex.h"
 #include "/net/cms26/cms26r0/milliqan/milliDAQ/interface/GlobalEvent.h"
 #include "/net/cms26/cms26r0/milliqan/milliDAQ/interface/DemonstratorConfiguration.h"
+#include "pmt-calibration/photon_template_generator/SPEGen.h"
 
 #include <string>
 
@@ -253,6 +255,8 @@ float rmsCalib[] = {0.8637, 0.7901, 0.9028, 0.7561, 0.8741, 0.7857, 0.8706, 0.77
 float interModuleCalibrations[32] = { 33.125, 33.125, 13.75, 25.0, 24.375, 35.0, 30.0, 29.375, 24.375, 33.75, 3.125, 15.625, 26.875, 34.375, 9.375, 0.0, 27.5, 30.0, 0.0, 11.25, 7.5, 12.5, 28.125, 20.625, 33.75, 26.875, -3.125, 8.75, 13.75, 0.0, 14.375};
 float channelCalibrations[32];
 // float channelCalibrations[] = {0.,0.,-2.17,-7.49,0.48,0.,1.17,11.44,1.15,0.,-6.41,-4.81,1.2,0.,25.7,6.8};
+float channelSPEAreas[] = {62.,66.,77.,65.,68.,84.,70.,75.,100.,62.,85.,80.,60.,95.,65.,1.,48.,46.,80.,82.,60.,80.,118.,52.,46.,32.,60.,73.,70.,47.,75.,65.};
+SPE* spe = new SPE();
 TTree * inTree;
 TTree * outTree;
 
@@ -328,7 +332,7 @@ bool addTriggerTimes = true;
 
 TString milliqanOfflineDir="/net/cms26/cms26r0/milliqan/milliqanOffline/";
 
-void make_tree(TString fileName, int eventNum=-1, TString tag="",float rangeMinX=-1.,float rangeMaxX=-1.,float rangeMinY=-1000.,float rangeMaxY=-1000., int displayPulseBounds=1, int onlyForceChans=0, int runFFT=0 , int applyLPFilter =1,set<int> forceChan={});
+void make_tree(TString fileName, int eventNum=-1, TString tag="",float rangeMinX=-1.,float rangeMaxX=-1.,float rangeMinY=-1000.,float rangeMaxY=-1000., int displayPulseBounds=1, int onlyForceChans=0, int runFFT=0 , int applyLPFilter =1,int injectPulses=0,set<int> forceChan={});
 void loadFillList(TString fillFile=milliqanOfflineDir+"processedFillList2018.txt");
 vector<TString> getFieldFileList(TString location);
 void loadFieldList(TString fieldFile);
@@ -339,8 +343,8 @@ void loadWavesMilliDAQ();
 void loadBranchesInteractiveDAQ();
 void prepareOutBranches();
 void clearOutBranches();
-vector< vector<float> > processChannel(int ic,bool applyLPFilter);
-void prepareWave(int ic, float &sb_mean, float &sb_RMS, float &tb_mean, float &tb_RMS, float &tb_max, float &tb_maxTime, bool applyLPFilter);
+vector< vector<float> > processChannel(int ic,bool applyLPFilter, bool injectPulses);
+void prepareWave(int ic, float &sb_mean, float &sb_RMS, float &tb_mean, float &tb_RMS, float &tb_max, float &tb_maxTime, bool applyLPFilter, bool injectPulses);
 vector< vector<float> > findPulses(int ic,bool applyLPFilter);
 void findTriggerCandidates(int ic, float sb_mean);
 vector< vector<float> > findPulses_inside_out(int ic);
@@ -356,6 +360,12 @@ string GetStdoutFromCommand(string cmd);
 pair<float,float> measureSideband(int ic, float start, float end);
 pair<float,float> getMaxInRange(int ic, float start, float end);
 
+TH1D * SPEGen(float sampFreq) {
+    gRandom->SetSeed(0);
+    spe->SetOutputSampleFreq(sampFreq); // generate at sampling frequency
+    TH1D *out = spe->Generate();
+    return out;
+}
 void defineColors(){
     for(int icolor=0;icolor<reds.size();icolor++){
 	palette.push_back(new TColor(2000+icolor,reds[icolor],greens[icolor],blues[icolor]));
@@ -389,20 +399,21 @@ int main(int argc, char **argv)
     else if(argc==10) make_tree(argv[1],stoi(argv[2]),argv[3],stof(argv[4]),stof(argv[5]),stoi(argv[6]),stoi(argv[7]),stoi(argv[8]),stoi(argv[9]));
     else if(argc==11) make_tree(argv[1],stoi(argv[2]),argv[3],stof(argv[4]),stof(argv[5]),stoi(argv[6]),stoi(argv[7]),stoi(argv[8]),stoi(argv[9]),stoi(argv[10]));
     else if(argc==12) make_tree(argv[1],stoi(argv[2]),argv[3],stof(argv[4]),stof(argv[5]),stoi(argv[6]),stoi(argv[7]),stoi(argv[8]),stoi(argv[9]),stoi(argv[10]),stoi(argv[11]));
-    else if(argc>=13) {
+    else if(argc==13) make_tree(argv[1],stoi(argv[2]),argv[3],stof(argv[4]),stof(argv[5]),stoi(argv[6]),stoi(argv[7]),stoi(argv[8]),stoi(argv[9]),stoi(argv[10]),stoi(argv[11]),stoi(argv[12]));
+    else if(argc>=14) {
 	//the arguments after index 10 are channels to be forced for the display.
 	set<int> forceChans;
-	for(int i=12;i<argc;i++){
+	for(int i=13;i<argc;i++){
 	    forceChans.insert(stoi(argv[i]));
 	}
-	make_tree(argv[1],stoi(argv[2]),argv[3],stof(argv[4]),stof(argv[5]),stoi(argv[6]),stoi(argv[7]),stoi(argv[8]),stoi(argv[9]),stoi(argv[10]),stoi(argv[11]),forceChans);
+	make_tree(argv[1],stoi(argv[2]),argv[3],stof(argv[4]),stof(argv[5]),stoi(argv[6]),stoi(argv[7]),stoi(argv[8]),stoi(argv[9]),stoi(argv[10]),stoi(argv[11]),stoi(argv[12]),forceChans);
     }
 
 }
 # endif
 
 
-void make_tree(TString fileName, int eventNum, TString tag, float rangeMinX,float rangeMaxX, float rangeMinY,float rangeMaxY, int displayPulseBounds, int onlyForceChans,int runFFT,int applyLPFilter, set<int> forceChan){
+void make_tree(TString fileName, int eventNum, TString tag, float rangeMinX,float rangeMaxX, float rangeMinY,float rangeMaxY, int displayPulseBounds, int onlyForceChans,int runFFT,int applyLPFilter,int injectPulses, set<int> forceChan){
     //	gROOT->ProcessLine( "gErrorIgnoreLevel = kError");
     for (int i=0;i<=31;i++) {channelCalibrations[i] = interModuleCalibrations[i];}//+intraModuleCalibrations[i];}
     bool calibrateDisplay = true;
@@ -439,6 +450,7 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMinX,floa
     TString runNumber = ((TObjString*)baseFileName.Tokenize(".")->At(0))->String().Data();
     runNumber.ReplaceAll("MilliQan_Run","");
     runNum=atoi(runNumber.Data());
+    if (injectPulses) runNum *= -1;
 
     //Get file number from file name
     TString fileNumber = ((TObjString*)baseFileName.Tokenize(".")->At(1))->String().Data();
@@ -638,7 +650,7 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMinX,floa
 	       }*/
 	    //	cout<<Form("Chan %i min: ",ic)<<waves[ic]->GetMinimum()<<endl;
 
-	    allPulseBounds.push_back(processChannel(ic,applyLPFilter));
+	    allPulseBounds.push_back(processChannel(ic,applyLPFilter,injectPulses));
 	}
 	if(displayMode){
 	    displayEvent(allPulseBounds,tag,rangeMinX,rangeMaxX,rangeMinY,rangeMaxY,calibrateDisplay,displayPulseBounds,onlyForceChans,runFFT,forceChan);
@@ -670,7 +682,7 @@ void convertXaxis(TH1D *h, int ic){
     h->ResetStats();
 }
 void prepareWave(int ic, float &sb_meanPerEvent, float &sb_RMSPerEvent, float &sb_triggerMeanPerEvent, float &sb_triggerRMSPerEvent,
-	float &sb_triggerMaxPerEvent,float &sb_timeTriggerMaxPerEvent,bool applyLPFilter){
+	float &sb_triggerMaxPerEvent,float &sb_timeTriggerMaxPerEvent,bool applyLPFilter, bool injectPulses){
     //Invert waveform and convert x-axis to ns
 
     waves[ic]->Scale(-1.0);
@@ -679,6 +691,17 @@ void prepareWave(int ic, float &sb_meanPerEvent, float &sb_RMSPerEvent, float &s
     //subtract calibrated mean
     for(int ibin = 1; ibin <= waves[ic]->GetNbinsX(); ibin++){
 	waves[ic]->SetBinContent(ibin,waves[ic]->GetBinContent(ibin)-meanCalib[ic]);
+    }
+    if (injectPulses && ic != 15){
+	int injectPulsesStartBin = waves[ic]->FindBin(200.);
+	TH1D * generatedTemplate = SPEGen(sample_rate[ic/16]);
+	generatedTemplate->Scale(channelSPEAreas[ic]/50.);
+
+	for(int ibin = 1; ibin <= generatedTemplate->GetNbinsX(); ibin++){
+	    waves[ic]->SetBinContent(ibin+injectPulsesStartBin,waves[ic]->GetBinContent(ibin+injectPulsesStartBin)+generatedTemplate->GetBinContent(ibin));
+	    if (ibin+injectPulsesStartBin > waves[ic]->GetNbinsX()) break;
+	}
+	delete generatedTemplate;
     }
     if (applyLPFilter){
 	waves[ic] = LPFilter(waves[ic]);
@@ -748,9 +771,9 @@ pair<float,float> measureSideband(int ic, float start, float end){
 }
 
 
-vector< vector<float> > processChannel(int ic,bool applyLPFilter){
+vector< vector<float> > processChannel(int ic,bool applyLPFilter, bool injectPulses){
     float sb_meanPerEvent, sb_RMSPerEvent, sb_triggerMeanPerEvent, sb_triggerRMSPerEvent,  sb_triggerMaxPerEvent, sb_timeTriggerMaxPerEvent;
-    prepareWave(ic, sb_meanPerEvent, sb_RMSPerEvent,sb_triggerMeanPerEvent, sb_triggerRMSPerEvent, sb_triggerMaxPerEvent, sb_timeTriggerMaxPerEvent,applyLPFilter); 
+    prepareWave(ic, sb_meanPerEvent, sb_RMSPerEvent,sb_triggerMeanPerEvent, sb_triggerRMSPerEvent, sb_triggerMaxPerEvent, sb_timeTriggerMaxPerEvent,applyLPFilter, injectPulses); 
     float sb_mean = meanCalib[ic];
     float sb_RMS = rmsCalib[ic];
 
@@ -763,7 +786,8 @@ vector< vector<float> > processChannel(int ic,bool applyLPFilter){
     int npulses = pulseBounds.size();
     //float channelCalibrations[] = {0.,0.,-2.0,-7.5,0.5,0.,0.88,12.58,1.22,0.,-6.51,-4.75,1.2,0.,25.7,6.8};
     //Replaced after pulse finding modification postTS1   float channelSPEAreas[] = {60.,81.5,64.5,48.7,55.2,84.8,57.0,57.2,60.,181.6,576.6,60.,77.5,60.,52.6,50.4};
-    float channelSPEAreas[] = {65.,70.,85.,70.,73.,83.,75.,80.,100.,65.,90.,80.,73.,95.,75.,1.,65.,45.,95.,85.,68.,90.,100.,58.,48.,33.,78.,75.,80.,62.,68.,70.};
+    //                          0   1   2   3   4   5   6   7   8   9   10  11  12  13  14  15 16  17 18   19  20  21  22   23  24  25  26  27  28  29  30  31
+    // Archive the values used before low pass filtering   float channelSPEAreas[] = {65.,70.,85.,70.,73.,83.,75.,80.,100.,65.,90.,80.,73.,95.,75.,1.,65.,45.,95.,85.,68.,90.,100.,58.,48.,33.,78.,75.,80.,62.,68.,70.};
     //NB: v8 march13- currently approximate guess (60 nVs) for unmeasured ch0,ch8,ch11,ch13
 
     v_sideband_mean->push_back(sb_meanPerEvent);
@@ -1179,9 +1203,9 @@ vector< vector<float> > findPulses(int ic, bool applyLPFilter){
     // int Nconsec = 4;
     // int NconsecEnd = 3;
     // float thresh = 2.5; //mV
-    int NconsecConfig1p6[] = {7, 7, 7, 7, 7, 5, 7, 7, 7, 4, 7, 7, 7, 7, 7, 7, 7, 4, 7, 7, 7, 7, 5, 7, 4, 4, 7, 7, 7, 7, 7, 7};
+    int NconsecConfig1p6[] = {7, 7, 9, 7, 7, 5, 7, 7, 7, 4, 7, 7, 7, 8, 9, 7, 7, 4, 8, 7, 7, 8, 5, 7, 4, 4, 7, 7, 7, 7, 7, 7};
     int NconsecEndConfig1p6[] = {13, 13, 13, 13, 13, 4, 13, 13, 13, 4, 13, 13, 13, 13, 13, 13, 13, 4, 13, 13, 13, 13, 4, 13, 4, 4, 13, 13, 13, 13, 13, 13};
-    float threshConfig1p6[] = {2.0, 2.0, 2.0, 2.0, 2.0, 2.5, 2.0, 2.0, 2.0, 2.5, 2.0, 2.0, 2.0, 2.0, 2.0, 2.5, 2.0, 2.5, 2.0, 2.0, 2.0, 2.0, 3.0, 2.0, 2.5, 2.5, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0};
+    float threshConfig1p6[] = {2.0, 2.0, 2.3, 2.0, 2.2, 2.0, 2.0, 2.0, 2.0, 2.0, 2.2, 2.0, 2.0, 2.0, 2.3, 2.5, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 3.7, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0};
 
     int NconsecConfig0p8[] = {3, 3, 3, 3, 3, 2, 3, 3, 3, 2, 3, 3, 3, 3, 3, 3, 3, 2, 3, 3, 3, 3, 2, 3, 2, 2, 3, 3, 3, 3, 3, 3};
     int NconsecEndConfig0p8[] = {6, 6, 6, 6, 6, 3, 6, 6, 6, 3, 6, 6, 6, 6, 6, 6, 6, 3, 6, 6, 6, 6, 3, 6, 3, 3, 6, 6, 6, 6, 6, 6};
@@ -1207,7 +1231,8 @@ vector< vector<float> > findPulses(int ic, bool applyLPFilter){
 	lowThresh = thresh - rmsCalib[ic];
     }
     if (applyLPFilter){
-	Nconsec = 2;
+      Nconsec = Nconsec-5; // Narrower pulses allowed after low pass filtering
+	if (Nconsec<2) Nconsec = 2;
 	thresh = thresh - 0.5;
 	lowThresh = lowThresh - 0.5;
     }

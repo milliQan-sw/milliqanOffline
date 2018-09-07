@@ -490,6 +490,7 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMinX,floa
     gSystem->mkdir(milliqanOfflineDir+"trees_"+version);	
     gSystem->mkdir(treeDirectory);	
     gSystem->mkdir(linkDirectory);
+    if (injectPulses) baseFileName.ReplaceAll(runNumber,"-"+runNumber);
     TString outFileName = treeDirectory+baseFileName+"_"+version+".root";
     TFile * outFile;
 

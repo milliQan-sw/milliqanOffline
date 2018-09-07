@@ -47,7 +47,7 @@ def main(runNumber, selection, nEvents,tag="",rangeForTime=None,rangeForVoltage=
                     rangeForTime = ["-1","-1"]
                 if rangeForVoltage == None:
                     rangeForVoltage = ["-1000","-1000"]
-		args = ["./make_tree_LPFilter",treeName,eventNumber,tag,str(rangeForTime[0]),str(rangeForTime[1]),str(rangeForVoltage[0]),str(rangeForVoltage[1]),str(int(displayPulseBounds)),str(int(onlyForceChans)),str(int(fft)),str(int(LPF)),str(0)]
+		args = ["./make_tree_signalInj",treeName,eventNumber,tag,str(rangeForTime[0]),str(rangeForTime[1]),str(rangeForVoltage[0]),str(rangeForVoltage[1]),str(int(displayPulseBounds)),str(int(onlyForceChans)),str(int(fft)),str(int(LPF)),str(0),str(-1)]
 		if forceChans != None:
 			args = args + forceChans
 		# print args

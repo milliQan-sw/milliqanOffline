@@ -208,7 +208,19 @@ vector< vector<int> > chanMap =
     {-1,-2,3,2} //1.15
 };
 
+TRandom * straightPathRandom = new TRandom();
+TRandom * nPulseRandom = new TRandom();
+TRandom * indexRandom = new TRandom();
+int nPulseQ1 = 50000;
 
+vector< vector<int> > straightPaths = 
+{{0,6,2},
+    {1,7,3},
+    {24,16,22},
+    {25,17,23},
+    {8,12,4},
+    {9,13,5},
+};
 
 
 
@@ -332,10 +344,11 @@ bool addTriggerTimes = true;
 
 TString milliqanOfflineDir="/net/cms26/cms26r0/milliqan/milliqanOffline/";
 
-void make_tree(TString fileName, int eventNum=-1, TString tag="",float rangeMinX=-1.,float rangeMaxX=-1.,float rangeMinY=-1000.,float rangeMaxY=-1000., int displayPulseBounds=1, int onlyForceChans=0, int runFFT=0 , int applyLPFilter =1,int injectPulses=0,set<int> forceChan={});
+void make_tree(TString fileName, int eventNum=-1, TString tag="",float rangeMinX=-1.,float rangeMaxX=-1.,float rangeMinY=-1000.,float rangeMaxY=-1000., int displayPulseBounds=1, int onlyForceChans=0, int runFFT=0 , int applyLPFilter = 0,int injectPulses=0, float injectSignalQ=0.01,set<int> forceChan={});
 void loadFillList(TString fillFile=milliqanOfflineDir+"processedFillList2018.txt");
 vector<TString> getFieldFileList(TString location);
 void loadFieldList(TString fieldFile);
+void loadPhotonList(TString photonFile);
 tuple<int,int,float,float> findFill(int seconds);
 int findField(int seconds);
 void loadBranchesMilliDAQ();
@@ -343,8 +356,8 @@ void loadWavesMilliDAQ();
 void loadBranchesInteractiveDAQ();
 void prepareOutBranches();
 void clearOutBranches();
-vector< vector<float> > processChannel(int ic,bool applyLPFilter, bool injectPulses);
-void prepareWave(int ic, float &sb_mean, float &sb_RMS, float &tb_mean, float &tb_RMS, float &tb_max, float &tb_maxTime, bool applyLPFilter, bool injectPulses);
+vector< vector<float> > processChannel(int ic,bool applyLPFilter, bool injectPulses, float injectSignalQ);
+void prepareWave(int ic, float &sb_mean, float &sb_RMS, float &tb_mean, float &tb_RMS, float &tb_max, float &tb_maxTime, bool applyLPFilter, bool injectPulses, float injectSignalQ);
 vector< vector<float> > findPulses(int ic,bool applyLPFilter);
 void findTriggerCandidates(int ic, float sb_mean);
 vector< vector<float> > findPulses_inside_out(int ic);
@@ -385,6 +398,7 @@ vector<std::tuple<int, int, int, float,float>> fillList;
 
 //timestamp x1 y1 z1 ... x4 y4 z4
 vector<std::tuple<int, float,float,float,float,float,float,float,float,float,float,float,float >> fieldList; 
+vector<float> photonList; 
 
 # ifndef __CINT__  // the following code will be invisible for the interpreter
 int main(int argc, char **argv)
@@ -400,20 +414,21 @@ int main(int argc, char **argv)
     else if(argc==11) make_tree(argv[1],stoi(argv[2]),argv[3],stof(argv[4]),stof(argv[5]),stoi(argv[6]),stoi(argv[7]),stoi(argv[8]),stoi(argv[9]),stoi(argv[10]));
     else if(argc==12) make_tree(argv[1],stoi(argv[2]),argv[3],stof(argv[4]),stof(argv[5]),stoi(argv[6]),stoi(argv[7]),stoi(argv[8]),stoi(argv[9]),stoi(argv[10]),stoi(argv[11]));
     else if(argc==13) make_tree(argv[1],stoi(argv[2]),argv[3],stof(argv[4]),stof(argv[5]),stoi(argv[6]),stoi(argv[7]),stoi(argv[8]),stoi(argv[9]),stoi(argv[10]),stoi(argv[11]),stoi(argv[12]));
-    else if(argc>=14) {
+    else if(argc==14) make_tree(argv[1],stoi(argv[2]),argv[3],stof(argv[4]),stof(argv[5]),stoi(argv[6]),stoi(argv[7]),stoi(argv[8]),stoi(argv[9]),stoi(argv[10]),stoi(argv[11]),stoi(argv[12]),atof(argv[13]));
+    else if(argc>=15) {
 	//the arguments after index 10 are channels to be forced for the display.
 	set<int> forceChans;
-	for(int i=13;i<argc;i++){
+	for(int i=14;i<argc;i++){
 	    forceChans.insert(stoi(argv[i]));
 	}
-	make_tree(argv[1],stoi(argv[2]),argv[3],stof(argv[4]),stof(argv[5]),stoi(argv[6]),stoi(argv[7]),stoi(argv[8]),stoi(argv[9]),stoi(argv[10]),stoi(argv[11]),stoi(argv[12]),forceChans);
+	make_tree(argv[1],stoi(argv[2]),argv[3],stof(argv[4]),stof(argv[5]),stoi(argv[6]),stoi(argv[7]),stoi(argv[8]),stoi(argv[9]),stoi(argv[10]),stoi(argv[11]),stoi(argv[12]),stoi(argv[13]),forceChans);
     }
 
 }
 # endif
 
 
-void make_tree(TString fileName, int eventNum, TString tag, float rangeMinX,float rangeMaxX, float rangeMinY,float rangeMaxY, int displayPulseBounds, int onlyForceChans,int runFFT,int applyLPFilter,int injectPulses, set<int> forceChan){
+void make_tree(TString fileName, int eventNum, TString tag, float rangeMinX,float rangeMaxX, float rangeMinY,float rangeMaxY, int displayPulseBounds, int onlyForceChans,int runFFT,int applyLPFilter,int injectPulses, float injectSignalQ, set<int> forceChan){
     //	gROOT->ProcessLine( "gErrorIgnoreLevel = kError");
     for (int i=0;i<=31;i++) {channelCalibrations[i] = interModuleCalibrations[i];}//+intraModuleCalibrations[i];}
     bool calibrateDisplay = true;
@@ -442,7 +457,9 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMinX,floa
 	cout<<"Sample frequencies, boards 0 and 1: "<<sample_rate[0]<<" GHz and "<<sample_rate[1]<<" GHz."<<endl;
 
     }
-    else inTree = (TTree*)f->Get("data"); 
+    else {
+	inTree = (TTree*)f->Get("data"); 
+    }
 
     TString baseFileName= ((TObjString*)inFileName.Tokenize("/")->Last())->String().Data();
 
@@ -451,6 +468,11 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMinX,floa
     runNumber.ReplaceAll("MilliQan_Run","");
     runNum=atoi(runNumber.Data());
     if (injectPulses) runNum *= -1;
+    TString signalString;
+    if (injectSignalQ > 0){
+	signalString += Form("SignalInjected_Q%.6f",injectSignalQ);
+	signalString.ReplaceAll(".","p");
+    }
 
     //Get file number from file name
     TString fileNumber = ((TObjString*)baseFileName.Tokenize(".")->At(1))->String().Data();
@@ -465,14 +487,15 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMinX,floa
 
     baseFileName="UX5"+baseFileName;
     baseFileName.ReplaceAll(".root","");
+    baseFileName += signalString;
 
     cout<<"Run "<<runNum<<", file "<<fileNum<<endl;
     //TString version = GetStdoutFromCommand("git describe --tag --abbrev=0"); //fixme- this is currently evaluated at runtime, instead of compile time
     TString version = "shorttagplaceholder";
     if(version.Contains("placeholder")){cout<<"This macro was compiled incorrectly. Please compile this macro using compile.sh"<<endl;return;}
 
-    TString treeDirectory= milliqanOfflineDir+"trees_"+version+"/Run"+to_string(runNum)+"_"+configName+"/";
-    TString linkDirectory= milliqanOfflineDir+"trees/Run"+to_string(runNum)+"_"+configName+"/";
+    TString treeDirectory= milliqanOfflineDir+"trees_"+version+"/Run"+to_string(runNum)+"_"+configName+signalString+"/";
+    TString linkDirectory= milliqanOfflineDir+"trees/Run"+to_string(runNum)+"_"+configName+signalString+"/";
 
 
     if(maxEvents<0) maxEvents=inTree->GetEntries();
@@ -503,7 +526,7 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMinX,floa
 
 
 
-    displayDirectory = milliqanOfflineDir+"displays/Run"+to_string(runNum)+"_"+configName+"/";
+    displayDirectory = milliqanOfflineDir+"displays/Run"+to_string(runNum)+"_"+configName+signalString+"/";
     gSystem->mkdir(displayDirectory);
 
 
@@ -519,6 +542,7 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMinX,floa
     for(int i=0;i<fieldFiles.size();i++){
 	loadFieldList(fieldFiles[i]);
     }
+    loadPhotonList("./ThruGoingSimPhotonTimes.dat");
 
     if(debug) maxEvents=10;
     cout<<"Starting event loop"<<endl;  
@@ -643,6 +667,11 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMinX,floa
 	else{ event_time_b0=0;event_time_b1=0;event_t_string="";fillNum=0;beam=false;fillAvgLumi=-1; fillTotalLumi=-1;}
 
 	vector<vector<vector<float> > > allPulseBounds;
+	straightPathRandom->SetSeed(0);
+	nPulseRandom->SetSeed(0);
+	indexRandom->SetSeed(0);
+	int straightPathIndex = straightPathRandom->Integer(6);
+	std::vector<int> straightPath = straightPaths[straightPathIndex];
 	for(int ic=0;ic<numChan;ic++){
 	    /* if(ic==15){//skip timing card channel
 	       vector<vector<float> > empty;
@@ -650,29 +679,29 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMinX,floa
 	       continue;
 	       }*/
 	    //	cout<<Form("Chan %i min: ",ic)<<waves[ic]->GetMinimum()<<endl;
-
-	    allPulseBounds.push_back(processChannel(ic,applyLPFilter,injectPulses));
+	    if (injectSignalQ < 0 || std::find(straightPath.begin(), straightPath.end(), ic) == straightPath.end()) allPulseBounds.push_back(processChannel(ic,applyLPFilter,injectPulses,-1));
+	    else allPulseBounds.push_back(processChannel(ic,applyLPFilter,injectPulses,injectSignalQ));
 	}
 	if(displayMode){
 	    displayEvent(allPulseBounds,tag,rangeMinX,rangeMaxX,rangeMinY,rangeMaxY,calibrateDisplay,displayPulseBounds,onlyForceChans,runFFT,forceChan);
 	}
 	else outTree->Fill();
     }
-    if(!displayMode) cout<<"Processed "<<maxEvents<<" events."<<endl;
+if(!displayMode) cout<<"Processed "<<maxEvents<<" events."<<endl;
 
-    if(!displayMode){
-	outTree->Write();
-	outFile->Close();
+if(!displayMode){
+    outTree->Write();
+    outFile->Close();
 
-	cout<<"Closed output tree."<<endl;
-	//TString currentDir=gSystem->pwd();
-	//TString target = currentDir+"/"+outFileName;
-	TString target = outFileName;
-	TString linkname =linkDirectory+baseFileName+".root";
-	remove(linkname); //remove if already exists
-	gSystem->Symlink(target,linkname);
-	cout<<"Made link to "<<target<<" called "<<linkname<<endl;
-    }
+    cout<<"Closed output tree."<<endl;
+    //TString currentDir=gSystem->pwd();
+    //TString target = currentDir+"/"+outFileName;
+    TString target = outFileName;
+    TString linkname =linkDirectory+baseFileName+".root";
+    remove(linkname); //remove if already exists
+    gSystem->Symlink(target,linkname);
+    cout<<"Made link to "<<target<<" called "<<linkname<<endl;
+}
 }
 
 
@@ -683,7 +712,7 @@ void convertXaxis(TH1D *h, int ic){
     h->ResetStats();
 }
 void prepareWave(int ic, float &sb_meanPerEvent, float &sb_RMSPerEvent, float &sb_triggerMeanPerEvent, float &sb_triggerRMSPerEvent,
-	float &sb_triggerMaxPerEvent,float &sb_timeTriggerMaxPerEvent,bool applyLPFilter, bool injectPulses){
+	float &sb_triggerMaxPerEvent,float &sb_timeTriggerMaxPerEvent,bool applyLPFilter, bool injectPulses, float injectSignalQ){
     //Invert waveform and convert x-axis to ns
 
     waves[ic]->Scale(-1.0);
@@ -703,6 +732,21 @@ void prepareWave(int ic, float &sb_meanPerEvent, float &sb_RMSPerEvent, float &s
 	    if (ibin+injectPulsesStartBin > waves[ic]->GetNbinsX()) break;
 	}
 	delete generatedTemplate;
+    }
+    if (injectSignalQ > 0){
+	int totalN = nPulseRandom->Poisson(injectSignalQ*injectSignalQ*nPulseQ1);
+	for (int iSig = 0; iSig < totalN; iSig++){
+	    int index = indexRandom->Integer(photonList.size());
+	    float photonTimeCalib = photonList[index];
+	    TH1D * generatedTemplate = SPEGen(sample_rate[ic/16]);
+	    generatedTemplate->Scale(channelSPEAreas[ic]/50.);
+	    int signalPulsesStartBin = waves[ic]->FindBin(380+photonTimeCalib-channelCalibrations[ic]);
+	    for(int ibin = 1; ibin <= generatedTemplate->GetNbinsX(); ibin++){
+		waves[ic]->SetBinContent(ibin+signalPulsesStartBin,waves[ic]->GetBinContent(ibin+signalPulsesStartBin)+generatedTemplate->GetBinContent(ibin));
+		if (ibin+signalPulsesStartBin > waves[ic]->GetNbinsX()) break;
+	    }
+	}
+
     }
     if (applyLPFilter){
 	waves[ic] = LPFilter(waves[ic]);
@@ -772,9 +816,9 @@ pair<float,float> measureSideband(int ic, float start, float end){
 }
 
 
-vector< vector<float> > processChannel(int ic,bool applyLPFilter, bool injectPulses){
+vector< vector<float> > processChannel(int ic,bool applyLPFilter, bool injectPulses, float injectSignalQ){
     float sb_meanPerEvent, sb_RMSPerEvent, sb_triggerMeanPerEvent, sb_triggerRMSPerEvent,  sb_triggerMaxPerEvent, sb_timeTriggerMaxPerEvent;
-    prepareWave(ic, sb_meanPerEvent, sb_RMSPerEvent,sb_triggerMeanPerEvent, sb_triggerRMSPerEvent, sb_triggerMaxPerEvent, sb_timeTriggerMaxPerEvent,applyLPFilter, injectPulses); 
+    prepareWave(ic, sb_meanPerEvent, sb_RMSPerEvent,sb_triggerMeanPerEvent, sb_triggerRMSPerEvent, sb_triggerMaxPerEvent, sb_timeTriggerMaxPerEvent,applyLPFilter, injectPulses, injectSignalQ); 
     float sb_mean = meanCalib[ic];
     float sb_RMS = rmsCalib[ic];
 
@@ -1232,7 +1276,7 @@ vector< vector<float> > findPulses(int ic, bool applyLPFilter){
 	lowThresh = thresh - rmsCalib[ic];
     }
     if (applyLPFilter){
-      Nconsec = Nconsec-5; // Narrower pulses allowed after low pass filtering
+	Nconsec = Nconsec-5; // Narrower pulses allowed after low pass filtering
 	if (Nconsec<2) Nconsec = 2;
 	thresh = thresh - 0.5;
 	lowThresh = lowThresh - 0.5;
@@ -1659,6 +1703,22 @@ vector<TString> getFieldFileList(TString location){
     date = startOfFile.GetDate();
     files.push_back(Form("%s/environ_data_%i.txt",location.Data(),date));
     return files;
+}
+void loadPhotonList(TString photonFile){
+    float time;
+    ifstream infile;
+    infile.open(photonFile); 
+    if(!infile.good()){
+	cout<<"Photon time file doesn't exist: "<<photonFile<<endl;
+	return;}
+    infile.ignore(10000,'\n'); //skip first line
+    while(infile >> time){
+	//    if(end<=start && end>0) cout<<"Error in fill time list"<<endl; //end == -1 indicates ongoing fill
+	//cout<<Form("Appending %i %i %i %0.2f",start,end,fillnumber,lumi)<<endl;
+	photonList.push_back(time);
+	    //        cout<<timestamp<<" "<< x1<<" "<<y1<<" "<<z1<<" "<<x2<<" "<<y2<<" "<<z2<<" "<<x3<<" "<<y3<<" "<<z3<<" "<<x4<<" "<<y4<<" "<<z4<<endl;
+    }
+    cout<<"Loaded photon time file"<<photonFile<<", "<<photonList.size()<<" photon measurements."<<endl;
 }
 
 void loadFieldList(TString fieldFile){

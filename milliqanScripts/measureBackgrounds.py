@@ -95,24 +95,10 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
 
     iE = -1
     nEvents = tree.GetEntries()
-    runPrev = 1E9
-    tdcTimePrev = 1E9
-    # totalRunTime = 0
-    # tree.BuildIndex("event_time_fromTDC")
-    # index = tree.GetTreeIndex()
     extraPathsSet = [set(extraPath) for extraPath in allPaths["ExtraPaths"]]
     pbar = ProgressBar()
     for iE in pbar(range(nEvents)):
-        # local = tree.LoadTree(index.GetIndex()[iE])
         tree.GetEntry(iE)
-        # if tree.run == runPrev:
-        #     if tree.event_time_fromTDC > 0 and tdcTimePrev > 0:
-        #         if tree.event_time_fromTDC > tdcTimePrev:
-        #             totalRunTime += tree.event_time_fromTDC-tdcTimePrev
-        # print tdcTimePrev,tree.event_time_fromTDC
-
-        # runPrev = tree.run*1.
-        # tdcTimePrev = tree.event_time_fromTDC*1.
         if tree.groupTDC_b0[0] != tree.groupTDC_b1[0]:
             continue
         nTot += 1

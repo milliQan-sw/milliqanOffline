@@ -10,8 +10,13 @@ import config as cfg
 
 #### This script will submit jobs to reprocess a run and overwrite existing files. ####
 
-def main(arg1):
+def main(arg1,arg2=None):
 	run = str(arg1)
+        if arg2 == None:
+            make_tree_script = "make_tree"
+        else:
+            make_tree_script = str(arg2)
+
 
 	moveRawToFolders.main()
 
@@ -34,7 +39,7 @@ def main(arg1):
 		for i in range(15):
 			if iFile>=nFiles: break
 			#script.write("root -b -q 'make_tree.C+(\""+fileList[iFile]+"\""")'\n")
-			script.write("make_tree "+fileList[iFile]+"\n")
+			script.write(make_tree_script+" "+fileList[iFile]+"\n")
 			iFile = iFile+1
 
 		script.close()
@@ -45,6 +50,9 @@ def main(arg1):
 
 
 if __name__ == "__main__":
+    if len(sys.argv) == 2:
 	main(sys.argv[1])
+    else:
+	main(sys.argv[1],sys.argv[2])
 
 

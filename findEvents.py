@@ -12,7 +12,8 @@ def main(run,cuts,nevents,tag):
 	t = ROOT.TChain("t")
 	treeList=glob.glob(cfg.offlineDir+"trees/Run"+run+"*/*.root")
 	for f in treeList: 
-		t.Add(f)
+            if "SignalInjected" in f: continue
+	    t.Add(f)
 
 	t.SetEstimate(nevents) # limit how many events are read to memory
 	#use Draw to generate table and store in memory

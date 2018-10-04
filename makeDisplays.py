@@ -17,16 +17,25 @@ def parse_args():
 	parser.add_argument("nEvents",help="Number of diplays to make",type=int)
 	parser.add_argument("-t","--tag",help="Filename tag",default="")
 	parser.add_argument("-r","--rangeForTime",nargs=2,help="Force time range for plots (default is zoomed to pulses)",type=float)
+	parser.add_argument("-v","--rangeForVoltage",nargs=2,help="Force y range for plots (default is zoomed to pulses)",type=float)
 	parser.add_argument("--noBounds",help="Disable display of pulsefinding bounds.",action='store_true',default=False)
 	parser.add_argument("-c","--forceChans",nargs='+',help="List of channels to force in display (space separated, any length)")
+	parser.add_argument("-f","--fft",help="run FFT",action="store_true")
+	parser.add_argument("-l","--LPF",help="apply low pass filter",action="store_true")
+	parser.add_argument("-o","--onlyForceChans",action='store_true',help="Only show forced chans")
 	args = parser.parse_args()
 	#print args
 	return args
 
-def main(runNumber, selection, nEvents,tag="",rangeForTime=None,noBounds=False,forceChans=[]):
+def main(runNumber, selection, nEvents,tag="",rangeForTime=None,rangeForVoltage=None,noBounds=False,forceChans=[],onlyForceChans=False,fft=False,LPF=False):
+        if forceChans == None:
+            forceChans = []
 	displayPulseBounds = not noBounds
 	runNumber = str(runNumber)
 	table = findEvents.main(runNumber,selection,nEvents,tag)
+        if len(forceChans) == 0 and onlyForceChans:
+            print "No forced chans to show!"
+            exit()
 	for i in range(len(table)):
 		fileNumber= str(table[i][1])
 		eventNumber= str(table[i][2])
@@ -34,14 +43,14 @@ def main(runNumber, selection, nEvents,tag="",rangeForTime=None,noBounds=False,f
 		if len(treeList)>0: treeName=treeList[0]
 		else: print "Base file not found."	
 		#print "make_tree",treeName,eventNumber,tag
-		if rangeForTime != None:
-			args = ["make_tree",treeName,eventNumber,tag,str(rangeForTime[0]),str(rangeForTime[1]),str(int(displayPulseBounds))]
-		else:
-			args = ["make_tree",treeName,eventNumber,tag,"-1","-1",str(int(displayPulseBounds))]
-		
+                if rangeForTime == None:
+                    rangeForTime = ["-1","-1"]
+                if rangeForVoltage == None:
+                    rangeForVoltage = ["-1000","-1000"]
+		args = ["./make_tree_signalInj",treeName,eventNumber,tag,str(rangeForTime[0]),str(rangeForTime[1]),str(rangeForVoltage[0]),str(rangeForVoltage[1]),str(int(displayPulseBounds)),str(int(onlyForceChans)),str(int(fft)),str(int(LPF)),str(0),str(-1)]
 		if forceChans != None:
 			args = args + forceChans
-	#	print args
+		# print args
 		call(args)
 
 if __name__ == "__main__":

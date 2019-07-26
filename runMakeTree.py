@@ -16,17 +16,18 @@ def parse_args():
 	parser.add_argument("-e","--exe",help="executable to run",type=str,default="make_tree")
 	parser.add_argument("-p","--pulseInject",help="Inject pulses",action="store_true")
 	parser.add_argument("-s","--signalInject",help="Inject signal",type=float,default=-1)
+	parser.add_argument("-d","--DRS",help="DRS input",action="store_true")
 	args = parser.parse_args()
 	#print args
 	return args
 
-def main(inFiles,LPF,exe,pulseInject,signalInject):
+def main(inFiles,LPF,exe,pulseInject,signalInject,DRS):
     for inFileText in inFiles:
         inFilesTextExpanded = glob.glob(inFileText)
         if len(inFilesTextExpanded) == 0:
             print "No files found for string: ",inFileText
         for inFile in inFilesTextExpanded:
-            args = [exe,inFile,"-1","","-1","-1","-1000","-1000","0","0","0",str(int(LPF)),str(int(pulseInject)),str(float(signalInject))]
+            args = [exe,inFile,"-1","","-1","-1","-1000","-1000","0","0","0",str(int(LPF)),str(int(pulseInject)),str(float(signalInject)),str(int(DRS))]
             call(args)
 
 if __name__ == "__main__":

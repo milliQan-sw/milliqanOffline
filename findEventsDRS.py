@@ -20,6 +20,10 @@ def main(timestamp,cuts,nevents,tag):
         outFile = open(outFileName,"w")
         table = []
         nselTot = 0
+        if len(treeList) > 1:
+            print "ERROR: found more than one file with same timestamp!"
+            print " ".join(treeList)
+            exit()
         for fileName in treeList:
             fileNameDRS = fileName.split("/")[-1][3:]
 	    t = ROOT.TChain("t")

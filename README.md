@@ -26,6 +26,8 @@ make_tree and make_tree_vN are both used by processRun and topUpRun, so both sho
 
 ##To use common scripts, log onto milliqan username on SL6 machine (e.g. cms1, cms3, cms6, cms29)
 
+From the milliqanOffline directory you can run on a single file using the runMakeTree.py script.
+
 From anywhere, you can:
 	processRun.py <runNumber> (submits batch jobs)
 
@@ -58,7 +60,6 @@ From anywhere, you can:
   	 -q SIGNALINJECT, --signalInject SIGNALINJECT
                         Inject signal
  	 -o, --onlyForceChans  Only show forced chans
-
 
 
 ##### Tags and versions #######
@@ -115,7 +116,24 @@ The diff of the changes are:
 Also remove the following line from LinkDef.h:
 #pragma link C++ class mdaq::V1743Configuration+;
 
+### Running with DRS input (experimental!)
 
+Place the DRS input file (made using the processBinary script here: https://github.com/mcitron/pmt-calibration) in the /net/cms26/cms26r0/milliqan/DRS directory
+
+Make offline trees by running:
+
+```bash
+python runMakeTree.py --inFile ../DRS/<input-file-name>.root --exe ./make_tree_withDRS -d
+```
+
+Make displays using the dedicated script (identify the input file from the timestamp):
+
+```bash
+python makeDisplaysDRS.py <timestamp> <nEvents> #other arguments as for makeDisplays.py detailed above
+```
+
+
+	
 
 
 

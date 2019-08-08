@@ -118,7 +118,7 @@ Also remove the following line from LinkDef.h:
 
 ### Running with DRS input (experimental!)
 
-Place the DRS input file (made using the processBinary script here: https://github.com/mcitron/pmt-calibration) in the /net/cms26/cms26r0/milliqan/DRS directory
+Place the DRS input file (made using the processBinary script here: https://github.com/mcitron/pmt-calibration) in the /net/cms26/cms26r0/milliqan/DRS directory (DO NOT CHANGE THE FILE NAME!)
 
 Make offline trees by running:
 

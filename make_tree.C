@@ -555,7 +555,6 @@ else if (runDRS > 0){
 else {
     inTree = (TTree*)f->Get("data"); 
 }
-return;
 
 if (runDRS > 0){
     runNumber = "1";

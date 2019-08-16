@@ -529,17 +529,28 @@ The first background source that was considered is the dark rate overlap. The da
 for each channel using ``zero bias" runs in which the data is collected with a random trigger.
 The average dark rate for the bars is shown in Figure~\ref{fig:darkRate}. This can be used to estimate the 
 contribution from the random overlap of three dark counts in three bars. 
-The prediction as a function of \npe is shown in Figure~\ref{fig:ratePred} and 
+The prediction as a function of \npe is shown in Figure~\ref{fig:darkRateSingle} and 
 compared to the observation in the signal region during data taking periods without collisions. 
 Random overlap of dark rate can be seen to account for $\sim25\%$ and $\sim0.4\%$ 
 of the overall rate for \npe values of $\sim 1$ and $> 5$, respectively. The dark rates are 
 known to vary with time and so this prediction should be repeated with a time
 dependent measurement.
 
+A dark rate pulse in a particular channel may also overlap with correlated deposits in two
+other channels. The rate for this can be inclusively determined using runs which 
+are collected with double coincidence triggers and then calculating the triple
+coincidence rate given the single coincidence rates measured as detailed above.
+This calculation is approximate as it does not allow for time dependence in the rates and assumes
+the double coincidence pulses occur at the same time. The result is shown
+in Fig~\ref{fig:darkRateDouble}. For $\npe < 5$ the prediction is shown to agree reasonably well
+with the observation given the limitations in the method discussed above. For $\npe > 5$ the prediction
+from this method accounts for $\sim 10\%$ of the total rate.
+
 Finally, the background per path is shown in Figure~\ref{fig:perPathPlot}. The paths involving
 the channels with the highest dark rates are seen to have the highest 
-significantly higher triple coincidence rate for \npe < 5. For \npe > 5 the
+significantly higher triple coincidence rate for $\npe < 5$. For $\npe > 5$ the
 rate is comparable for all paths.
+
 \begin{figure}[ht!]
     \centering
     \includegraphics[width=0.6\textwidth]{figures/singlesRatesUnbiasedQuietSinglePulseInChanHeightAllUnbiasedBinnedAsSignal}
@@ -549,8 +560,16 @@ rate is comparable for all paths.
 \begin{figure}[ht!]
     \centering
     \includegraphics[width=0.6\textwidth]{figures/predictionAndMeasurementTimeWindow15}
-    \caption{\label{fig:darkRate} Background predictions for a signal like selection
+    \caption{\label{fig:darkRateSingle} Background predictions for a signal like selection
     from dark rate is compared to the observation in the data taking period without beam.} 
+\end{figure}
+
+\begin{figure}[ht!]
+    \centering
+    \includegraphics[width=0.6\textwidth]{figures/predictionAndMeasurementFromDoubleAndSingleTimeWindow15}
+    \caption{\label{fig:darkRateDouble} Background predictions for a signal like selection
+    from the dark rate in each channel overlapping with a double coincidence in the two other
+    channels for each path is compared to the observation in the data taking period without beam.} 
 \end{figure}
 
 %FIXME - this rate is seen to vary with time, evaluate this dependence for single channel and 
@@ -570,11 +589,11 @@ To be filled ...
 
 \subsection{Cosmic/beam muon showers}
 
-To be filled ...
+To be filled (Brunel/Ryan) ...
 
 \subsection{Afterpulses}
 
-To be filled ...
+To be filled (Jan) ...
 
 \section{Interpretation}
 

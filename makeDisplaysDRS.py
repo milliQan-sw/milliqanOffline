@@ -4,14 +4,14 @@ import ROOT
 import glob
 import math
 from subprocess import call
-import findEvents
+import findEventsDRS
 import argparse
 import config as cfg
 
 
 def parse_args():
 	parser=argparse.ArgumentParser()
-	parser.add_argument("runNumber",help="Run number for display",type=int)
+	parser.add_argument("timestamp",help="timestamp of output file",type=int)
 	parser.add_argument("-s","--selection",help="Selection, if you call this script from bash and use the symbol $ in selection, you must use single quotes or backslash to escape.",
 	type=str, default="")
 	parser.add_argument("nEvents",help="Number of diplays to make",type=int)
@@ -29,32 +29,27 @@ def parse_args():
 	#print args
 	return args
 
-def main(runNumber, selection, nEvents,tag="",rangeForTime=None,rangeForVoltage=None,noBounds=False,forceChans=[],onlyForceChans=False,fft=False,LPF=False,pulseInject=False,signalInject=-1.):
-        if forceChans == None:
-            forceChans = []
-	displayPulseBounds = not noBounds
-	runNumber = str(runNumber)
-	table = findEvents.main(runNumber,selection,nEvents,tag)
-        if len(forceChans) == 0 and onlyForceChans:
-            print "No forced chans to show!"
-            exit()
-	for i in range(len(table)):
-		fileNumber= str(table[i][1])
-		eventNumber= str(table[i][2])
-		treeList=glob.glob(cfg.rawDir+"Run"+runNumber+"_*/MilliQan_Run"+runNumber+"."+fileNumber+"_*.root")
-		if len(treeList)>0: treeName=treeList[0]
-		else: print "Base file not found."	
-		#print "make_tree",treeName,eventNumber,tag
-                if rangeForTime == None:
-                    rangeForTime = ["-1","-1"]
-                if rangeForVoltage == None:
-                    rangeForVoltage = ["-1000","-1000"]
-                #FIXME - will need to update if use new version of make_tree!
-		args = ["./make_tree_signalInj3",treeName,eventNumber,tag,str(rangeForTime[0]),str(rangeForTime[1]),str(rangeForVoltage[0]),str(rangeForVoltage[1]),str(int(displayPulseBounds)),str(int(onlyForceChans)),str(int(fft)),str(int(LPF)),str(int(pulseInject)),str(float(signalInject))]
-		if forceChans != None:
-			args = args + forceChans
-		# print " ".join(args)
-		call(args)
+def main(timestamp, selection, nEvents,tag="",rangeForTime=None,rangeForVoltage=None,noBounds=False,forceChans=[],onlyForceChans=False,fft=False,LPF=False,pulseInject=False,signalInject=-1.):
+    timestamp = str(timestamp)
+    if forceChans == None:
+        forceChans = []
+    displayPulseBounds = not noBounds
+    table = findEventsDRS.main(timestamp,selection,nEvents,tag)
+    if len(forceChans) == 0 and onlyForceChans:
+        print "No forced chans to show!"
+        exit()
+    for i in range(len(table)):
+        treeName = str(table[i][0])
+        eventNumber = str(table[i][1])
+        print treeName,eventNumber
+        if rangeForTime == None:
+            rangeForTime = ["-1","-1"]
+        if rangeForVoltage == None:
+            rangeForVoltage = ["-1000","-1000"]
+        args = ["./make_tree_withDRS",treeName,eventNumber,tag,str(rangeForTime[0]),str(rangeForTime[1]),str(rangeForVoltage[0]),str(rangeForVoltage[1]),str(int(displayPulseBounds)),str(int(onlyForceChans)),str(int(fft)),str(int(LPF)),str(int(pulseInject)),str(float(signalInject)),"1"]
+        if forceChans != None:
+                args = args + forceChans
+        call(args)
 
 if __name__ == "__main__":
 	#if len(sys.argv)<4:

@@ -13,12 +13,14 @@
 #include "TROOT.h"
 #include "TF1.h"
 #include "TMath.h"
+#include "TArray.h"
 #include "TFile.h"
 #include "TVirtualFFT.h"
 #include "TTree.h"
 #include "TChain.h"
 #include "TMath.h"
 #include "TH1F.h"
+#include "TParameter.h"
 #include "TH2F.h"
 #include "TGraphErrors.h"
 #include "TCanvas.h"
@@ -39,6 +41,13 @@
 #include "pmt-calibration/photon_template_generator/SPEGen.h"
 
 #include <string>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fstream> 
+#include <iostream> 
+
+struct stat info1;
+struct stat info2;
 
 #ifdef __MAKECINT__
 #pragma link C++ class std::vector < std::vector<int> >+;
@@ -62,10 +71,11 @@ TH1D * doFFT(TH1D * hrIn){
     return hrOut;
 }
 
-TH1D * LPFilter(TH1D * hrIn,float filterMin=0.049,bool butterworth=true){
+TH1D * LPFilter(TH1D * hrIn,int butterworthOrder = 2,float filterMin=0.049){
+    bool butterworth = butterworthOrder > 0;
     TH1 * hr = 0;
     TF1 *butterworthFilter = new TF1("butterworth", "1/sqrt(1+[0]*(x/[1])^(2*[2]))");
-    butterworthFilter->SetParameters(1,filterMin,2);
+    butterworthFilter->SetParameters(1,filterMin,butterworthOrder);
     TVirtualFFT::SetTransform(0);
     hr = hrIn->FFT(hr, "MAG");
     hr->SetName(TString(hrIn->GetName())+"Transform");
@@ -137,6 +147,7 @@ TH1D * LPFilter(TH1D * hrIn,float filterMin=0.049,bool butterworth=true){
 
 //Configurable parameters
 int numChan=32;
+TArrayI * chanArray;
 int maxEvents=-1; 
 float sideband_range[2] = {0,50}; //in ns
 float triggerBand_range[2] = {360,390}; //in ns
@@ -155,11 +166,16 @@ bool milliDAQ=true;
 //Activated to display specific events
 bool displayMode=false;
 
-vector<TString> tubeSpecies = {"ET","ET","ET","ET",             // 0 1 2 3 
-    "R878","R878","R878","ET",       // 4 5 6 7	
-    "R878","R7725","R7725","R878",	// 8 9 10 11
-    "R878","R878","R878","R878"};    // 12 13 14 15
+TString configurationFolder = "/net/cms26/cms26r0/milliqan/milliqanOffline/configuration/";
 
+vector<TString> tubeSpecies = {"R878","R878","R878","R878",             // 0 1 2 3 
+    "R878","R7725","R878","R878",       // 4 5 6 7	
+    "R878","ET","R878","R878",	// 8 9 10 11
+    "R878","R878","R878","",    // 12 13 14 15
+    "R878","ET","R878","R878",	// 16 17 18 19 
+    "R878","R878","R7725","R878",	// 20 21 22 23
+    "R878","ET","R7725","R878",	// 24 25 26 27
+    "R878","R878","R878","R878"};	// 28 29 30 31
 // vector<int> layerMap = {1,1,1,1,    // 0 1 2 3 
 //     2,2,2,2,   // 4 5 6 7	
 //     3,3,3,3,	// 8 9 10 11
@@ -257,6 +273,10 @@ vector<int> colors;
 
 //Declare global variables
 vector<TH1D*> waves;
+double arrayVoltageDRS_1[1024];
+double arrayVoltageDRS_2[1024];
+double arrayVoltageDRS_3[1024];
+double arrayVoltageDRS_4[1024];
 // float intraModuleCalibrations[] = {0.,0.,-2.69,-7.25,0.5,0.,2.0,9.92,1.37,0.,-3.85,-3.67,-1.65,0.,-24.21,-5.05};
 // float interModuleCalibrations[] = {0.,0.,0.,0.,-6.07,-6.07,-6.07,-6.07,8.38,8.38,8.38,8.38,-6.07,0.,8.38,0.};
 // float intraModuleCalibrations[] = {0.0, 0.0, -2.5, -7.5, 0.625, 0.0, 1.875, 10.0, 1.25, 0.0, -3.75, -3.75, -1.875, 0.0, -24.375, -5.0};
@@ -264,11 +284,13 @@ vector<TH1D*> waves;
 // float intraModuleCalibrations[32];
 float meanCalib[] = {-0.2453, 0.009, -0.007, -0.07, -0.661, -0.252, 0.080, -0.214, -1.04, -0.160, 1.18, -0.910, -0.3789, -1.09, -0.53, 0., -0.367, -0.837, -0.283, -0.275, -0.235, -0.295, -0.443, -0.606, -0.762, -0.201, -0.576, -0.440, -0.706, -0.426, -0.280, -0.458};
 float rmsCalib[] = {0.8637, 0.7901, 0.9028, 0.7561, 0.8741, 0.7857, 0.8706, 0.7795, 0.8098, 0.7954, 0.9941, 0.7833, 0.9148, 0.7899, 0.9600, 1., 0.8829, 0.8828, 0.8908, 0.8005, 0.8400, 0.8863, 1.061, 0.8085, 0.9275, 0.8194, 0.9087, 0.7757, 0.8507, 0.9169, 0.9577, 0.8018};
-float interModuleCalibrations[32] = { 33.125, 33.125, 13.75, 25.0, 24.375, 35.0, 30.0, 29.375, 24.375, 33.75, 3.125, 15.625, 26.875, 34.375, 9.375, 0.0, 27.5, 30.0, 0.0, 11.25, 7.5, 12.5, 28.125, 20.625, 33.75, 26.875, -3.125, 8.75, 13.75, 0.0, 14.375};
+// float interModuleCalibrations[32] = { 33.125, 33.125, 13.75, 25.0, 24.375, 35.0, 30.0, 29.375, 24.375, 33.75, 3.125, 15.625, 26.875, 34.375, 9.375, 0.0, 27.5, 30.0, 0.0, 11.25, 7.5, 12.5, 28.125, 20.625, 33.75, 26.875, -3.125, 8.75, 13.75, 0.0, 14.375};
+float interModuleCalibrations[32] = { 33.125, 33.125, 13.75, 24.375, 23.75, 35.0, 30.625, 29.375, 24.375, 33.75, 3.75, 16.25, 26.875, 34.375, 9.375, 0.0, 27.5, 30.625, 0.0, 11.25, 7.5, 12.5, 28.125, 20.625, 33.75, 26.875, -3.125, 9.375, 13.75, 0.625, 15.625,10.625};
 float channelCalibrations[32];
 // float channelCalibrations[] = {0.,0.,-2.17,-7.49,0.48,0.,1.17,11.44,1.15,0.,-6.41,-4.81,1.2,0.,25.7,6.8};
 float channelSPEAreas[] = {62.,66.,77.,65.,68.,84.,70.,75.,100.,62.,85.,80.,60.,95.,65.,1.,48.,46.,80.,82.,60.,80.,118.,52.,46.,32.,60.,73.,70.,47.,75.,65.};
-SPE* spe = new SPE();
+SPE* speR878 = new SPE("r878",2,false);
+SPE* speR7725 = new SPE("r7725",2,false);
 TTree * inTree;
 TTree * outTree;
 
@@ -280,20 +302,24 @@ int nRollOvers=0;
 
 int event = 0;
 int fileNum=0;
-int runNum=0;
+Long64_t runNum=0;
+int runNumOrig=0;
 Long64_t event_time_b0=0;
 Long64_t event_time_b1=0;
 double event_time_fromTDC=0;
 bool present_b0;
 bool present_b1;
 int t_since_fill_start=0;
+int t_since_fill_end=0;
+int t_until_next_fill=0;
 string event_t_string;
 Long64_t event_trigger_time_tag_b0;
 Long64_t event_trigger_time_tag_b1;
 int fillNum;
 float fillAvgLumi=0;
 float fillTotalLumi=0;
-bool beam;
+bool beam=false;
+bool hardNoBeam=true;
 mdaq::GlobalEvent * evt = new mdaq::GlobalEvent(); //for MilliDAQ output only
 mdaq::DemonstratorConfiguration * cfg = new mdaq::DemonstratorConfiguration(); 
 
@@ -334,31 +360,42 @@ vector<float> * v_by = new vector<float>();
 vector<float> * v_bz = new vector<float>();
 vector<float> * v_max = new vector<float>();
 vector<float> * v_min = new vector<float>();
+vector<float> * v_max_afterFilter = new vector<float>();
+vector<float> * v_max_threeConsec = new vector<float>();
+vector<float> * v_triggerThresholds = new vector<float>();
+vector<bool> * v_triggerEnable = new vector<bool>();
+vector<int> * v_triggerLogic = new vector<int>();
+vector<int> * v_triggerMajority = new vector<int>();
+vector<float> * v_min_afterFilter = new vector<float>();
 
 
-float triggerThreshold = 5;
 bool addTriggerTimes = true;
+
+double timestampSecs = 0;
+
 
 
 //Temporary sanity check
 
 TString milliqanOfflineDir="/net/cms26/cms26r0/milliqan/milliqanOffline/";
 
-void make_tree(TString fileName, int eventNum=-1, TString tag="",float rangeMinX=-1.,float rangeMaxX=-1.,float rangeMinY=-1000.,float rangeMaxY=-1000., int displayPulseBounds=1, int onlyForceChans=0, int runFFT=0 , int applyLPFilter = 0,int injectPulses=0, float injectSignalQ=0.01,set<int> forceChan={});
+void make_tree(TString fileName, int eventNum=-1, TString tag="",float rangeMinX=-1.,float rangeMaxX=-1.,float rangeMinY=-1000.,float rangeMaxY=-1000., int displayPulseBounds=1, int onlyForceChans=0, int runFFT=0 , int applyLPFilter = 0,int injectPulses=0, float injectSignalQ=-1, int runDRS=0,set<int> forceChan={});
 void loadFillList(TString fillFile=milliqanOfflineDir+"processedFillList2018.txt");
 vector<TString> getFieldFileList(TString location);
 void loadFieldList(TString fieldFile);
 void loadPhotonList(TString photonFile);
-tuple<int,int,float,float> findFill(int seconds);
+tuple<int,int,float,float,float, float> findFill(int seconds);
 int findField(int seconds);
 void loadBranchesMilliDAQ();
+void loadBranchesDRS();
 void loadWavesMilliDAQ();
+void loadWavesDRS();
 void loadBranchesInteractiveDAQ();
 void prepareOutBranches();
 void clearOutBranches();
-vector< vector<float> > processChannel(int ic,bool applyLPFilter, bool injectPulses, float injectSignalQ);
-void prepareWave(int ic, float &sb_mean, float &sb_RMS, float &tb_mean, float &tb_RMS, float &tb_max, float &tb_maxTime, bool applyLPFilter, bool injectPulses, float injectSignalQ);
-vector< vector<float> > findPulses(int ic,bool applyLPFilter);
+vector< vector<float> > processChannel(int ic,bool applyLPFilter, bool injectPulses, float injectSignalQ, int runDRS);
+void prepareWave(int ic, float &sb_mean, float &sb_RMS, float &tb_mean, float &tb_RMS, float &tb_max, float &tb_maxTime, bool applyLPFilter, bool injectPulses, float injectSignalQ,int runDRS);
+vector< vector<float> > findPulses(int ic,bool applyLPFilter, int runDRS);
 void findTriggerCandidates(int ic, float sb_mean);
 vector< vector<float> > findPulses_inside_out(int ic);
 void displayPulse(int ic, float begin, float end, int ipulse);
@@ -373,10 +410,18 @@ string GetStdoutFromCommand(string cmd);
 pair<float,float> measureSideband(int ic, float start, float end);
 pair<float,float> getMaxInRange(int ic, float start, float end);
 
-TH1D * SPEGen(float sampFreq) {
-    gRandom->SetSeed(0);
-    spe->SetOutputSampleFreq(sampFreq); // generate at sampling frequency
-    TH1D *out = spe->Generate();
+TH1D * SPEGen(float sampFreq,TString species) {
+    TH1D * out;
+    if (species == "R7725" || species == "ET"){
+	gRandom->SetSeed(0);
+	speR7725->SetOutputSampleFreq(sampFreq); // generate at sampling frequency
+	out = speR7725->Generate();
+    }
+    else{
+	gRandom->SetSeed(0);
+	speR878->SetOutputSampleFreq(sampFreq); // generate at sampling frequency
+	out = speR878->Generate();
+    }
     return out;
 }
 void defineColors(){
@@ -415,22 +460,34 @@ int main(int argc, char **argv)
     else if(argc==12) make_tree(argv[1],stoi(argv[2]),argv[3],stof(argv[4]),stof(argv[5]),stoi(argv[6]),stoi(argv[7]),stoi(argv[8]),stoi(argv[9]),stoi(argv[10]),stoi(argv[11]));
     else if(argc==13) make_tree(argv[1],stoi(argv[2]),argv[3],stof(argv[4]),stof(argv[5]),stoi(argv[6]),stoi(argv[7]),stoi(argv[8]),stoi(argv[9]),stoi(argv[10]),stoi(argv[11]),stoi(argv[12]));
     else if(argc==14) make_tree(argv[1],stoi(argv[2]),argv[3],stof(argv[4]),stof(argv[5]),stoi(argv[6]),stoi(argv[7]),stoi(argv[8]),stoi(argv[9]),stoi(argv[10]),stoi(argv[11]),stoi(argv[12]),atof(argv[13]));
-    else if(argc>=15) {
+    else if(argc==15) make_tree(argv[1],stoi(argv[2]),argv[3],stof(argv[4]),stof(argv[5]),stoi(argv[6]),stoi(argv[7]),stoi(argv[8]),stoi(argv[9]),stoi(argv[10]),stoi(argv[11]),stoi(argv[12]),atof(argv[13]),stoi(argv[14]));
+    else if(argc>=16) {
 	//the arguments after index 10 are channels to be forced for the display.
 	set<int> forceChans;
-	for(int i=14;i<argc;i++){
+	for(int i=15;i<argc;i++){
 	    forceChans.insert(stoi(argv[i]));
 	}
-	make_tree(argv[1],stoi(argv[2]),argv[3],stof(argv[4]),stof(argv[5]),stoi(argv[6]),stoi(argv[7]),stoi(argv[8]),stoi(argv[9]),stoi(argv[10]),stoi(argv[11]),stoi(argv[12]),stoi(argv[13]),forceChans);
+	make_tree(argv[1],stoi(argv[2]),argv[3],stof(argv[4]),stof(argv[5]),stoi(argv[6]),stoi(argv[7]),stoi(argv[8]),stoi(argv[9]),stoi(argv[10]),stoi(argv[11]),stoi(argv[12]),atof(argv[13]),stoi(argv[14]),forceChans);
     }
 
 }
 # endif
 
 
-void make_tree(TString fileName, int eventNum, TString tag, float rangeMinX,float rangeMaxX, float rangeMinY,float rangeMaxY, int displayPulseBounds, int onlyForceChans,int runFFT,int applyLPFilter,int injectPulses, float injectSignalQ, set<int> forceChan){
+void make_tree(TString fileName, int eventNum, TString tag, float rangeMinX,float rangeMaxX, float rangeMinY,float rangeMaxY, int displayPulseBounds, int onlyForceChans,int runFFT,int applyLPFilter,int injectPulses, float injectSignalQ,int runDRS, set<int> forceChan){
     //	gROOT->ProcessLine( "gErrorIgnoreLevel = kError");
-    for (int i=0;i<=31;i++) {channelCalibrations[i] = interModuleCalibrations[i];}//+intraModuleCalibrations[i];}
+    if (injectPulses) cout << "Running in pulse injection mode!" << endl;
+    if (injectSignalQ > 0) cout << "Running in signal injection mode with Q = " << injectSignalQ << "!" << endl;
+    if (applyLPFilter) cout << "Applying low pass filter to waveforms!" << endl;
+    if (runDRS){
+	for (int ic=0;ic<=31;ic++) {
+	    channelCalibrations[ic] = 0;
+	    meanCalib[ic] = 0;
+	}//+intraModuleCalibrations[i];}
+    }
+    else{
+	for (int ic=0;ic<=31;ic++) {channelCalibrations[ic] = interModuleCalibrations[ic];}//+intraModuleCalibrations[i];}
+    }
     bool calibrateDisplay = true;
     defineColors();
     if(eventNum>=0) displayMode=true;
@@ -440,13 +497,34 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMinX,floa
 
     TString inFileName = fileName;
     TFile *f = TFile::Open(inFileName, "READ");
+    TString date;
+    TTree * metadata;
+    TString baseFileName= ((TObjString*)inFileName.Tokenize("/")->Last())->String().Data();
+    TString runNumber = ((TObjString*)baseFileName.Tokenize(".")->At(0))->String().Data();
+    runNumber.ReplaceAll("MilliQan_Run","");
 
-    if(milliDAQ){ 
+    if(milliDAQ && runDRS <= 0){ 
 	inTree = (TTree*)f->Get("Events"); 
 
-	TTree * metadata = (TTree*)f->Get("Metadata");
+	metadata = (TTree*)f->Get("Metadata");
 	metadata->SetBranchAddress("configuration", &cfg);
 	metadata->GetEntry(0);
+	fstream file; 
+	runNum = atoi(runNumber.Data());
+	file.open(configurationFolder+"Run"+runNum+".txt", ios::out); 
+	// Backup streambuffers of  cout 
+	streambuf* stream_buffer_cout = cout.rdbuf(); 
+	streambuf* stream_buffer_cin = cin.rdbuf(); 
+
+	// Get the streambuffer of the file 
+	streambuf* stream_buffer_file = file.rdbuf(); 
+
+	// Redirect cout to file 
+	cout.rdbuf(stream_buffer_file); 
+
+	// Redirect cout back to screen 
+	cfg->PrintConfiguration();
+	cout.rdbuf(stream_buffer_cout); 
 
 	//SAMFrequency 1 -> 1.6 GHz
 	//SAMFrequency 2 -> 0.8 GHz
@@ -454,67 +532,133 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMinX,floa
 
 	sample_rate[0] = 3.2 / pow(2,cfg->digitizers[0].SAMFrequency);
 	sample_rate[1] = 3.2 / pow(2,cfg->digitizers[1].SAMFrequency);
+	for (int i =0; i < numChan; i++){
+	    float triggerThresh = cfg->digitizers[i/16].channels[i % 16].triggerThreshold;
+	    bool triggerEnable = cfg->digitizers[i/16].channels[i % 16].triggerEnable;
+	    int triggerMajority = cfg->digitizers[i/16].GroupTriggerMajorityLevel;
+	    int triggerLogic = cfg->digitizers[i/16].GroupTriggerLogic;
+	    v_triggerThresholds->push_back(triggerThresh);
+	    v_triggerEnable->push_back(triggerEnable);
+	    v_triggerMajority->push_back(triggerMajority);
+	    v_triggerLogic->push_back(triggerLogic);
+	}
+
 	cout<<"Sample frequencies, boards 0 and 1: "<<sample_rate[0]<<" GHz and "<<sample_rate[1]<<" GHz."<<endl;
 
     }
-    else {
-	inTree = (TTree*)f->Get("data"); 
+else if (runDRS > 0){
+    inTree = (TTree*)f->Get("Events"); 
+    TParameter<float> * rate = (TParameter<float> *) f->Get("sampleRate");
+    sample_rate[0] = rate->GetVal();
+    sample_rate[1] = rate->GetVal();
+}
+else {
+    inTree = (TTree*)f->Get("data"); 
+}
+
+if (runDRS > 0){
+    runNumber = "1";
+}
+
+runNum=atoi(runNumber.Data());
+runNumOrig = runNum;
+if (injectPulses) runNum *= -1;
+if (injectSignalQ > 0) {
+    runNum *= 1E10;
+    Long64_t injectSignalQ_long = Long64_t(round(injectSignalQ*1E5));
+    runNum += injectSignalQ_long*1000;
     }
-
-    TString baseFileName= ((TObjString*)inFileName.Tokenize("/")->Last())->String().Data();
-
-    //Get run number from file name
-    TString runNumber = ((TObjString*)baseFileName.Tokenize(".")->At(0))->String().Data();
-    runNumber.ReplaceAll("MilliQan_Run","");
-    runNum=atoi(runNumber.Data());
-    if (injectPulses) runNum *= -1;
     TString signalString;
     if (injectSignalQ > 0){
-	signalString += Form("SignalInjected_Q%.6f",injectSignalQ);
-	signalString.ReplaceAll(".","p");
+    signalString += Form("SignalInjected_Q%.6f",injectSignalQ);
+    signalString.ReplaceAll(".","p");
     }
-
+    TString fileNumber;
+    if (runDRS > 0){
+    fileNumber = "0";
+    }
+    else{
     //Get file number from file name
-    TString fileNumber = ((TObjString*)baseFileName.Tokenize(".")->At(1))->String().Data();
+    fileNumber = ((TObjString*)baseFileName.Tokenize(".")->At(1))->String().Data();
     fileNumber = ((TObjString*)fileNumber.Tokenize("_")->At(0))->String().Data();
+    }
     fileNum=atoi(fileNumber.Data());
-
+    TString configName; 
+    if (runDRS > 0){
+    TNamed * dateNamed = (TNamed *)f->Get("date");
+    date = TString(dateNamed->GetTitle());
+    configName = "DRS_"+date;
+    }
+    else{
     //Get config name from filename
-    TString configName = ((TObjString*)baseFileName.Tokenize(".")->At(1))->String().Data();
+    configName = ((TObjString*)baseFileName.Tokenize(".")->At(1))->String().Data();
     configName = ((TObjString*)configName.Tokenize("_")->At(1))->String().Data();
     configName.ReplaceAll(".root","");
+    }
 
+    if (runDRS > 0){
+    baseFileName="DRS"+baseFileName;
+    }
+    else{
+	baseFileName="UX5"+baseFileName;
+    }
 
-    baseFileName="UX5"+baseFileName;
     baseFileName.ReplaceAll(".root","");
     baseFileName += signalString;
 
-    cout<<"Run "<<runNum<<", file "<<fileNum<<endl;
     //TString version = GetStdoutFromCommand("git describe --tag --abbrev=0"); //fixme- this is currently evaluated at runtime, instead of compile time
     TString version = "shorttagplaceholder";
     if(version.Contains("placeholder")){cout<<"This macro was compiled incorrectly. Please compile this macro using compile.sh"<<endl;return;}
 
+    int offsetSignalQ = 0;
+
+    if (runDRS){
+	milliqanOfflineDir+="DRS/";
+    }
+
     TString treeDirectory= milliqanOfflineDir+"trees_"+version+"/Run"+to_string(runNum)+"_"+configName+signalString+"/";
     TString linkDirectory= milliqanOfflineDir+"trees/Run"+to_string(runNum)+"_"+configName+signalString+"/";
 
+    if (injectPulses) baseFileName.ReplaceAll(runNumber,"-"+runNumber);
+    if (injectSignalQ > 0) baseFileName.ReplaceAll(runNumber,to_string(runNum));
+    TString outFileName = treeDirectory+baseFileName+"_"+version+".root";
+
+    if (injectSignalQ > 0 and !(displayMode)){
+	while (stat(outFileName, &info1) == 0){
+	    offsetSignalQ += 1;
+	    runNum += 1;
+	    treeDirectory= milliqanOfflineDir+"trees_"+version+"/Run"+to_string(runNum)+"_"+configName+signalString+"/";
+	    linkDirectory= milliqanOfflineDir+"trees/Run"+to_string(runNum)+"_"+configName+signalString+"/";
+	    baseFileName.ReplaceAll(to_string(runNum-1),to_string(runNum));
+	    outFileName = treeDirectory+baseFileName+"_"+version+".root";
+	}
+    }
+    cout<<"Run "<<runNum<<", file "<<fileNum<<endl;
+    cout << outFileName<< endl;
+    cout << sample_rate[0] << endl;
 
     if(maxEvents<0) maxEvents=inTree->GetEntries();
     if(!displayMode) cout<<"Entries: "<<inTree->GetEntries()<<endl;
     //if((int)tubeSpecies.size()!=numChan) cout<<"Tube species map does not match number of channels"<<endl;
 
-    if(milliDAQ) loadBranchesMilliDAQ();
+    if(runDRS <= 0) {
+	chanArray = new TArrayI(numChan);
+	for(int ic=0;ic<numChan;ic++){
+	    chanArray->SetAt(ic,ic);
+	}
+    }
+    else {
+	chanArray = (TArrayI *) f->Get("chans");
+	numChan = chanArray->GetSize();
+    }
+
+    if(milliDAQ && runDRS <= 0) loadBranchesMilliDAQ();
+    else if(runDRS) loadBranchesDRS();
     else loadBranchesInteractiveDAQ();	
-
-
-
-
-
 
     gSystem->mkdir(milliqanOfflineDir+"trees_"+version);	
     gSystem->mkdir(treeDirectory);	
     gSystem->mkdir(linkDirectory);
-    if (injectPulses) baseFileName.ReplaceAll(runNumber,"-"+runNumber);
-    TString outFileName = treeDirectory+baseFileName+"_"+version+".root";
     TFile * outFile;
 
     if(!displayMode){
@@ -525,8 +669,12 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMinX,floa
     }
 
 
-
-    displayDirectory = milliqanOfflineDir+"displays/Run"+to_string(runNum)+"_"+configName+signalString+"/";
+    if (runDRS){
+	displayDirectory = milliqanOfflineDir+"displaysDRS/Run"+to_string(runNum)+"_"+configName+signalString+"/";
+    }
+    else{
+	displayDirectory = milliqanOfflineDir+"displays/Run"+to_string(runNum)+"_"+configName+signalString+"/";
+    }
     gSystem->mkdir(displayDirectory);
 
 
@@ -536,13 +684,15 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMinX,floa
 
 
     //Load entry 0 in order to get timestamp of first event to find corret field information
-    inTree->GetEntry(0);
-    TString fieldFileLocation ="/net/cms26/cms26r0/milliqan/EnvironSensorData";
-    vector<TString> fieldFiles = getFieldFileList(fieldFileLocation);
-    for(int i=0;i<fieldFiles.size();i++){
-	loadFieldList(fieldFiles[i]);
+    if (!runDRS){
+	inTree->GetEntry(0);
+	TString fieldFileLocation ="/net/cms26/cms26r0/milliqan/EnvironSensorData";
+	vector<TString> fieldFiles = getFieldFileList(fieldFileLocation);
+	for(int i=0;i<fieldFiles.size();i++){
+	    loadFieldList(fieldFiles[i]);
+	}
+	loadPhotonList("./ThruGoingSimPhotonTimes.dat");
     }
-    loadPhotonList("./ThruGoingSimPhotonTimes.dat");
 
     if(debug) maxEvents=10;
     cout<<"Starting event loop"<<endl;  
@@ -551,21 +701,32 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMinX,floa
 	if(i%200==0) cout<<"Processing event "<<i<<endl;
 	inTree->GetEntry(i);
 	//cout<<"Got entry "<<i<<endl;
-	if(milliDAQ) loadWavesMilliDAQ();
+	if(milliDAQ && runDRS <= 0) loadWavesMilliDAQ();
+	else if (runDRS) loadWavesDRS();
 	//if(!displayMode) 
 	clearOutBranches();
 	event=i;
 
 	if(milliDAQ){
 	    //Waveforms are not inverted yet- done in processChannel
-	    for (int iTemp = 0; iTemp < 32; iTemp++){
+	    for (int iTemp = 0; iTemp < numChan; iTemp++){
 		v_max->push_back(-1.*waves[iTemp]->GetMinimum());
 		v_min->push_back(-1.*waves[iTemp]->GetMaximum());
 	    }
 
 	}
 
-	if(milliDAQ) {
+	if (runDRS){
+	    event_time_b0 = timestampSecs;
+	    event_time_b1 = timestampSecs;
+	    event_time_fromTDC = timestampSecs;
+	    present_b0 = true;
+	    present_b1 = true;
+	    event_t_string="";
+	    fillAvgLumi=-1; 
+	    fillTotalLumi=-1;
+	}
+	else if(milliDAQ) {
 	    if(initSecs<0){ //if timestamps for first event are uninitialized
 		if(evt->digitizers[0].DataPresent){ //If this event exists
 		    initSecs=evt->digitizers[0].DAQTimeStamp.GetSec();
@@ -613,17 +774,24 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMinX,floa
 
 	    fillNum=0;
 	    t_since_fill_start= -1;
+	    t_since_fill_end= -1;
+	    t_until_next_fill= -1;
 	    fillAvgLumi=-1;
 	    fillTotalLumi=-1;
 	    secs = round(event_time_fromTDC);
-	    tuple<int,int,float,float> fillInfo = findFill(secs);
+	    tuple<int,int,float,float,float, float> fillInfo = findFill(secs);
 	    fillNum= get<0>(fillInfo);
 	    t_since_fill_start= get<1>(fillInfo);
 	    fillAvgLumi = get<2>(fillInfo);
 	    fillTotalLumi = get<3>(fillInfo);
+	    t_until_next_fill = get<4>(fillInfo);
+	    t_since_fill_end = get<5>(fillInfo);
 
 	    if(fillNum>0) beam=true;
 	    else beam = false;
+
+	    if (t_until_next_fill > 3600 && t_since_fill_end > 600) hardNoBeam = true;
+	    else hardNoBeam = false;
 
 	    // cout<<"This secs "<<secs<<endl;
 	    int fieldPoint = findField(secs);
@@ -664,7 +832,7 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMinX,floa
 
 
 	}
-	else{ event_time_b0=0;event_time_b1=0;event_t_string="";fillNum=0;beam=false;fillAvgLumi=-1; fillTotalLumi=-1;}
+	else{ event_time_b0=0;event_time_b1=0;event_t_string="";fillNum=0;beam=false;hardNoBeam=false;fillAvgLumi=-1; fillTotalLumi=-1;}
 
 	vector<vector<vector<float> > > allPulseBounds;
 	straightPathRandom->SetSeed(0);
@@ -679,29 +847,29 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMinX,floa
 	       continue;
 	       }*/
 	    //	cout<<Form("Chan %i min: ",ic)<<waves[ic]->GetMinimum()<<endl;
-	    if (injectSignalQ < 0 || std::find(straightPath.begin(), straightPath.end(), ic) == straightPath.end()) allPulseBounds.push_back(processChannel(ic,applyLPFilter,injectPulses,-1));
-	    else allPulseBounds.push_back(processChannel(ic,applyLPFilter,injectPulses,injectSignalQ));
+	    if (injectSignalQ < 0 || std::find(straightPath.begin(), straightPath.end(), ic) == straightPath.end()) allPulseBounds.push_back(processChannel(ic,applyLPFilter,injectPulses,-1,runDRS));
+	    else allPulseBounds.push_back(processChannel(ic,applyLPFilter,injectPulses,injectSignalQ,runDRS));
 	}
 	if(displayMode){
 	    displayEvent(allPulseBounds,tag,rangeMinX,rangeMaxX,rangeMinY,rangeMaxY,calibrateDisplay,displayPulseBounds,onlyForceChans,runFFT,forceChan);
 	}
 	else outTree->Fill();
     }
-if(!displayMode) cout<<"Processed "<<maxEvents<<" events."<<endl;
+    if(!displayMode) cout<<"Processed "<<maxEvents<<" events."<<endl;
 
-if(!displayMode){
-    outTree->Write();
-    outFile->Close();
+    if(!displayMode){
+	outTree->Write();
+	outFile->Close();
 
-    cout<<"Closed output tree."<<endl;
-    //TString currentDir=gSystem->pwd();
-    //TString target = currentDir+"/"+outFileName;
-    TString target = outFileName;
-    TString linkname =linkDirectory+baseFileName+".root";
-    remove(linkname); //remove if already exists
-    gSystem->Symlink(target,linkname);
-    cout<<"Made link to "<<target<<" called "<<linkname<<endl;
-}
+	cout<<"Closed output tree."<<endl;
+	//TString currentDir=gSystem->pwd();
+	//TString target = currentDir+"/"+outFileName;
+	TString target = outFileName;
+	TString linkname =linkDirectory+baseFileName+".root";
+	remove(linkname); //remove if already exists
+	gSystem->Symlink(target,linkname);
+	cout<<"Made link to "<<target<<" called "<<linkname<<endl;
+    }
 }
 
 
@@ -712,19 +880,21 @@ void convertXaxis(TH1D *h, int ic){
     h->ResetStats();
 }
 void prepareWave(int ic, float &sb_meanPerEvent, float &sb_RMSPerEvent, float &sb_triggerMeanPerEvent, float &sb_triggerRMSPerEvent,
-	float &sb_triggerMaxPerEvent,float &sb_timeTriggerMaxPerEvent,bool applyLPFilter, bool injectPulses, float injectSignalQ){
+	float &sb_triggerMaxPerEvent,float &sb_timeTriggerMaxPerEvent,bool applyLPFilter, bool injectPulses, float injectSignalQ, int runDRS){
     //Invert waveform and convert x-axis to ns
 
     waves[ic]->Scale(-1.0);
-    convertXaxis(waves[ic],ic);
+    if (runDRS <= 0){
+	convertXaxis(waves[ic],ic);
+    }
 
     //subtract calibrated mean
     for(int ibin = 1; ibin <= waves[ic]->GetNbinsX(); ibin++){
 	waves[ic]->SetBinContent(ibin,waves[ic]->GetBinContent(ibin)-meanCalib[ic]);
     }
     if (injectPulses && ic != 15){
-	int injectPulsesStartBin = waves[ic]->FindBin(200.);
-	TH1D * generatedTemplate = SPEGen(sample_rate[ic/16]);
+	int injectPulsesStartBin = waves[ic]->FindBin(200.-channelCalibrations[ic]);
+	TH1D * generatedTemplate = SPEGen(sample_rate[ic/16],tubeSpecies[ic]);
 	generatedTemplate->Scale(channelSPEAreas[ic]/50.);
 
 	for(int ibin = 1; ibin <= generatedTemplate->GetNbinsX(); ibin++){
@@ -738,7 +908,7 @@ void prepareWave(int ic, float &sb_meanPerEvent, float &sb_RMSPerEvent, float &s
 	for (int iSig = 0; iSig < totalN; iSig++){
 	    int index = indexRandom->Integer(photonList.size());
 	    float photonTimeCalib = photonList[index];
-	    TH1D * generatedTemplate = SPEGen(sample_rate[ic/16]);
+	    TH1D * generatedTemplate = SPEGen(sample_rate[ic/16],tubeSpecies[ic]);
 	    generatedTemplate->Scale(channelSPEAreas[ic]/50.);
 	    int signalPulsesStartBin = waves[ic]->FindBin(380+photonTimeCalib-channelCalibrations[ic]);
 	    for(int ibin = 1; ibin <= generatedTemplate->GetNbinsX(); ibin++){
@@ -749,7 +919,16 @@ void prepareWave(int ic, float &sb_meanPerEvent, float &sb_RMSPerEvent, float &s
 
     }
     if (applyLPFilter){
-	waves[ic] = LPFilter(waves[ic]);
+	int butterworthOrder = -1;
+	// if (tubeSpecies[ic] == "R878" || tubeSpecies[ic] == "R7725"){
+	//     butterworthOrder = 2;
+	// }
+	// else{
+	//     butterworthOrder = 1;
+	// }
+	butterworthOrder = 2;
+	waves[ic] = LPFilter(waves[ic],butterworthOrder);
+	// waves[ic] = LPFilter(waves[ic],4,0.099);
     }
 
     //Measure event by event mean and RMS from the sideband
@@ -768,7 +947,7 @@ void prepareWave(int ic, float &sb_meanPerEvent, float &sb_RMSPerEvent, float &s
     sb_timeTriggerMaxPerEvent = max_timeMax_trigger.second;
 
     // Subtract dynamically measured pedestal for CH30, which has time dependent variations
-    if (ic == 30) {
+    if (ic == 30 && runDRS <= 0) {
 	for(int ibin = 1; ibin <= waves[ic]->GetNbinsX(); ibin++){
 	    waves[ic]->SetBinContent(ibin,waves[ic]->GetBinContent(ibin)-mean_rms.first);
 	}
@@ -816,15 +995,15 @@ pair<float,float> measureSideband(int ic, float start, float end){
 }
 
 
-vector< vector<float> > processChannel(int ic,bool applyLPFilter, bool injectPulses, float injectSignalQ){
+vector< vector<float> > processChannel(int ic,bool applyLPFilter, bool injectPulses, float injectSignalQ, int runDRS){
     float sb_meanPerEvent, sb_RMSPerEvent, sb_triggerMeanPerEvent, sb_triggerRMSPerEvent,  sb_triggerMaxPerEvent, sb_timeTriggerMaxPerEvent;
-    prepareWave(ic, sb_meanPerEvent, sb_RMSPerEvent,sb_triggerMeanPerEvent, sb_triggerRMSPerEvent, sb_triggerMaxPerEvent, sb_timeTriggerMaxPerEvent,applyLPFilter, injectPulses, injectSignalQ); 
+    prepareWave(ic, sb_meanPerEvent, sb_RMSPerEvent,sb_triggerMeanPerEvent, sb_triggerRMSPerEvent, sb_triggerMaxPerEvent, sb_timeTriggerMaxPerEvent,applyLPFilter, injectPulses, injectSignalQ,runDRS); 
     float sb_mean = meanCalib[ic];
     float sb_RMS = rmsCalib[ic];
 
     vector<vector<float> > pulseBounds;
     //if(tubeSpecies[ic]!="ET") 
-    pulseBounds = findPulses(ic,applyLPFilter);
+    pulseBounds = findPulses(ic,applyLPFilter, runDRS);
     if (addTriggerTimes) findTriggerCandidates(ic,sb_mean);
     //else pulseBounds = findPulses_inside_out(ic); //Use inside-out method for narrow ET pulses
 
@@ -843,6 +1022,16 @@ vector< vector<float> > processChannel(int ic,bool applyLPFilter, bool injectPul
     v_triggerBand_maxTime->push_back(sb_timeTriggerMaxPerEvent);	
     v_sideband_mean_calib->push_back(sb_mean);
     v_sideband_RMS_calib->push_back(sb_RMS);	
+    float maxThreeConsec = -100;
+    for (int iBin = 1; iBin < waves[ic]->GetNbinsX(); iBin++){
+	float maxList[] = {waves[ic]->GetBinContent(iBin),waves[ic]->GetBinContent(iBin+1),waves[ic]->GetBinContent(iBin+2)};
+	float tempMax = *std::min_element(maxList,maxList+3);
+	if (maxThreeConsec < tempMax) maxThreeConsec = tempMax;
+
+    }
+    v_max_threeConsec->push_back(maxThreeConsec);
+    v_max_afterFilter->push_back(waves[ic]->GetMaximum());
+    v_min_afterFilter->push_back(waves[ic]->GetMinimum());
 
 
 
@@ -853,12 +1042,20 @@ vector< vector<float> > processChannel(int ic,bool applyLPFilter, bool injectPul
 	//Fill branches
 
 
-	v_chan->push_back(ic);
+	v_chan->push_back(chanArray->GetAt(ic));
 	//chanMap: col,row,layer,type
-	v_column->push_back(chanMap[ic][0]);
-	v_row->push_back(chanMap[ic][1]);
-	v_layer->push_back(chanMap[ic][2]);
-	v_type->push_back(chanMap[ic][3]);
+	if (runDRS <= 0){
+	    v_column->push_back(chanMap[ic][0]);
+	    v_row->push_back(chanMap[ic][1]);
+	    v_layer->push_back(chanMap[ic][2]);
+	    v_type->push_back(chanMap[ic][3]);
+	}
+	else{
+	    v_column->push_back(0);
+	    v_row->push_back(0);
+	    v_layer->push_back(0);
+	    v_type->push_back(0);
+	}
 
 	v_height->push_back(waves[ic]->GetMaximum());
 	v_time->push_back(pulseBounds[ipulse][0]);
@@ -914,7 +1111,7 @@ void displayPulse(int ic, float begin, float end, int ipulse){
     tla.DrawLatexNDC(0.13,0.78,Form("Area: %0.2f nVs",v_area->back()));
     tla.DrawLatexNDC(0.13,0.73,Form("Duration: %0.2f ns",v_duration->back()));
 
-    c.Print(displayDirectory+Form("Event%i_Chan%i_begin%0.0f.pdf",event,ic,begin));
+    c.SaveAs(displayDirectory+Form("Event%i_Chan%i_begin%0.0f.pdf",event,ic,begin));
 }
 
 void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rangeMinX,float rangeMaxX,float rangeMinY,float rangeMaxY,bool calibrateDisplay, bool displayPulseBounds,bool onlyForceChans,bool runFFT, set<int> forceChan){
@@ -938,6 +1135,7 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
     vector<TH1D*> wavesShiftedTemp;
     float originalMaxHeights[32];
     for(uint ic=0;ic<bounds.size();ic++){
+	int chan = chanArray->GetAt(ic);
 	vector<vector<float>> boundShifted = bounds[ic];
 	TH1D * waveShifted = (TH1D*) waves[ic]->Clone();
 	if(calibrateDisplay){
@@ -953,13 +1151,15 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
 		}
 
 	    }
-	    for(uint iBoundVec =0;iBoundVec < bounds[ic].size();iBoundVec++)
-		for(uint iBoundVec2 =0;iBoundVec2 < bounds[ic][iBoundVec].size();iBoundVec2++)
+	    for(uint iBoundVec =0;iBoundVec < bounds[ic].size();iBoundVec++){
+		for(uint iBoundVec2 =0;iBoundVec2 < bounds[ic][iBoundVec].size();iBoundVec2++){
 		    boundShifted[iBoundVec][iBoundVec2] += channelCalibrations[ic]; 
+		}
+	    }
 	}
-	if(boundShifted.size()>0 || waveShifted->GetMaximum()>drawThresh || forceChan.find(ic)!=forceChan.end()){
+	if(boundShifted.size()>0 || waveShifted->GetMaximum()>drawThresh || forceChan.find(chan)!=forceChan.end()){
 	    //if(ic==15 && forceChan.find(ic)==forceChan.end()) continue;
-	    if (!(onlyForceChans && forceChan.find(ic)==forceChan.end())){
+	    if (!(onlyForceChans && forceChan.find(chan)==forceChan.end())){
 		chanList.push_back(ic);
 		TString beamState = "off";
 		if(beam) beamState="on";
@@ -993,6 +1193,7 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
 	boundsShifted = bounds;
 	for(uint ic=0;ic<bounds.size();ic++){
 	    // if (std::find(chanList.begin(), chanList.end(), ic) == chanList.end()) continue;
+	    int chan = chanArray->GetAt(ic);
 	    float binSize = wavesShiftedTemp[ic]->GetBinCenter(2)-wavesShiftedTemp[ic]->GetBinCenter(1);
 	    float totalRange = wavesShiftedTemp[ic]->GetXaxis()->GetBinUpEdge(wavesShiftedTemp[ic]->GetNbinsX());
 	    TString name; name.Form("%d",ic); 
@@ -1004,7 +1205,7 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
 		hist_transform->SetBinContent(iBin,TMath::Sqrt(hist_transformT->GetBinContent(iBin)));
 	    }
 	    wavesShifted.push_back(hist_transformT);
-	    if (!(onlyForceChans && forceChan.find(ic)==forceChan.end())){
+	    if (!(onlyForceChans && forceChan.find(chan)==forceChan.end())){
 		wavesShifted[ic]->GetXaxis()->SetRange(2,wavesShifted[ic]->GetNbinsX()-1);
 		if(wavesShifted[ic]->GetMaximum()>maxheight) maxheight=wavesShifted[ic]->GetMaximum();
 		if(wavesShifted[ic]->GetMaximum()>maxheight) maxheightbin=wavesShifted[ic]->GetMaximumBin();
@@ -1032,10 +1233,10 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
     TLegend leg(0.45,0.9-depth,0.65,0.9);
     for(uint i=0;i<chanList.size();i++){
 	int ic = chanList[i];	
-	if (onlyForceChans && forceChan.find(ic)==forceChan.end()) continue;
-	if(ic==15 && forceChan.find(ic)==forceChan.end()) continue;
+	int chan = chanArray->GetAt(ic);
+	if (onlyForceChans && forceChan.find(chan)==forceChan.end()) continue;
+	if(ic==15 && forceChan.find(chan)==forceChan.end()) continue;
 	wavesShifted[ic]->SetAxisRange(timeRange[0],timeRange[1]);
-
 	originalMaxHeights[ic] = wavesShifted[ic]->GetMaximum();
 	if (rangeMinY > -999) wavesShifted[ic]->SetMinimum(rangeMinY);
 	wavesShifted[ic]->SetMaximum(maxheight);
@@ -1132,8 +1333,9 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
 
     for(uint i=0;i<chanList.size();i++){
 	int ic = chanList[i];	
-	if (onlyForceChans && forceChan.find(ic)==forceChan.end()) continue;
-	if(ic==15 && forceChan.find(ic)==forceChan.end()) continue;
+	int chan = chanArray->GetAt(ic);
+	if (onlyForceChans && forceChan.find(chan)==forceChan.end()) continue;
+	if(ic==15 && forceChan.find(chan)==forceChan.end()) continue;
 	//if(i==15) continue;
 	//xyz
 	int column= chanMap[ic][0];
@@ -1186,12 +1388,15 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
 
 	tla.SetTextColor(colors[colorIndex]);
 	tla.SetTextSize(0.04);
-	tla.DrawLatexNDC(headerX,currentYpos,Form("Channel %i, V_{max} = %0.0f, N_{pulses}= %i",ic,originalMaxHeights[ic],(int)boundsShifted[ic].size()));
+	tla.DrawLatexNDC(headerX,currentYpos,Form("Channel %i, V_{max} = %0.0f, N_{pulses}= %i",chan,originalMaxHeights[ic],(int)boundsShifted[ic].size()));
 	tla.SetTextColor(kBlack);
 	currentYpos-=height;
 	tla.SetTextSize(0.035);
 
 	for(int ip=0;ip<boundsShifted[ic].size();ip++){
+	    while (v_chan->at(pulseIndex) != chan){
+		pulseIndex++; 
+	    }
 	    TString digis="%.1f";
 	    if(v_height->at(pulseIndex)>10) digis = "%.0f";
 	    TString row;
@@ -1229,7 +1434,7 @@ void findTriggerCandidates(int ic,float sb_mean){
 	// std::cout << sb_mean << std::endl;
 	// std::cout << waves[ic]->GetBinContent(i) << std::endl;
 	// std::cout << triggerThreshold << std::endl;
-	if (waves[ic]->GetBinContent(i) + sb_mean >= triggerThreshold){
+	if (waves[ic]->GetBinContent(i) + sb_mean >= (v_triggerThresholds->at(ic)*-1000.)){
 	    if (!inTrigger){
 		v_triggerCandidates->push_back((float)waves[ic]->GetBinLowEdge(i));
 		v_triggerCandidatesChannel->push_back(ic);
@@ -1243,7 +1448,7 @@ void findTriggerCandidates(int ic,float sb_mean){
     }
     if (inTrigger) v_triggerCandidatesEnd->push_back((float)waves[ic]->GetBinLowEdge(waves[ic]->GetNbinsX()));
 }
-vector< vector<float> > findPulses(int ic, bool applyLPFilter){
+vector< vector<float> > findPulses(int ic, bool applyLPFilter, int runDRS){
     //Configurable:
     // int Nconsec = 4;
     // int NconsecEnd = 3;
@@ -1251,6 +1456,10 @@ vector< vector<float> > findPulses(int ic, bool applyLPFilter){
     int NconsecConfig1p6[] = {7, 7, 9, 7, 7, 5, 7, 7, 7, 4, 7, 7, 7, 8, 9, 7, 7, 4, 8, 7, 7, 8, 5, 7, 4, 4, 7, 7, 7, 7, 7, 7};
     int NconsecEndConfig1p6[] = {13, 13, 13, 13, 13, 4, 13, 13, 13, 4, 13, 13, 13, 13, 13, 13, 13, 4, 13, 13, 13, 13, 4, 13, 4, 4, 13, 13, 13, 13, 13, 13};
     float threshConfig1p6[] = {2.0, 2.0, 2.3, 2.0, 2.2, 2.0, 2.0, 2.0, 2.0, 2.0, 2.2, 2.0, 2.0, 2.0, 2.3, 2.5, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 3.7, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0};
+
+    int NconsecConfig1p6Filtered[] = {3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3};
+    int NconsecEndConfig1p6Filtered[] = {8, 8, 8, 8, 8, 4, 8, 8, 8, 4, 8, 8, 8, 8, 8, 8, 8, 4, 8, 8, 8, 8, 4, 8, 4, 4, 8, 8, 8, 8, 8, 8};
+    float threshConfig1p6Filtered[] = {1.1,1.3,1.2,1.2,1.4,1.4,1.3,1.3,1.5,1.5,1.3,1.3,1.2,1.3,1.7,2.5,1.1,1.7,1.5,1.5,1.4,1.7,2.2,1.3,1.2,1.4,1.6,1.3,1.6,1.3,1.3,1.5};
 
     int NconsecConfig0p8[] = {3, 3, 3, 3, 3, 2, 3, 3, 3, 2, 3, 3, 3, 3, 3, 3, 3, 2, 3, 3, 3, 3, 2, 3, 2, 2, 3, 3, 3, 3, 3, 3};
     int NconsecEndConfig0p8[] = {6, 6, 6, 6, 6, 3, 6, 6, 6, 3, 6, 6, 6, 6, 6, 6, 6, 3, 6, 6, 6, 6, 3, 6, 3, 3, 6, 6, 6, 6, 6, 6};
@@ -1261,7 +1470,7 @@ vector< vector<float> > findPulses(int ic, bool applyLPFilter){
     float thresh = 2.0;
     float lowThresh = 1.0;
 
-    if (int(sample_rate[ic/16]/0.4+0.1) == 4)
+    if (runDRS >= 0 || int(sample_rate[ic/16]/0.4+0.1) == 4)
     {
 	Nconsec = NconsecConfig1p6[ic];
 	NconsecEnd = NconsecEndConfig1p6[ic];
@@ -1276,10 +1485,10 @@ vector< vector<float> > findPulses(int ic, bool applyLPFilter){
 	lowThresh = thresh - rmsCalib[ic];
     }
     if (applyLPFilter){
-	Nconsec = Nconsec-5; // Narrower pulses allowed after low pass filtering
+	Nconsec = 3;//Nconsec-6; // Narrower pulses allowed after low pass filtering
 	if (Nconsec<2) Nconsec = 2;
-	thresh = thresh - 0.5;
-	lowThresh = lowThresh - 0.5;
+	thresh = threshConfig1p6Filtered[ic];
+	lowThresh = threshConfig1p6Filtered[ic];
     }
     // if (event==264) {
     //   cout << "Debug "<< thresh << " " << lowThresh<< " "<< Nconsec << " " << NconsecEnd<<endl;
@@ -1318,6 +1527,9 @@ vector< vector<float> > findPulses(int ic, bool applyLPFilter){
 	    else if (v>=thresh){		
 		nover++; // Another sample over threshold
 		//cout << "DEBUG: Over pulse, t = "<< w.t[i] <<", v = "<<v<<", nover = "<<nover<<endl;
+	    }
+	    else{
+		i_begin = i; // most recent sample below threshold
 	    }
 
 	    if (nover>=Nconsec) {
@@ -1401,11 +1613,12 @@ void prepareOutBranches(){
     //MAKE SURE TO ALWAYS ADD BRANCHES TO CLEAR FUNCTION AS WELL
 
     TBranch * b_event = outTree->Branch("event",&event,"event/I");
-    TBranch * b_run = outTree->Branch("run",&runNum,"run/I");
+    TBranch * b_run = outTree->Branch("run",&runNumOrig,"run/I");
     TBranch * b_file = outTree->Branch("file",&fileNum,"file/I");
     TBranch * b_fill = outTree->Branch("fill",&fillNum,"fill/I");
     TBranch * b_nRollOvers = outTree->Branch("nRollOvers",&nRollOvers,"nRollOvers/I");
     TBranch * b_beam = outTree->Branch("beam",&beam,"beam/O");
+    TBranch * b_hardNoBeam = outTree->Branch("hardNoBeam",&hardNoBeam,"hardNoBeam/O");
     TBranch * b_fillAvgLumi = outTree->Branch("fillAvgLumi",&fillAvgLumi,"fillAvgLumi/F");
     TBranch * b_fillTotalLumi = outTree->Branch("fillTotalLumi",&fillTotalLumi,"fillTotalLumi/F");
     TBranch * b_present_b0 = outTree->Branch("present_b0",&present_b0,"present_b0/O");
@@ -1414,6 +1627,8 @@ void prepareOutBranches(){
     TBranch * b_event_time_b1 = outTree->Branch("event_time_b1",&event_time_b1,"event_time_b1/L");
     TBranch * b_event_time_fromTDC = outTree->Branch("event_time_fromTDC",&event_time_fromTDC,"event_time_fromTDC/D");
     TBranch * b_t_since_fill_start = outTree->Branch("t_since_fill_start",&t_since_fill_start,"t_since_fill_start/I");
+    TBranch * b_t_since_fill_end = outTree->Branch("t_since_fill_end",&t_since_fill_end,"t_since_fill_end/I");
+    TBranch * b_t_until_next_fill = outTree->Branch("t_until_next_fill",&t_until_next_fill,"t_until_next_fill/I");
     TBranch * b_event_t_string = outTree->Branch("event_t_string",&event_t_string);
     TBranch * b_event_trigger_time_tag_b0 = outTree->Branch("event_trigger_time_tag_b0",&event_trigger_time_tag_b0,"event_trigger_time_tag_b0/L");
     TBranch * b_event_trigger_time_tag_b1 = outTree->Branch("event_trigger_time_tag_b1",&event_trigger_time_tag_b1,"event_trigger_time_tag_b1/L");
@@ -1452,6 +1667,13 @@ void prepareOutBranches(){
 
     TBranch * b_max = outTree->Branch("max",&v_max);
     TBranch * b_min = outTree->Branch("min",&v_min);
+    TBranch * b_max_afterFilter = outTree->Branch("maxAfterFilter",&v_max_afterFilter);
+    TBranch * b_max_threeConsec = outTree->Branch("maxThreeConsec",&v_max_threeConsec);
+    TBranch * b_min_afterFilter = outTree->Branch("minAfterFilter",&v_min_afterFilter);
+    TBranch * b_triggerThresholds = outTree->Branch("triggerThreshold",&v_triggerThresholds);
+    TBranch * b_triggerEnable = outTree->Branch("triggerEnable",&v_triggerEnable);
+    TBranch * b_triggerMajority = outTree->Branch("triggerMajority",&v_triggerMajority);
+    TBranch * b_triggerLogic = outTree->Branch("triggerLogic",&v_triggerLogic);
 
     TBranch * b_bx = outTree->Branch("bx",&v_bx);
     TBranch * b_by = outTree->Branch("by",&v_by);
@@ -1462,15 +1684,18 @@ void prepareOutBranches(){
 
 
     outTree->SetBranchAddress("event",&event,&b_event);
-    outTree->SetBranchAddress("run",&runNum,&b_run);
+    outTree->SetBranchAddress("run",&runNumOrig,&b_run);
     outTree->SetBranchAddress("file",&fileNum,&b_file);
     outTree->SetBranchAddress("nRollOvers",&nRollOvers,&b_nRollOvers);
     outTree->SetBranchAddress("event_time_b0",&event_time_b0,&b_event_time_b0);
     outTree->SetBranchAddress("event_time_b1",&event_time_b1,&b_event_time_b1);
     outTree->SetBranchAddress("event_time_fromTDC",&event_time_fromTDC,&b_event_time_fromTDC);
     outTree->SetBranchAddress("t_since_fill_start",&t_since_fill_start,&b_t_since_fill_start);
+    outTree->SetBranchAddress("t_since_fill_end",&t_since_fill_end,&b_t_since_fill_end);
+    outTree->SetBranchAddress("t_until_next_fill",&t_until_next_fill,&b_t_until_next_fill);
     outTree->SetBranchAddress("fill",&fillNum,&b_fill);
     outTree->SetBranchAddress("beam",&beam,&b_beam);
+    outTree->SetBranchAddress("hardNoBeam",&hardNoBeam,&b_hardNoBeam);
     outTree->SetBranchAddress("fillAvgLumi",&fillAvgLumi,&b_fillAvgLumi);
     outTree->SetBranchAddress("fillTotalLumi",&fillTotalLumi,&b_fillTotalLumi);
     outTree->SetBranchAddress("present_b0",&present_b0,&b_present_b0);
@@ -1511,7 +1736,13 @@ void prepareOutBranches(){
     outTree->SetBranchAddress("groupTDC_b0",&v_groupTDC_b0,&b_groupTDC_b0);
     outTree->SetBranchAddress("groupTDC_b1",&v_groupTDC_b1,&b_groupTDC_b1);
     outTree->SetBranchAddress("max",&v_max,&b_max);
-    outTree->SetBranchAddress("min",&v_min,&b_min);
+    outTree->SetBranchAddress("triggerThreshold",&v_triggerThresholds,&b_triggerThresholds);
+    outTree->SetBranchAddress("triggerLogic",&v_triggerLogic,&b_triggerLogic);
+    outTree->SetBranchAddress("triggerMajority",&v_triggerMajority,&b_triggerMajority);
+    outTree->SetBranchAddress("triggerEnable",&v_triggerEnable,&b_triggerEnable);
+    outTree->SetBranchAddress("maxAfterFilter",&v_max_afterFilter,&b_max_afterFilter);
+    outTree->SetBranchAddress("maxThreeConsec",&v_max_threeConsec,&b_max_threeConsec);
+    outTree->SetBranchAddress("minAfterFilter",&v_min_afterFilter,&b_min_afterFilter);
 
     outTree->SetBranchAddress("bx",&v_bx,&b_bx);
     outTree->SetBranchAddress("by",&v_by,&b_by);
@@ -1523,7 +1754,10 @@ void prepareOutBranches(){
 
 void clearOutBranches(){
     v_max->clear();
+    v_max_afterFilter->clear();
+    v_max_threeConsec->clear();
     v_min->clear();
+    v_min_afterFilter->clear();
     v_chan->clear();
     v_triggerCandidates->clear();
     v_triggerCandidatesEnd->clear();
@@ -1583,13 +1817,57 @@ void writeVersion(){
     v.Write();
 
 }
-
+void loadBranchesDRS(){
+    inTree->SetBranchAddress("timestamp",&timestampSecs);
+    for(int ic=0;ic<numChan;ic++) 
+    { 	
+	int chan = chanArray->GetAt(ic);
+	TString branchName; 
+	branchName.Form("voltages_%d",chan);
+	if (chan == 1){
+	    inTree->SetBranchAddress(branchName,arrayVoltageDRS_1);
+	}
+	else if (chan == 2){
+	    inTree->SetBranchAddress(branchName,arrayVoltageDRS_2);
+	}
+	else if (chan == 3){
+	    inTree->SetBranchAddress(branchName,arrayVoltageDRS_3);
+	}
+	else if (chan == 4){
+	    inTree->SetBranchAddress(branchName,arrayVoltageDRS_4);
+	}
+	else {
+	    std::cout << "OH NO" << std::endl;
+	}	
+	waves.push_back(new TH1D(TString(chan),"",1024,0,1024*1./sample_rate[0]));
+    }
+}
 void loadBranchesMilliDAQ(){
     inTree->SetBranchAddress("event", &evt);
     for(int ic=0;ic<numChan;ic++) waves.push_back(new TH1D());
 
 }
 
+void loadWavesDRS(){
+    for(int ic=0;ic<numChan;ic++){
+	waves[ic]->Reset();
+	int chan = chanArray->GetAt(ic);
+	for (int i = 0; i < 1024; i++){
+	    if (chan == 1){
+		waves[ic]->SetBinContent(i+1,arrayVoltageDRS_1[i]);
+	    }
+	    else if (chan == 2){
+		waves[ic]->SetBinContent(i+1,arrayVoltageDRS_2[i]);
+	    }
+	    else if (chan == 3){
+		waves[ic]->SetBinContent(i+1,arrayVoltageDRS_3[i]);
+	    }
+	    else if (chan == 4){
+		waves[ic]->SetBinContent(i+1,arrayVoltageDRS_4[i]);
+	    }
+	}
+    }
+}
 void loadWavesMilliDAQ(){
     int board,chan;
     for(int i=0;i<numChan;i++){
@@ -1671,7 +1949,7 @@ void loadFillList(TString fillFile){
 
 }
 
-tuple<int,int,float,float> findFill(int seconds){
+tuple<int,int,float,float,float, float> findFill(int seconds){
     auto index_of_first_fill_with_larger_start_time = distance(fillList.begin(), lower_bound(fillList.begin(),fillList.end(), 
 		make_tuple(seconds, seconds, 0, 0.,0.) ));
     //cout<<"index "<<index_of_first_fill_with_larger_start_time<<endl;
@@ -1679,6 +1957,8 @@ tuple<int,int,float,float> findFill(int seconds){
     int time_since_start=-1;
     float average_instantaneous_lumi=-1;
     float total_lumi=-1;
+    float time_until_next_fill = -1.;
+    float time_since_end = -1.;
     if(index_of_first_fill_with_larger_start_time > (int)fillList.size()) this_fill=-1;
     //This event is during a fill if its time is less than the end time of the fill before the first fill with a larger start time
     else if(seconds < get<1>(fillList[index_of_first_fill_with_larger_start_time-1]) || get<1>(fillList[index_of_first_fill_with_larger_start_time-1])==-1){
@@ -1688,7 +1968,11 @@ tuple<int,int,float,float> findFill(int seconds){
 	total_lumi = get<3>(fillList[index_of_first_fill_with_larger_start_time-1]);
 	average_instantaneous_lumi = get<4>(fillList[index_of_first_fill_with_larger_start_time-1]);
     }
-    return make_tuple(this_fill,time_since_start,average_instantaneous_lumi,total_lumi);
+    else{
+	time_until_next_fill = get<0>(fillList[index_of_first_fill_with_larger_start_time]) - seconds;
+	time_since_end = seconds - get<1>(fillList[index_of_first_fill_with_larger_start_time-1]);
+    }
+    return make_tuple(this_fill,time_since_start,average_instantaneous_lumi,total_lumi,time_until_next_fill,time_since_end);
 }
 
 
@@ -1716,7 +2000,7 @@ void loadPhotonList(TString photonFile){
 	//    if(end<=start && end>0) cout<<"Error in fill time list"<<endl; //end == -1 indicates ongoing fill
 	//cout<<Form("Appending %i %i %i %0.2f",start,end,fillnumber,lumi)<<endl;
 	photonList.push_back(time);
-	    //        cout<<timestamp<<" "<< x1<<" "<<y1<<" "<<z1<<" "<<x2<<" "<<y2<<" "<<z2<<" "<<x3<<" "<<y3<<" "<<z3<<" "<<x4<<" "<<y4<<" "<<z4<<endl;
+	//        cout<<timestamp<<" "<< x1<<" "<<y1<<" "<<z1<<" "<<x2<<" "<<y2<<" "<<z2<<" "<<x3<<" "<<y3<<" "<<z3<<" "<<x4<<" "<<y4<<" "<<z4<<endl;
     }
     cout<<"Loaded photon time file"<<photonFile<<", "<<photonList.size()<<" photon measurements."<<endl;
 }

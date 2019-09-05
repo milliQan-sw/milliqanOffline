@@ -596,6 +596,219 @@ To be filled ...
 
 To be filled ...
 
+
+
+
+
+
+
+\newpage
+
+\section{Trigger Efficiency}
+
+
+The trigger efficiency $\varepsilon$ was defined as the ratio between the rate of pulses in a specific channel when linked to the trigger over the rate of pulses in the same channel when not connected to the trigger. In this way, $\varepsilon$ represented the probability of the trigger to fire whenever a pulse was detected in the channel. \\
+Because of the electronics available, it was not possible to compute the trigger efficiency by using a single run with different trigger configurations. $\varepsilon$ was instead computed by comparing the trigger performance in multiple runs, each run featuring a distinct trigger configuration. These involved Triple Coincidence runs (TC) and Double Coincidence runs (DC). In the case of TC, the trigger was linked to three channels which involved two tag-channels (shared by TC and DC runs) and one probe channel, whose rate represented the numerator in the efficiency ratio. In DC runs, instead, the trigger was linked to two tag channels (these needed to be the same channels as in the TC run) and the probe channel was not connected to the trigger, hence recording all pulses indiscriminately. 
+
+
+\begin{figure}[b!]
+\centering
+\begin{minipage}{.5\textwidth}
+  \centering
+  \includegraphics[width=1.\linewidth]{figures/triggerEfficiency/Comparison_Run2272_TC_CH8_Height_vs_Run2271_DC_CH8_Height}
+  \captionof{figure}{Comparison of pulse \\ height rate distributions for hits in \\ the probe channel between TC and \\ DC runs. Channel 8 threshold at \\ 2.4mV.  }
+  \label{fig:compH}
+\end{minipage}%
+\begin{minipage}{.5\textwidth}
+  \centering
+  \includegraphics[width=1.\linewidth]{figures/triggerEfficiency/Efficiency_Run2272_TC_CH8_Height_Eff_vs_Run2271_DC_CH8_Height_Eff}
+  \captionof{figure}{Trigger efficiency $\varepsilon$ of \\ channel 8 as a function of pulse height. $\varepsilon$ was obtained by dividing the TC (red) bins in figure \ref{fig:compH} by the DC (blue) bins. }
+  \label{fig:compY}
+\end{minipage}
+\end{figure}
+
+According to this approach, we defined $\varepsilon=\frac{f_{TC}}{f_{DC}}$, where $f_{TC}$ represented the pulse-rate measured in the probe channel whilst linked to the trigger (TC run), and $f_{DC}$ represented the pulse-rate detected when the probe channel was not connected to the trigger (DC run), see figures ~\ref{fig:compH},~\ref{fig:compY}. Since different runs might span different amounts of time, instead of counting the number of pulses in each channel for each run we normalised such measure with respect to the synchronised running time. This was given by the total time of the run during which the two boards connected to channels 0-15 and 16-31 were synchronised. \\
+
+
+
+
+\subsection{Trigger Functioning}
+For DC runs, the trigger was armed by the first pulse in any of the two linked channels and fired whenever a second pulse was measured in the remaining channel. Similarly, for TC configurations, the trigger was armed by the first two pulses detected in any two distinct channels and was then fired when the remaining channel detected a signal. The order in which channels recorded pulses, and wether the probe channel was the one to fire the trigger or not should not affect the overall efficiency. However, care was taken to remove any potential bias in selecting events based on their timing requirements (see sections ~\ref{tSelection},~\ref{eSelection}). \\
+
+The times associated with the online trigger were the uncalibrated times, therefore the order in which the pulses were observed by the trigger clock did not necessarily reflect their correct chronological order. When the trigger was armed, it opened a $100$ ns window during which any pulse in the channels linked to the trigger could fire the trigger. If not all channels connected to the trigger measured a pulse within the 100 ns time window, the trigger would not fire and the information lost.  \\
+Whenever the first pulse crossed the trigger threshold associated with such channel, the output waveform corresponding to such pulse would be assigned a time $380\pm10$ ns, with the uncertainty introduced by the frequency with which the trigger measurements were read. Starting from the first pulse at $380$ns, the remaining pulses were allocated a time based on wether they occurred before or later the arming pulse. Time differences between pulses were preserved throughout this process.
+
+\subsubsection{Timing Selection} \label{tSelection}
+
+
+Figures ~\ref{fig:Ch0Time},~\ref{fig:Ch10Time} show the time distribution for a comparison between TC and DC runs with tag channels 0 and 10 and probe channel 9. We observed the presence of afterpulses in the tag channels. The degree to which a channel was affected by afterpulses was connected to the trigger threshold associated with such channel. Because of the limited time window, if the threshold associated with a channel was high (usually few hundreds mVs, as in channel 0 figure ~\ref{fig:Ch0Time}) the pulse activating the trigger had a longer duration, reducing the time available in the time window for later afterpulses to occur. On the other hand, if the trigger threshold was low (few mVs, as in channel 10 figure ~\ref{fig:Ch10Time}), the pulse activating the trigger was generally shorter (see, for instance, the duration of pulse in channel 24 figure ~\ref{fig:DC_run} as opposed to the length of pulses in channels 0 or 8), leaving more time for afterpulses to occur before the 480ns cutoff. 
+For the probe channel in figure ~\ref{fig:Ch9Time}, afterpulses were removed by retaining only the earliest hit in the offline selection, but it was important to check that the current selection did not allow uncorrelated pulses in the probe channel for events that might have presented a single (uncorrelated) hit in the probe channel towards the far end of the time window. 
+
+\begin{figure}[b!]
+\centering
+\begin{minipage}{.5\textwidth}
+  \centering
+  \includegraphics[width=1.\linewidth]{figures/triggerEfficiency/Comparison_Run2196_TC_CH0_Time_vs_Run2194_DC_CH0_Time}
+  \captionof{figure}{Pulse time distribution \\ for hits detected in tag channel 0 at \\ a threshold of 300mV.  }
+  \label{fig:Ch0Time}
+\end{minipage}%
+\begin{minipage}{.5\textwidth}
+  \centering
+  \includegraphics[width=1.\linewidth]{figures/triggerEfficiency/Comparison_Run2196_TC_CH10_Time_vs_Run2194_DC_CH10_Time}
+  \captionof{figure}{Pulse time distribution for hits detected in tag channel 10 at a threshold of 3mV. }
+  \label{fig:Ch10Time}
+\end{minipage}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\centerline{\includegraphics[scale=0.43]{figures/triggerEfficiency/Comparison_Run2196_TC_CH9_Time_vs_Run2194_DC_CH9_Time}}
+{\caption{ Pulse time distribution for hits detected in probe channel 9 at a threshold of 3.1mV.  }
+
+\label{fig:Ch9Time}
+}
+\end{figure}
+
+
+
+\subsection{Event Selection} \label{eSelection}
+ 
+We considered a time window from 280ns to 480ns (100 ns around either sides of the pulse time set by the trigger clock) within which we kept track of all the pulses detected in both the tag and probe channels. In the case of multiple hits in the tag channels, we stored the after pulses, as shown in figures  ~\ref{fig:Ch0Time},~\ref{fig:Ch10Time}. If multiple hits occurred in the probe channel, we only retained the first hit above threshold (earliest pulse), disregarding the subsequent ones. We also required at least one hit in each tag and probe channel and at least one permutation of pulses (one per channel involved) to feature all pulses simultaneously within 100ns from each other. \\
+ 
+
+\subsubsection{Fit to the Turn On Curve}
+
+The turn on profile of the probe channel was fitted with and error function (ERF) as:
+
+\begin{equation}
+ f_{fit} = \frac{1}{2} \lambda(1+ERF(\frac{x-\mu}{\sqrt{2}\sigma}))  ,
+ \label{f_fit}
+\end{equation}
+
+with $\lambda$ plateau, $\mu$ midpoint and $\sigma$ sigma (or slope) of the turn on profile, no vertical offset was included. The fit was performed according to the $\chi^{2}$ method and the fit range started from 1mV below the threshold (dashed green line) until the upper limit of $10^{4}$mV. A number of DC and SC runs was taken to test the fitting procedure by keeping the threshold of the tag channel fixed at 300mV and varying the threshold of the probe channel. This is shown in figures ~\ref{fig:turnon1},~\ref{fig:turnon2},~\ref{fig:turnon3}. The threshold for the probe channel was set at 2, 3.1 and 8mV, and the midpoint of the fitting function reached larger values for higher thresholds and lower values for lower thresholds, in agreement with expectations. 
+
+
+\begin{figure}[t!]
+\centering
+\begin{minipage}{.55\textwidth}
+  \centering
+  \includegraphics[width=1.\linewidth]{figures/triggerEfficiency/Efficiency_Run2201_DC_CH9_Height_vs_Run2191_SC_CH9_Height}
+  \captionof{figure}{ Turn On fit for probe \\ channel with threshold at 2mV.  }
+  \label{fig:turnon1}
+\end{minipage}%
+\begin{minipage}{.55\textwidth}
+  \centering
+  \includegraphics[width=1.\linewidth]{figures/triggerEfficiency/Efficiency_Run2193_DC_CH9_Height_vs_Run2191_SC_CH9_Height}
+  \captionof{figure}{ Turn On fit for probe \\ channel with threshold at 3.1mV.  }
+  \label{fig:turnon2}
+\end{minipage}
+\centering
+\centerline{\includegraphics[scale=0.43]{figures/triggerEfficiency/Efficiency_Run2200_DC_CH9_Height_vs_Run2191_SC_CH9_Height}}
+{\caption{ Turn On fit for probe \\ channel with threshold at 8mV. }
+
+\label{fig:turnon3}
+}
+\end{figure}
+
+
+\subsubsection{Rate Dependent Effects}
+In order to check if the rate at which the trigger was firing affected the overall trigger performance, we took runs with different tag thresholds while maintaining a constant threshold in the probe channel. Specifically, we considered DC and SC runs with tag channel 0 at 250mV (SC trigger rate 95Hz, run 2202 and 2204), 300mV (SC trigger rate 66Hz, run 2191 and 2193) and 400mV (SC trigger rate 11Hz, run 2187 and 2189), and probe channel 9 at 3.1mV. The fitted values and profiles are shown in figures ~\ref{fig:rate1},~\ref{fig:rate2},~\ref{fig:rate3}. \\ 
+Apart from the different statistics populating the histograms, no major differences were observed between run. This confirmed the expectation that the trigger efficiency would have not been sensitive to a change in frequency of the order of 100Hz or less. 
+
+
+
+
+\begin{figure}[b!]
+\centering
+\begin{minipage}{.53\textwidth}
+  \centering
+  \includegraphics[width=1.\linewidth]{figures/triggerEfficiency/Efficiency_Run2204_DC_CH9_Height_vs_Run2202_SC_CH9_Height}
+  \captionof{figure}{ Trigger efficiency for probe \\ channel 9 and tag channel 0 at 250mV.  }
+  \label{fig:rate1}
+\end{minipage}%
+\begin{minipage}{.53\textwidth}
+  \centering
+  \includegraphics[width=1.\linewidth]{figures/triggerEfficiency/Efficiency_Run2193_DC_CH9_Height_vs_Run2191_SC_CH9_Height}
+  \captionof{figure}{ Trigger efficiency for probe \\ channel 9 and tag channel 0 at 300mV.  }
+  \label{fig:rate2}
+\end{minipage}
+
+\centering
+\centerline{\includegraphics[scale=0.43]{figures/triggerEfficiency/Efficiency_Run2189_DC_CH9_Height_vs_Run2187_SC_CH9_Height}}
+{\caption{ Trigger efficiency for probe \\ channel 9 and tag channel 0 at 400mV. }
+
+\label{fig:rate3}
+}
+\end{figure}
+
+
+\subsubsection{Single Coincidence Runs}
+
+
+To gain a better understanding of how the trigger worked, we also made use of Single Coincidence runs (SC) in which the trigger fired on any pulse of a designated tag channel. In order to maintain the trigger rate low (below 100Hz), the threshold of the associated SC channel was set to larger values (typically 300-400mV). This introduced a delay in the output waveform times assigned by the trigger clock, since the point in time where the pulse crosses the thresholds is set around 380ns, the start of the pulse itself typically occurs 25-30ns before (for trigger threshold of about 300mV). The ROOT-tree data used in this analysis defined the pulse time as the beginning of the pulse, instead of the time time when the signal crossed the threshold. This feature is outlined in figures ~\ref{fig:SC_run},~\ref{fig:DC_run}. \\
+
+\begin{figure}[h]
+\centering
+\centerline{\includegraphics[scale=0.7]{figures/triggerEfficiency/Run2187_File36_Event980_Franny}}
+{\caption{ Event display of a SC run with trigger threshold set on channel 0 at 400mV. As shown in the diagram, the time difference between the start of the pulse (around 373ns) and the point where it crosses threshold (around 400ns) determines by how much the waveform will be time-translated in the offline data. }
+
+\label{fig:SC_run}
+}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\centerline{\includegraphics[scale=0.7]{figures/triggerEfficiency/Run2188_File2_Event694_Franny}}
+{\caption{ Event display of a DC run with trigger thresholds set on channel 0 at 400mV and on channel 8 at 2.4mV. In this current trigger configuration the pulse in channel 8 almost immediately crosses the (low) trigger threshold, and the trigger will set both pulses only few ns apart from the 380ns time-mark, as opposed to the $\sim30$ns delay introduced by the pulse in fig ~\ref{fig:SC_run}.  }
+
+\label{fig:DC_run}
+}
+\end{figure}
+
+
+
+\subsection{ Efficiency for Individual Channels}
+The following plots represent the trigger efficiency for some of the channels in the first layer as a function of pulse height in mV. Only 4 channels were considered since longer runs (20 hours) were needed in order to increase statistics. 
+
+\begin{figure}[t!]
+\centering
+\centerline{\includegraphics[scale=0.5]{figures/triggerEfficiency/Efficiency_Run2276_TC_CH0_Height_Eff_vs_Run2277_DC_CH0_Height_Eff}}
+{\caption{ Trigger efficiency for channel 0 as a function of pulse height.  }
+
+\label{fig:ch0}
+}
+\end{figure}
+
+\begin{figure}[b!]
+\centering
+\centerline{\includegraphics[scale=0.5]{figures/triggerEfficiency/Efficiency_Run2278_TC_CH1_Height_Eff_vs_Run2277_DC_CH1_Height_Eff}}
+{\caption{ Trigger efficiency for channel 1 as a function of pulse height.  }
+
+\label{fig:ch1}
+}
+\end{figure}
+
+\begin{figure}[t!]
+\centering
+\centerline{\includegraphics[scale=0.5]{figures/triggerEfficiency/Efficiency_Run2272_TC_CH8_Height_Eff_vs_Run2271_DC_CH8_Height_Eff}}
+{\caption{ Trigger efficiency for channel 8 as a function of pulse height.  }
+
+\label{fig:ch8}
+}
+\end{figure}
+
+\begin{figure}[t!]
+\centering
+\centerline{\includegraphics[scale=0.5]{figures/triggerEfficiency/Efficiency_Run2273_TC_CH9_Height_Eff_vs_Run2271_DC_CH9_Height_Eff}}
+{\caption{ Trigger efficiency for channel 9 as a function of pulse height.  }
+
+\label{fig:ch9}
+}
+\end{figure}
+
+
+\newpage
+
 \section{Interpretation}
 
 To be filled ...

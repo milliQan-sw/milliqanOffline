@@ -289,8 +289,6 @@ float interModuleCalibrations[32] = { 33.125, 33.125, 13.75, 24.375, 23.75, 35.0
 float channelCalibrations[32];
 // float channelCalibrations[] = {0.,0.,-2.17,-7.49,0.48,0.,1.17,11.44,1.15,0.,-6.41,-4.81,1.2,0.,25.7,6.8};
 float channelSPEAreas[] = {62.,66.,77.,65.,68.,84.,70.,75.,100.,62.,85.,80.,60.,95.,65.,1.,48.,46.,80.,82.,60.,80.,118.,52.,46.,32.,60.,73.,70.,47.,75.,65.};
-SPE* speR878 = new SPE("r878",2,false);
-SPE* speR7725 = new SPE("r7725",2,false);
 TTree * inTree;
 TTree * outTree;
 
@@ -410,17 +408,20 @@ string GetStdoutFromCommand(string cmd);
 pair<float,float> measureSideband(int ic, float start, float end);
 pair<float,float> getMaxInRange(int ic, float start, float end);
 
-TH1D * SPEGen(float sampFreq,TString species) {
+TH1D * SPEGen(float sampFreq,TString species, double chanArea) {
     TH1D * out;
-    if (species == "R7725" || species == "ET"){
-	gRandom->SetSeed(0);
-	speR7725->SetOutputSampleFreq(sampFreq); // generate at sampling frequency
+    gRandom->SetSeed(0);
+    if (species == "R878"){
+	SPE* speR878 = new SPE("r878",sampFreq,false,chanArea);
+	out = speR878->Generate();
+    }
+    else if (species == "R7725"){
+	SPE* speR7725 = new SPE("r7725",sampFreq,false,chanArea);
 	out = speR7725->Generate();
     }
-    else{
-	gRandom->SetSeed(0);
-	speR878->SetOutputSampleFreq(sampFreq); // generate at sampling frequency
-	out = speR878->Generate();
+    else if (species == "ET"){
+	SPE* speET = new SPE("et",sampFreq,false,chanArea);
+	out = speET->Generate();
     }
     return out;
 }
@@ -894,8 +895,7 @@ void prepareWave(int ic, float &sb_meanPerEvent, float &sb_RMSPerEvent, float &s
     }
     if (injectPulses && ic != 15){
 	int injectPulsesStartBin = waves[ic]->FindBin(200.-channelCalibrations[ic]);
-	TH1D * generatedTemplate = SPEGen(sample_rate[ic/16],tubeSpecies[ic]);
-	generatedTemplate->Scale(channelSPEAreas[ic]/50.);
+	TH1D * generatedTemplate = SPEGen(sample_rate[ic/16],tubeSpecies[ic],channelSPEAreas[ic]);
 
 	for(int ibin = 1; ibin <= generatedTemplate->GetNbinsX(); ibin++){
 	    waves[ic]->SetBinContent(ibin+injectPulsesStartBin,waves[ic]->GetBinContent(ibin+injectPulsesStartBin)+generatedTemplate->GetBinContent(ibin));
@@ -908,8 +908,7 @@ void prepareWave(int ic, float &sb_meanPerEvent, float &sb_RMSPerEvent, float &s
 	for (int iSig = 0; iSig < totalN; iSig++){
 	    int index = indexRandom->Integer(photonList.size());
 	    float photonTimeCalib = photonList[index];
-	    TH1D * generatedTemplate = SPEGen(sample_rate[ic/16],tubeSpecies[ic]);
-	    generatedTemplate->Scale(channelSPEAreas[ic]/50.);
+	    TH1D * generatedTemplate = SPEGen(sample_rate[ic/16],tubeSpecies[ic],channelSPEAreas[ic]);
 	    int signalPulsesStartBin = waves[ic]->FindBin(380+photonTimeCalib-channelCalibrations[ic]);
 	    for(int ibin = 1; ibin <= generatedTemplate->GetNbinsX(); ibin++){
 		waves[ic]->SetBinContent(ibin+signalPulsesStartBin,waves[ic]->GetBinContent(ibin+signalPulsesStartBin)+generatedTemplate->GetBinContent(ibin));

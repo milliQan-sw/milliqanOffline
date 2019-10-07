@@ -171,7 +171,7 @@ void mix_events(TString runToMixName, TString inFileName , TString tag, int file
     TFile * inFile = new TFile(inFileName);
     TTree * simTreeInput = (TTree *) inFile->Get("Events");
     uint totEvents = simTreeInput->GetEntries();
-    totEvents -= startEvent;
+    // totEvents -= startEvent;
     if (totEvents > maxEvents && maxEvents >= 0) totEvents = maxEvents;
     SimTree sTree = SimTree(simTreeInput);
     // uint fileNumber = 2;
@@ -180,7 +180,7 @@ void mix_events(TString runToMixName, TString inFileName , TString tag, int file
 	mixFileName =  "/net/cms26/cms26r0/milliqan/UX5/Run"+runToMixName+"_software/MilliQan_Run"+runToMixName+"."+to_string(fileNumber)+"_software.root";
 	inTree->Add(mixFileName);
 	int totEventsMix = inTree->GetEntries();
-	if (totEventsMix >= totEvents) break;
+	if (totEventsMix >= totEvents-startEvent) break;
 	fileNumber++;
     }
     TFile * f = new TFile(mixFileName);

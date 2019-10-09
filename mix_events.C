@@ -166,6 +166,7 @@ void mix_events(TString runToMixName, TString inFileName , TString tag, int file
 	if (tubeSpecies[ic] == "ET") tubeTimeCorr.push_back(-11.5);
 	else if (tubeSpecies[ic] == "R7725") tubeTimeCorr.push_back(-11.5);
 	else if (tubeSpecies[ic] == "R878") tubeTimeCorr.push_back(-22.5);
+	else tubeTimeCorr.push_back(0);
     }
 
     TFile * inFile = new TFile(inFileName);
@@ -265,7 +266,7 @@ void mix_events(TString runToMixName, TString inFileName , TString tag, int file
 		if (nPhoton[iChan] < maxNPEForSample){
 		    for (uint arb = 0; arb < nPhoton[iChan]; arb++){
 			generatedTemplate = SPEGen(sample_rate[iChan/16],tubeSpecies[iChan],channelSPEAreas[iChan],iChan/16);
-			int signalPulsesStartBin = waves[iChan]->FindBin(380+photonTime-channelCalibrations[iChan]+tubeTimeCorr[iChan]);
+			int signalPulsesStartBin = waves[iChan]->FindBin(380+photonTime+tubeTimeCorr[iChan]);
 			for(int ibin = 1; ibin <= 1024; ibin++){
 			    if (ibin+signalPulsesStartBin > waves[iChan]->GetNbinsX()) break;
 			    waves[iChan]->SetBinContent(ibin+signalPulsesStartBin,waves[iChan]->GetBinContent(ibin+signalPulsesStartBin)+generatedTemplate->GetBinContent(ibin));
@@ -275,7 +276,7 @@ void mix_events(TString runToMixName, TString inFileName , TString tag, int file
 		}
 		else{
 		    generatedTemplate = SPEGenLargeN(sample_rate[iChan/16],tubeSpecies[iChan],channelSPEAreas[iChan],iChan/16,nPhoton[iChan]);
-		    int signalPulsesStartBin = waves[iChan]->FindBin(380+photonTime-channelCalibrations[iChan]+tubeTimeCorr[iChan]);
+		    int signalPulsesStartBin = waves[iChan]->FindBin(380+photonTime+tubeTimeCorr[iChan]);
 		    for(int ibin = 1; ibin <= 1024; ibin++){
 			if (ibin+signalPulsesStartBin > waves[iChan]->GetNbinsX()) break;
 			waves[iChan]->SetBinContent(ibin+signalPulsesStartBin,waves[iChan]->GetBinContent(ibin+signalPulsesStartBin)+generatedTemplate->GetBinContent(ibin));

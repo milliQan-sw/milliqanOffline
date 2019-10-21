@@ -9,7 +9,7 @@
 
 
 #include "TSystem.h"
-#include "TRandom.h"
+#include "TRandom2.h"
 #include "TROOT.h"
 #include "TF1.h"
 #include "TMath.h"
@@ -154,6 +154,14 @@ float triggerBand_range[2] = {360,390}; //in ns
 float presampleStart= 17.5;
 float presampleEnd = 2.5; 
 //Measure presample from t0-17.5 to t0-2.5 ns
+//
+Float_t         chan_muDistDRS[32];
+Int_t           chan_trueNPEDRS[32];
+Int_t           fileIDDRS;
+Float_t         scale1fbDRS;
+Int_t           orig_evtDRS;
+Bool_t          mcTruth_fourSlabDRS;
+Bool_t          mcTruth_threeBarLineDRS;
 
 float sample_rate[] = {1.6,1.6};
 
@@ -224,9 +232,44 @@ vector< vector<int> > chanMap =
     {-1,-2,3,2} //1.15
 };
 
-TRandom * straightPathRandom = new TRandom();
-TRandom * nPulseRandom = new TRandom();
-TRandom * indexRandom = new TRandom();
+vector<double> zPosition = 
+{   132, //0.0
+    132, //0.1
+    -115, //0.2
+    -115, //0.3
+    -115, //0.4
+    -115, //0.5
+    10, //0.6
+    10, //0.7
+    132, //0.8
+    132, //0.9
+    122, //0.10
+    0, //0.11
+    10, //0.12
+    10, //0.13
+    2, //0.14 
+    0, //0.15, timing card
+    10, //1.0
+    10, //1.1
+    174, //1.2
+    0, //1.3
+    53, //1.4
+    -181.5, //1.5
+    -115, //1.6
+    -115, //1.7
+    132, //1.8
+    132, //1.9
+    -125, //1.10
+    122, //1.11
+    -72.5, //1.12
+    122, //1.13
+    0, //1.14
+    -125 //1.15
+};
+
+TRandom2 * straightPathRandom = new TRandom2();
+TRandom2 * nPulseRandom = new TRandom2();
+TRandom2 * indexRandom = new TRandom2();
 int nPulseQ1 = 50000;
 
 vector< vector<int> > straightPaths = 
@@ -273,10 +316,38 @@ vector<int> colors;
 
 //Declare global variables
 vector<TH1D*> waves;
+double arrayVoltageDRS_0[1024];
 double arrayVoltageDRS_1[1024];
 double arrayVoltageDRS_2[1024];
 double arrayVoltageDRS_3[1024];
 double arrayVoltageDRS_4[1024];
+double arrayVoltageDRS_5[1024];
+double arrayVoltageDRS_6[1024];
+double arrayVoltageDRS_7[1024];
+double arrayVoltageDRS_8[1024];
+double arrayVoltageDRS_9[1024];
+double arrayVoltageDRS_10[1024];
+double arrayVoltageDRS_11[1024];
+double arrayVoltageDRS_12[1024];
+double arrayVoltageDRS_13[1024];
+double arrayVoltageDRS_14[1024];
+double arrayVoltageDRS_15[1024];
+double arrayVoltageDRS_16[1024];
+double arrayVoltageDRS_17[1024];
+double arrayVoltageDRS_18[1024];
+double arrayVoltageDRS_19[1024];
+double arrayVoltageDRS_20[1024];
+double arrayVoltageDRS_21[1024];
+double arrayVoltageDRS_22[1024];
+double arrayVoltageDRS_23[1024];
+double arrayVoltageDRS_24[1024];
+double arrayVoltageDRS_25[1024];
+double arrayVoltageDRS_26[1024];
+double arrayVoltageDRS_27[1024];
+double arrayVoltageDRS_28[1024];
+double arrayVoltageDRS_29[1024];
+double arrayVoltageDRS_30[1024];
+double arrayVoltageDRS_31[1024];
 // float intraModuleCalibrations[] = {0.,0.,-2.69,-7.25,0.5,0.,2.0,9.92,1.37,0.,-3.85,-3.67,-1.65,0.,-24.21,-5.05};
 // float interModuleCalibrations[] = {0.,0.,0.,0.,-6.07,-6.07,-6.07,-6.07,8.38,8.38,8.38,8.38,-6.07,0.,8.38,0.};
 // float intraModuleCalibrations[] = {0.0, 0.0, -2.5, -7.5, 0.625, 0.0, 1.875, 10.0, 1.25, 0.0, -3.75, -3.75, -1.875, 0.0, -24.375, -5.0};
@@ -289,9 +360,9 @@ float interModuleCalibrations[32] = { 33.125, 33.125, 13.75, 24.375, 23.75, 35.0
 float channelCalibrations[32];
 // float channelCalibrations[] = {0.,0.,-2.17,-7.49,0.48,0.,1.17,11.44,1.15,0.,-6.41,-4.81,1.2,0.,25.7,6.8};
 float channelSPEAreas[] = {62.,66.,77.,65.,68.,84.,70.,75.,100.,62.,85.,80.,60.,95.,65.,1.,48.,46.,80.,82.,60.,80.,118.,52.,46.,32.,60.,73.,70.,47.,75.,65.};
-SPE* speR878 = new SPE("r878",2,false);
-SPE* speR7725 = new SPE("r7725",2,false);
+#ifndef _INCL_GUARD
 TTree * inTree;
+#endif
 TTree * outTree;
 
 Long64_t initTDC=-1;
@@ -368,6 +439,13 @@ vector<int> * v_triggerLogic = new vector<int>();
 vector<int> * v_triggerMajority = new vector<int>();
 vector<float> * v_min_afterFilter = new vector<float>();
 
+Float_t         chan_muDist[32];
+Int_t           chan_trueNPE[32];
+Int_t           fileID = -1;
+Float_t         scale1fb = -1.;
+Int_t           orig_evt = -1;
+Bool_t          mcTruth_fourSlab = false;
+Bool_t          mcTruth_threeBarLine = false;
 
 bool addTriggerTimes = true;
 
@@ -409,18 +487,48 @@ string GetStdoutFromCommand(string cmd);
 
 pair<float,float> measureSideband(int ic, float start, float end);
 pair<float,float> getMaxInRange(int ic, float start, float end);
+SPE* speR878[2];
+SPE* speR7725[2];
+SPE* speET[2]; 
+TRandom2 * areaRandom = new TRandom2();
 
-TH1D * SPEGen(float sampFreq,TString species) {
+TH1D * SPEGenLargeN(float sampFreq,TString species, double chanArea,uint iDigi,uint nPulse) {
     TH1D * out;
-    if (species == "R7725" || species == "ET"){
-	gRandom->SetSeed(0);
-	speR7725->SetOutputSampleFreq(sampFreq); // generate at sampling frequency
-	out = speR7725->Generate();
+    double mean,rms,max;
+    chanArea *= 1./1.6;
+    if (species == "R878"){
+	speR878[iDigi]->SetChanArea(chanArea);
+	out = speR878[iDigi]->Generate();
+	speR878[iDigi]->GetMeanRMSMaxArea(mean,rms,max);
     }
-    else{
-	gRandom->SetSeed(0);
-	speR878->SetOutputSampleFreq(sampFreq); // generate at sampling frequency
-	out = speR878->Generate();
+    else if (species == "R7725"){
+	speR7725[iDigi]->SetChanArea(chanArea);
+	out = speR7725[iDigi]->Generate();
+	speR7725[iDigi]->GetMeanRMSMaxArea(mean,rms,max);
+    }
+    else if (species == "ET"){
+	speET[iDigi]->SetChanArea(chanArea);
+	out = speET[iDigi]->Generate();
+	speET[iDigi]->GetMeanRMSMaxArea(mean,rms,max);
+    }
+    double randArea = areaRandom->Gaus(mean*nPulse,rms*TMath::Sqrt(1.*nPulse));
+    out->Scale(randArea*chanArea/(out->Integral("width")*max));
+    return out;
+}
+TH1D * SPEGen(float sampFreq,TString species, double chanArea,uint iDigi) {
+    TH1D * out;
+    chanArea *= 1./1.6;
+    if (species == "R878"){
+	speR878[iDigi]->SetChanArea(chanArea);
+	out = speR878[iDigi]->Generate();
+    }
+    else if (species == "R7725"){
+	speR7725[iDigi]->SetChanArea(chanArea);
+	out = speR7725[iDigi]->Generate();
+    }
+    else if (species == "ET"){
+	speET[iDigi]->SetChanArea(chanArea);
+	out = speET[iDigi]->Generate();
     }
     return out;
 }
@@ -446,6 +554,7 @@ vector<std::tuple<int, float,float,float,float,float,float,float,float,float,flo
 vector<float> photonList; 
 
 # ifndef __CINT__  // the following code will be invisible for the interpreter
+#ifndef _INCL_GUARD
 int main(int argc, char **argv)
 {
     if(argc==2) make_tree(argv[1]);
@@ -472,6 +581,7 @@ int main(int argc, char **argv)
 
 }
 # endif
+# endif
 
 
 void make_tree(TString fileName, int eventNum, TString tag, float rangeMinX,float rangeMaxX, float rangeMinY,float rangeMaxY, int displayPulseBounds, int onlyForceChans,int runFFT,int applyLPFilter,int injectPulses, float injectSignalQ,int runDRS, set<int> forceChan){
@@ -482,7 +592,7 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMinX,floa
     if (runDRS){
 	for (int ic=0;ic<=31;ic++) {
 	    channelCalibrations[ic] = 0;
-	    meanCalib[ic] = 0;
+	    // meanCalib[ic] = 0;
 	}//+intraModuleCalibrations[i];}
     }
     else{
@@ -548,9 +658,20 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMinX,floa
     }
 else if (runDRS > 0){
     inTree = (TTree*)f->Get("Events"); 
-    TParameter<float> * rate = (TParameter<float> *) f->Get("sampleRate");
-    sample_rate[0] = rate->GetVal();
-    sample_rate[1] = rate->GetVal();
+    TParameter<float> * rate0 = (TParameter<float> *) f->Get("sampleRate0");
+    sample_rate[0] = rate0->GetVal();
+    TParameter<float> * rate1 = (TParameter<float> *) f->Get("sampleRate1");
+    sample_rate[1] = rate1->GetVal();
+    for (int i =0; i < numChan; i++){
+	float triggerThresh = 0.03;
+	bool triggerEnable = true;
+	int triggerMajority = 2;
+	int triggerLogic = 1;
+	v_triggerThresholds->push_back(triggerThresh);
+	v_triggerEnable->push_back(triggerEnable);
+	v_triggerMajority->push_back(triggerMajority);
+	v_triggerLogic->push_back(triggerLogic);
+    }
 }
 else {
     inTree = (TTree*)f->Get("data"); 
@@ -559,6 +680,12 @@ else {
 if (runDRS > 0){
     runNumber = "1";
 }
+	speR878[0] = new SPE("r878",sample_rate[0],false,-1);
+	speR878[1] = new SPE("r878",sample_rate[1],false,-1);
+	speR7725[0] = new SPE("r7725",sample_rate[0],false,-1);
+	speR7725[1] = new SPE("r7725",sample_rate[1],false,-1);
+	speET[0] = new SPE("et",sample_rate[0],false,-1);
+	speET[1] = new SPE("et",sample_rate[1],false,-1);
 
 runNum=atoi(runNumber.Data());
 runNumOrig = runNum;
@@ -634,8 +761,6 @@ if (injectSignalQ > 0) {
 	}
     }
     cout<<"Run "<<runNum<<", file "<<fileNum<<endl;
-    cout << outFileName<< endl;
-    cout << sample_rate[0] << endl;
 
     if(maxEvents<0) maxEvents=inTree->GetEntries();
     if(!displayMode) cout<<"Entries: "<<inTree->GetEntries()<<endl;
@@ -840,7 +965,17 @@ if (injectSignalQ > 0) {
 	indexRandom->SetSeed(0);
 	int straightPathIndex = straightPathRandom->Integer(6);
 	std::vector<int> straightPath = straightPaths[straightPathIndex];
+	fileID = fileIDDRS;
+	scale1fb = scale1fbDRS;
+	orig_evt = orig_evtDRS;
+	mcTruth_fourSlab = mcTruth_fourSlabDRS;
+	mcTruth_threeBarLine = mcTruth_threeBarLineDRS;
 	for(int ic=0;ic<numChan;ic++){
+	    if (runDRS){
+		chan_muDist[ic] = chan_muDistDRS[ic];
+		chan_trueNPE[ic] = chan_trueNPEDRS[ic];
+	    }
+
 	    /* if(ic==15){//skip timing card channel
 	       vector<vector<float> > empty;
 	       allPulseBounds.push_back(empty);
@@ -855,21 +990,21 @@ if (injectSignalQ > 0) {
 	}
 	else outTree->Fill();
     }
-    if(!displayMode) cout<<"Processed "<<maxEvents<<" events."<<endl;
+if(!displayMode) cout<<"Processed "<<maxEvents<<" events."<<endl;
 
-    if(!displayMode){
-	outTree->Write();
-	outFile->Close();
+if(!displayMode){
+    outTree->Write();
+    outFile->Close();
 
-	cout<<"Closed output tree."<<endl;
-	//TString currentDir=gSystem->pwd();
-	//TString target = currentDir+"/"+outFileName;
-	TString target = outFileName;
-	TString linkname =linkDirectory+baseFileName+".root";
-	remove(linkname); //remove if already exists
-	gSystem->Symlink(target,linkname);
-	cout<<"Made link to "<<target<<" called "<<linkname<<endl;
-    }
+    cout<<"Closed output tree."<<endl;
+    //TString currentDir=gSystem->pwd();
+    //TString target = currentDir+"/"+outFileName;
+    TString target = outFileName;
+    TString linkname =linkDirectory+baseFileName+".root";
+    remove(linkname); //remove if already exists
+    gSystem->Symlink(target,linkname);
+    cout<<"Made link to "<<target<<" called "<<linkname<<endl;
+}
 }
 
 
@@ -894,8 +1029,7 @@ void prepareWave(int ic, float &sb_meanPerEvent, float &sb_RMSPerEvent, float &s
     }
     if (injectPulses && ic != 15){
 	int injectPulsesStartBin = waves[ic]->FindBin(200.-channelCalibrations[ic]);
-	TH1D * generatedTemplate = SPEGen(sample_rate[ic/16],tubeSpecies[ic]);
-	generatedTemplate->Scale(channelSPEAreas[ic]/50.);
+	TH1D * generatedTemplate = SPEGen(sample_rate[ic/16],tubeSpecies[ic],channelSPEAreas[ic],ic/16);
 
 	for(int ibin = 1; ibin <= generatedTemplate->GetNbinsX(); ibin++){
 	    waves[ic]->SetBinContent(ibin+injectPulsesStartBin,waves[ic]->GetBinContent(ibin+injectPulsesStartBin)+generatedTemplate->GetBinContent(ibin));
@@ -908,8 +1042,7 @@ void prepareWave(int ic, float &sb_meanPerEvent, float &sb_RMSPerEvent, float &s
 	for (int iSig = 0; iSig < totalN; iSig++){
 	    int index = indexRandom->Integer(photonList.size());
 	    float photonTimeCalib = photonList[index];
-	    TH1D * generatedTemplate = SPEGen(sample_rate[ic/16],tubeSpecies[ic]);
-	    generatedTemplate->Scale(channelSPEAreas[ic]/50.);
+	    TH1D * generatedTemplate = SPEGen(sample_rate[ic/16],tubeSpecies[ic],channelSPEAreas[ic], ic/16);
 	    int signalPulsesStartBin = waves[ic]->FindBin(380+photonTimeCalib-channelCalibrations[ic]);
 	    for(int ibin = 1; ibin <= generatedTemplate->GetNbinsX(); ibin++){
 		waves[ic]->SetBinContent(ibin+signalPulsesStartBin,waves[ic]->GetBinContent(ibin+signalPulsesStartBin)+generatedTemplate->GetBinContent(ibin));
@@ -947,7 +1080,7 @@ void prepareWave(int ic, float &sb_meanPerEvent, float &sb_RMSPerEvent, float &s
     sb_timeTriggerMaxPerEvent = max_timeMax_trigger.second;
 
     // Subtract dynamically measured pedestal for CH30, which has time dependent variations
-    if (ic == 30 && runDRS <= 0) {
+    if (ic == 30) {
 	for(int ibin = 1; ibin <= waves[ic]->GetNbinsX(); ibin++){
 	    waves[ic]->SetBinContent(ibin,waves[ic]->GetBinContent(ibin)-mean_rms.first);
 	}
@@ -1679,9 +1812,21 @@ void prepareOutBranches(){
     TBranch * b_by = outTree->Branch("by",&v_by);
     TBranch * b_bz = outTree->Branch("bz",&v_bz);
 
+    TBranch *  b_chan_muDist = outTree->Branch("chan_muDist",chan_muDist,"chan_muDist[32]/F");
+    TBranch *  b_chan_trueNPE = outTree->Branch("chan_trueNPE",chan_trueNPE,"chan_trueNPE[32]/I");
+    TBranch *  b_scale1fb = outTree->Branch("scale1fb",&scale1fb,"scale1fb/F");
+    TBranch *  b_fileID = outTree->Branch("fileID",&fileID,"fileID/I");
+    TBranch *  b_orig_evt = outTree->Branch("orig_evt",&orig_evt,"orig_evt/I");
+    TBranch *  b_mcTruth_threeBarLine = outTree->Branch("mcTruth_threeBarLine",&mcTruth_threeBarLine,"mcTruth_threeBarLine/O");
+    TBranch * b_mcTruth_fourSlab = outTree->Branch("mcTruth_fourSlab",&mcTruth_fourSlab,"mcTruth_fourSlab/O");
 
-
-
+    outTree->SetBranchAddress("chan_muDist",chan_muDist,&b_chan_muDist);
+    outTree->SetBranchAddress("chan_trueNPE",chan_trueNPE,&b_chan_trueNPE);
+    outTree->SetBranchAddress("scale1fb",&scale1fb,&b_scale1fb);
+    outTree->SetBranchAddress("fileID",&fileID,&b_fileID);
+    outTree->SetBranchAddress("orig_evt",&orig_evt,&b_orig_evt);
+    outTree->SetBranchAddress("mcTruth_threeBarLine",&mcTruth_threeBarLine,&b_mcTruth_threeBarLine);
+    outTree->SetBranchAddress("mcTruth_fourSlab",&mcTruth_fourSlab,&b_mcTruth_fourSlab);
 
     outTree->SetBranchAddress("event",&event,&b_event);
     outTree->SetBranchAddress("run",&runNumOrig,&b_run);
@@ -1818,27 +1963,50 @@ void writeVersion(){
 
 }
 void loadBranchesDRS(){
+    inTree->SetBranchAddress("chan_muDist",chan_muDistDRS);
+    inTree->SetBranchAddress("chan_trueNPE",chan_trueNPEDRS);
+    inTree->SetBranchAddress("fileID",&fileIDDRS);
+    inTree->SetBranchAddress("scale1fb",&scale1fbDRS);
+    inTree->SetBranchAddress("orig_evt",&orig_evtDRS);
+    inTree->SetBranchAddress("mcTruth_threeBarLine",&mcTruth_threeBarLineDRS);
+    inTree->SetBranchAddress("mcTruth_fourSlab",&mcTruth_fourSlabDRS);
     inTree->SetBranchAddress("timestamp",&timestampSecs);
+    inTree->SetBranchAddress("voltages_0",arrayVoltageDRS_0);
+    inTree->SetBranchAddress("voltages_1",arrayVoltageDRS_1);
+    inTree->SetBranchAddress("voltages_2",arrayVoltageDRS_2);
+    inTree->SetBranchAddress("voltages_3",arrayVoltageDRS_3);
+    inTree->SetBranchAddress("voltages_4",arrayVoltageDRS_4);
+    inTree->SetBranchAddress("voltages_5",arrayVoltageDRS_5);
+    inTree->SetBranchAddress("voltages_6",arrayVoltageDRS_6);
+    inTree->SetBranchAddress("voltages_7",arrayVoltageDRS_7);
+    inTree->SetBranchAddress("voltages_8",arrayVoltageDRS_8);
+    inTree->SetBranchAddress("voltages_9",arrayVoltageDRS_9);
+    inTree->SetBranchAddress("voltages_10",arrayVoltageDRS_10);
+    inTree->SetBranchAddress("voltages_11",arrayVoltageDRS_11);
+    inTree->SetBranchAddress("voltages_12",arrayVoltageDRS_12);
+    inTree->SetBranchAddress("voltages_13",arrayVoltageDRS_13);
+    inTree->SetBranchAddress("voltages_14",arrayVoltageDRS_14);
+    inTree->SetBranchAddress("voltages_15",arrayVoltageDRS_15);
+    inTree->SetBranchAddress("voltages_16",arrayVoltageDRS_16);
+    inTree->SetBranchAddress("voltages_17",arrayVoltageDRS_17);
+    inTree->SetBranchAddress("voltages_18",arrayVoltageDRS_18);
+    inTree->SetBranchAddress("voltages_19",arrayVoltageDRS_19);
+    inTree->SetBranchAddress("voltages_20",arrayVoltageDRS_20);
+    inTree->SetBranchAddress("voltages_21",arrayVoltageDRS_21);
+    inTree->SetBranchAddress("voltages_22",arrayVoltageDRS_22);
+    inTree->SetBranchAddress("voltages_23",arrayVoltageDRS_23);
+    inTree->SetBranchAddress("voltages_24",arrayVoltageDRS_24);
+    inTree->SetBranchAddress("voltages_25",arrayVoltageDRS_25);
+    inTree->SetBranchAddress("voltages_26",arrayVoltageDRS_26);
+    inTree->SetBranchAddress("voltages_27",arrayVoltageDRS_27);
+    inTree->SetBranchAddress("voltages_28",arrayVoltageDRS_28);
+    inTree->SetBranchAddress("voltages_29",arrayVoltageDRS_29);
+    inTree->SetBranchAddress("voltages_30",arrayVoltageDRS_30);
+    inTree->SetBranchAddress("voltages_31",arrayVoltageDRS_31);
     for(int ic=0;ic<numChan;ic++) 
     { 	
 	int chan = chanArray->GetAt(ic);
 	TString branchName; 
-	branchName.Form("voltages_%d",chan);
-	if (chan == 1){
-	    inTree->SetBranchAddress(branchName,arrayVoltageDRS_1);
-	}
-	else if (chan == 2){
-	    inTree->SetBranchAddress(branchName,arrayVoltageDRS_2);
-	}
-	else if (chan == 3){
-	    inTree->SetBranchAddress(branchName,arrayVoltageDRS_3);
-	}
-	else if (chan == 4){
-	    inTree->SetBranchAddress(branchName,arrayVoltageDRS_4);
-	}
-	else {
-	    std::cout << "OH NO" << std::endl;
-	}	
 	waves.push_back(new TH1D(TString(chan),"",1024,0,1024*1./sample_rate[0]));
     }
 }
@@ -1849,23 +2017,39 @@ void loadBranchesMilliDAQ(){
 }
 
 void loadWavesDRS(){
-    for(int ic=0;ic<numChan;ic++){
-	waves[ic]->Reset();
-	int chan = chanArray->GetAt(ic);
-	for (int i = 0; i < 1024; i++){
-	    if (chan == 1){
-		waves[ic]->SetBinContent(i+1,arrayVoltageDRS_1[i]);
-	    }
-	    else if (chan == 2){
-		waves[ic]->SetBinContent(i+1,arrayVoltageDRS_2[i]);
-	    }
-	    else if (chan == 3){
-		waves[ic]->SetBinContent(i+1,arrayVoltageDRS_3[i]);
-	    }
-	    else if (chan == 4){
-		waves[ic]->SetBinContent(i+1,arrayVoltageDRS_4[i]);
-	    }
-	}
+    for (int i = 0; i < 1024; i++){
+	waves[0]->SetBinContent(i+1,arrayVoltageDRS_0[i]);
+	waves[1]->SetBinContent(i+1,arrayVoltageDRS_1[i]);
+	waves[2]->SetBinContent(i+1,arrayVoltageDRS_2[i]);
+	waves[3]->SetBinContent(i+1,arrayVoltageDRS_3[i]);
+	waves[4]->SetBinContent(i+1,arrayVoltageDRS_4[i]);
+	waves[5]->SetBinContent(i+1,arrayVoltageDRS_5[i]);
+	waves[6]->SetBinContent(i+1,arrayVoltageDRS_6[i]);
+	waves[7]->SetBinContent(i+1,arrayVoltageDRS_7[i]);
+	waves[8]->SetBinContent(i+1,arrayVoltageDRS_8[i]);
+	waves[9]->SetBinContent(i+1,arrayVoltageDRS_9[i]);
+	waves[10]->SetBinContent(i+1,arrayVoltageDRS_10[i]);
+	waves[11]->SetBinContent(i+1,arrayVoltageDRS_11[i]);
+	waves[12]->SetBinContent(i+1,arrayVoltageDRS_12[i]);
+	waves[13]->SetBinContent(i+1,arrayVoltageDRS_13[i]);
+	waves[14]->SetBinContent(i+1,arrayVoltageDRS_14[i]);
+	waves[15]->SetBinContent(i+1,arrayVoltageDRS_15[i]);
+	waves[16]->SetBinContent(i+1,arrayVoltageDRS_16[i]);
+	waves[17]->SetBinContent(i+1,arrayVoltageDRS_17[i]);
+	waves[18]->SetBinContent(i+1,arrayVoltageDRS_18[i]);
+	waves[19]->SetBinContent(i+1,arrayVoltageDRS_19[i]);
+	waves[20]->SetBinContent(i+1,arrayVoltageDRS_20[i]);
+	waves[21]->SetBinContent(i+1,arrayVoltageDRS_21[i]);
+	waves[22]->SetBinContent(i+1,arrayVoltageDRS_22[i]);
+	waves[23]->SetBinContent(i+1,arrayVoltageDRS_23[i]);
+	waves[24]->SetBinContent(i+1,arrayVoltageDRS_24[i]);
+	waves[25]->SetBinContent(i+1,arrayVoltageDRS_25[i]);
+	waves[26]->SetBinContent(i+1,arrayVoltageDRS_26[i]);
+	waves[27]->SetBinContent(i+1,arrayVoltageDRS_27[i]);
+	waves[28]->SetBinContent(i+1,arrayVoltageDRS_28[i]);
+	waves[29]->SetBinContent(i+1,arrayVoltageDRS_29[i]);
+	waves[30]->SetBinContent(i+1,arrayVoltageDRS_30[i]);
+	waves[31]->SetBinContent(i+1,arrayVoltageDRS_31[i]);
     }
 }
 void loadWavesMilliDAQ(){

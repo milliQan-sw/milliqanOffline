@@ -4,7 +4,7 @@ import ROOT as r
 r.gROOT.SetBatch()
 
 fig = plt.figure()
-iFile = "/Users/mcitron/llpStudies/darkTime/timeTreePlotting/stats/limitsMQMC_V5.root"
+iFile = "./limitsMQMC_V5.root"
 datasets = {}
 for datasetName in ["MilliQ","CMB","CMS","Collider"]:
     dataset = np.loadtxt("external/"+datasetName+".csv",delimiter=",")
@@ -34,4 +34,4 @@ plt.loglog(internalData[:,0],internalData[:,1],linewidth=2,label="95% UL from de
 plt.legend(frameon=False)
 plt.xlim([0.01,200])
 plt.ylim([0.001,1])
-fig.savefig("testExternal.pdf",transparent=True)
+fig.savefig("finalLimit.pdf",transparent=True)

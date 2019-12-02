@@ -10,8 +10,18 @@ from collections import OrderedDict as odict
 from array import array
 import pandas as pd
 from progressbar import ProgressBar
+import numpy as np
 layersMap = {1:[0,1,24,25,8,9],2:[6,7,16,17,12,13],3:[2,3,22,23,4,5]}
 allBars = [0,1,24,25,8,9,6,7,16,17,12,13,2,3,22,23,4,5]
+
+d = os.path.dirname(os.path.abspath(__file__))
+versionTag = "V16_check15"
+inputArray = np.loadtxt(d+"/timeCalcV16.txt",delimiter=":")
+timingSel = 15
+tagOrig = "signalInjectionStudies191118{0}_{1}ns".format(versionTag,timingSel)
+beamTime = sum(inputArray[:,1]*inputArray[:,3])
+noBeamTime = sum(inputArray[:,2]*inputArray[:,4])
+totalRunTime = {"beam":beamTime,"noBeam":noBeamTime}
 #col,row,layer,type (xyz) 
 
 #types- bars:0, slabs:1, sheets=2
@@ -59,8 +69,6 @@ extraPaths = []
 # binsNPE = array('d',[0]+np.logspace(0.1,3,6))
 binsNPE = array('d',[0,0.5,1.5,5,10,20,50,100,1000,10000])
 binsDeltaT = array('d',np.linspace(-120,120,385))
-timingSel = 15
-tagOrig = "signalInjectionStudies191022_{0}ns".format(timingSel)
 def preparePaths(badChans = [6,4],slabs=[18,20,28]):
     slabs = tuple(sorted(slabs))
     paths = []
@@ -190,6 +198,7 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
     tree = inputFile.Get("t")
     nTot = 0
     nPassQuiet = 0
+    nPassMaxMin = 0
     nPassCosmic = 0
     nPassSidebandRMS = 0
     nPassStraightPath = 0
@@ -200,6 +209,17 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
     nPassMaxNPE = 0
     beamReq = False
     totalEffsPerPath = {}
+    numVsRunBent = r.TH1D("numVsRunBent",";run;",500,1000,1500)
+    rateVsRunBent = r.TH1D("rateVsRunBent",";run;",500,1000,1500)
+    numVsRunBentNPE10 = r.TH1D("numVsRunBentNPE10",";run;",500,1000,1500)
+    rateVsRunBentNPE10 = r.TH1D("rateVsRunBentNPE10",";run;",500,1000,1500)
+    runTimeDict = {}
+    for entry in inputArray:
+        if beamString == "beam":
+            runTimeDict[entry[0]] = entry[1]*entry[3]/3600.
+        else:
+            runTimeDict[entry[0]] = entry[2]*entry[4]/3600.
+    print (runTimeDict)
     for path in range(-1,6):
         if path > -1:
             totalEffsPerPath[path] = r.TH1D("pathTuple"+"_".join(str(x) for x in allPaths["Straight"][path]),";nPE;",len(binsNPE)-1,binsNPE)
@@ -243,20 +263,38 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
                 continue
             if tree.beam != beamReq:
                 continue
-        # if run > 1341:
+        if tree.run == 1395:
+            continue
+        if tree.beam != beamReq:
+            continue
+        # if (tree.beam and tree.t_since_fill_start > 7200): 
+        #     continue
+        # if (tree.hardNoBeam and (tree.t_until_next_fill < 3600 or tree.t_until_next_fill > 10800)):
+        #     continue
+        # if (not tree.beam and not tree.hardNoBeam):
         #     continue
         layers = []
         types = []
-        for chan in tree.chan:
+        chans = []
+        durations = []
+        time_module_calibrateds = []
+        nPEs = []
+        for iC,chan in enumerate(tree.chan):
+            if chan == 15: continue
             layers.append(chanMap[chan][2])
             types.append(chanMap[chan][3])
+            chans.append(tree.chan[iC])
+            durations.append(tree.duration[iC])
+            time_module_calibrateds.append(tree.time_module_calibrated[iC])
+            nPEs.append(tree.nPE[iC])
         nTot += 1
-        chansHit = set(tree.chan)
-        if 15 in chansHit: chansHit.remove(15)
+        chansHit = set(chans)
+        if 15 in chansHit:
+            chansHit.remove(15)
         #Only N chans hit
         if len(chansHit) > maxPathLength: continue
         #chans hit in paths
-        chanSet = tuple(sorted(set(tree.chan)))
+        chanSet = tuple(sorted(set(chans)))
         if chanSet not in paths:
             continue
         nPassQuiet += 1
@@ -272,25 +310,25 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
         #     pulses[0] = []
         if (chansHit == set(slabs)):
             #Slabs are offset by 1
-            for nPE,time,layer,chan,duration in zip(tree.nPE,tree.time_module_calibrated,layers,tree.chan,tree.duration):
+            for nPE,time,layer,chan,duration in zip(nPEs,time_module_calibrateds,layers,chan,durations):
                 pulses[layer+1].append([nPE,time,chan])
         elif any(chansHit == extraPathSet for extraPathSet in extraPathsSet):
             extraPathIndex = extraPathsSet.index(chansHit)
-            for nPE,time,chan,duration in zip(tree.nPE,tree.time_module_calibrated,tree.chan,tree.duration):
+            for nPE,time,chan,duration in zip(nPEs,time_module_calibrateds,chans,durations):
                 pulses[allPaths["ExtraPaths"][extraPathIndex].index(chan)+1].append([nPE,time,chan])
         elif len(chansHit) == 3:
             #Only bars hit
             if 1 in types or 2 in types: continue
             #Hit in each layer
             if set(list(layers)) != set([1,2,3]): continue
-            for nPE,time,layer,chan,duration in zip(tree.nPE,tree.time_module_calibrated,layers,tree.chan,tree.duration):
+            for nPE,time,layer,chan,duration in zip(nPEs,time_module_calibrateds,layers,chans,durations):
                 pulses[layer].append([nPE,time,chan])
         elif len(chansHit) >= 4:
             #bars hit + N slab
             if 2 in types: continue
             #Hit in each layer
             layers4Slab = []
-            for nPE,time,layer,chan,duration,typeC in zip(tree.nPE,tree.time_module_calibrated,layers,tree.chan,tree.duration,types):
+            for nPE,time,layer,chan,duration,typeC in zip(nPEs,time_module_calibrateds,layers,chans,durations,types):
                 if chan in [18,20,21] and nPE > 300: failCosmic= True
                 elif chan == 28 and nPE > 200: failCosmic= True
 
@@ -336,7 +374,7 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
         if singlePulse:
             sels.append("NoOtherPulse")
 
-        chanSet = tuple(sorted(set(tree.chan)))
+        # chanSet = tuple(sorted(set(chans)))
         allDeltaTs = []
         if len(pulses) == 3:
             minNPE = min([pulses[1][0][0],pulses[2][0][0],pulses[3][0][0]])
@@ -365,30 +403,44 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
         minDeltaT = min(allDeltaTs,key = lambda x:abs(x))
         maxDeltaT = max(allDeltaTs,key = lambda x:abs(x))
         if blind:
-            if tuple(sorted(list(chanSet))) in allPaths["Straight"] and abs(maxDeltaT) < timingSel: continue
-            if tuple(sorted(list(chanSet))) in allPaths["StraightPlusSlab"] and abs(maxDeltaT) < timingSel: continue
-            if tuple(sorted(list(chanSet))) in allPaths["StraightPlusAnySlab"] and abs(maxDeltaT) < timingSel: continue
-        if abs(maxDeltaT) < timingSel:
+            if tuple(sorted(list(chanSet))) in allPaths["Straight"] or tuple(sorted(list(chanSet))) in allPaths["StraightPlusSlab"] or tuple(sorted(list(chanSet))) in allPaths["StraightPlusAnySlab"]:
+                if abs(maxDeltaT) < timingSel: continue
+                if abs(abs(maxDeltaT/timingSel) - 1) < 0.01: continue
+
+        if not signal:
+            tree.scale1fb = 1./37.
+        if tuple(sorted(list(chanSet))) in allPaths["BentSameDigi"]:
+            if (abs(maxDeltaT) < 100 and len(sels) == 2):
+                numVsRunBent.Fill(tree.run)
+                rateVsRunBent.Fill(tree.run,1./runTimeDict[tree.run])
+                if minNPE > 10:
+                    numVsRunBentNPE10.Fill(tree.run)
+                    rateVsRunBentNPE10.Fill(tree.run,1./runTimeDict[tree.run])
+        # if (maxNPE/minNPE) > 5: continue
+        # if (maxNPE-minNPE)/((minNPE + maxNPE)**0.5) > 3: continue
+        nPassMaxMin += 1
+        if abs(maxDeltaT) < timingSel: 
             nPassTiming += 1
-            if tuple(sorted(list(chanSet))) in allPaths["Straight"]:
-                chanSetBars = [x for x in chanSet if x in allBars]
-                pathIndex = allPaths["Straight"].index(tuple(sorted(list(chanSetBars))))
-                nPassStraightPath += tree.scale1fb*37.
-                    #skip npe for now
-                totalEffsPerPath[pathIndex].Fill(minNPE)
-                totalEffsPerPath["Straight"].Fill(minNPE,tree.scale1fb*37.)
-                totalEffsPerPath[-1].Fill(minNPE)
-            if tuple(sorted(list(chanSet))) in allPaths["StraightPlusSlab"]:
-                totalEffsPerPath["StraightPlusSlab"].Fill(minNPE,tree.scale1fb*37.)
-                nPassStraightPlusSlabPath += tree.scale1fb*37.
-            if tuple(sorted(list(chanSet))) in allPaths["StraightPlusAnySlab"]:
-                totalEffsPerPath["StraightPlusAnySlab"].Fill(minNPE,tree.scale1fb*37.)
-                nPassStraightPlusAnySlabPath += tree.scale1fb*37.
-                # if maxNPE < 100:
-                #     nPassMaxNPE += 1
-                # if maxNPE/minNPE > 2: 
-                #     nPassMaxNPE += 1
-                #     continue
+            if len(sels) == 2:
+                if tuple(sorted(list(chanSet))) in allPaths["Straight"]:
+                    chanSetBars = [x for x in chanSet if x in allBars]
+                    pathIndex = allPaths["Straight"].index(tuple(sorted(list(chanSetBars))))
+                    nPassStraightPath += tree.scale1fb*37.
+                        #skip npe for now
+                    totalEffsPerPath[pathIndex].Fill(minNPE)
+                    totalEffsPerPath["Straight"].Fill(minNPE,tree.scale1fb*37.)
+                    totalEffsPerPath[-1].Fill(minNPE)
+                if tuple(sorted(list(chanSet))) in allPaths["StraightPlusSlab"]:
+                    totalEffsPerPath["StraightPlusSlab"].Fill(minNPE,tree.scale1fb*37.)
+                    nPassStraightPlusSlabPath += tree.scale1fb*37.
+                if tuple(sorted(list(chanSet))) in allPaths["StraightPlusAnySlab"]:
+                    totalEffsPerPath["StraightPlusAnySlab"].Fill(minNPE,tree.scale1fb*37.)
+                    nPassStraightPlusAnySlabPath += tree.scale1fb*37.
+                    # if maxNPE < 100:
+                    #     nPassMaxNPE += 1
+                    # if maxNPE/minNPE > 2: 
+                    #     nPassMaxNPE += 1
+                    #     continue
 
         # if maxNPE > 100: continue
         # if minNPE > binsNPE[-1]: continue
@@ -411,6 +463,10 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
 
 
     outputFile.cd()
+    numVsRunBent.Write()
+    rateVsRunBent.Write()
+    numVsRunBentNPE10.Write()
+    rateVsRunBentNPE10.Write()
     for path in totalEffsPerPath:
         # totalEffsPerPath[path].Scale(1./nTot)
         totalEffsPerPath[path].Write()
@@ -419,6 +475,7 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
         print( "Q", nPassQuiet*1./nTot)
         print( nPassCosmic*1./nTot)
         print( "OP",nPassOnePulse*1./nTot)
+        print( "MaxMin",nPassMaxMin*1./nTot)
         print( "Timing",nPassTiming*1./nTot)
         print( "Straight",nPassStraightPath*1.)
         print( "StraightPlusSlab",nPassStraightPlusSlabPath*1.)
@@ -467,7 +524,6 @@ def makeABCDPredictions(inputFile,beamString,blind,nPEStrings,deltaTStrings,sele
     outputFileABCD = r.TFile("outputFileABCD{0}{1}{2}.root".format(beamString,blindString,tag),"RECREATE")
     # totalRunTime = {"beam":418*3600,"noBeam":418*3600}
     # totalRunTime = {"beam":1.44E6,"noBeam":1.45E6}
-    totalRunTime = {"beam":3.34E6,"noBeam":3.92E6}
     outDir = outputFileABCD.mkdir("sep_paths")
     outDir.cd()
     for deltaTString in ["min","max"]:
@@ -494,116 +550,119 @@ def makeABCDPredictions(inputFile,beamString,blind,nPEStrings,deltaTStrings,sele
                 if nPEString == "": continue
                 outputDirNPE = outputDirDT.mkdir(nPEString)
                 outputDirNPE.cd()
-                for pathType in ["","bad","noBad"]:
-                    if pathType == "":
-                        pathTypeString = "All"
-                    else:
-                        pathTypeString = pathType
-                    for scaleByPath in [True,False]:
-                        if scaleByPath:
-                            outputDir = outputDirNPE.mkdir(pathTypeString+"_scaleByPath")
+                for plusSlab in ["","PlusAnySlab"]:
+                    for pathType in ["","bad","noBad"]:
+                        if pathType == "":
+                            pathTypeString = "All"+plusSlab
                         else:
-                            outputDir = outputDirNPE.mkdir(pathTypeString)
-                        outputDir.cd()
-                        straightPlot = inputFile.Get("{0}Vs{1}{2}/summary/{3}StraightPlusAnySlab_{0}_{1}{2}".format(nPEString,deltaTString,selection,pathType))
-                        bentPlot = inputFile.Get("{0}Vs{1}{2}/summary/{3}BentSameDigiPlusAnySlab_{0}_{1}{2}".format(nPEString,deltaTString,selection,pathType))
-                        straightDeltaT = straightPlot.ProjectionY()
-                        bentDeltaT = bentPlot.ProjectionY()
+                            pathTypeString = pathType+plusSlab
+                        for scaleByPath in [True,False]:
+                            if scaleByPath:
+                                outputDir = outputDirNPE.mkdir(pathTypeString+"_scaleByPath")
+                            else:
+                                outputDir = outputDirNPE.mkdir(pathTypeString)
+                            outputDir.cd()
+                            straightPlot = inputFile.Get("{0}Vs{1}{2}/summary/{3}Straight{4}_{0}_{1}{2}".format(nPEString,deltaTString,selection,pathType,plusSlab))
+                            bentPlot = inputFile.Get("{0}Vs{1}{2}/summary/{3}BentSameDigi{4}_{0}_{1}{2}".format(nPEString,deltaTString,selection,pathType,plusSlab))
+                            straightDeltaT = straightPlot.ProjectionY()
+                            bentDeltaT = bentPlot.ProjectionY()
 
 
-                        histA = straightPlot.ProjectionX("A",straightPlot.GetYaxis().FindBin(-timingSel),straightPlot.GetYaxis().FindBin(timingSel)-1)
-                        histB = straightPlot.ProjectionX("B",straightPlot.GetYaxis().FindBin(-100),straightPlot.GetYaxis().FindBin(-timingSel)-1)
-                        histB2 = straightPlot.ProjectionX("B2",straightPlot.GetYaxis().FindBin(timingSel),straightPlot.GetYaxis().FindBin(100))
-                        histB.Add(histB2)
+                            histA = straightPlot.ProjectionX("A",straightPlot.GetYaxis().FindBin(-timingSel),straightPlot.GetYaxis().FindBin(timingSel)-1)
+                            histB = straightPlot.ProjectionX("B",straightPlot.GetYaxis().FindBin(-100),straightPlot.GetYaxis().FindBin(-timingSel)-1)
+                            histB2 = straightPlot.ProjectionX("B2",straightPlot.GetYaxis().FindBin(timingSel),straightPlot.GetYaxis().FindBin(100))
+                            histB.Add(histB2)
 
-                        histD = bentPlot.ProjectionX("D",bentPlot.GetYaxis().FindBin(-timingSel),bentPlot.GetYaxis().FindBin(timingSel)-1)
-                        histC = bentPlot.ProjectionX("C",bentPlot.GetYaxis().FindBin(-100),bentPlot.GetYaxis().FindBin(-timingSel)-1)
-                        histC2 = bentPlot.ProjectionX("C2",bentPlot.GetYaxis().FindBin(timingSel),bentPlot.GetYaxis().FindBin(100))
-                        histC.Add(histC2)
+                            histD = bentPlot.ProjectionX("D",bentPlot.GetYaxis().FindBin(-timingSel),bentPlot.GetYaxis().FindBin(timingSel)-1)
+                            histC = bentPlot.ProjectionX("C",bentPlot.GetYaxis().FindBin(-100),bentPlot.GetYaxis().FindBin(-timingSel)-1)
+                            histC2 = bentPlot.ProjectionX("C2",bentPlot.GetYaxis().FindBin(timingSel),bentPlot.GetYaxis().FindBin(100))
+                            histC.Add(histC2)
 
-                        histA.SetTitle("deltaTWithintimingSelStraightPred")
-                        histB.SetTitle("deltaTOutsidetimingSelStraight")
-                        histC.SetTitle("deltaTOutsidetimingSelBent")
-                        histD.SetTitle("deltaTWithintimingSelBent")
+                            histA.SetTitle("deltaTWithintimingSelStraightPred")
+                            histB.SetTitle("deltaTOutsidetimingSelStraight")
+                            histC.SetTitle("deltaTOutsidetimingSelBent")
+                            histD.SetTitle("deltaTWithintimingSelBent")
 
-                        for hist in [histA,histB,histC,histD]:
-                            for iBin in range(1,hist.GetNbinsX()+1):
-                                hist.SetBinError(iBin,hist.GetBinContent(iBin)**0.5)
-                        histAPred = histB.Clone("APred")
-                        histAPred.Multiply(histD)
-                        histAPred.Divide(histC)
-                        histAPred.SetTitle("deltaTWithintimingSelStraightObs")
+                            for hist in [histA,histB,histC,histD]:
+                                for iBin in range(1,hist.GetNbinsX()+1):
+                                    hist.SetBinError(iBin,hist.GetBinContent(iBin)**0.5)
+                            histAPred = histB.Clone("APred")
+                            histAPred.Multiply(histD)
+                            histAPred.Divide(histC)
+                            histAPred.SetTitle("deltaTWithintimingSelStraightObs")
 
-                        histAPred.SetLineColor(r.kRed)
-                        histA.SetLineColor(r.kBlue)
-                        if signalNorm != None:
-                            straightDeltaT.Scale(1./signalNorm)
-                            bentDeltaT.Scale(1./signalNorm)
+                            histAPred.SetLineColor(r.kRed)
+                            histA.SetLineColor(r.kBlue)
+                            if signalNorm != None:
+                                straightDeltaT.Scale(1./signalNorm)
+                                bentDeltaT.Scale(1./signalNorm)
 
-                            histA.Scale(1./signalNorm)
-                            histAPred.Scale(1./signalNorm)
-                            histB.Scale(1./signalNorm)
-                            histC.Scale(1./signalNorm)
-                            histD.Scale(1./signalNorm)
-                        else:
-                            straightDeltaT.Scale(3600./totalRunTime[beamString])
-                            bentDeltaT.Scale(3600./totalRunTime[beamString])
+                                histA.Scale(1./signalNorm)
+                                histAPred.Scale(1./signalNorm)
+                                histB.Scale(1./signalNorm)
+                                histC.Scale(1./signalNorm)
+                                histD.Scale(1./signalNorm)
+                            else:
+                                straightDeltaT.Scale(3600./totalRunTime[beamString])
+                                bentDeltaT.Scale(3600./totalRunTime[beamString])
 
-                            histA.Scale(3600./totalRunTime[beamString])
-                            histAPred.Scale(3600./totalRunTime[beamString])
-                            histB.Scale(3600./totalRunTime[beamString])
-                            histC.Scale(3600./totalRunTime[beamString])
-                            histD.Scale(3600./totalRunTime[beamString])
-                        if scaleByPath:
-                            straightDeltaT.Scale(1./len(allPaths[pathType+"Straight"]))
-                            bentDeltaT.Scale(1./len(allPaths[pathType+"BentSameDigi"]))
-                            histA.Scale(1./len(allPaths[pathType+"Straight"]))
-                            histAPred.Scale(1./len(allPaths[pathType+"Straight"]))
-                            histB.Scale(1./len(allPaths[pathType+"Straight"]))
-                            histC.Scale(1./len(allPaths[pathType+"BentSameDigi"]))
-                            histD.Scale(1./len(allPaths[pathType+"BentSameDigi"]))
-                            # singlesPred = histAPred.Clone(histAPred.GetName()+"SinglesPred")
-                            # for iBin in range(1,singlesPred.GetNbinsX()+2):
-                            #     singlesPred.SetBinContent(iBin,(singlesPred.GetBinContent(iBin)*3600/(100E-9*100E-9))**(1./3.))
-                            #     singlesPred.SetBinError(iBin,(singlesPred.GetBinError(iBin)*3600/(100E-9*100E-9))**(1./3.))
+                                histA.Scale(3600./totalRunTime[beamString])
+                                histAPred.Scale(3600./totalRunTime[beamString])
+                                histB.Scale(3600./totalRunTime[beamString])
+                                histC.Scale(3600./totalRunTime[beamString])
+                                histD.Scale(3600./totalRunTime[beamString])
+                            if scaleByPath:
+                                straightDeltaT.Scale(1./len(allPaths[pathType+"Straight"+plusSlab]))
+                                bentDeltaT.Scale(1./len(allPaths[pathType+"BentSameDigi"+plusSlab]))
+                                histA.Scale(1./len(allPaths[pathType+"Straight"+plusSlab]))
+                                histAPred.Scale(1./len(allPaths[pathType+"Straight"+plusSlab]))
+                                histB.Scale(1./len(allPaths[pathType+"Straight"+plusSlab]))
+                                histC.Scale(1./len(allPaths[pathType+"BentSameDigi"+plusSlab]))
+                                histD.Scale(1./len(allPaths[pathType+"BentSameDigi"+plusSlab]))
+                                # singlesPred = histAPred.Clone(histAPred.GetName()+"SinglesPred")
+                                # for iBin in range(1,singlesPred.GetNbinsX()+2):
+                                #     singlesPred.SetBinContent(iBin,(singlesPred.GetBinContent(iBin)*3600/(100E-9*100E-9))**(1./3.))
+                                #     singlesPred.SetBinError(iBin,(singlesPred.GetBinError(iBin)*3600/(100E-9*100E-9))**(1./3.))
 
-                        histAPred.Write()
-                        histA.Write()
-                        histB.Write()
-                        histC.Write()
-                        histD.Write()
-                        # singlesPred.Write()
-                        perPathDir = outputDir.mkdir("perPathRates")
-                        perPathDir.cd()
-                        for pathNum in range(1,7):
-                            perPathHist2D = inputFile.Get("{0}Vs{1}{2}/allPaths/{3}_{0}_{1}{2}".format("NPEMin",deltaTString,"NoOtherPulse","_".join(str(x) for x in allPaths["Straight"+str(pathNum)][0])))
-                            perPathHist = perPathHist2D.ProjectionX("A",straightPlot.GetYaxis().FindBin(-timingSel),straightPlot.GetYaxis().FindBin(timingSel)-1)
-                            perPathHist.SetName("Path_"+"_".join(str(x) for x in allPaths["Straight"+str(pathNum)][0]))
-                            for iBin in range(1,perPathHist.GetNbinsX()+1):
-                                hist.SetBinError(iBin,perPathHist.GetBinContent(iBin)**0.5)
-                            perPathHist.Scale(3600./totalRunTime[beamString])
-                            perPathHist.Write()
-                        if scaleByPath:
-                            validDir = outputDir.mkdir("validation_scaleByPath")
-                        else:
-                            validDir = outputDir.mkdir("validation")
-                        validDir.cd()
+                            histAPred.Write()
+                            histA.Write()
+                            histB.Write()
+                            histC.Write()
+                            histD.Write()
+                            # singlesPred.Write()
+                            perPathDir = outputDir.mkdir("perPathRates")
+                            perPathDir.cd()
+                            for pathNum in range(1,7):
+                                perPathHist2D = inputFile.Get("{0}Vs{1}{2}/allPaths/{3}_{0}_{1}{2}".format("NPEMin",deltaTString,"NoOtherPulse","_".join(str(x) for x in allPaths["Straight"+str(pathNum)][0])))
+                                perPathHist = perPathHist2D.ProjectionX("A",straightPlot.GetYaxis().FindBin(-timingSel),straightPlot.GetYaxis().FindBin(timingSel)-1)
+                                perPathHist.SetName("Path_"+"_".join(str(x) for x in allPaths["Straight"+str(pathNum)][0]))
+                                for iBin in range(1,perPathHist.GetNbinsX()+1):
+                                    hist.SetBinError(iBin,perPathHist.GetBinContent(iBin)**0.5)
+                                perPathHist.Scale(3600./totalRunTime[beamString])
+                                perPathHist.Write()
+                            if scaleByPath:
+                                validDir = outputDir.mkdir("validation_scaleByPath")
+                            else:
+                                validDir = outputDir.mkdir("validation")
+                            validDir.cd()
 
-                        straightDeltaT.SetName(pathType+"Straight"+"_"+deltaTString)
-                        bentDeltaT.SetName(pathType+"BentSameDigi"+"_"+deltaTString)
-                        if not scaleByPath:
-                            validationHists[selection,deltaTString,pathType+"Straight"] = straightDeltaT
-                            validationHists[selection,deltaTString,pathType+"BentSameDigi"] = bentDeltaT
+                            straightDeltaT.SetName(pathType+"Straight"+plusSlab+"_"+deltaTString)
+                            bentDeltaT.SetName(pathType+"BentSameDigi"+plusSlab+"_"+deltaTString)
+                            if not scaleByPath:
+                                print (selection,deltaTString,pathType+"Straight"+plusSlab)
+                                validationHists[selection,deltaTString,pathType+"Straight"+plusSlab] = straightDeltaT
+                                validationHists[selection,deltaTString,pathType+"BentSameDigi"+plusSlab] = bentDeltaT
         validDir = outputDirSel.mkdir("validation")
         for pathType in ["","bad","noBad"]:
-            validDirPathDirStraight = validDir.mkdir(pathType+"Straight")
-            validDirPathDirStraight.cd()
-            for deltaTString in deltaTStrings[1:]:
-                validationHists[selection,deltaTString,pathType+"Straight"].Write()
-            validDirPathDirBent = validDir.mkdir(pathType+"BentSameDigi")
-            validDirPathDirBent.cd()
-            for deltaTString in deltaTStrings[1:]:
-                validationHists[selection,deltaTString,pathType+"BentSameDigi"].Write()
+            for plusSlab in ["","PlusAnySlab"]:
+                validDirPathDirStraight = validDir.mkdir(pathType+"Straight"+plusSlab)
+                validDirPathDirStraight.cd()
+                for deltaTString in deltaTStrings[1:]:
+                    validationHists[selection,deltaTString,pathType+"Straight"].Write()
+                validDirPathDirBent = validDir.mkdir(pathType+"BentSameDigi"+plusSlab)
+                validDirPathDirBent.cd()
+                for deltaTString in deltaTStrings[1:]:
+                    validationHists[selection,deltaTString,pathType+"BentSameDigi"].Write()
 
 
 
@@ -614,7 +673,7 @@ if __name__=="__main__":
     blind = False
     useSaved = False
     beamString = "beam"
-    signal = True
+    signal = False
     for beamString in ["beam","noBeam"]:
         if signal and beamString == "noBeam":
             continue
@@ -633,7 +692,7 @@ if __name__=="__main__":
             else:
                 tag = tagOrig
                 # inputFile = r.TFile("{0}TwoLayerHitsOrThreeSlabHits.root".format(beamString))
-                inputFile = r.TFile("../allTrees/allPhysicsAndTripleChannelSinceTS1_threeLayerHit_181017.root".format(beamString))
+                inputFile = r.TFile("../allTrees/allPhysicsAndTripleChannelSinceTS1_threeLayerHit_191118.root".format(beamString))
                 signalNorm = None
             slabs = [18,20,28]
             outputFile,allPaths = measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStrings,selections,slabs,signal)

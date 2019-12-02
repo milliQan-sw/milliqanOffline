@@ -1177,7 +1177,7 @@ vector< vector<float> > processChannel(int ic,bool applyLPFilter, bool injectPul
 
 	v_chan->push_back(chanArray->GetAt(ic));
 	//chanMap: col,row,layer,type
-	if (runDRS <= 0){
+	if (numChan == 32){
 	    v_column->push_back(chanMap[ic][0]);
 	    v_row->push_back(chanMap[ic][1]);
 	    v_layer->push_back(chanMap[ic][2]);

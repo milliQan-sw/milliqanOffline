@@ -11,20 +11,74 @@ from array import array
 import pandas as pd
 from progressbar import ProgressBar
 import numpy as np
+# layersMap = {1:[24,25],2:[16,17],3:[22,23]}
 layersMap = {1:[0,1,24,25,8,9],2:[6,7,16,17,12,13],3:[2,3,22,23,4,5]}
 allBars = [0,1,24,25,8,9,6,7,16,17,12,13,2,3,22,23,4,5]
 
 d = os.path.dirname(os.path.abspath(__file__))
-versionTag = "V16_check15"
-inputArray = np.loadtxt(d+"/timeCalcV16.txt",delimiter=":")
+versionTag = "V16_noPrePulseAddPanelTEST"
+inputArray = np.loadtxt(d+"/timeCalcV16_withExtraRuns.txt",delimiter=":")
 timingSel = 15
-tagOrig = "signalInjectionStudies191118{0}_{1}ns".format(versionTag,timingSel)
+tagOrig = "signalInjectionStudies191204{0}_{1}ns".format(versionTag,timingSel)
 beamTime = sum(inputArray[:,1]*inputArray[:,3])
 noBeamTime = sum(inputArray[:,2]*inputArray[:,4])
 totalRunTime = {"beam":beamTime,"noBeam":noBeamTime}
 #col,row,layer,type (xyz) 
 
-#types- bars:0, slabs:1, sheets=2
+npeCorrDictDataOvSim = {0:0.598,
+ 1:0.883,
+24:1.341,
+25:1.723,
+ 8:0.761,
+ 9:1.518,
+ 6:0.633,
+ 7:0.871,
+16:0.901,
+17:1.166,
+12: 0.671,
+13: 0.750,
+ 2: 0.695,
+ 3: 0.917,
+22: 0.440,
+23: 0.761,
+ 4: 0.698,
+ 5: 1.316,
+18: 0.57,
+20: 0.72,
+28: 0.36,
+21: 0.77,
+ }
+
+npeForQ1Sim = {0:5347*80./5.,
+        1:5319*80./5.,
+        2:4101*80./5.,
+        3:5233*80./5.,
+        4:5300*80./5.,
+        5:3800*80./5.,
+        6:5367*80./5.,
+        7:5397*80./5.,
+        8:5305*80./5.,
+        9:3885*80./5.,
+        12:5366*80./5.,
+        13:5333*80./5.,
+        16:5550*80./5.,
+        17:4031*80./5.,
+        22:3861*80./5.,
+        23:5510*80./5.,
+        24:4101*80./5.,
+        25:4062*80./5.,
+        18: 300,
+        20: 360,
+        28: 200,
+        21: 400}
+
+
+
+npeCorrDictSimOvData = {}
+for x,y in npeCorrDictDataOvSim.items():
+    npeCorrDictSimOvData[x] = 1./y 
+
+#type=- bars:0, slabs:1, sheets=2
 #for sheets: column is -1,0,+1 for left, top, right
 #for slabs: column is 0
 #For slabs/sheets: row is redundant with type (= -1*type) 
@@ -68,7 +122,41 @@ extraPaths = []
 
 # binsNPE = array('d',[0]+np.logspace(0.1,3,6))
 binsNPE = array('d',[0,0.5,1.5,5,10,20,50,100,1000,10000])
+binsQ = array('d',[0,0.001,0.01,0.02,0.05,0.1,0.2,1])
 binsDeltaT = array('d',np.linspace(-120,120,385))
+binsNumAfter = array('d',range(11))
+
+firstNPEVsNumAfterPulsesWithSlab = r.TH2D("firstNPEVsNumAfterWithSlab",";firstNPE;num after",len(binsNPE)-1,binsNPE,len(binsNumAfter)-1,binsNumAfter)
+minNPEVsMaxNPEWithSlab = r.TH2D("minNPEVsMaxNPEWithSlab",";minNPE; maxNPE",len(binsNPE)-1,binsNPE,len(binsNPE)-1,binsNPE)
+minQVsMaxQWithSlab = r.TH2D("minQVsMaxQWithSlab",";minQ; maxQ",100,0,1,100,0,1)
+minNPEVsMaxNPECorrWithSlab = r.TH2D("minNPEVsMaxNPECorrWithSlab",";minNPE; maxNPE",len(binsNPE)-1,binsNPE,len(binsNPE)-1,binsNPE)
+chanVsNumAfterPulsesWithSlab = r.TH2D("chanVsNumAfterWithSlab",";chan;num after",32,0,32,10,0,10)
+chanVsNPEWithSlab = r.TH2D("chanVsNPEWithSlab",";chan;NPE",32,0,32,len(binsNPE)-1,binsNPE)
+chanVsNPECorrWithSlab = r.TH2D("chanVsNPECorrWithSlab",";chan;NPE",32,0,32,len(binsNPE)-1,binsNPE)
+firstPulseTimeWithSlab = r.TH1D("firstPulseTimeWithSlab",";time;",240,0,600)
+chanMultWithSlab = r.TH1D("chanMultWithSlab",";chan;",32,0,32)
+chanMultNoAfterWithSlab = r.TH1D("chanMultNoAfterWithSlab",";chan;",32,0,32)
+chanVsQWithSlab = r.TH2D("chanVsQWithSlab",";chan;Q",32,0,32,100,0,1)
+
+firstNPEVsNumAfterPulses = r.TH2D("firstNPEVsNumAfter",";firstNPE;num after",len(binsNPE)-1,binsNPE,len(binsNumAfter)-1,binsNumAfter)
+minNPEVsMaxNPE = r.TH2D("minNPEVsMaxNPE",";minNPE; maxNPE",len(binsNPE)-1,binsNPE,len(binsNPE)-1,binsNPE)
+minNPEVsMaxNPECorr = r.TH2D("minNPEVsMaxNPECorr",";minNPE; maxNPE",len(binsNPE)-1,binsNPE,len(binsNPE)-1,binsNPE)
+minQVsMaxQ = r.TH2D("minQVsMaxQ",";minQ; maxQ",100,0,1,100,0,1)
+chanVsNumAfterPulses = r.TH2D("chanVsNumAfter",";chan;num after",32,0,32,10,0,10)
+chanVsNPE = r.TH2D("chanVsNPE",";chan;NPE",32,0,32,len(binsNPE)-1,binsNPE)
+chanVsNPECorr = r.TH2D("chanVsNPECorr",";chan;NPE",32,0,32,len(binsNPE)-1,binsNPE)
+firstPulseTime = r.TH1D("firstPulseTime",";time;",240,0,600)
+chanMult = r.TH1D("chanMult",";chan;",32,0,32)
+chanMultNoAfter = r.TH1D("chanMultNoAfter",";chan;",32,0,32)
+chanVsQ = r.TH2D("chanVsQ",";chan;Q",32,0,32,100,0,1)
+
+afterPulseTimeSinceFirstPulseWithSlab = {}
+afterPulseTimeSinceFirstPulse = {}
+
+for chan in range(32):
+    if chanMap[chan][-1] != 2:
+        afterPulseTimeSinceFirstPulseWithSlab[chan] = r.TH1D("timeSinceFirstPulseWithSlab_chan{0}".format(chan),"time diff",100,0,500)
+        afterPulseTimeSinceFirstPulse[chan] = r.TH1D("timeSinceFirstPulse_chan{0}".format(chan),"time diff",100,0,500)
 def preparePaths(badChans = [6,4],slabs=[18,20,28]):
     slabs = tuple(sorted(slabs))
     paths = []
@@ -194,6 +282,14 @@ def preparePaths(badChans = [6,4],slabs=[18,20,28]):
             "badBentSameDigiPlusAnySlab":badBentSameDigiPlusAnySlab,"noBadBentSameDigiPlusAnySlab":noBadBentSameDigiPlusAnySlab,"BentDiffDigi":bentDiffDigiPlusAnySlab}
     return allPaths,paths
 def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStrings,selections,slabs,signal):
+    npeCorrDict = {}
+    for x in npeCorrDictSimOvData:
+        if not signal:
+            npeCorrDict[x] = npeCorrDictSimOvData[x]
+        else:
+            npeCorrDict[x] = 1
+    for x in npeCorrDictSimOvData:
+        npeCorrDict[x] = npeCorrDict[x]/(npeForQ1Sim[x])
     allPaths,paths = preparePaths(slabs=slabs)
     tree = inputFile.Get("t")
     nTot = 0
@@ -205,6 +301,7 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
     nPassStraightPlusSlabPath = 0
     nPassStraightPlusAnySlabPath = 0
     nPassOnePulse = 0
+    nPassPulseTimeSelection = 0
     nPassTiming = 0
     nPassMaxNPE = 0
     beamReq = False
@@ -214,17 +311,21 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
     numVsRunBentNPE10 = r.TH1D("numVsRunBentNPE10",";run;",500,1000,1500)
     rateVsRunBentNPE10 = r.TH1D("rateVsRunBentNPE10",";run;",500,1000,1500)
     runTimeDict = {}
+    runTimeDict[1] = 1
     for entry in inputArray:
         if beamString == "beam":
             runTimeDict[entry[0]] = entry[1]*entry[3]/3600.
         else:
             runTimeDict[entry[0]] = entry[2]*entry[4]/3600.
     print (runTimeDict)
-    for path in range(-1,6):
-        if path > -1:
+    print (len(allPaths["Straight"]))
+    for path in range(-1,2*(len(allPaths["Straight"]))):
+        if path == -1:
+            totalEffsPerPath[path] = r.TH1D("pathTupleAll",";nPE;",len(binsNPE)-1,binsNPE)
+        elif path < (len(allPaths["Straight"])):
             totalEffsPerPath[path] = r.TH1D("pathTuple"+"_".join(str(x) for x in allPaths["Straight"][path]),";nPE;",len(binsNPE)-1,binsNPE)
         else:
-            totalEffsPerPath[path] = r.TH1D("pathTupleAll",";nPE;",len(binsNPE)-1,binsNPE)
+            totalEffsPerPath[path] = r.TH1D("pathTuplePlusAnySlab"+"_".join(str(x) for x in allPaths["Straight"][path-(len(allPaths["Straight"]))]),";nPE;",len(binsNPE)-1,binsNPE)
     totalEffsPerPath["Straight"] = r.TH1D("pathTupleStraight",";nPE;",len(binsNPE)-1,binsNPE)
     totalEffsPerPath["StraightPlusAnySlab"] = r.TH1D("pathTupleStraightPlusAnySlab",";nPE;",len(binsNPE)-1,binsNPE)
     totalEffsPerPath["StraightPlusSlab"] = r.TH1D("pathTupleStraightPlusSlab",";nPE;",len(binsNPE)-1,binsNPE)
@@ -263,10 +364,8 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
                 continue
             if tree.beam != beamReq:
                 continue
-        if tree.run == 1395:
-            continue
-        if tree.beam != beamReq:
-            continue
+            if tree.run == 1395:
+                continue
         # if (tree.beam and tree.t_since_fill_start > 7200): 
         #     continue
         # if (tree.hardNoBeam and (tree.t_until_next_fill < 3600 or tree.t_until_next_fill > 10800)):
@@ -279,14 +378,29 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
         durations = []
         time_module_calibrateds = []
         nPEs = []
+        nPECorrs = []
+        Qs = []
+        panelPresent = False
         for iC,chan in enumerate(tree.chan):
             if chan == 15: continue
+            if chanMap[chan][3] == 2:
+                panelPresent = True
+                continue
             layers.append(chanMap[chan][2])
             types.append(chanMap[chan][3])
             chans.append(tree.chan[iC])
             durations.append(tree.duration[iC])
             time_module_calibrateds.append(tree.time_module_calibrated[iC])
             nPEs.append(tree.nPE[iC])
+            if chanMap[chan][3] == 2:
+                nPECorrs.append(tree.nPE[iC])
+                Qs.append(-1.0)
+            else:
+                if chanMap[chan][3] == 0:
+                    nPECorrs.append(tree.nPE[iC]*npeCorrDict[tree.chan[iC]]*5000*80/5.)
+                else:
+                    nPECorrs.append(tree.nPE[iC]*npeCorrDict[tree.chan[iC]]*400*80/5.)
+                Qs.append((tree.nPE[iC]*npeCorrDict[tree.chan[iC]])**0.5)
         nTot += 1
         chansHit = set(chans)
         if 15 in chansHit:
@@ -310,27 +424,25 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
         #     pulses[0] = []
         if (chansHit == set(slabs)):
             #Slabs are offset by 1
-            for nPE,time,layer,chan,duration in zip(nPEs,time_module_calibrateds,layers,chan,durations):
-                pulses[layer+1].append([nPE,time,chan])
-        elif any(chansHit == extraPathSet for extraPathSet in extraPathsSet):
-            extraPathIndex = extraPathsSet.index(chansHit)
-            for nPE,time,chan,duration in zip(nPEs,time_module_calibrateds,chans,durations):
-                pulses[allPaths["ExtraPaths"][extraPathIndex].index(chan)+1].append([nPE,time,chan])
+            for nPE,nPECorr,Q,time,layer,chan,duration in zip(nPEs,nPECorrs,Qs,time_module_calibrateds,layers,chan,durations):
+                pulses[layer+1].append([nPE,time,chan,nPECorr,Q])
         elif len(chansHit) == 3:
             #Only bars hit
             if 1 in types or 2 in types: continue
             #Hit in each layer
             if set(list(layers)) != set([1,2,3]): continue
-            for nPE,time,layer,chan,duration in zip(nPEs,time_module_calibrateds,layers,chans,durations):
-                pulses[layer].append([nPE,time,chan])
+            for nPE,nPECorr,Q,time,layer,chan,duration in zip(nPEs,nPECorrs,Qs,time_module_calibrateds,layers,chans,durations):
+                pulses[layer].append([nPE,time,chan,nPECorr,Q])
         elif len(chansHit) >= 4:
             #bars hit + N slab
             if 2 in types: continue
             #Hit in each layer
             layers4Slab = []
-            for nPE,time,layer,chan,duration,typeC in zip(nPEs,time_module_calibrateds,layers,chans,durations,types):
-                if chan in [18,20,21] and nPE > 300: failCosmic= True
-                elif chan == 28 and nPE > 200: failCosmic= True
+            for nPE,nPECorr,Q,time,layer,chan,duration,typeC in zip(nPEs,nPECorrs,Qs,time_module_calibrateds,layers,chans,durations,types):
+                if chan in [18,20,21] and nPE > 300: 
+                    failCosmic= True
+                elif chan == 28 and nPE > 200: 
+                    failCosmic= True
 
                 if chan in [18,20,21,28]: layerT = chan
                 else: 
@@ -338,8 +450,13 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
                     layers4Slab.append(layerT)
                 if layerT not in pulses:
                     pulses[layerT] = []
-                pulses[layerT].append([nPE,time,chan])
+                pulses[layerT].append([nPE,time,chan,nPECorr,Q])
             if set(layers4Slab) != set([1,2,3]): continue
+        elif any(chansHit == extraPathSet for extraPathSet in extraPathsSet):
+            extraPathIndex = extraPathsSet.index(chansHit)
+            for nPE,nPECorrs,Qs,time,chan,duration in zip(nPEs,nPECorrs,Qs,time_module_calibrateds,chans,durations):
+                pulses[allPaths["ExtraPaths"][extraPathIndex].index(chan)+1].append([nPE,nPECorrs,Qs,time,chan])
+
         # elif len(chansHit) == 4:
         #     #bars hit + 1 slab
         #     if 2 in types: continue
@@ -358,7 +475,11 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
         nPassCosmic += 1
         singlePulse = True
         failAllSelection = False
+        failPulseTimeSelection = False
         for layer,pulsesList in pulses.items():
+            if pulsesList[0][1] < 300 or pulsesList[0][1] > 440:
+                failPulseTimeSelection = True
+                break
             if len(pulsesList) == 0: 
                 failAllSelection = True
                 break
@@ -367,18 +488,30 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
             if pulsesList[0] != max(pulsesList):
                 failAllSelection = True
                 break
-
         if failAllSelection: continue
         nPassOnePulse += 1
-        sels = ["NoPrePulse"]
+        if failPulseTimeSelection: continue
+        nPassPulseTimeSelection += 1
+        selsOrig = ["NoPrePulse"]
         if singlePulse:
-            sels.append("NoOtherPulse")
+            selsOrig.append("NoOtherPulse")
+        sels = []
+        if panelPresent:
+            for sel in selsOrig:
+                sel += "PlusPanelHit"
+                sels.append(sel)
+        else:
+            sels = selsOrig
 
         # chanSet = tuple(sorted(set(chans)))
         allDeltaTs = []
         if len(pulses) == 3:
             minNPE = min([pulses[1][0][0],pulses[2][0][0],pulses[3][0][0]])
             maxNPE = max([pulses[1][0][0],pulses[2][0][0],pulses[3][0][0]])
+            minNPECorr = min([pulses[1][0][3],pulses[2][0][3],pulses[3][0][3]])
+            maxNPECorr = max([pulses[1][0][3],pulses[2][0][3],pulses[3][0][3]])
+            minQ = min([pulses[1][0][4],pulses[2][0][4],pulses[3][0][4]])
+            maxQ = max([pulses[1][0][4],pulses[2][0][4],pulses[3][0][4]])
 
             deltaTL3L1 = pulses[3][0][1] - pulses[1][0][1]
             deltaTL3L2 = pulses[3][0][1] - pulses[2][0][1]
@@ -389,6 +522,10 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
             # maxNPE = max([pulses[1][0][0],pulses[2][0][0],pulses[3][0][0],pulses[0][0][0]])
             minNPE = min([pulses[1][0][0],pulses[2][0][0],pulses[3][0][0]])
             maxNPE = max([pulses[1][0][0],pulses[2][0][0],pulses[3][0][0]])#,pulses[0][0][0]])
+            minNPECorr = min([pulses[1][0][3],pulses[2][0][3],pulses[3][0][3]])
+            maxNPECorr = max([pulses[1][0][3],pulses[2][0][3],pulses[3][0][3]])
+            minQ = min([pulses[1][0][4],pulses[2][0][4],pulses[3][0][4]])
+            maxQ = max([pulses[1][0][4],pulses[2][0][4],pulses[3][0][4]])
 
             deltaTL3L1 = pulses[3][0][1] - pulses[1][0][1]
             deltaTL3L2 = pulses[3][0][1] - pulses[2][0][1]
@@ -409,38 +546,78 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
 
         if not signal:
             tree.scale1fb = 1./37.
+        if abs(maxDeltaT) < 100 and not panelPresent:
+            if tuple(sorted(list(chanSet))) in (allPaths["BentSameDigi"]+allPaths["Straight"]+allPaths["BentSameDigiPlusAnySlab"]+allPaths["StraightPlusAnySlab"]):
+                #npe,time,chan
+                if len(pulses) >= 4:
+                    for layer,pulseList in pulses.items():
+                        chanVsNumAfterPulsesWithSlab.Fill(pulseList[0][2],len(pulseList)-1)
+                        chanMultWithSlab.Fill(pulseList[0][2])
+                        firstPulseTimeWithSlab.Fill(pulseList[0][1])
+                        if len(sels) == 2:
+                            chanMultNoAfterWithSlab.Fill(pulseList[0][2])
+                        firstNPEVsNumAfterPulsesWithSlab.Fill(pulseList[0][0],len(pulseList)-1)
+                        for pulse in pulseList[1:]:
+                            afterPulseTimeSinceFirstPulseWithSlab[pulseList[0][2]].Fill(pulse[1]-pulseList[0][1])
+                        chanVsNPEWithSlab.Fill(pulseList[0][2],pulseList[0][0])
+                        chanVsNPECorrWithSlab.Fill(pulseList[0][2],pulseList[0][3])
+                        chanVsQWithSlab.Fill(pulseList[0][2],pulseList[0][4])
+                    minNPEVsMaxNPEWithSlab.Fill(minNPE,maxNPE)
+                    minNPEVsMaxNPECorrWithSlab.Fill(minNPECorr,maxNPECorr)
+                    minQVsMaxQWithSlab.Fill(minQ,maxQ)
+                elif len(pulses) == 3:
+                    for layer,pulseList in pulses.items():
+                        chanVsNumAfterPulses.Fill(pulseList[0][2],len(pulseList)-1)
+                        chanMult.Fill(pulseList[0][2])
+                        firstPulseTime.Fill(pulseList[0][1])
+                        if len(sels) == 2:
+                            chanMultNoAfter.Fill(pulseList[0][2])
+                        firstNPEVsNumAfterPulses.Fill(pulseList[0][0],len(pulseList)-1)
+                        for pulse in pulseList[1:]:
+                            afterPulseTimeSinceFirstPulse[pulseList[0][2]].Fill(pulse[1]-pulseList[0][1])
+                        chanVsNPE.Fill(pulseList[0][2],pulseList[0][0])
+                        chanVsNPECorr.Fill(pulseList[0][2],pulseList[0][3])
+                        chanVsQ.Fill(pulseList[0][2],pulseList[0][4])
+                    minNPEVsMaxNPE.Fill(minNPE,maxNPE)
+                    minNPEVsMaxNPECorr.Fill(minNPECorr,maxNPECorr)
+                    minQVsMaxQ.Fill(minQ,maxQ)
         if tuple(sorted(list(chanSet))) in allPaths["BentSameDigi"]:
-            if (abs(maxDeltaT) < 100 and len(sels) == 2):
+            if (abs(maxDeltaT) < 100 and len(sels) == 2 and not panelPresent) :
                 numVsRunBent.Fill(tree.run)
                 rateVsRunBent.Fill(tree.run,1./runTimeDict[tree.run])
                 if minNPE > 10:
                     numVsRunBentNPE10.Fill(tree.run)
                     rateVsRunBentNPE10.Fill(tree.run,1./runTimeDict[tree.run])
-        # if (maxNPE/minNPE) > 5: continue
+        # if maxNPE > 10 and (maxNPE/minNPE) > 3: continue
         # if (maxNPE-minNPE)/((minNPE + maxNPE)**0.5) > 3: continue
-        nPassMaxMin += 1
-        if abs(maxDeltaT) < timingSel: 
+        if abs(maxDeltaT) < timingSel and not panelPresent:
             nPassTiming += 1
-            if len(sels) == 2:
-                if tuple(sorted(list(chanSet))) in allPaths["Straight"]:
-                    chanSetBars = [x for x in chanSet if x in allBars]
-                    pathIndex = allPaths["Straight"].index(tuple(sorted(list(chanSetBars))))
-                    nPassStraightPath += tree.scale1fb*37.
-                        #skip npe for now
-                    totalEffsPerPath[pathIndex].Fill(minNPE)
-                    totalEffsPerPath["Straight"].Fill(minNPE,tree.scale1fb*37.)
-                    totalEffsPerPath[-1].Fill(minNPE)
-                if tuple(sorted(list(chanSet))) in allPaths["StraightPlusSlab"]:
-                    totalEffsPerPath["StraightPlusSlab"].Fill(minNPE,tree.scale1fb*37.)
-                    nPassStraightPlusSlabPath += tree.scale1fb*37.
-                if tuple(sorted(list(chanSet))) in allPaths["StraightPlusAnySlab"]:
-                    totalEffsPerPath["StraightPlusAnySlab"].Fill(minNPE,tree.scale1fb*37.)
-                    nPassStraightPlusAnySlabPath += tree.scale1fb*37.
-                    # if maxNPE < 100:
-                    #     nPassMaxNPE += 1
-                    # if maxNPE/minNPE > 2: 
-                    #     nPassMaxNPE += 1
-                    #     continue
+            # if maxNPECorr/minNPECorr < 5: 
+            if True:
+                nPassMaxMin += 1
+                if len(sels) > 0:
+                    if tuple(sorted(list(chanSet))) in allPaths["Straight"]:
+                        chanSetBars = [x for x in chanSet if x in allBars]
+                        pathIndex = allPaths["Straight"].index(tuple(sorted(list(chanSetBars))))
+                        nPassStraightPath += tree.scale1fb*37.
+                            #skip npe for now
+                        totalEffsPerPath[pathIndex].Fill(minNPE)
+                        totalEffsPerPath["Straight"].Fill(minNPE,tree.scale1fb*37.)
+                        totalEffsPerPath[-1].Fill(minNPE)
+                    if tuple(sorted(list(chanSet))) in allPaths["StraightPlusSlab"]:
+                        totalEffsPerPath["StraightPlusSlab"].Fill(minNPE,tree.scale1fb*37.)
+                        nPassStraightPlusSlabPath += tree.scale1fb*37.
+                        chanSetBars = [x for x in chanSet if x in allBars]
+                        pathIndex = 6+allPaths["Straight"].index(tuple(sorted(list(chanSetBars))))
+                        totalEffsPerPath[pathIndex].Fill(minNPE)
+                    if tuple(sorted(list(chanSet))) in allPaths["StraightPlusAnySlab"]:
+                        totalEffsPerPath["StraightPlusAnySlab"].Fill(minNPE,tree.scale1fb*37.)
+                        nPassStraightPlusAnySlabPath += tree.scale1fb*37.
+                        # if maxNPE < 100:
+                        #     nPassMaxNPE += 1
+                        # if maxNPE/minNPE > 2: 
+                        #     nPassMaxNPE += 1
+                        #     continue
 
         # if maxNPE > 100: continue
         # if minNPE > binsNPE[-1]: continue
@@ -450,11 +627,13 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
         #             print( "s",chanSet,tree.run,tree.file,tree.event,maxNPE
         #         elif tuple(sorted(list(chanSet))) in allPaths["BentSameDigiPlusSlab"]:
         #             print( "b",chanSet,tree.run,tree.file,tree.event,maxNPE
-        nPEDict = {"NPEMin":minNPE,"NPEMax":maxNPE}
-        deltaTDict = {"min":minDeltaT,"max":maxDeltaT}
+        nPEDict = {"NPEMin":minNPE,"NPEMax":maxNPE}#,"NPEMinCorr":minNPECorr,"NPEMaxCorr":maxNPECorr}
+        deltaTDict = {"max":maxDeltaT}
+        # deltaTDict = {"min":minDeltaT,"max":maxDeltaT}
         for sel in sels:
             for deltaTString in deltaTStrings:
                 for nPEString in nPEStrings:
+                    # if nPEDict[nPEString.replace("Min","Max")]/nPEDict[nPEString.replace("Max","Min")] < 5:
                     outputPlots[nPEString+"Vs"+deltaTString+sel][chanSet].Fill(nPEDict[nPEString],deltaTDict[deltaTString])
 
         #Check time distributions
@@ -467,6 +646,43 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
     rateVsRunBent.Write()
     numVsRunBentNPE10.Write()
     rateVsRunBentNPE10.Write()
+    outDirNoS = outputFile.mkdir("noSlab")
+    outDirNoS.cd()
+    chanMult.Write()
+    chanMultNoAfter.Write()
+    minNPEVsMaxNPE.Write()
+    minQVsMaxQ.Write()
+    minNPEVsMaxNPECorr.Write()
+    firstNPEVsNumAfterPulses.Write()
+    firstPulseTime.Write()
+    chanVsNumAfterPulses.Write()
+    chanVsNPE.Write()
+    chanVsNPECorr.Write()
+    chanVsQ.Write()
+    outDir = outDirNoS.mkdir("afterPulseTimeSinceFirst")
+    outDir.cd()
+    for chan in afterPulseTimeSinceFirstPulse:
+        afterPulseTimeSinceFirstPulse[chan].Write()
+    outputFile.cd()
+    outDirWS = outputFile.mkdir("withSlab")
+    outDirWS.cd()
+    chanMultWithSlab.Write()
+    chanMultNoAfterWithSlab.Write()
+    minNPEVsMaxNPEWithSlab.Write()
+    minQVsMaxQWithSlab.Write()
+    minNPEVsMaxNPECorrWithSlab.Write()
+    firstNPEVsNumAfterPulsesWithSlab.Write()
+    firstPulseTimeWithSlab.Write()
+    chanVsNumAfterPulsesWithSlab.Write()
+    chanVsNPEWithSlab.Write()
+    chanVsNPECorrWithSlab.Write()
+    chanVsQWithSlab.Write()
+    outDir = outDirWS.mkdir("afterPulseTimeSinceFirst")
+    outDir.cd()
+    for chan in afterPulseTimeSinceFirstPulse:
+        afterPulseTimeSinceFirstPulse[chan].Write()
+    outputFile.cd()
+
     for path in totalEffsPerPath:
         # totalEffsPerPath[path].Scale(1./nTot)
         totalEffsPerPath[path].Write()
@@ -475,6 +691,7 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
         print( "Q", nPassQuiet*1./nTot)
         print( nPassCosmic*1./nTot)
         print( "OP",nPassOnePulse*1./nTot)
+        print( "Pulse time selection",nPassPulseTimeSelection*1./nTot)
         print( "MaxMin",nPassMaxMin*1./nTot)
         print( "Timing",nPassTiming*1./nTot)
         print( "Straight",nPassStraightPath*1.)
@@ -498,6 +715,7 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
     if signal:
         return None,None
     for plotType,plots in outputPlots.items():
+        print (plotType)
         outDir = outputFile.mkdir(plotType)
         outDir.cd()
         outDirValid = outDir.mkdir("allPaths")
@@ -526,7 +744,7 @@ def makeABCDPredictions(inputFile,beamString,blind,nPEStrings,deltaTStrings,sele
     # totalRunTime = {"beam":1.44E6,"noBeam":1.45E6}
     outDir = outputFileABCD.mkdir("sep_paths")
     outDir.cd()
-    for deltaTString in ["min","max"]:
+    for deltaTString in ["min","max"][-1:]:
         if deltaTString == "": continue
         outDirDT = outDir.mkdir(deltaTString)
         outDirDT.cd()
@@ -535,6 +753,7 @@ def makeABCDPredictions(inputFile,beamString,blind,nPEStrings,deltaTStrings,sele
             if pathType == "Slabs":continue
             for path in paths:
                 if path not in pathList:
+                    print ("{0}Vs{1}{2}/allPaths/{3}_{0}_{1}{2}".format("NPEMin",deltaTString,"NoOtherPulse","_".join(str(x) for x in path)))
                     straightPlot = inputFile.Get("{0}Vs{1}{2}/allPaths/{3}_{0}_{1}{2}".format("NPEMin",deltaTString,"NoOtherPulse","_".join(str(x) for x in path)))
                     straightDeltaT = straightPlot.ProjectionY()
                     straightDeltaT.Scale(3600./totalRunTime[beamString])
@@ -663,18 +882,19 @@ def makeABCDPredictions(inputFile,beamString,blind,nPEStrings,deltaTStrings,sele
                 validDirPathDirBent.cd()
                 for deltaTString in deltaTStrings[1:]:
                     validationHists[selection,deltaTString,pathType+"BentSameDigi"].Write()
+    outputFileABCD.Close()
 
 
 
 if __name__=="__main__":
-    nPEStrings = ["NPEMin","NPEMax"]
-    deltaTStrings = ["min","max"]
-    selections = ["NoOtherPulse","NoPrePulse"]
+    nPEStrings = ["NPEMin","NPEMax","NPEMinCorr","NPEMaxCorr"][:2]
+    deltaTStrings = ["min","max"][-1:]
+    selections = ["NoOtherPulse","NoOtherPulsePlusPanelHit","NoPrePulse","NoPrePulsePlusPanelHit"]
     blind = False
     useSaved = False
     beamString = "beam"
     signal = False
-    for beamString in ["beam","noBeam"]:
+    for beamString in ["beam","noBeam"][:-1]:
         if signal and beamString == "noBeam":
             continue
         if beamString  == "beam" and not signal:
@@ -682,7 +902,6 @@ if __name__=="__main__":
         else:
             blind = False
         for signalQ in ["0p005","0p01","0p02","0p03","0p05","0p07","0p1","0p14","0p2","0p3"]:
-            print (signalQ)
             if not signal and signalQ != "0p005":continue
             if signal:
                 inputFile = r.TFile("signalInputs/mcp_m1p0_q{0}_geant_NTUPLE_testmixv2.root".format(signalQ))
@@ -692,8 +911,14 @@ if __name__=="__main__":
             else:
                 tag = tagOrig
                 # inputFile = r.TFile("{0}TwoLayerHitsOrThreeSlabHits.root".format(beamString))
-                inputFile = r.TFile("../allTrees/allPhysicsAndTripleChannelSinceTS1_threeLayerHit_191118.root".format(beamString))
+                # inputFile = r.TFile("../allTrees/allPhysicsAndTripleChannelSinceTS1_threeLayerHitPlusSlab_191204.root".format(beamString))
+                inputFile = r.TFile("../allTrees/allPhysicsAndTripleChannelSinceTS1_threeLayerHit_191204.root".format(beamString))
                 signalNorm = None
             slabs = [18,20,28]
             outputFile,allPaths = measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStrings,selections,slabs,signal)
-            makeABCDPredictions(outputFile,beamString,blind,nPEStrings,deltaTStrings,selections,allPaths,signalNorm)
+            if not signal:
+                makeABCDPredictions(outputFile,beamString,blind,nPEStrings,deltaTStrings,selections,allPaths,signalNorm)
+            if outputFile:
+                outputFile.Close()
+            if inputFile:
+                inputFile.Close()

@@ -482,7 +482,7 @@ void h1cosmetic(TH1D* hist,int ic);
 void getFileCreationTime(const char *path);
 vector<int> eventsPrinted(32,0);
 TString displayDirectory;
-void writeVersion();
+void writeVersion(bool);
 string GetStdoutFromCommand(string cmd);
 
 pair<float,float> measureSideband(int ic, float start, float end);
@@ -742,9 +742,12 @@ if (injectSignalQ > 0) {
     if (runDRS){
 	milliqanOfflineDir+="DRS/";
     }
+    if (applyLPFilter) version += "_filtered";
 
     TString treeDirectory= milliqanOfflineDir+"trees_"+version+"/Run"+to_string(runNum)+"_"+configName+signalString+"/";
-    TString linkDirectory= milliqanOfflineDir+"trees/Run"+to_string(runNum)+"_"+configName+signalString+"/";
+    TString linkDirectory;
+    if (applyLPFilter) linkDirectory= milliqanOfflineDir+"trees_filtered/Run"+to_string(runNum)+"_"+configName+signalString+"/";
+    else linkDirectory= milliqanOfflineDir+"trees/Run"+to_string(runNum)+"_"+configName+signalString+"/";
 
     if (injectPulses) baseFileName.ReplaceAll(runNumber,"-"+runNumber);
     if (injectSignalQ > 0) baseFileName.ReplaceAll(runNumber,to_string(runNum));
@@ -755,7 +758,8 @@ if (injectSignalQ > 0) {
 	    offsetSignalQ += 1;
 	    runNum += 1;
 	    treeDirectory= milliqanOfflineDir+"trees_"+version+"/Run"+to_string(runNum)+"_"+configName+signalString+"/";
-	    linkDirectory= milliqanOfflineDir+"trees/Run"+to_string(runNum)+"_"+configName+signalString+"/";
+	    if (applyLPFilter) linkDirectory= milliqanOfflineDir+"trees_filtered/Run"+to_string(runNum)+"_"+configName+signalString+"/";
+	    else linkDirectory = milliqanOfflineDir+"trees/Run"+to_string(runNum)+"_"+configName+signalString+"/";
 	    baseFileName.ReplaceAll(to_string(runNum-1),to_string(runNum));
 	    outFileName = treeDirectory+baseFileName+"_"+version+".root";
 	}
@@ -790,7 +794,7 @@ if (injectSignalQ > 0) {
 	outFile = new TFile(outFileName,"recreate");
 	outTree = new TTree("t","t");
 	prepareOutBranches();
-	writeVersion();
+	writeVersion(applyLPFilter);
     }
 
 
@@ -1079,11 +1083,9 @@ void prepareWave(int ic, float &sb_meanPerEvent, float &sb_RMSPerEvent, float &s
     sb_triggerMaxPerEvent = max_timeMax_trigger.first;
     sb_timeTriggerMaxPerEvent = max_timeMax_trigger.second;
 
-    // Subtract dynamically measured pedestal for CH30, which has time dependent variations
-    if (ic == 30) {
-	for(int ibin = 1; ibin <= waves[ic]->GetNbinsX(); ibin++){
-	    waves[ic]->SetBinContent(ibin,waves[ic]->GetBinContent(ibin)-mean_rms.first);
-	}
+    // Subtract dynamically measured pedestal for all channels
+    for(int ibin = 1; ibin <= waves[ic]->GetNbinsX(); ibin++){
+	waves[ic]->SetBinContent(ibin,waves[ic]->GetBinContent(ibin)-mean_rms.first);
     }
 
 }
@@ -1954,11 +1956,13 @@ void h1cosmetic(TH1D *hist,int ic){
 
 }
 
-void writeVersion(){
+void writeVersion(bool applyLPFilter){
     string version = "longtagplaceholder";
     //string version = GetStdoutFromCommand("git describe --tags --long");
-    cout<<"Git tag is "<<version<<endl;
-    TNamed v("tag",version);
+    cout<<"Git tag is "<<version+"_filtered"<<endl;
+    TNamed v;
+    if (applyLPFilter) v = TNamed("tag",version+"_filtered");
+    else v= TNamed("tag",version);
     v.Write();
 
 }

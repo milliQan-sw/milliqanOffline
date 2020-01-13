@@ -1,7 +1,7 @@
 import pickle
 from collections import defaultdict
 
-closureDict = pickle.load(open("outputIntercalibration_closure100/calibrationDictClosure.pkl"))
+closureDict = pickle.load(open("/Users/mcitron/outputIntercalibration_closure100/calibrationDictClosure.pkl"))
 variances = defaultdict(list)
 variances[11].append(0.5*(closureDict[11,10][2]**2 - closureDict[10,9][2]**2 + closureDict[11,9][2]**2))
 variances[11].append(0.5*(closureDict[11,10][2]**2 - closureDict[10,8][2]**2 + closureDict[11,8][2]**2))

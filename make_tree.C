@@ -813,12 +813,10 @@ if (injectSignalQ > 0) {
 
 
     //if(!displayMode)
+    std::vector<float> zeros(32,0.);
+    sidebandPerFile[fileNum] = zeros;
     if (!runDRS){
 	loadSidebandList(Form("/net/cms26/cms26r0/milliqan/haddedTrees/sideband_files/sideband_mean_run_%i.txt",runNum));
-    }
-    else{
-	std::vector<float> zeros(32,0.);
-	sidebandPerFile[fileNum] = zeros;
     }
 
 
@@ -2217,9 +2215,15 @@ void loadSidebandList(TString sidebandFile){
     float sb0,sb1,sb2,sb3,sb4,sb5,sb6,sb7,sb8,sb9,sb10,sb11,sb12,sb13,sb14,sb15,sb16,sb17,sb18,sb19,sb20,sb21,sb22,sb23,sb24,sb25,sb26,sb27,sb28,sb29,sb30,sb31;
     ifstream infile;
     infile.open(sidebandFile); 
-    while(infile >> file >> sb0 >> sb1 >>sb2 >>sb3 >>sb4 >>sb5 >>sb6 >>sb7 >>sb8 >>sb9 >>sb10 >>sb11 >>sb12 >>sb13 >>sb14 >>sb15 >>sb16 >>sb17 >>sb18 >>sb19 >>sb20 >>sb21 >>sb22 >>sb23 >>sb24 >>sb25 >>sb26 >>sb27 >>sb28 >>sb29 >>sb30 >>sb31){
-	vector<float> sideband = {sb0,sb1,sb2,sb3,sb4,sb5,sb6,sb7,sb8,sb9,sb10,sb11,sb12,sb13,sb14,sb15,sb16,sb17,sb18,sb19,sb20,sb21,sb22,sb23,sb24,sb25,sb26,sb27,sb28,sb29,sb30,sb31};
-	sidebandPerFile[file] = sideband;
+    if (infile.good()){
+	while(infile >> file >> sb0 >> sb1 >>sb2 >>sb3 >>sb4 >>sb5 >>sb6 >>sb7 >>sb8 >>sb9 >>sb10 >>sb11 >>sb12 >>sb13 >>sb14 >>sb15 >>sb16 >>sb17 >>sb18 >>sb19 >>sb20 >>sb21 >>sb22 >>sb23 >>sb24 >>sb25 >>sb26 >>sb27 >>sb28 >>sb29 >>sb30 >>sb31){
+	    vector<float> sideband = {sb0,sb1,sb2,sb3,sb4,sb5,sb6,sb7,sb8,sb9,sb10,sb11,sb12,sb13,sb14,sb15,sb16,sb17,sb18,sb19,sb20,sb21,sb22,sb23,sb24,sb25,sb26,sb27,sb28,sb29,sb30,sb31};
+	    sidebandPerFile[file] = sideband;
+	}
+    }
+    else {
+	std::cout << "sideband file doesn't exist - per file correction will be 0" << std::endl;
+
     }
 
 }

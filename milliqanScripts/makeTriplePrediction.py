@@ -231,11 +231,12 @@ def makeTriplePrediction():
     # histTest = r.TH1D("test","test",len(binsDeltaT)-1,binsDeltaT)
     baseHists = [histMin,histMax]#,histAll]
 
-    # outFile = r.TFile("templatesCalibTimeUniformTEST.root","RECREATE")
-    # histDictFromUniform = prepareBlankTemplates(paths,baseHists)
-    # histDictFromUniform = makeTriplePredictionFromUniform(histDictFromUniform,paths,singlesRates)
-    # writeOutput(histDictFromUniform,outFile,singlesRates=singlesRates,baseHists=baseHists)
-    #
+    outFile = r.TFile("templatesCalibTimeUniformTEST.root","RECREATE")
+    histDictFromUniform = prepareBlankTemplates(paths,baseHists)
+    histDictFromUniform = makeTriplePredictionFromUniform(histDictFromUniform,paths,singlesRates)
+    writeOutput(histDictFromUniform,outFile,singlesRates=singlesRates,baseHists=baseHists)
+    exit()
+
     histDictFromDoubles = prepareBlankTemplates(paths,baseHists)
     chansForSingle = []
     for doubleChans in histDictFromDoubles:

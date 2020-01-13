@@ -18,7 +18,7 @@ def main():
         if not os.path.exists(outputDirBase):
             os.mkdir(outputDirBase)
         for quietInRest in opts:
-            for singlePulseAboveThreshInChan in opts:
+            for singlePulseAboveThreshInChan in [False]:
                 for singlePulseInChan in opts:
                     for noPrePulse in opts:
                         for skipSameLayer in [True,False]:
@@ -88,7 +88,7 @@ def main():
                                                 for check in skipList:
                                                     if int(histoName.split("_")[1]) in check and int(histoName.split("_")[2]) in check:
                                                         skip = False
-                                            if int(histoName.split("_")[1]) in [4,6] or int(histoName.split("_")[2]) in [4,6]:
+                                            if int(histoName.split("_")[1]) in [3,4,6] or int(histoName.split("_")[2]) in [3,4,6]:
                                                 skip = True
                                             if integral == 0:
                                                 skip = True
@@ -130,8 +130,8 @@ def main():
                                 dummyHist = r.TH1D(str(height),"",len(outListSingle)+2,-1,len(outListSingle)+1)
                                 for iBin in range(len(chanCombosSingle)):
                                     dummyHist.GetXaxis().SetBinLabel(iBin+1," ".join(str(x) for x in sorted(chanCombosSingle)[iBin]))
-                                dummyHist.SetMaximum(10)
-                                dummyHist.SetMinimum(1E-3)
+                                dummyHist.SetMaximum(100)
+                                dummyHist.SetMinimum(1E-5)
                                 #Basic graphs
                                 outCanvas = r.TCanvas()
                                 outCanvas.SetLogy()

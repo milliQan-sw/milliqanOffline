@@ -586,8 +586,74 @@ rate is comparable for all paths.
 
 \subsection{Radiation}
 
-To be filled ...
+The features of the background due to radiation in the cavern were studied
+using bars from the milliQan demonstrator in the cavern. First, two bars
+were placed side-by-side in order to mesaure the depedence of the 
+double coincidence rate on the separation between the bars. The setup
+for a particular separation of $40\unit{cm}$ is shown in Figure~\ref{fig:setup40cmSep}
+and the results of the rate measurement is shown in Figure~\ref{fig:rateVsSepSideBySide}.
+For small separations (as for adjacent bars in the same layer)
+the rate is seen to be $\sim 50 \unit{Hz}$. This reduces to 
+$\sim 5 \unit{Hz}$ for a separation of $60\unit{cm}$. The measurement was
+repeated with $12\unit{mm}$ of steel shielding between the bars (see Fig.~\ref{setup2cmSepShield}). 
+For all separations this is seen to reduce the overall rate by $\sim 20\%$.
+The time difference between the pulses in the two bars is shown in Figure~\ref{fig:timeDiffSep40cm} and
+Figure~\ref{fig:timeDiffSep40cmShield} without and with shielding, respectively,
+and in both cases is clearly consistent with a correlated effect. Finally, 
+the rate against pulse area is shown in Fig.~\ref{fig:rateVsArea}. The reduction in 
+rate is seen to be consistent across the full distribution.
 
+\begin{figure}[ht!]
+    \centering
+    \subfloat[][Setup for $40\unit{cm}$\label{fig:setup40cmSep}]{\includegraphics[width=0.49\textwidth]{figures/setup40cmSep}}~
+    \subfloat[][Setup for $2\unit{cm}$ with shielding\label{fig:setup2cmSepShield}]{\includegraphics[width=0.49\textwidth]{figures/setup2cmSepShield}}
+    \caption{(a) The setup for the side-by-side rate tests with $40\unit{cm}$ spacing and (b) the setup for the side-by-side rate
+    tests with $2\unit{cm}$ spacing and $12\unit{mm}$ of steel shielding.}
+\end{figure}
+\begin{figure}[ht!]
+    \centering
+    \includegraphics[width=0.6\textwidth]{figures/rateVsSepSideBySide}
+    \caption{The rate against separation for the side by side configuration
+    with no shielding and with shielding between the 
+    scintillator bars shown in black and red, respectively.}
+\end{figure}
+
+\begin{figure}[ht!]
+    \centering
+    \subfloat[][No shielding\label{fig:timeDiffSep40cm}]{\includegraphics[width=0.49\textwidth]{figures/timeDiffSep40cm}}~
+    \subfloat[][Shielding\label{fig:timeDiffSep40cmShield}]{\includegraphics[width=0.49\textwidth]{figures/timeDiffSep40cmShield}}
+    \caption{ The time difference between pulses in the two scintillator bars is shown for a separation 
+    of $40\unit{cm}$ with shielding (a) and without shielding (b).}
+\end{figure}
+
+% \begin{figure}[ht!]
+%     \centering
+%     \includegraphics[width=0.6\textwidth]{figures/rateVsArea}
+%     \caption{The rate against pulse area for two spacings is shown with no shielding and with shielding between 
+%     the scintillator bars in black and red, respectively. The upper lines correspond to a separation
+%     of 2\unit{cm} while the lower lines correspond to a separation of 10\unit{cm}.\label{fig:rateVsArea}}
+% \end{figure}
+
+The scintillator bars were placed end to end, as shown in Fig.~\ref{fig:setup20cmSepEToE}.
+The rate was measured for two separations (20 and 70\unit{cm}) and with lead
+shielding between the bars, as shown in Fig.~\ref{fig:setup20cmSepEToEShield}.
+
+% \begin{figure}[ht!]
+%     \centering
+%     \subfloat[][Setup for $20\unit{cm}$\label{fig:setup20cmSepEToE}]{\includegraphics[width=0.49\textwidth]{figures/setup20cmSepEToE}}~
+%     \subfloat[][Setup for $20\unit{cm}$ with shielding\label{fig:setup20cmSepEToEShield}]{\includegraphics[width=0.49\textwidth]{figures/setup20cmSepEToEShield}}
+%     \caption{(a) The setup for the side-by-side rate tests with $40\unit{cm}$ spacing and (b) the setup for the side-by-side rate
+%     tests with $2\unit{cm}$ spacing and $12\unit{mm}$ of steel shielding.}
+% \end{figure}
+%
+% \begin{figure}[ht!]
+%     \centering
+%     \includegraphics[width=0.6\textwidth]{figures/rateVsSepEndToEnd}
+%     \caption{The rate against separation for the end-to-end configuration
+%     with no shielding and with shielding between the 
+%     scintillator bars shown in black and red, respectively.}
+% \end{figure}
+%
 \subsection{Cosmic/beam muon showers}
 
 To be filled ...
@@ -811,7 +877,20 @@ The following plots represent the trigger efficiency for some of the channels in
 
 \section{Interpretation}
 
-To be filled ...
+An initial approximation of the exclusion limits at 95\% CL 
+is shown in Fig.~\ref{fig:limitPlot}. This uses the legacy simulation
+and signal generation and propagation. Three ``signal regions" are then defined for charges
+of $Q<0.01$, $0.01 < Q < 0.02$ and $Q > 0.02$ with background yields, measured in 
+Figure~\ref{fig:bkgNoBeam}, taken from the regions $\npe < 5$, $5 < \npe < 
+20$ and $\npe > 20$, respectively. The reach is shown to extend to cover masses between
+$\sim0.1$ and 5\unit{GeV} and charges between $\sim0.02$ and $0.1e$.
+
+\begin{figure}[ht!]
+    \centering
+    \includegraphics[width=0.6\textwidth]{figures/LimitPlot_Demo_Split.pdf}
+    \caption{\label{fig:limitPlot} The contours of 95\% CL upper limits
+    are shown for the demonstrator and full milliQan detector.}
+\end{figure}
 
 \section{Summary}
 

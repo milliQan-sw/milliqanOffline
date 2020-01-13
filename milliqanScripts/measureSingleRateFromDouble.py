@@ -74,7 +74,7 @@ def measureDoubleRateAllFiles(outputFile,inputFiles,nPEs,window,quietInRest,sing
     inDir = "/Users/mcitron/milliqanOffline/milliqanScripts/dcRuns/"
     doubleRates = {}
     for nPELow,nPEHigh in zip(nPEs,nPEs[1:]+[9999]):
-        for chans,inputFileName in inputFiles.iteritems():
+        for chans,inputFileName in inputFiles.items():
             inputFile = r.TFile(inDir+"/"+inputFileName)
             inputTree = inputFile.Get("t")
             # outputHist,rate = measureDoubleRate(inputTree,window,chans,nPE,quietInRest,singlePulseAboveThreshInChan,singlePulseInChan)
@@ -132,7 +132,7 @@ def findSingleRates(loopDict,doubleRates,nPE,window):
     yPointsFull = []
     yPointsFullErr = []
     xPointsFull = []
-    for chan,loops in loopDict.iteritems():
+    for chan,loops in loopDict.items():
         outputHistPerChannel = r.TH1D(str(chan)+"PerLoopRates",";chans",len(loops),0,len(loops))
         for iBin in range(1,len(loops)+1):
             outputHistPerChannel.GetXaxis().SetBinLabel(iBin," ".join(str(x) for x in loops[iBin-1]))
@@ -161,7 +161,7 @@ def findSingleRates(loopDict,doubleRates,nPE,window):
 if __name__ == "__main__":
     opts = [True,False]
     for quietInRest in opts:
-        for singlePulseAboveThreshInChan in opts:
+        for singlePulseAboveThreshInChan in [False]:
             for singlePulseInChan in opts:
                 for noPrePulse in opts:
                     optString = ""
@@ -176,7 +176,7 @@ if __name__ == "__main__":
                         optString += "SinglePulseAboveThreshInChan"
                     if noPrePulse:
                         optString += "NoPrePulse"
-                    print "Running Opts: "+optString
+                    print ("Running Opts: "+optString)
                     window = [100,200]
                     source = "source.txt"
                     inputDict = makeInputDict(source)

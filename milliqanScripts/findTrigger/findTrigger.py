@@ -58,6 +58,7 @@ def findTrigger(iFile,oFile,triggerChannels,nCoinc=2,window=100,maxSkip=1,runRan
     else:
         groups = [X for X in triggerGroups if len(set(X).intersection(set(triggerChannels))) > 0]
         groups = list(set(groups))
+    print groups
     print "Running with triggering channels:",triggerChannels
     if len(groups) < nCoinc:
         raise ValueError,"Not enough triggering groups! Check your channel selection"
@@ -71,8 +72,8 @@ def findTrigger(iFile,oFile,triggerChannels,nCoinc=2,window=100,maxSkip=1,runRan
             continue
         if event.file < fileRange[0] or event.file > fileRange[1]:
             continue
-        if iE == 0:
-            continue
+        # if iE == 1:
+        #     continue
         found = {}
         v_triggerN.clear()
         v_triggerTime.clear()
@@ -82,6 +83,8 @@ def findTrigger(iFile,oFile,triggerChannels,nCoinc=2,window=100,maxSkip=1,runRan
         groupsTemp = groups+[]
         triggerCandidatesChannel = [x for _,x in sorted(zip(event.triggerCandidates,event.triggerCandidatesChannel))]
         triggerCandidates = sorted(event.triggerCandidates)
+        # triggerCandidatesChannel = [y for x,y in zip(event.triggerCandidates,event.triggerCandidatesChannel) if x > 100]
+        # triggerCandidates = [x for x in event.triggerCandidates if x > 100]
         # deltas = [triggerCandidates[i] - triggerCandidates[i-1] for i in range(1,len(triggerCandidates))]
         # averageTimeBetweenPulses += sum(deltas)*1./len(deltas)
         skip = 0

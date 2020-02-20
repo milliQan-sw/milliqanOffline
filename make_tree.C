@@ -149,6 +149,7 @@ TH1D * LPFilter(TH1D * hrIn,int butterworthOrder = 2,float filterMin=0.049){
 int numChan=32;
 TArrayI * chanArray;
 int maxEvents=-1; 
+map<int,vector<float>> sidebandPerFile;
 float sideband_range[2] = {0,50}; //in ns
 float triggerBand_range[2] = {360,390}; //in ns
 float presampleStart= 17.5;
@@ -416,6 +417,7 @@ vector<float> * v_presample_mean = new vector<float>();
 vector<float> * v_presample_RMS = new vector<float>();
 vector<float> * v_sideband_mean = new vector<float>();
 vector<float> * v_sideband_RMS = new vector<float>();
+vector<float> * v_sideband_mean_perFile = new vector<float>();
 vector<float> * v_triggerBand_mean = new vector<float>();
 vector<float> * v_triggerBand_max = new vector<float>();
 vector<float> * v_triggerBand_maxTime = new vector<float>();
@@ -461,6 +463,7 @@ void make_tree(TString fileName, int eventNum=-1, TString tag="",float rangeMinX
 void loadFillList(TString fillFile=milliqanOfflineDir+"processedFillList2018.txt");
 vector<TString> getFieldFileList(TString location);
 void loadFieldList(TString fieldFile);
+void loadSidebandList(TString sidebandFile);
 void loadPhotonList(TString photonFile);
 tuple<int,int,float,float,float, float> findFill(int seconds);
 int findField(int seconds);
@@ -482,7 +485,7 @@ void h1cosmetic(TH1D* hist,int ic);
 void getFileCreationTime(const char *path);
 vector<int> eventsPrinted(32,0);
 TString displayDirectory;
-void writeVersion();
+void writeVersion(bool);
 string GetStdoutFromCommand(string cmd);
 
 pair<float,float> measureSideband(int ic, float start, float end);
@@ -742,9 +745,12 @@ if (injectSignalQ > 0) {
     if (runDRS){
 	milliqanOfflineDir+="DRS/";
     }
+    if (applyLPFilter) version += "_filtered";
 
     TString treeDirectory= milliqanOfflineDir+"trees_"+version+"/Run"+to_string(runNum)+"_"+configName+signalString+"/";
-    TString linkDirectory= milliqanOfflineDir+"trees/Run"+to_string(runNum)+"_"+configName+signalString+"/";
+    TString linkDirectory;
+    if (applyLPFilter) linkDirectory= milliqanOfflineDir+"trees_filtered/Run"+to_string(runNum)+"_"+configName+signalString+"/";
+    else linkDirectory= milliqanOfflineDir+"trees/Run"+to_string(runNum)+"_"+configName+signalString+"/";
 
     if (injectPulses) baseFileName.ReplaceAll(runNumber,"-"+runNumber);
     if (injectSignalQ > 0) baseFileName.ReplaceAll(runNumber,to_string(runNum));
@@ -755,7 +761,8 @@ if (injectSignalQ > 0) {
 	    offsetSignalQ += 1;
 	    runNum += 1;
 	    treeDirectory= milliqanOfflineDir+"trees_"+version+"/Run"+to_string(runNum)+"_"+configName+signalString+"/";
-	    linkDirectory= milliqanOfflineDir+"trees/Run"+to_string(runNum)+"_"+configName+signalString+"/";
+	    if (applyLPFilter) linkDirectory= milliqanOfflineDir+"trees_filtered/Run"+to_string(runNum)+"_"+configName+signalString+"/";
+	    else linkDirectory = milliqanOfflineDir+"trees/Run"+to_string(runNum)+"_"+configName+signalString+"/";
 	    baseFileName.ReplaceAll(to_string(runNum-1),to_string(runNum));
 	    outFileName = treeDirectory+baseFileName+"_"+version+".root";
 	}
@@ -790,7 +797,7 @@ if (injectSignalQ > 0) {
 	outFile = new TFile(outFileName,"recreate");
 	outTree = new TTree("t","t");
 	prepareOutBranches();
-	writeVersion();
+	writeVersion(applyLPFilter);
     }
 
 
@@ -806,6 +813,11 @@ if (injectSignalQ > 0) {
 
 
     //if(!displayMode)
+    std::vector<float> zeros(32,0.);
+    sidebandPerFile[fileNum] = zeros;
+    if (!runDRS){
+	loadSidebandList(Form("/net/cms26/cms26r0/milliqan/haddedTrees/sideband_files/sideband_mean_run_%i.txt",runNum));
+    }
 
 
     //Load entry 0 in order to get timestamp of first event to find corret field information
@@ -1027,6 +1039,10 @@ void prepareWave(int ic, float &sb_meanPerEvent, float &sb_RMSPerEvent, float &s
     for(int ibin = 1; ibin <= waves[ic]->GetNbinsX(); ibin++){
 	waves[ic]->SetBinContent(ibin,waves[ic]->GetBinContent(ibin)-meanCalib[ic]);
     }
+    //subtract per file mean
+    for(int ibin = 1; ibin <= waves[ic]->GetNbinsX(); ibin++){
+	waves[ic]->SetBinContent(ibin,waves[ic]->GetBinContent(ibin)-sidebandPerFile[fileNum][ic]);
+    }
     if (injectPulses && ic != 15){
 	int injectPulsesStartBin = waves[ic]->FindBin(200.-channelCalibrations[ic]);
 	TH1D * generatedTemplate = SPEGen(sample_rate[ic/16],tubeSpecies[ic],channelSPEAreas[ic],ic/16);
@@ -1079,8 +1095,8 @@ void prepareWave(int ic, float &sb_meanPerEvent, float &sb_RMSPerEvent, float &s
     sb_triggerMaxPerEvent = max_timeMax_trigger.first;
     sb_timeTriggerMaxPerEvent = max_timeMax_trigger.second;
 
-    // Subtract dynamically measured pedestal for CH30, which has time dependent variations
-    if (ic == 30) {
+    // Subtract dynamically measured pedestal for channel 30
+    if (ic == 30){
 	for(int ibin = 1; ibin <= waves[ic]->GetNbinsX(); ibin++){
 	    waves[ic]->SetBinContent(ibin,waves[ic]->GetBinContent(ibin)-mean_rms.first);
 	}
@@ -1155,6 +1171,7 @@ vector< vector<float> > processChannel(int ic,bool applyLPFilter, bool injectPul
     v_triggerBand_maxTime->push_back(sb_timeTriggerMaxPerEvent);	
     v_sideband_mean_calib->push_back(sb_mean);
     v_sideband_RMS_calib->push_back(sb_RMS);	
+    v_sideband_mean_perFile->push_back(sidebandPerFile[fileNum][ic]);
     float maxThreeConsec = -100;
     for (int iBin = 1; iBin < waves[ic]->GetNbinsX(); iBin++){
 	float maxList[] = {waves[ic]->GetBinContent(iBin),waves[ic]->GetBinContent(iBin+1),waves[ic]->GetBinContent(iBin+2)};
@@ -1788,6 +1805,7 @@ void prepareOutBranches(){
     TBranch * b_presample_RMS = outTree->Branch("presample_RMS",&v_presample_RMS);
     TBranch * b_sideband_mean = outTree->Branch("sideband_mean",&v_sideband_mean);
     TBranch * b_sideband_RMS = outTree->Branch("sideband_RMS",&v_sideband_RMS);
+    TBranch * b_sideband_mean_perFile = outTree->Branch("sideband_mean_perFile",&v_sideband_mean_perFile);
     TBranch * b_triggerBand_mean = outTree->Branch("triggerBand_mean",&v_triggerBand_mean);
     TBranch * b_triggerBand_max = outTree->Branch("triggerBand_max",&v_triggerBand_max);
     TBranch * b_triggerBand_maxTime = outTree->Branch("triggerBand_maxTime",&v_triggerBand_maxTime);
@@ -1871,6 +1889,7 @@ void prepareOutBranches(){
     outTree->SetBranchAddress("presample_RMS",&v_presample_RMS,&b_presample_RMS);
     outTree->SetBranchAddress("sideband_mean",&v_sideband_mean,&b_sideband_mean);
     outTree->SetBranchAddress("sideband_RMS",&v_sideband_RMS,&b_sideband_RMS);
+    outTree->SetBranchAddress("sideband_mean_perFile",&v_sideband_mean_perFile,&b_sideband_mean_perFile);
     outTree->SetBranchAddress("triggerBand_mean",&v_triggerBand_mean,&b_triggerBand_mean);
     outTree->SetBranchAddress("triggerBand_max",&v_triggerBand_max,&b_triggerBand_max);
     outTree->SetBranchAddress("triggerBand_maxTime",&v_triggerBand_maxTime,&b_triggerBand_maxTime);
@@ -1922,6 +1941,7 @@ void clearOutBranches(){
     v_delay->clear();
     v_sideband_mean->clear();
     v_sideband_RMS->clear();
+    v_sideband_mean_perFile->clear();
     v_triggerBand_mean->clear();
     v_triggerBand_max->clear();
     v_triggerBand_maxTime->clear();
@@ -1954,11 +1974,13 @@ void h1cosmetic(TH1D *hist,int ic){
 
 }
 
-void writeVersion(){
+void writeVersion(bool applyLPFilter){
     string version = "longtagplaceholder";
     //string version = GetStdoutFromCommand("git describe --tags --long");
-    cout<<"Git tag is "<<version<<endl;
-    TNamed v("tag",version);
+    cout<<"Git tag is "<<version+"_filtered"<<endl;
+    TNamed v;
+    if (applyLPFilter) v = TNamed("tag",version+"_filtered");
+    else v= TNamed("tag",version);
     v.Write();
 
 }
@@ -2188,7 +2210,23 @@ void loadPhotonList(TString photonFile){
     }
     cout<<"Loaded photon time file"<<photonFile<<", "<<photonList.size()<<" photon measurements."<<endl;
 }
+void loadSidebandList(TString sidebandFile){
+    int file;
+    float sb0,sb1,sb2,sb3,sb4,sb5,sb6,sb7,sb8,sb9,sb10,sb11,sb12,sb13,sb14,sb15,sb16,sb17,sb18,sb19,sb20,sb21,sb22,sb23,sb24,sb25,sb26,sb27,sb28,sb29,sb30,sb31;
+    ifstream infile;
+    infile.open(sidebandFile); 
+    if (infile.good()){
+	while(infile >> file >> sb0 >> sb1 >>sb2 >>sb3 >>sb4 >>sb5 >>sb6 >>sb7 >>sb8 >>sb9 >>sb10 >>sb11 >>sb12 >>sb13 >>sb14 >>sb15 >>sb16 >>sb17 >>sb18 >>sb19 >>sb20 >>sb21 >>sb22 >>sb23 >>sb24 >>sb25 >>sb26 >>sb27 >>sb28 >>sb29 >>sb30 >>sb31){
+	    vector<float> sideband = {sb0,sb1,sb2,sb3,sb4,sb5,sb6,sb7,sb8,sb9,sb10,sb11,sb12,sb13,sb14,sb15,sb16,sb17,sb18,sb19,sb20,sb21,sb22,sb23,sb24,sb25,sb26,sb27,sb28,sb29,sb30,sb31};
+	    sidebandPerFile[file] = sideband;
+	}
+    }
+    else {
+	std::cout << "sideband file doesn't exist - per file correction will be 0" << std::endl;
 
+    }
+
+}
 void loadFieldList(TString fieldFile){
     string timestamp;
     int seconds;

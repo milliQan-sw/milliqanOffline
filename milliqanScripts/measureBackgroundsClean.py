@@ -11,15 +11,16 @@ from array import array
 import pandas as pd
 from progressbar import ProgressBar
 import numpy as np
-# layersMap = {1:[24,25],2:[16,17],3:[22,23]}
 layersMap = {1:[0,1,24,25,8,9],2:[6,7,16,17,12,13],3:[2,3,22,23,4,5]}
 allBars = [0,1,24,25,8,9,6,7,16,17,12,13,2,3,22,23,4,5]
+restrictList = set([24,25,16,17,22,23])
 
 d = os.path.dirname(os.path.abspath(__file__))
-versionTag = "V16_noPrePulseAddPanelTEST"
+versionTag = "V16_noPrePulseAddPanelPlusSlab_verifyPrintOut"
 inputArray = np.loadtxt(d+"/timeCalcV16_withExtraRuns.txt",delimiter=":")
 timingSel = 15
 tagOrig = "signalInjectionStudies191204{0}_{1}ns".format(versionTag,timingSel)
+inputArray = np.array([x for x in inputArray])
 beamTime = sum(inputArray[:,1]*inputArray[:,3])
 noBeamTime = sum(inputArray[:,2]*inputArray[:,4])
 totalRunTime = {"beam":beamTime,"noBeam":noBeamTime}
@@ -317,8 +318,6 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
             runTimeDict[entry[0]] = entry[1]*entry[3]/3600.
         else:
             runTimeDict[entry[0]] = entry[2]*entry[4]/3600.
-    print (runTimeDict)
-    print (len(allPaths["Straight"]))
     for path in range(-1,2*(len(allPaths["Straight"]))):
         if path == -1:
             totalEffsPerPath[path] = r.TH1D("pathTupleAll",";nPE;",len(binsNPE)-1,binsNPE)
@@ -403,6 +402,7 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
                 Qs.append((tree.nPE[iC]*npeCorrDict[tree.chan[iC]])**0.5)
         nTot += 1
         chansHit = set(chans)
+        # if len(chansHit & restrictList) == 0: continue
         if 15 in chansHit:
             chansHit.remove(15)
         #Only N chans hit
@@ -590,10 +590,11 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
                     rateVsRunBentNPE10.Fill(tree.run,1./runTimeDict[tree.run])
         # if maxNPE > 10 and (maxNPE/minNPE) > 3: continue
         # if (maxNPE-minNPE)/((minNPE + maxNPE)**0.5) > 3: continue
-        if abs(maxDeltaT) < timingSel and not panelPresent:
-            nPassTiming += 1
+        if (abs(maxDeltaT) < timingSel or abs(abs(maxDeltaT/timingSel) - 1) < 0.01) and not panelPresent:
+            if not (abs(maxDeltaT/timingSel - 1) < 0.01):
+                nPassTiming += 1
             # if maxNPECorr/minNPECorr < 5: 
-            if True:
+            # if True:
                 nPassMaxMin += 1
                 if len(sels) > 0:
                     if tuple(sorted(list(chanSet))) in allPaths["Straight"]:
@@ -715,7 +716,6 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
     if signal:
         return None,None
     for plotType,plots in outputPlots.items():
-        print (plotType)
         outDir = outputFile.mkdir(plotType)
         outDir.cd()
         outDirValid = outDir.mkdir("allPaths")
@@ -753,7 +753,6 @@ def makeABCDPredictions(inputFile,beamString,blind,nPEStrings,deltaTStrings,sele
             if pathType == "Slabs":continue
             for path in paths:
                 if path not in pathList:
-                    print ("{0}Vs{1}{2}/allPaths/{3}_{0}_{1}{2}".format("NPEMin",deltaTString,"NoOtherPulse","_".join(str(x) for x in path)))
                     straightPlot = inputFile.Get("{0}Vs{1}{2}/allPaths/{3}_{0}_{1}{2}".format("NPEMin",deltaTString,"NoOtherPulse","_".join(str(x) for x in path)))
                     straightDeltaT = straightPlot.ProjectionY()
                     straightDeltaT.Scale(3600./totalRunTime[beamString])
@@ -868,7 +867,6 @@ def makeABCDPredictions(inputFile,beamString,blind,nPEStrings,deltaTStrings,sele
                             straightDeltaT.SetName(pathType+"Straight"+plusSlab+"_"+deltaTString)
                             bentDeltaT.SetName(pathType+"BentSameDigi"+plusSlab+"_"+deltaTString)
                             if not scaleByPath:
-                                print (selection,deltaTString,pathType+"Straight"+plusSlab)
                                 validationHists[selection,deltaTString,pathType+"Straight"+plusSlab] = straightDeltaT
                                 validationHists[selection,deltaTString,pathType+"BentSameDigi"+plusSlab] = bentDeltaT
         validDir = outputDirSel.mkdir("validation")
@@ -894,7 +892,7 @@ if __name__=="__main__":
     useSaved = False
     beamString = "beam"
     signal = False
-    for beamString in ["beam","noBeam"][:-1]:
+    for beamString in ["beam","noBeam"]:
         if signal and beamString == "noBeam":
             continue
         if beamString  == "beam" and not signal:
@@ -912,6 +910,7 @@ if __name__=="__main__":
                 tag = tagOrig
                 # inputFile = r.TFile("{0}TwoLayerHitsOrThreeSlabHits.root".format(beamString))
                 # inputFile = r.TFile("../allTrees/allPhysicsAndTripleChannelSinceTS1_threeLayerHitPlusSlab_191204.root".format(beamString))
+                # inputFile = r.TFile("/Users/mcitron/Downloads/atLeastOneHitPerLayer_Physics_2018.root".format(beamString))
                 inputFile = r.TFile("../allTrees/allPhysicsAndTripleChannelSinceTS1_threeLayerHit_191204.root".format(beamString))
                 signalNorm = None
             slabs = [18,20,28]

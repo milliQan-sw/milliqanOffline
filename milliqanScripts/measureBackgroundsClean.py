@@ -16,7 +16,7 @@ allBars = [0,1,24,25,8,9,6,7,16,17,12,13,2,3,22,23,4,5]
 restrictList = set([24,25,16,17,22,23])
 
 d = os.path.dirname(os.path.abspath(__file__))
-versionTag = "V16_noPrePulseAddPanelPlusSlab_verifyPrintOut"
+versionTag = "V16_finalForPreliminaryLimit"
 inputArray = np.loadtxt(d+"/timeCalcV16_withExtraRuns.txt",delimiter=":")
 timingSel = 15
 tagOrig = "signalInjectionStudies191204{0}_{1}ns".format(versionTag,timingSel)
@@ -24,6 +24,8 @@ inputArray = np.array([x for x in inputArray])
 beamTime = sum(inputArray[:,1]*inputArray[:,3])
 noBeamTime = sum(inputArray[:,2]*inputArray[:,4])
 totalRunTime = {"beam":beamTime,"noBeam":noBeamTime}
+# print (totalRunTime)
+# exit()
 #col,row,layer,type (xyz) 
 
 npeCorrDictDataOvSim = {0:0.598,
@@ -178,13 +180,13 @@ def preparePaths(badChans = [6,4],slabs=[18,20,28]):
     bentSameDigiPlusSlab = []
     badBentSameDigiPlusSlab = []
     noBadBentSameDigiPlusSlab = []
-    straightPlusAnySlab = []
-    badStraightPlusAnySlab = []
-    noBadStraightPlusAnySlab = []
-    bentSameDigiPlusAnySlab = []
-    badBentSameDigiPlusAnySlab = []
-    noBadBentSameDigiPlusAnySlab = []
-    bentDiffDigiPlusAnySlab = []
+    straightPlusTwoOrMoreSlabs = []
+    badStraightPlusTwoOrMoreSlabs = []
+    noBadStraightPlusTwoOrMoreSlabs = []
+    bentSameDigiPlusTwoOrMoreSlabs = []
+    badBentSameDigiPlusTwoOrMoreSlabs = []
+    noBadBentSameDigiPlusTwoOrMoreSlabs = []
+    bentDiffDigiPlusTwoOrMoreSlabs = []
     slabPaths = {}
     for iC1,chan1 in enumerate(layersMap[1]):
         for iC2,chan2 in enumerate(layersMap[2]):
@@ -199,10 +201,10 @@ def preparePaths(badChans = [6,4],slabs=[18,20,28]):
                 pathsPlus4Slab = []
                 pathsPlus4Slab.append(tuple(sorted(set([18,20,21,28,chan1,chan2,chan3]))))
                 pathsPlus1Slab = []
-                pathsPlus1Slab.append(pathPlusSlab1)
-                pathsPlus1Slab.append(pathPlusSlab2)
-                pathsPlus1Slab.append(pathPlusSlab3)
-                pathsPlus1Slab.append(pathPlusSlab4)
+                # pathsPlus1Slab.append(pathPlusSlab1)
+                # pathsPlus1Slab.append(pathPlusSlab2)
+                # pathsPlus1Slab.append(pathPlusSlab3)
+                # pathsPlus1Slab.append(pathPlusSlab4)
                 for ix,x in enumerate([18,21,28,20]):
                     for iy,y in enumerate([18,21,28,20]):
                         if ix < iy:
@@ -229,21 +231,21 @@ def preparePaths(badChans = [6,4],slabs=[18,20,28]):
                     straightPlusThreeSlab.extend(pathsPlus3Slab)
                     straightPlusFourSlab.extend(pathsPlus4Slab)
 
-                    straightPlusAnySlab.extend(pathsPlus1Slab+pathsPlus2Slab+pathsPlus3Slab+pathsPlus4Slab)
+                    straightPlusTwoOrMoreSlabs.extend(pathsPlus1Slab+pathsPlus2Slab+pathsPlus3Slab+pathsPlus4Slab)
                     if chan1 in badChans or chan2 in badChans or chan3 in badChans:
                         badStraight.append(path)
                         badStraightPlusSlab.append(pathPlusSlab1)
                         badStraightPlusSlab.append(pathPlusSlab2)
                         badStraightPlusSlab.append(pathPlusSlab3)
                         badStraightPlusSlab.append(pathPlusSlab4)
-                        badStraightPlusAnySlab.extend(pathsPlus1Slab+pathsPlus2Slab+pathsPlus3Slab+pathsPlus4Slab)
+                        badStraightPlusTwoOrMoreSlabs.extend(pathsPlus1Slab+pathsPlus2Slab+pathsPlus3Slab+pathsPlus4Slab)
                     else:
                         noBadStraight.append(path)
                         noBadStraightPlusSlab.append(pathPlusSlab1)
                         noBadStraightPlusSlab.append(pathPlusSlab2)
                         noBadStraightPlusSlab.append(pathPlusSlab3)
                         noBadStraightPlusSlab.append(pathPlusSlab4)
-                        noBadStraightPlusAnySlab.extend(pathsPlus1Slab+pathsPlus2Slab+pathsPlus3Slab+pathsPlus4Slab)
+                        noBadStraightPlusTwoOrMoreSlabs.extend(pathsPlus1Slab+pathsPlus2Slab+pathsPlus3Slab+pathsPlus4Slab)
                 else:
                     if int(chan1/16) == int(chan2/16) and int(chan2/16) == int(chan3/16):
                         bentSameDigi.append(path)
@@ -251,36 +253,36 @@ def preparePaths(badChans = [6,4],slabs=[18,20,28]):
                         bentSameDigiPlusSlab.append(pathPlusSlab2)
                         bentSameDigiPlusSlab.append(pathPlusSlab3)
                         bentSameDigiPlusSlab.append(pathPlusSlab4)
-                        bentSameDigiPlusAnySlab.extend(pathsPlus1Slab+pathsPlus2Slab+pathsPlus3Slab+pathsPlus4Slab)
+                        bentSameDigiPlusTwoOrMoreSlabs.extend(pathsPlus1Slab+pathsPlus2Slab+pathsPlus3Slab+pathsPlus4Slab)
                         if chan1 in badChans or chan2 in badChans or chan3 in badChans:
                             badBentSameDigi.append(path)
                             badBentSameDigiPlusSlab.append(pathPlusSlab1)
                             badBentSameDigiPlusSlab.append(pathPlusSlab2)
                             badBentSameDigiPlusSlab.append(pathPlusSlab3)
                             badBentSameDigiPlusSlab.append(pathPlusSlab4)
-                            badBentSameDigiPlusAnySlab.extend(pathsPlus1Slab+pathsPlus2Slab+pathsPlus3Slab+pathsPlus4Slab)
+                            badBentSameDigiPlusTwoOrMoreSlabs.extend(pathsPlus1Slab+pathsPlus2Slab+pathsPlus3Slab+pathsPlus4Slab)
                         else:
                             noBadBentSameDigi.append(path)
                             noBadBentSameDigiPlusSlab.append(pathPlusSlab1)
                             noBadBentSameDigiPlusSlab.append(pathPlusSlab2)
                             noBadBentSameDigiPlusSlab.append(pathPlusSlab3)
                             noBadBentSameDigiPlusSlab.append(pathPlusSlab4)
-                            noBadBentSameDigiPlusAnySlab.extend(pathsPlus1Slab+pathsPlus2Slab+pathsPlus3Slab+pathsPlus4Slab)
+                            noBadBentSameDigiPlusTwoOrMoreSlabs.extend(pathsPlus1Slab+pathsPlus2Slab+pathsPlus3Slab+pathsPlus4Slab)
                     else:
                         bentDiffDigi.append(path)
                         bentDiffDigiPlusSlab.append(pathPlusSlab1)
                         bentDiffDigiPlusSlab.append(pathPlusSlab2)
                         bentDiffDigiPlusSlab.append(pathPlusSlab3)
                         bentDiffDigiPlusSlab.append(pathPlusSlab4)
-                        bentDiffDigiPlusAnySlab.extend(pathsPlus1Slab+pathsPlus2Slab+pathsPlus3Slab+pathsPlus4Slab)
+                        bentDiffDigiPlusTwoOrMoreSlabs.extend(pathsPlus1Slab+pathsPlus2Slab+pathsPlus3Slab+pathsPlus4Slab)
     # paths.extend(extraPaths)
     # paths.append(slabs)
     allPaths={"Straight1":[(0,2,6)],"Straight2":[(1,3,7)],"Straight3":[(16,22,24)],"Straight4":[(17,23,25)],"Straight5":[(4,8,12)],"Straight6":[(5,9,13)],"Straight":straight,"badStraight":badStraight,"noBadStraight":noBadStraight,"BentSameDigi":bentSameDigi,
             "badBentSameDigi":badBentSameDigi,"noBadBentSameDigi":noBadBentSameDigi,"BentDiffDigi":bentDiffDigi,"Slabs":[slabs],"ExtraPaths":extraPaths,
             "StraightPlusSlab":straightPlusSlab,"StraightPlusTwoSlab":straightPlusTwoSlab,"StraightPlusThreeSlab":straightPlusThreeSlab,"StraightPlusFourSlab":straightPlusFourSlab,"badStraightPlusSlab":badStraightPlusSlab,"noBadStraightPlusSlab":noBadStraightPlusSlab,"BentSameDigiPlusSlab":bentSameDigiPlusSlab,
             "badBentSameDigiPlusSlab":badBentSameDigiPlusSlab,"noBadBentSameDigiPlusSlab":noBadBentSameDigiPlusSlab,"BentDiffDigi":bentDiffDigiPlusSlab,"Slabs":[slabs],"ExtraPaths":extraPaths,
-            "StraightPlusAnySlab":straightPlusAnySlab,"badStraightPlusAnySlab":badStraightPlusAnySlab,"noBadStraightPlusAnySlab":noBadStraightPlusAnySlab,"BentSameDigiPlusAnySlab":bentSameDigiPlusAnySlab,
-            "badBentSameDigiPlusAnySlab":badBentSameDigiPlusAnySlab,"noBadBentSameDigiPlusAnySlab":noBadBentSameDigiPlusAnySlab,"BentDiffDigi":bentDiffDigiPlusAnySlab}
+            "StraightPlusTwoOrMoreSlabs":straightPlusTwoOrMoreSlabs,"badStraightPlusTwoOrMoreSlabs":badStraightPlusTwoOrMoreSlabs,"noBadStraightPlusTwoOrMoreSlabs":noBadStraightPlusTwoOrMoreSlabs,"BentSameDigiPlusTwoOrMoreSlabs":bentSameDigiPlusTwoOrMoreSlabs,
+            "badBentSameDigiPlusTwoOrMoreSlabs":badBentSameDigiPlusTwoOrMoreSlabs,"noBadBentSameDigiPlusTwoOrMoreSlabs":noBadBentSameDigiPlusTwoOrMoreSlabs,"BentDiffDigi":bentDiffDigiPlusTwoOrMoreSlabs}
     return allPaths,paths
 def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStrings,selections,slabs,signal):
     npeCorrDict = {}
@@ -300,7 +302,7 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
     nPassSidebandRMS = 0
     nPassStraightPath = 0
     nPassStraightPlusSlabPath = 0
-    nPassStraightPlusAnySlabPath = 0
+    nPassStraightPlusTwoOrMoreSlabsPath = 0
     nPassOnePulse = 0
     nPassPulseTimeSelection = 0
     nPassTiming = 0
@@ -324,9 +326,9 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
         elif path < (len(allPaths["Straight"])):
             totalEffsPerPath[path] = r.TH1D("pathTuple"+"_".join(str(x) for x in allPaths["Straight"][path]),";nPE;",len(binsNPE)-1,binsNPE)
         else:
-            totalEffsPerPath[path] = r.TH1D("pathTuplePlusAnySlab"+"_".join(str(x) for x in allPaths["Straight"][path-(len(allPaths["Straight"]))]),";nPE;",len(binsNPE)-1,binsNPE)
+            totalEffsPerPath[path] = r.TH1D("pathTuplePlusTwoOrMoreSlabs"+"_".join(str(x) for x in allPaths["Straight"][path-(len(allPaths["Straight"]))]),";nPE;",len(binsNPE)-1,binsNPE)
     totalEffsPerPath["Straight"] = r.TH1D("pathTupleStraight",";nPE;",len(binsNPE)-1,binsNPE)
-    totalEffsPerPath["StraightPlusAnySlab"] = r.TH1D("pathTupleStraightPlusAnySlab",";nPE;",len(binsNPE)-1,binsNPE)
+    totalEffsPerPath["StraightPlusTwoOrMoreSlabs"] = r.TH1D("pathTupleStraightPlusTwoOrMoreSlabs",";nPE;",len(binsNPE)-1,binsNPE)
     totalEffsPerPath["StraightPlusSlab"] = r.TH1D("pathTupleStraightPlusSlab",";nPE;",len(binsNPE)-1,binsNPE)
     if beamString == "beam":
         beamReq = True
@@ -540,14 +542,14 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
         minDeltaT = min(allDeltaTs,key = lambda x:abs(x))
         maxDeltaT = max(allDeltaTs,key = lambda x:abs(x))
         if blind:
-            if tuple(sorted(list(chanSet))) in allPaths["Straight"] or tuple(sorted(list(chanSet))) in allPaths["StraightPlusSlab"] or tuple(sorted(list(chanSet))) in allPaths["StraightPlusAnySlab"]:
+            if tuple(sorted(list(chanSet))) in allPaths["Straight"] or tuple(sorted(list(chanSet))) in allPaths["StraightPlusSlab"] or tuple(sorted(list(chanSet))) in allPaths["StraightPlusTwoOrMoreSlabs"]:
                 if abs(maxDeltaT) < timingSel: continue
                 if abs(abs(maxDeltaT/timingSel) - 1) < 0.01: continue
 
         if not signal:
             tree.scale1fb = 1./37.
         if abs(maxDeltaT) < 100 and not panelPresent:
-            if tuple(sorted(list(chanSet))) in (allPaths["BentSameDigi"]+allPaths["Straight"]+allPaths["BentSameDigiPlusAnySlab"]+allPaths["StraightPlusAnySlab"]):
+            if tuple(sorted(list(chanSet))) in (allPaths["BentSameDigi"]+allPaths["Straight"]+allPaths["BentSameDigiPlusTwoOrMoreSlabs"]+allPaths["StraightPlusTwoOrMoreSlabs"]):
                 #npe,time,chan
                 if len(pulses) >= 4:
                     for layer,pulseList in pulses.items():
@@ -611,9 +613,9 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
                         chanSetBars = [x for x in chanSet if x in allBars]
                         pathIndex = 6+allPaths["Straight"].index(tuple(sorted(list(chanSetBars))))
                         totalEffsPerPath[pathIndex].Fill(minNPE)
-                    if tuple(sorted(list(chanSet))) in allPaths["StraightPlusAnySlab"]:
-                        totalEffsPerPath["StraightPlusAnySlab"].Fill(minNPE,tree.scale1fb*37.)
-                        nPassStraightPlusAnySlabPath += tree.scale1fb*37.
+                    if tuple(sorted(list(chanSet))) in allPaths["StraightPlusTwoOrMoreSlabs"]:
+                        totalEffsPerPath["StraightPlusTwoOrMoreSlabs"].Fill(minNPE,tree.scale1fb*37.)
+                        nPassStraightPlusTwoOrMoreSlabsPath += tree.scale1fb*37.
                         # if maxNPE < 100:
                         #     nPassMaxNPE += 1
                         # if maxNPE/minNPE > 2: 
@@ -697,7 +699,7 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
         print( "Timing",nPassTiming*1./nTot)
         print( "Straight",nPassStraightPath*1.)
         print( "StraightPlusSlab",nPassStraightPlusSlabPath*1.)
-        print( "StraightPlusAnySlab",nPassStraightPlusAnySlabPath*1.)
+        print( "StraightPlusTwoOrMoreSlabs",nPassStraightPlusTwoOrMoreSlabsPath*1.)
     # overallEff = r.TH1D("eff",";eff",6,0,6)
     # overallEffPerPath = r.TH2D("effVsNPE",";eff",6,0,6)
     # overallEff.SetBinContent(1,nPassQuiet*1./nTot)
@@ -768,7 +770,7 @@ def makeABCDPredictions(inputFile,beamString,blind,nPEStrings,deltaTStrings,sele
                 if nPEString == "": continue
                 outputDirNPE = outputDirDT.mkdir(nPEString)
                 outputDirNPE.cd()
-                for plusSlab in ["","PlusAnySlab"]:
+                for plusSlab in ["","PlusSlab","PlusTwoOrMoreSlabs"]:
                     for pathType in ["","bad","noBad"]:
                         if pathType == "":
                             pathTypeString = "All"+plusSlab
@@ -871,7 +873,7 @@ def makeABCDPredictions(inputFile,beamString,blind,nPEStrings,deltaTStrings,sele
                                 validationHists[selection,deltaTString,pathType+"BentSameDigi"+plusSlab] = bentDeltaT
         validDir = outputDirSel.mkdir("validation")
         for pathType in ["","bad","noBad"]:
-            for plusSlab in ["","PlusAnySlab"]:
+            for plusSlab in ["","PlusTwoOrMoreSlabs"]:
                 validDirPathDirStraight = validDir.mkdir(pathType+"Straight"+plusSlab)
                 validDirPathDirStraight.cd()
                 for deltaTString in deltaTStrings[1:]:

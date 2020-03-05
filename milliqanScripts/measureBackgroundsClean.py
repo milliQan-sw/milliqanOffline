@@ -32,7 +32,7 @@ channelSPEAreasNew = [62.,54.,73.,55.,62.,74.,68.,69.,92.,61.,85.,80.,51.,76.,65
 
 npeCorrDictDataOvSim = {}
 for iC in range(len(channelSPEAreasOld)):
-    npeCorrDictDataOvSim[iC] = channelSPEAreasOld[iC]/channelSPEAreasNew[iC]
+    npeCorrDictDataOvSim[iC] = channelSPEAreasNew[iC]/channelSPEAreasOld[iC]
 
 npeForQ1Sim = {0:5300, 1:3900, 2:4300, 3:6000, 4:4000,
             6:3300, 7:5900, 12:4700, 13:3400, 16:9000,

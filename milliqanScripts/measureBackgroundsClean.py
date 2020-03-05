@@ -364,7 +364,10 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
                     nPECorrs.append(tree.nPE[iC]*npeCorrDict[tree.chan[iC]]*5000)
                 else:
                     nPECorrs.append(tree.nPE[iC]*npeCorrDict[tree.chan[iC]]*400)
-                Qs.append((tree.nPE[iC]*npeCorrDict[tree.chan[iC]])**0.5)
+                if tree.nPE[iC] > 0:
+                    Qs.append((tree.nPE[iC]*npeCorrDict[tree.chan[iC]])**0.5)
+                else:
+                    Qs.append(0)
         nTot += 1
         chansHit = set(chans)
         # if len(chansHit & restrictList) == 0: continue

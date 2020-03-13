@@ -16,7 +16,7 @@ allBars = [0,1,24,25,8,9,6,7,16,17,12,13,2,3,22,23,4,5]
 restrictList = set([24,25,16,17,22,23])
 
 d = os.path.dirname(os.path.abspath(__file__))
-versionTag = "V16_finalForPreliminaryLimitNewSideband_addNPECorrAddMaxMin10"
+versionTag = "V16_finalForPreliminaryLimitNewSideband_addNPECorrAddMaxMin10AlterCosmicVeto"
 inputArray = np.loadtxt(d+"/timeCalcV16_withExtraRuns.txt",delimiter=":")
 timingSel = 15
 tagOrig = "{0}_{1}ns".format(versionTag,timingSel)
@@ -24,8 +24,6 @@ inputArray = np.array([x for x in inputArray])
 beamTime = sum(inputArray[:,1]*inputArray[:,3])
 noBeamTime = sum(inputArray[:,2]*inputArray[:,4])
 totalRunTime = {"beam":beamTime,"noBeam":noBeamTime}
-# print (totalRunTime)
-# exit()
 #col,row,layer,type (xyz) 
 channelSPEAreasOld = [62.,66.,77.,65.,68.,84.,70.,75.,100.,62.,85.,80.,60.,95.,65.,1.,48.,46.,80.,82.,60.,80.,118.,52.,46.,32.,60.,73.,70.,47.,75.,65.]
 channelSPEAreasNew = [62.,54.,73.,55.,62.,74.,68.,69.,92.,61.,85.,80.,51.,76.,65.,1.,52.,47.,80.,82.,60.,80.,86.,40.,51.,30.,60.,73.,70.,47.,75.,65.]
@@ -39,6 +37,13 @@ npeForQ1Sim = {0:5300, 1:3900, 2:4300, 3:6000, 4:4000,
             8:3200, 9:6300, 17:4900, 24:7200, 25:6400,
             5:6400, 22:2300, 23:3800, 27:45, 29:25, 30:65, 19:45, 31:50, 26:50,
             10:21, 11:40, 14:24,18:300, 20:390, 21: 410, 28:190,15:1}
+# npeForQ1UpdatedCalibration = {
+# 0   :3600, 1   :5500, 2   :4300, 3   :6300, 4   :4800, 
+# 5   :4700, 6   :3800, 7   :5300, 8   :3300, 9   :5700,
+# 12  :5200, 13  :4100, 16  :6200, 17  :4700, 22  :1900,
+# 23  :3800, 24  :4400, 25  :7000, 
+# 27:45, 29:25, 30:65, 19:45, 31:50, 26:50,
+# 10:21, 11:40, 14:24,18:300, 20:390, 21: 410, 28:190,15:1}
 
 npeCorrDictSimOvData = {}
 for x,y in npeCorrDictDataOvSim.items():
@@ -103,6 +108,7 @@ firstPulseTimeWithSlab = r.TH1D("firstPulseTimeWithSlab",";time;",240,0,600)
 chanMultWithSlab = r.TH1D("chanMultWithSlab",";chan;",32,0,32)
 chanMultNoAfterWithSlab = r.TH1D("chanMultNoAfterWithSlab",";chan;",32,0,32)
 chanVsQWithSlab = r.TH2D("chanVsQWithSlab",";chan;Q",32,0,32,100,0,1)
+maxDeltaTHistWithSlab = r.TH1D("maxDeltaTWithSlab",";max delta T;",160,-100,100)
 
 firstNPEVsNumAfterPulses = r.TH2D("firstNPEVsNumAfter",";firstNPE;num after",len(binsNPE)-1,binsNPE,len(binsNumAfter)-1,binsNumAfter)
 minNPEVsMaxNPE = r.TH2D("minNPEVsMaxNPE",";minNPE; maxNPE",len(binsNPE)-1,binsNPE,len(binsNPE)-1,binsNPE)
@@ -115,6 +121,7 @@ firstPulseTime = r.TH1D("firstPulseTime",";time;",240,0,600)
 chanMult = r.TH1D("chanMult",";chan;",32,0,32)
 chanMultNoAfter = r.TH1D("chanMultNoAfter",";chan;",32,0,32)
 chanVsQ = r.TH2D("chanVsQ",";chan;Q",32,0,32,100,0,1)
+maxDeltaTHist = r.TH1D("maxDeltaT",";max delta T;",160,-100,100)
 
 afterPulseTimeSinceFirstPulseWithSlab = {}
 afterPulseTimeSinceFirstPulse = {}
@@ -535,6 +542,7 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
                     minNPEVsMaxNPEWithSlab.Fill(minNPE,maxNPE)
                     minNPEVsMaxNPECorrWithSlab.Fill(minNPECorr,maxNPECorr)
                     minQVsMaxQWithSlab.Fill(minQ,maxQ)
+                    maxDeltaTHistWithSlab.Fill(maxDeltaT)
                 elif len(pulses) == 3:
                     for layer,pulseList in pulses.items():
                         chanVsNumAfterPulses.Fill(pulseList[0][2],len(pulseList)-1)
@@ -551,6 +559,7 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
                     minNPEVsMaxNPE.Fill(minNPE,maxNPE)
                     minNPEVsMaxNPECorr.Fill(minNPECorr,maxNPECorr)
                     minQVsMaxQ.Fill(minQ,maxQ)
+                    maxDeltaTHist.Fill(maxDeltaT)
         if tuple(sorted(list(chanSet))) in allPaths["BentSameDigi"]:
             if (abs(maxDeltaT) < 100 and len(sels) == 2 and not panelPresent) :
                 numVsRunBent.Fill(tree.run)
@@ -631,6 +640,7 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
     chanVsNPE.Write()
     chanVsNPECorr.Write()
     chanVsQ.Write()
+    maxDeltaTHist.Write()
     outDir = outDirNoS.mkdir("afterPulseTimeSinceFirst")
     outDir.cd()
     for chan in afterPulseTimeSinceFirstPulse:
@@ -649,6 +659,7 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
     chanVsNPEWithSlab.Write()
     chanVsNPECorrWithSlab.Write()
     chanVsQWithSlab.Write()
+    maxDeltaTHistWithSlab.Write()
     outDir = outDirWS.mkdir("afterPulseTimeSinceFirst")
     outDir.cd()
     for chan in afterPulseTimeSinceFirstPulse:

@@ -8,15 +8,17 @@ from uncertainties import ufloat
 from collections import defaultdict
 from collections import OrderedDict as odict
 from array import array
+import bisect
 import pandas as pd
 from progressbar import ProgressBar
 import numpy as np
+from timeCorrections import getCorrections
 layersMap = {1:[0,1,24,25,8,9],2:[6,7,16,17,12,13],3:[2,3,22,23,4,5]}
 allBars = [0,1,24,25,8,9,6,7,16,17,12,13,2,3,22,23,4,5]
 restrictList = set([24,25,16,17,22,23])
 
 d = os.path.dirname(os.path.abspath(__file__))
-versionTag = "V16_finalForPreliminaryLimitNewSideband_addNPECorrAddMaxMin10AlterCosmicVeto"
+versionTag = "V16_finalForPreliminaryLimitNewSideband_addNPECorrAddMaxMin10AlterCosmicVetoAddTimeShiftUpdateCalibration"
 inputArray = np.loadtxt(d+"/timeCalcV16_withExtraRuns.txt",delimiter=":")
 timingSel = 15
 tagOrig = "{0}_{1}ns".format(versionTag,timingSel)
@@ -32,18 +34,18 @@ npeCorrDictDataOvSim = {}
 for iC in range(len(channelSPEAreasOld)):
     npeCorrDictDataOvSim[iC] = channelSPEAreasNew[iC]/channelSPEAreasOld[iC]
 
-npeForQ1Sim = {0:5300, 1:3900, 2:4300, 3:6000, 4:4000,
-            6:3300, 7:5900, 12:4700, 13:3400, 16:9000,
-            8:3200, 9:6300, 17:4900, 24:7200, 25:6400,
-            5:6400, 22:2300, 23:3800, 27:45, 29:25, 30:65, 19:45, 31:50, 26:50,
-            10:21, 11:40, 14:24,18:300, 20:390, 21: 410, 28:190,15:1}
-# npeForQ1UpdatedCalibration = {
-# 0   :3600, 1   :5500, 2   :4300, 3   :6300, 4   :4800, 
-# 5   :4700, 6   :3800, 7   :5300, 8   :3300, 9   :5700,
-# 12  :5200, 13  :4100, 16  :6200, 17  :4700, 22  :1900,
-# 23  :3800, 24  :4400, 25  :7000, 
-# 27:45, 29:25, 30:65, 19:45, 31:50, 26:50,
-# 10:21, 11:40, 14:24,18:300, 20:390, 21: 410, 28:190,15:1}
+# npeForQ1Sim = {0:5300, 1:3900, 2:4300, 3:6000, 4:4000,
+#             6:3300, 7:5900, 12:4700, 13:3400, 16:9000,
+#             8:3200, 9:6300, 17:4900, 24:7200, 25:6400,
+#             5:6400, 22:2300, 23:3800, 27:45, 29:25, 30:65, 19:45, 31:50, 26:50,
+#             10:21, 11:40, 14:24,18:300, 20:390, 21: 410, 28:190,15:1}
+npeForQ1UpdatedCalibration = {
+0   :3600, 1   :5500, 2   :4300, 3   :6300, 4   :4800, 
+5   :4700, 6   :3800, 7   :5300, 8   :3300, 9   :5700,
+12  :5200, 13  :4100, 16  :6200, 17  :4700, 22  :1900,
+23  :3800, 24  :4400, 25  :7000, 
+27:45, 29:25, 30:65, 19:45, 31:50, 26:50,
+10:21, 11:40, 14:24,18:300, 20:390, 21: 410, 28:190,15:1}
 
 npeCorrDictSimOvData = {}
 for x,y in npeCorrDictDataOvSim.items():
@@ -263,6 +265,12 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
             npeCorrDict[x] = 1
     for x in npeCorrDictSimOvData:
         npeCorrDict[x] = npeCorrDict[x]/(npeForQ1Sim[x])
+
+    if signal:
+        timeCorrectionsForSmallPulses = getCorrections()["signal"]
+    else:
+        timeCorrectionsForSmallPulses = getCorrections()["data"]
+
     allPaths,paths = preparePaths(slabs=slabs)
     tree = inputFile.Get("t")
     nTot = 0
@@ -337,6 +345,7 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
                 continue
             if tree.run == 1395:
                 continue
+            tree.scale1fb = 1./37.
         # if (tree.beam and tree.t_since_fill_start > 7200): 
         #     continue
         # if (tree.hardNoBeam and (tree.t_until_next_fill < 3600 or tree.t_until_next_fill > 10800)):
@@ -351,6 +360,7 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
         nPEs = []
         nPECorrs = []
         Qs = []
+        timeOrigs = []
         panelPresent = False
         for iC,chan in enumerate(tree.chan):
             if chan == 15: continue
@@ -361,8 +371,12 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
             types.append(chanMap[chan][3])
             chans.append(tree.chan[iC])
             durations.append(tree.duration[iC])
-            time_module_calibrateds.append(tree.time_module_calibrated[iC])
+            area = tree.area[iC]
+            areaBinForCorrection = bisect.bisect(timeCorrectionsForSmallPulses[0],area) - 1
+            if areaBinForCorrection < 0: areaBinForCorrection = 0
+            time_module_calibrateds.append(tree.time_module_calibrated[iC]+timeCorrectionsForSmallPulses[1][areaBinForCorrection]+np.random.normal(0,timeCorrectionsForSmallPulses[2][areaBinForCorrection]))
             nPEs.append(tree.nPE[iC])
+            timeOrigs.append(tree.time[iC])
             if chanMap[chan][3] == 2:
                 nPECorrs.append(tree.nPE[iC])
                 Qs.append(-1.0)
@@ -379,7 +393,7 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
                         Qs.append((tree.nPE[iC]*npeCorrDict[tree.chan[iC]])**0.5)
                     else:
                         Qs.append(0)
-        nTot += 1
+        nTot += tree.scale1fb*37
         chansHit = set(chans)
         # if len(chansHit & restrictList) == 0: continue
         if 15 in chansHit:
@@ -403,36 +417,35 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
         #     pulses[0] = []
         if (chansHit == set(slabs)):
             #Slabs are offset by 1
-            for nPE,nPECorr,Q,time,layer,chan,duration in zip(nPEs,nPECorrs,Qs,time_module_calibrateds,layers,chan,durations):
-                pulses[layer+1].append([nPE,time,chan,nPECorr,Q])
+            for nPE,nPECorr,Q,time,layer,chan,duration,timeOrig in zip(nPEs,nPECorrs,Qs,time_module_calibrateds,layers,chan,durations,timeOrigs):
+                pulses[layer+1].append([nPE,time,chan,nPECorr,Q,timeOrig])
         elif len(chansHit) == 3:
             #Only bars hit
             if 1 in types or 2 in types: continue
             #Hit in each layer
             if set(list(layers)) != set([1,2,3]): continue
-            for nPE,nPECorr,Q,time,layer,chan,duration in zip(nPEs,nPECorrs,Qs,time_module_calibrateds,layers,chans,durations):
-                pulses[layer].append([nPE,time,chan,nPECorr,Q])
+            for nPE,nPECorr,Q,time,layer,chan,duration,timeOrig in zip(nPEs,nPECorrs,Qs,time_module_calibrateds,layers,chans,durations,timeOrigs):
+                pulses[layer].append([nPE,time,chan,nPECorr,Q,timeOrig])
         elif len(chansHit) >= 4:
             #bars hit + N slab
             if 2 in types: continue
             #Hit in each layer
             layers4Slab = []
-            for nPE,nPECorr,Q,time,layer,chan,duration,typeC in zip(nPEs,nPECorrs,Qs,time_module_calibrateds,layers,chans,durations,types):
-                if chan in [18,20,21,28] and nPE > 250: 
+            for nPE,nPECorr,Q,time,layer,chan,duration,typeC,timeOrig in zip(nPEs,nPECorrs,Qs,time_module_calibrateds,layers,chans,durations,types,timeOrigs):
+                if chan in [18,20,21,28] and nPECorr > 250: 
                     failCosmic= True
-
                 if chan in [18,20,21,28]: layerT = chan
                 else: 
                     layerT = layer
                     layers4Slab.append(layerT)
                 if layerT not in pulses:
                     pulses[layerT] = []
-                pulses[layerT].append([nPE,time,chan,nPECorr,Q])
+                pulses[layerT].append([nPE,time,chan,nPECorr,Q,timeOrig])
             if set(layers4Slab) != set([1,2,3]): continue
         elif any(chansHit == extraPathSet for extraPathSet in extraPathsSet):
             extraPathIndex = extraPathsSet.index(chansHit)
-            for nPE,nPECorrs,Qs,time,chan,duration in zip(nPEs,nPECorrs,Qs,time_module_calibrateds,chans,durations):
-                pulses[allPaths["ExtraPaths"][extraPathIndex].index(chan)+1].append([nPE,nPECorrs,Qs,time,chan])
+            for nPE,nPECorr,Q,time,chan,duration,timeOrig in zip(nPEs,nPECorrs,Qs,time_module_calibrateds,chans,durations,timeOrigs):
+                pulses[allPaths["ExtraPaths"][extraPathIndex].index(chan)+1].append([nPE,time,chan,nPECorr,Q,timeOrig])
 
         # elif len(chansHit) == 4:
         #     #bars hit + 1 slab
@@ -454,7 +467,7 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
         failAllSelection = False
         failPulseTimeSelection = False
         for layer,pulsesList in pulses.items():
-            if pulsesList[0][1] < 300 or pulsesList[0][1] > 440:
+            if pulsesList[0][5] < 300 or pulsesList[0][5] > 440:
                 failPulseTimeSelection = True
                 break
             if len(pulsesList) == 0: 
@@ -462,7 +475,7 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
                 break
             if len(pulsesList) != 1:
                 singlePulse = False
-            if pulsesList[0] != max(pulsesList):
+            if pulsesList[0] != max(pulsesList,key=lambda x: x[3]):
                 failAllSelection = True
                 break
         if failAllSelection: continue
@@ -521,8 +534,6 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
                 if abs(maxDeltaT) < timingSel: continue
                 if abs(abs(maxDeltaT/timingSel) - 1) < 0.01: continue
 
-        if not signal:
-            tree.scale1fb = 1./37.
         if abs(maxDeltaT) < 100 and not panelPresent:
             if tuple(sorted(list(chanSet))) in (allPaths["BentSameDigi"]+allPaths["Straight"]+allPaths["BentSameDigiPlusTwoOrMoreSlabs"]+allPaths["StraightPlusTwoOrMoreSlabs"]):
                 #npe,time,chan
@@ -715,6 +726,7 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
             outputPlots[plotType][pathType].Write()
 
     return outputFile,allPaths
+
 def makeABCDPredictions(inputFile,beamString,blind,nPEStrings,deltaTStrings,selections,allPaths,signalNorm):
     if inputFile == None:
         return
@@ -874,7 +886,7 @@ if __name__=="__main__":
     useSaved = False
     beamString = "beam"
     signal = False
-    for beamString in ["beam","noBeam"]:
+    for beamString in ["beam","noBeam"][-1:]:
         if signal and beamString == "noBeam":
             continue
         if beamString  == "beam" and not signal:
@@ -892,8 +904,8 @@ if __name__=="__main__":
                 tag = tagOrig
                 # inputFile = r.TFile("{0}TwoLayerHitsOrThreeSlabHits.root".format(beamString))
                 # inputFile = r.TFile("../allTrees/allPhysicsAndTripleChannelSinceTS1_threeLayerHitPlusSlab_191204.root".format(beamString))
-                # inputFile = r.TFile("../allTrees/allPhysicsAndTripleChannelSinceTS1_threeLayerHitPlusSlab_200303.root".format(beamString))
                 inputFile = r.TFile("../allTrees/allPhysicsAndTripleChannelSinceTS1_threeLayerHit_200303.root".format(beamString))
+                # inputFile = r.TFile("../allTrees/allPhysicsAndTripleChannelSinceTS1_threeLayerHit_200303.root".format(beamString))
                 # inputFile = r.TFile("../allTrees/allPhysicsAndTripleChannelSinceTS1_threeLayerHit_191204.root".format(beamString))
                 signalNorm = None
             slabs = [18,20,28]

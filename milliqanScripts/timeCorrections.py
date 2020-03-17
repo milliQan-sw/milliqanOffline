@@ -32,7 +32,7 @@ def readTimeInputs(inputFileDataAbs,inputFileMCAbs,inputFileDataRMS,inputFileMCR
 
 def getCorrections(inputDir=None):
     if inputDir == None:
-        inputDir = "./timeCorrectionsFiles"
+        inputDir = "./timeCorrectionsFiles/"
     inputFileDataAbs = r.TFile(inputDir+"SmallPulseDelay_data.root")
     inputFileMCAbs = r.TFile(inputDir+"SmallPulseDelay_MC.root")
     inputFileMCRMS = r.TFile(inputDir+"Area_Proj_MC.root")

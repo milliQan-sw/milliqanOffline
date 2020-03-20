@@ -149,7 +149,7 @@ TH1D * LPFilter(TH1D * hrIn,int butterworthOrder = 2,float filterMin=0.049){
 int numChan=32;
 TArrayI * chanArray;
 int maxEvents=-1; 
-map<int,vector<float>> sidebandPerFile;
+map<int, map<int,vector<float> > > sidebandPerFile;
 float sideband_range[2] = {0,50}; //in ns
 float triggerBand_range[2] = {360,390}; //in ns
 float presampleStart= 17.5;
@@ -183,7 +183,7 @@ vector<TString> tubeSpecies = {"R878","R878","R878","R878",             // 0 1 2
     "R878","R878","R878","",    // 12 13 14 15
     "R878","ET","R878","R878",	// 16 17 18 19 
     "R878","R878","R7725","R878",	// 20 21 22 23
-    "R878","ET","R7725","R878",	// 24 25 26 27
+    "ET","ET","R878","R878",	// 24 25 26 27
     "R878","R878","R878","R878"};	// 28 29 30 31
 // vector<int> layerMap = {1,1,1,1,    // 0 1 2 3 
 //     2,2,2,2,   // 4 5 6 7	
@@ -360,7 +360,8 @@ float rmsCalib[] = {0.8637, 0.7901, 0.9028, 0.7561, 0.8741, 0.7857, 0.8706, 0.77
 float interModuleCalibrations[32] = { 33.125, 33.125, 13.75, 24.375, 23.75, 35.0, 30.625, 29.375, 24.375, 33.75, 3.75, 16.25, 26.875, 34.375, 9.375, 0.0, 27.5, 30.625, 0.0, 11.25, 7.5, 12.5, 28.125, 20.625, 33.75, 26.875, -3.125, 9.375, 13.75, 0.625, 15.625,10.625};
 float channelCalibrations[32];
 // float channelCalibrations[] = {0.,0.,-2.17,-7.49,0.48,0.,1.17,11.44,1.15,0.,-6.41,-4.81,1.2,0.,25.7,6.8};
-float channelSPEAreas[] = {62.,66.,77.,65.,68.,84.,70.,75.,100.,62.,85.,80.,60.,95.,65.,1.,48.,46.,80.,82.,60.,80.,118.,52.,46.,32.,60.,73.,70.,47.,75.,65.};
+// float channelSPEAreas[] = {62.,66.,77.,65.,68.,84.,70.,75.,100.,62.,85.,80.,60.,95.,65.,1.,48.,46.,80.,82.,60.,80.,118.,52.,46.,32.,60.,73.,70.,47.,75.,65.};
+float channelSPEAreas[] = {62.,54.,73.,55.,62.,74.,68.,69.,92.,61.,85.,80.,51.,76.,65.,1.,52.,47.,80.,82.,60.,80.,86.,40.,51.,30.,60.,73.,70.,47.,75.,65.};
 #ifndef _INCL_GUARD
 TTree * inTree;
 #endif
@@ -463,7 +464,7 @@ void make_tree(TString fileName, int eventNum=-1, TString tag="",float rangeMinX
 void loadFillList(TString fillFile=milliqanOfflineDir+"processedFillList2018.txt");
 vector<TString> getFieldFileList(TString location);
 void loadFieldList(TString fieldFile);
-void loadSidebandList(TString sidebandFile);
+void loadSidebandList(TString sidebandFile, int runNum);
 void loadPhotonList(TString photonFile);
 tuple<int,int,float,float,float, float> findFill(int seconds);
 int findField(int seconds);
@@ -814,9 +815,10 @@ if (injectSignalQ > 0) {
 
     //if(!displayMode)
     std::vector<float> zeros(32,0.);
-    sidebandPerFile[fileNum] = zeros;
+    sidebandPerFile[runNum] = map<int, vector<float> > ();
+    sidebandPerFile[runNum][fileNum] = zeros;
     if (!runDRS){
-	loadSidebandList(Form("/net/cms26/cms26r0/milliqan/haddedTrees/sideband_files/sideband_mean_run_%i.txt",runNum));
+	loadSidebandList(Form("/net/cms26/cms26r0/milliqan/haddedTrees/sideband_files/sideband_mean_run_%i.txt",runNum), runNum);
     }
 
 
@@ -1002,21 +1004,21 @@ if (injectSignalQ > 0) {
 	}
 	else outTree->Fill();
     }
-if(!displayMode) cout<<"Processed "<<maxEvents<<" events."<<endl;
+    if(!displayMode) cout<<"Processed "<<maxEvents<<" events."<<endl;
 
-if(!displayMode){
-    outTree->Write();
-    outFile->Close();
-
-    cout<<"Closed output tree."<<endl;
-    //TString currentDir=gSystem->pwd();
-    //TString target = currentDir+"/"+outFileName;
-    TString target = outFileName;
-    TString linkname =linkDirectory+baseFileName+".root";
-    remove(linkname); //remove if already exists
-    gSystem->Symlink(target,linkname);
-    cout<<"Made link to "<<target<<" called "<<linkname<<endl;
-}
+    if(!displayMode){
+        outTree->Write();
+        outFile->Close();
+        
+        cout<<"Closed output tree."<<endl;
+        //TString currentDir=gSystem->pwd();
+        //TString target = currentDir+"/"+outFileName;
+        TString target = outFileName;
+        TString linkname =linkDirectory+baseFileName+".root";
+        remove(linkname); //remove if already exists
+        gSystem->Symlink(target,linkname);
+        cout<<"Made link to "<<target<<" called "<<linkname<<endl;
+    }
 }
 
 
@@ -1041,7 +1043,7 @@ void prepareWave(int ic, float &sb_meanPerEvent, float &sb_RMSPerEvent, float &s
     }
     //subtract per file mean
     for(int ibin = 1; ibin <= waves[ic]->GetNbinsX(); ibin++){
-	waves[ic]->SetBinContent(ibin,waves[ic]->GetBinContent(ibin)-sidebandPerFile[fileNum][ic]);
+	waves[ic]->SetBinContent(ibin,waves[ic]->GetBinContent(ibin)-sidebandPerFile[runNum][fileNum][ic]);
     }
     if (injectPulses && ic != 15){
 	int injectPulsesStartBin = waves[ic]->FindBin(200.-channelCalibrations[ic]);
@@ -1171,7 +1173,7 @@ vector< vector<float> > processChannel(int ic,bool applyLPFilter, bool injectPul
     v_triggerBand_maxTime->push_back(sb_timeTriggerMaxPerEvent);	
     v_sideband_mean_calib->push_back(sb_mean);
     v_sideband_RMS_calib->push_back(sb_RMS);	
-    v_sideband_mean_perFile->push_back(sidebandPerFile[fileNum][ic]);
+    v_sideband_mean_perFile->push_back(sidebandPerFile[runNum][fileNum][ic]);
     float maxThreeConsec = -100;
     for (int iBin = 1; iBin < waves[ic]->GetNbinsX(); iBin++){
 	float maxList[] = {waves[ic]->GetBinContent(iBin),waves[ic]->GetBinContent(iBin+1),waves[ic]->GetBinContent(iBin+2)};
@@ -2210,15 +2212,16 @@ void loadPhotonList(TString photonFile){
     }
     cout<<"Loaded photon time file"<<photonFile<<", "<<photonList.size()<<" photon measurements."<<endl;
 }
-void loadSidebandList(TString sidebandFile){
+
+void loadSidebandList(TString sidebandFile, int runNum){
     int file;
     float sb0,sb1,sb2,sb3,sb4,sb5,sb6,sb7,sb8,sb9,sb10,sb11,sb12,sb13,sb14,sb15,sb16,sb17,sb18,sb19,sb20,sb21,sb22,sb23,sb24,sb25,sb26,sb27,sb28,sb29,sb30,sb31;
-    ifstream infile;
+    ifstream infile;    
     infile.open(sidebandFile); 
     if (infile.good()){
 	while(infile >> file >> sb0 >> sb1 >>sb2 >>sb3 >>sb4 >>sb5 >>sb6 >>sb7 >>sb8 >>sb9 >>sb10 >>sb11 >>sb12 >>sb13 >>sb14 >>sb15 >>sb16 >>sb17 >>sb18 >>sb19 >>sb20 >>sb21 >>sb22 >>sb23 >>sb24 >>sb25 >>sb26 >>sb27 >>sb28 >>sb29 >>sb30 >>sb31){
 	    vector<float> sideband = {sb0,sb1,sb2,sb3,sb4,sb5,sb6,sb7,sb8,sb9,sb10,sb11,sb12,sb13,sb14,sb15,sb16,sb17,sb18,sb19,sb20,sb21,sb22,sb23,sb24,sb25,sb26,sb27,sb28,sb29,sb30,sb31};
-	    sidebandPerFile[file] = sideband;
+	    sidebandPerFile[runNum][file] = sideband;
 	}
     }
     else {
@@ -2227,6 +2230,7 @@ void loadSidebandList(TString sidebandFile){
     }
 
 }
+
 void loadFieldList(TString fieldFile){
     string timestamp;
     int seconds;

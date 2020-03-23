@@ -266,10 +266,7 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
     for x in npeCorrDictSimOvData:
         npeCorrDict[x] = npeCorrDict[x]/(npeForQ1Sim[x])
 
-    if signal:
-        timeCorrectionsForSmallPulses = getCorrections()["signal"]
-    else:
-        timeCorrectionsForSmallPulses = getCorrections()["data"]
+    timeCorrectionsForSmallPulses = getCorrections()
 
     allPaths,paths = preparePaths(slabs=slabs)
     tree = inputFile.Get("t")
@@ -335,6 +332,14 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
     nEvents = tree.GetEntries()
     extraPathsSet = [set(extraPath) for extraPath in allPaths["ExtraPaths"]]
     pbar = ProgressBar()
+    tubeSpecies = ["878","878","878","878",             # 0 1 2 3 
+    "878","7725","878","878",       # 4 5 6 7	
+    "878","ET","878","878",	# 8 9 10 11
+    "878","878","878","",    # 12 13 14 15
+    "878","ET","878","878",	# 16 17 18 19 
+    "878","878","7725","878",	# 20 21 22 23
+    "ET","ET","878","878",	# 24 25 26 27
+    "878","878","878","878"]	# 28 29 30 31
     for iE in pbar(range(nEvents)):
     # for iE in range(nEvents):
         tree.GetEntry(iE)
@@ -372,9 +377,13 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
             chans.append(tree.chan[iC])
             durations.append(tree.duration[iC])
             area = tree.area[iC]
-            areaBinForCorrection = bisect.bisect(timeCorrectionsForSmallPulses[0],area) - 1
+            if signal:
+                timeCorrectionsForSmallPulsesPerSpecies = timeCorrectionsForSmallPulses["signal",tubeSpecies[tree.chan[iC]]]
+            else:
+                timeCorrectionsForSmallPulsesPerSpecies = timeCorrectionsForSmallPulses["data",tubeSpecies[tree.chan[iC]]]
+            areaBinForCorrection = bisect.bisect(timeCorrectionsForSmallPulsesPerSpecies[0],area) - 1
             if areaBinForCorrection < 0: areaBinForCorrection = 0
-            time_module_calibrateds.append(tree.time_module_calibrated[iC]+timeCorrectionsForSmallPulses[1][areaBinForCorrection]+np.random.normal(0,timeCorrectionsForSmallPulses[2][areaBinForCorrection]))
+            time_module_calibrateds.append(tree.time_module_calibrated[iC]+timeCorrectionsForSmallPulsesPerSpecies[1][areaBinForCorrection]+np.random.normal(0,timeCorrectionsForSmallPulsesPerSpecies[2][areaBinForCorrection]))
             nPEs.append(tree.nPE[iC])
             timeOrigs.append(tree.time[iC])
             if chanMap[chan][3] == 2:

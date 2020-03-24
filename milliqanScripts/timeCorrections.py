@@ -98,7 +98,7 @@ def getCorrections(inputDir=None,saveToPickle=False,readFromPickle=None):
         return pickle.load(open(readFromPickle,'rb'))
     else:
         if inputDir == None:
-            inputDir = "./timeCorrectionsFiles_update/V2_sat/"
+            inputDir = "./timeCorrectionsFiles_update/200324/"
             inputFileData = r.TFile(inputDir+"SmallPulseDelay_data_Sat_noCh4.root")
             inputFileMC = r.TFile(inputDir+"SmallPulseDelay_MC_Sat.root")
             allInputFiles = [inputFileData,inputFileMC]

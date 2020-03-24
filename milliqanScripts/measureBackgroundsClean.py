@@ -18,7 +18,7 @@ allBars = [0,1,24,25,8,9,6,7,16,17,12,13,2,3,22,23,4,5]
 restrictList = set([24,25,16,17,22,23])
 
 d = os.path.dirname(os.path.abspath(__file__))
-versionTag = "V16_finalForPreliminaryLimitNewSideband_addNPECorrAddMaxMin10AlterCosmicVetoAddTimeShiftUpdateCalibration"
+versionTag = "V19_finalForUnblinding"
 inputArray = np.loadtxt(d+"/timeCalcV16_withExtraRuns.txt",delimiter=":")
 timingSel = 15
 tagOrig = "{0}_{1}ns".format(versionTag,timingSel)
@@ -476,7 +476,7 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
         failAllSelection = False
         failPulseTimeSelection = False
         for layer,pulsesList in pulses.items():
-            if pulsesList[0][5] < 300 or pulsesList[0][5] > 440:
+            if pulsesList[0][5] < 200:
                 failPulseTimeSelection = True
                 break
             if len(pulsesList) == 0: 

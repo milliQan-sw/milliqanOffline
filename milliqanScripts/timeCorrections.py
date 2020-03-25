@@ -4,8 +4,8 @@ import pickle
 r.gROOT.SetBatch()
 
 minBinsMC = {"878":2,"ET":1,"7725":3}
-minBinsData = {"878":3,"ET":1,"7725":4}
-maxBinsMC = {"878":17,"ET":17,"7725":17}
+minBinsData = {"878":3,"ET":2,"7725":4}
+maxBinsMC = {"878":17,"ET":16,"7725":17}
 maxBinsData = {"878":18,"ET":16,"7725":16}
 def readTimeInputsPerSpecies(inputFileData,inputFileMC):
     #return time corrections from file (NB: should added to recorded time!)
@@ -100,7 +100,7 @@ def getCorrections(inputDir=None,saveToPickle=False,readFromPickle=None):
         if inputDir == None:
             inputDir = "./timeCorrectionsFiles_update/200324/"
             inputFileData = r.TFile(inputDir+"SmallPulseDelay_data_Sat_noCh4.root")
-            inputFileMC = r.TFile(inputDir+"SmallPulseDelay_MC_Sat.root")
+            inputFileMC = r.TFile(inputDir+"MC_Sat.root")
             allInputFiles = [inputFileData,inputFileMC]
             timeCorrections = readTimeInputsPerSpecies(inputFileData,inputFileMC)
         #old inputs

@@ -18,7 +18,7 @@ allBars = [0,1,24,25,8,9,6,7,16,17,12,13,2,3,22,23,4,5]
 restrictList = set([24,25,16,17,22,23])
 
 d = os.path.dirname(os.path.abspath(__file__))
-versionTag = "V19_finalForUnblinding"
+versionTag = "V19_finalForUnblindingMinNPEForVeto0p5"
 inputArray = np.loadtxt(d+"/timeCalcV16_withExtraRuns.txt",delimiter=":")
 timingSel = 15
 tagOrig = "{0}_{1}ns".format(versionTag,timingSel)
@@ -94,7 +94,7 @@ extraPaths = []
 #     extraPaths.append(tuple(sorted(path)))
 
 # binsNPE = array('d',[0]+np.logspace(0.1,3,6))
-binsNPE = array('d',[0,0.5,1.5,5,10,20,50,100,1000,10000])
+binsNPE = array('d',[0,0.5,1,1.5,2,3,4,5,10,20,30,40,50,75,100,1000,10000])
 binsQ = array('d',[0,0.001,0.01,0.02,0.05,0.1,0.2,1])
 binsDeltaT = array('d',np.linspace(-120,120,385))
 binsNumAfter = array('d',range(11))
@@ -260,9 +260,9 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
     npeCorrDict = {}
     for x in npeCorrDictSimOvData:
         if not signal:
-            npeCorrDict[x] = npeCorrDictSimOvData[x]
+            npeCorrDict[x] = npeCorrDictSimOvData[x]*1.
         else:
-            npeCorrDict[x] = 1
+            npeCorrDict[x] = 1.
     for x in npeCorrDictSimOvData:
         npeCorrDict[x] = npeCorrDict[x]/(npeForQ1Sim[x])
 
@@ -368,7 +368,15 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
         timeOrigs = []
         panelPresent = False
         for iC,chan in enumerate(tree.chan):
+            if chanMap[chan][3] == 2:
+                nPECorr = tree.nPE[iC]*npeCorrDict[tree.chan[iC]]*20
+            elif (chanMap[chan][3] == 0):
+                nPECorr = tree.nPE[iC]*npeCorrDict[tree.chan[iC]]*5000
+            else:
+                nPECorr = tree.nPE[iC]*npeCorrDict[tree.chan[iC]]*400
+
             if chan == 15: continue
+            if nPECorr < 0.5: continue
             if chanMap[chan][3] == 2:
                 panelPresent = True
                 continue
@@ -387,17 +395,17 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
             nPEs.append(tree.nPE[iC])
             timeOrigs.append(tree.time[iC])
             if chanMap[chan][3] == 2:
-                nPECorrs.append(tree.nPE[iC])
+                nPECorrs.append(nPECorr)
                 Qs.append(-1.0)
             else:
                 if chanMap[chan][3] == 0:
-                    nPECorrs.append(tree.nPE[iC]*npeCorrDict[tree.chan[iC]]*5000)
+                    nPECorrs.append(nPECorr)
                     if tree.nPE[iC] > 0:
                         Qs.append((tree.nPE[iC]*npeCorrDict[tree.chan[iC]]*5./80.)**0.5)
                     else:
                         Qs.append(0)
                 else:
-                    nPECorrs.append(tree.nPE[iC]*npeCorrDict[tree.chan[iC]]*400)
+                    nPECorrs.append(nPECorr)
                     if tree.nPE[iC] > 0:
                         Qs.append((tree.nPE[iC]*npeCorrDict[tree.chan[iC]])**0.5)
                     else:

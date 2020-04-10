@@ -256,7 +256,7 @@ def preparePaths(badChans = [6,4],slabs=[18,20,28]):
             "StraightPlusTwoOrMoreSlabs":straightPlusTwoOrMoreSlabs,"badStraightPlusTwoOrMoreSlabs":badStraightPlusTwoOrMoreSlabs,"noBadStraightPlusTwoOrMoreSlabs":noBadStraightPlusTwoOrMoreSlabs,"BentSameDigiPlusTwoOrMoreSlabs":bentSameDigiPlusTwoOrMoreSlabs,
             "badBentSameDigiPlusTwoOrMoreSlabs":badBentSameDigiPlusTwoOrMoreSlabs,"noBadBentSameDigiPlusTwoOrMoreSlabs":noBadBentSameDigiPlusTwoOrMoreSlabs,"BentDiffDigi":bentDiffDigiPlusTwoOrMoreSlabs}
     return allPaths,paths
-def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStrings,selections,slabs,signal):
+def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStrings,selections,slabs,signal,randN):
     npeCorrDict = {}
     for x in npeCorrDictSimOvData:
         if not signal:
@@ -305,6 +305,8 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
     totalEffsPerPath["Straight"] = r.TH1D("pathTupleStraight",";nPE;",len(binsNPE)-1,binsNPE)
     totalEffsPerPath["StraightPlusTwoOrMoreSlabs"] = r.TH1D("pathTupleStraightPlusTwoOrMoreSlabs",";nPE;",len(binsNPE)-1,binsNPE)
     totalEffsPerPath["StraightPlusSlab"] = r.TH1D("pathTupleStraightPlusSlab",";nPE;",len(binsNPE)-1,binsNPE)
+    if type(randN) != int:
+        raise (ValueError,"Rand N must be integer!")
     if beamString == "beam":
         beamReq = True
     if useSaved:
@@ -313,6 +315,8 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
         recreate = "RECREATE"
     if blind:
         outputFile = r.TFile("{0}backgroundMeasurementsBlind{1}.root".format(beamString,tag),recreate)
+    elif randN > 1:
+        outputFile = r.TFile("{0}backgroundMeasurementsRandN{2}{1}.root".format(beamString,tag,randN),recreate)
     else:
         outputFile = r.TFile("{0}backgroundMeasurements{1}.root".format(beamString,tag),recreate)
     outputPlots = defaultdict(dict)
@@ -503,6 +507,8 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
         if singlePulse:
             selsOrig.append("NoOtherPulse")
         sels = []
+        # if not panelPresent:
+        #     continue
         if panelPresent:
             for sel in selsOrig:
                 sel += "PlusPanelHit"
@@ -546,13 +552,13 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
 
         minDeltaT = min(allDeltaTs,key = lambda x:abs(x))
         maxDeltaT = max(allDeltaTs,key = lambda x:abs(x))
-        if blind:
+        if blind or ((tree.event % randN) != 0):
             if tuple(sorted(list(chanSet))) in allPaths["Straight"] or tuple(sorted(list(chanSet))) in allPaths["StraightPlusSlab"] or tuple(sorted(list(chanSet))) in allPaths["StraightPlusTwoOrMoreSlabs"]:
                 if abs(maxDeltaT) < timingSel: continue
                 if abs(abs(maxDeltaT/timingSel) - 1) < 0.01: continue
 
         if abs(maxDeltaT) < 100 and not panelPresent:
-            if tuple(sorted(list(chanSet))) in (allPaths["BentSameDigi"]+allPaths["Straight"]+allPaths["BentSameDigiPlusTwoOrMoreSlabs"]+allPaths["StraightPlusTwoOrMoreSlabs"]):
+            if tuple(sorted(list(chanSet))) in (allPaths["BentSameDigi"]+allPaths["Straight"]+allPaths["BentSameDigiPlusTwoOrMoreSlabs"]+allPaths["StraightPlusTwoOrMoreSlabs"] + allPaths["BentSameDigiPlusSlab"] + allPaths["StraightPlusSlab"]) :
                 #npe,time,chan
                 if len(pulses) >= 4:
                     for layer,pulseList in pulses.items():
@@ -589,12 +595,12 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
                     minQVsMaxQ.Fill(minQ,maxQ)
                     maxDeltaTHist.Fill(maxDeltaT)
         if tuple(sorted(list(chanSet))) in allPaths["BentSameDigi"]:
-            if (abs(maxDeltaT) < 100 and len(sels) == 2 and not panelPresent) :
-                numVsRunBent.Fill(tree.run)
-                rateVsRunBent.Fill(tree.run,1./runTimeDict[tree.run])
-                if minNPE > 10:
-                    numVsRunBentNPE10.Fill(tree.run)
-                    rateVsRunBentNPE10.Fill(tree.run,1./runTimeDict[tree.run])
+            if (abs(maxDeltaT) < 100 and len(sels) > 0 and not panelPresent) :
+                    numVsRunBent.Fill(tree.run)
+                    rateVsRunBent.Fill(tree.run,1./runTimeDict[tree.run])
+                    if minNPE > 10:
+                        numVsRunBentNPE10.Fill(tree.run)
+                        rateVsRunBentNPE10.Fill(tree.run,1./runTimeDict[tree.run])
         # if maxNPE > 10 and (maxNPE/minNPE) > 3: continue
         # if (maxNPE-minNPE)/((minNPE + maxNPE)**0.5) > 3: continue
         if maxNPECorr/minNPECorr > 10: 
@@ -744,31 +750,33 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
 
     return outputFile,allPaths
 
-def makeABCDPredictions(inputFile,beamString,blind,nPEStrings,deltaTStrings,selections,allPaths,signalNorm):
+def makeABCDPredictions(inputFile,beamString,blind,nPEStrings,deltaTStrings,selections,allPaths,signalNorm,randN):
     if inputFile == None:
         return
     blindString = ""
     if blind:
         blindString = "Blind"
+    elif randN > 1:
+        blindString = "RandN{0}".format(randN)
     outputFileABCD = r.TFile("outputFileABCD{0}{1}{2}.root".format(beamString,blindString,tag),"RECREATE")
     # totalRunTime = {"beam":418*3600,"noBeam":418*3600}
     # totalRunTime = {"beam":1.44E6,"noBeam":1.45E6}
     outDir = outputFileABCD.mkdir("sep_paths")
     outDir.cd()
-    for deltaTString in ["min","max"][-1:]:
-        if deltaTString == "": continue
-        outDirDT = outDir.mkdir(deltaTString)
-        outDirDT.cd()
-        pathList = []
-        for pathType,paths in allPaths.items():
-            if pathType == "Slabs":continue
-            for path in paths:
-                if path not in pathList:
-                    straightPlot = inputFile.Get("{0}Vs{1}{2}/allPaths/{3}_{0}_{1}{2}".format("NPEMin",deltaTString,"NoOtherPulse","_".join(str(x) for x in path)))
-                    straightDeltaT = straightPlot.ProjectionY()
-                    straightDeltaT.Scale(3600./totalRunTime[beamString])
-                    straightDeltaT.Write()
-                    pathList.append(path)
+    # for deltaTString in ["min","max"][-1:]:
+    #     if deltaTString == "": continue
+    #     outDirDT = outDir.mkdir(deltaTString)
+    #     outDirDT.cd()
+    #     pathList = []
+    #     for pathType,paths in allPaths.items():
+    #         if pathType == "Slabs":continue
+    #         for path in paths:
+    #             if path not in pathList:
+    #                 straightPlot = inputFile.Get("{0}Vs{1}{2}/allPaths/{3}_{0}_{1}{2}".format("NPEMin",deltaTString,"NoOtherPulse","_".join(str(x) for x in path)))
+    #                 straightDeltaT = straightPlot.ProjectionY()
+    #                 straightDeltaT.Scale(3600./totalRunTime[beamString])
+    #                 straightDeltaT.Write()
+    #                 pathList.append(path)
     for selection in selections:
         validationHists = {}
         outputDirSel = outputFileABCD.mkdir(selection)
@@ -834,8 +842,7 @@ def makeABCDPredictions(inputFile,beamString,blind,nPEStrings,deltaTStrings,sele
                             else:
                                 straightDeltaT.Scale(3600./totalRunTime[beamString])
                                 bentDeltaT.Scale(3600./totalRunTime[beamString])
-
-                                histA.Scale(3600./totalRunTime[beamString])
+                                histA.Scale(3600./(totalRunTime[beamString]/randN))
                                 histAPred.Scale(3600./totalRunTime[beamString])
                                 histB.Scale(3600./totalRunTime[beamString])
                                 histC.Scale(3600./totalRunTime[beamString])
@@ -903,13 +910,14 @@ if __name__=="__main__":
     useSaved = False
     beamString = "beam"
     signal = False
-    for beamString in ["beam","noBeam"][-1:]:
+    randN = 1
+    for beamString in ["beam","noBeam"][:-1]:
         if signal and beamString == "noBeam":
             continue
         if beamString  == "beam" and not signal:
-            blind = True
+            randN = 1
         else:
-            blind = False
+            randN = 1
         for signalQ in ["0p005","0p01","0p02","0p03","0p05","0p07","0p1","0p14","0p2","0p3"]:
             if not signal and signalQ != "0p005":continue
             if signal:
@@ -921,14 +929,14 @@ if __name__=="__main__":
                 tag = tagOrig
                 # inputFile = r.TFile("{0}TwoLayerHitsOrThreeSlabHits.root".format(beamString))
                 # inputFile = r.TFile("../allTrees/allPhysicsAndTripleChannelSinceTS1_threeLayerHitPlusSlab_191204.root".format(beamString))
+                # inputFile = r.TFile("../allTrees/allPhysicsAndTripleChannelSinceTS1_threeLayerHitPlusSlab_200303.root".format(beamString))
                 inputFile = r.TFile("../allTrees/allPhysicsAndTripleChannelSinceTS1_threeLayerHit_200303.root".format(beamString))
-                # inputFile = r.TFile("../allTrees/allPhysicsAndTripleChannelSinceTS1_threeLayerHit_200303.root".format(beamString))
                 # inputFile = r.TFile("../allTrees/allPhysicsAndTripleChannelSinceTS1_threeLayerHit_191204.root".format(beamString))
                 signalNorm = None
             slabs = [18,20,28]
-            outputFile,allPaths = measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStrings,selections,slabs,signal)
+            outputFile,allPaths = measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStrings,selections,slabs,signal,randN)
             if not signal:
-                makeABCDPredictions(outputFile,beamString,blind,nPEStrings,deltaTStrings,selections,allPaths,signalNorm)
+                makeABCDPredictions(outputFile,beamString,blind,nPEStrings,deltaTStrings,selections,allPaths,signalNorm,randN)
             if outputFile:
                 outputFile.Close()
             if inputFile:

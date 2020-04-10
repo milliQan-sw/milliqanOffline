@@ -7,8 +7,15 @@ minBinsMC = {"878":2,"ET":1,"7725":3}
 minBinsData = {"878":3,"ET":2,"7725":4}
 maxBinsMC = {"878":17,"ET":16,"7725":17}
 maxBinsData = {"878":18,"ET":16,"7725":16}
+allBars = [0,1,24,25,8,9,6,7,16,17,12,13,2,3,22,23,4,5]
 def readTimeInputsPerSpecies(inputFileData,inputFileMC):
     #return time corrections from file (NB: should added to recorded time!)
+    # speciesList = ["Ch"+str(x) for x in allBars]
+    # for x in speciesList:
+    #     maxBinsData[x] = 1E8
+    #     minBinsData[x] = 1
+    #     maxBinsMC[x] = 1E8
+    #     minBinsMC[x] = 1
     speciesList = ["878","ET","7725"]
     timeCorrections = {}
     for species in speciesList:
@@ -27,6 +34,8 @@ def readTimeInputsPerSpecies(inputFileData,inputFileMC):
                 projData.Rebin(2)
             if projData.GetBinContent(projData.GetMaximumBin()) < 20:
                 projData.Rebin(2)
+            # if projData.GetBinContent(projData.GetMaximumBin()) < 10:
+            #     continue
             # projData.Rebin(2)
             binWithMaxData = projData.GetMaximumBin()
             binWithMaxMC = projMC.GetMaximumBin()
@@ -98,9 +107,14 @@ def getCorrections(inputDir=None,saveToPickle=False,readFromPickle=None):
         return pickle.load(open(readFromPickle,'rb'))
     else:
         if inputDir == None:
+            # inputDir = "./timeCorrectionsFiles_update/SingleChannel/"
             inputDir = "./timeCorrectionsFiles_update/200324/"
-            inputFileData = r.TFile(inputDir+"SmallPulseDelay_data_Sat_noCh4.root")
+            # inputFileData = r.TFile(inputDir+"/data_Sat_noCh5.root")
+            # inputFileData = r.TFile(inputDir+"SmallPulseDelay_data_Sat_noCh4.root")
             inputFileMC = r.TFile(inputDir+"MC_Sat.root")
+            # inputFileData = r.TFile(inputDir+"/data_Sat_singleCh.root")
+            inputFileData = r.TFile(inputDir+"SmallPulseDelay_data_Sat_noCh4.root")
+            # inputFileMC = r.TFile(inputDir+"/MC_Sat_singleCh.root")
             allInputFiles = [inputFileData,inputFileMC]
             timeCorrections = readTimeInputsPerSpecies(inputFileData,inputFileMC)
         #old inputs

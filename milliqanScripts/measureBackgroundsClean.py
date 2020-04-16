@@ -13,6 +13,7 @@ import pandas as pd
 from progressbar import ProgressBar
 import numpy as np
 from timeCorrections import getCorrections
+from readFitFunctions import readFitFunctions
 layersMap = {1:[0,1,24,25,8,9],2:[6,7,16,17,12,13],3:[2,3,22,23,4,5]}
 allBars = [0,1,24,25,8,9,6,7,16,17,12,13,2,3,22,23,4,5]
 restrictList = set([24,25,16,17,22,23])
@@ -267,6 +268,7 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
         npeCorrDict[x] = npeCorrDict[x]/(npeForQ1Sim[x])
 
     timeCorrectionsForSmallPulses = getCorrections()
+    fitFuncs = readFitFunctions()
 
     allPaths,paths = preparePaths(slabs=slabs)
     tree = inputFile.Get("t")
@@ -274,6 +276,7 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
     nPassQuiet = 0
     nPassMaxMin = 0
     nPassCosmic = 0
+    nPassTriggerEff = 0
     nPassSidebandRMS = 0
     nPassStraightPath = 0
     nPassStraightPlusSlabPath = 0
@@ -518,6 +521,14 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
 
         # chanSet = tuple(sorted(set(chans)))
         allDeltaTs = []
+        triggerEff = 1
+        if signal:
+            triggerEffPulses1 = fitFuncs[pulses[1][0][2]].Eval(pulses[1][0][3])
+            triggerEffPulses2 = fitFuncs[pulses[2][0][2]].Eval(pulses[2][0][3])
+            triggerEffPulses3 = fitFuncs[pulses[3][0][2]].Eval(pulses[3][0][3])
+            triggerEff = triggerEffPulses1*triggerEffPulses2*triggerEffPulses3
+            tree.scale1fb *= triggerEff
+        nPassTriggerEff += tree.scale1fb*37
         if len(pulses) == 3:
             minNPE = min([pulses[1][0][0],pulses[2][0][0],pulses[3][0][0]])
             maxNPE = max([pulses[1][0][0],pulses[2][0][0],pulses[3][0][0]])
@@ -706,11 +717,13 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
     if not blind:
         print( nTot)
         print( "Q", nPassQuiet*1./nTot)
-        print( nPassCosmic*1./nTot)
+        print( "Cosmic Eff",nPassCosmic*1./nTot)
         print( "OP",nPassOnePulse*1./nTot)
         print( "Pulse time selection",nPassPulseTimeSelection*1./nTot)
+        print( "Trigger Eff",nPassTriggerEff*1./nTot)
         print( "MaxMin",nPassMaxMin*1./nTot)
         print( "Timing",nPassTiming*1./nTot)
+        print( "Trigger",nPassT*1./nTot)
         print( "Straight",nPassStraightPath*1.)
         print( "StraightPlusSlab",nPassStraightPlusSlabPath*1.)
         print( "StraightPlusTwoOrMoreSlabs",nPassStraightPlusTwoOrMoreSlabsPath*1.)

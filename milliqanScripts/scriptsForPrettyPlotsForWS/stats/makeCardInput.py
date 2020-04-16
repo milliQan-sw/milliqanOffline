@@ -42,7 +42,7 @@ def makeCard(paths,labelDict,bkg,sig):
     labels = ""
     binLabels = ""
     for path in paths:
-        obs += "%.0f"%(bkg[path])+" "
+        obs += "%.0f"%(bkg[path.replace("Yield","Obs")])+" "
         rate += "%.2f"%sig[path]+" "+"%.2f"%bkg[path]+" "
         labels += labelDict[path]+" "
         binLabels += labelDict[path]+" "+labelDict[path]+" "
@@ -68,8 +68,12 @@ def addGammaLines(paths,bkg,sig):
     gammaLines = ""
     for iP,path in enumerate(paths):
         weightLine = ["-"]*len(paths)*2
-        weightLine[iP*2+1] = "%.4f" % (bkg[path]/bkg[path+"Gamma"])
-        line = "predUnc_"+path+" gmN %.0f "%(bkg[path+"Gamma"])+" ".join(weightLine)
+        if (bkg[path] == 0):
+            weightLine[iP*2+1] = "%.4f"%bkg[path+"Gamma"]
+            line = "predUnc_"+path+" gmN 0 "+" ".join(weightLine)
+        else:
+            weightLine[iP*2+1] = "%.4f" % (bkg[path]/bkg[path+"Gamma"])
+            line = "predUnc_"+path+" gmN %.0f "%(bkg[path+"Gamma"])+" ".join(weightLine)
         gammaLines += line +"\n"
 
         if (sig[path+"Gamma"] == 0):
@@ -80,11 +84,39 @@ def addGammaLines(paths,bkg,sig):
         gammaLines += line +"\n"
 
     return gammaLines
+def addNoBeamSystematicLines(paths,sig):
+    systLines = ""
+    for iP,path in enumerate(paths):
+        systLine = ["-"]*len(paths)*2
+        unc = sig[path+"NoBeamSyst"]
+        if (abs(unc) < 0.01 or abs(unc - 1) < 0.01) :
+            continue
+        systLine[iP*2+1] = "%.2f" % unc
+        systLines += "noBeamSyst"+str(iP+1)+" lnN " + " ".join(systLine)+"\n"
+    if not any(char.isdigit() for char in systLines.split("lnN")[1]):
+        return ""
+    return systLines
+def addTimeShiftSystematicLines(paths,sig):
+    systLines = ""
+    systLine = ["-"]*len(paths)*2
+    for iP,path in enumerate(paths):
+        unc = sig[path+"TimeShift"]
+        if (abs(unc) < 0.01 or abs(unc - 1) < 0.01) :
+            continue
+        systLine[iP*2] = "%.2f" % unc
+    systLines += "timeShift lnN " + " ".join(systLine)+"\n"
+    if not any(char.isdigit() for char in systLines.split("lnN")[1]):
+        return ""
+    return systLines
 def addSystematicsLines(paths,systematicsPerModel):
     systLines = ""
     for syst in systematicsPerModel:
         systLineTemp = systematicsPerModel[syst]
         if len(systLineTemp) == 2:
+            if systLineTemp[0] > 1: systLineTemp[0] = 1
+            if systLineTemp[1] > 1: systLineTemp[1] = 1
+            if systLineTemp[0] < -0.5: systLineTemp[0] = -0.5
+            if systLineTemp[1] < -0.5: systLineTemp[1] = -0.5
             if (abs(systLineTemp[0]) < 0.01 and abs(systLineTemp[1]) < 0.01): continue
             systLine = syst+" lnN "+("{1}/{0} - ".format("%.2f" % (1+systLineTemp[0]),"%.2f" % (1+systLineTemp[1])))*len(paths)
         else:
@@ -92,6 +124,8 @@ def addSystematicsLines(paths,systematicsPerModel):
                 raise "Don't know what to do with syst: {0}!".format(syst)
             systLine = syst+" lnN "
             for systInBin in systLineTemp:
+                if systInBin > 1: systInBin = 1
+                if systInBin < -0.5: systInBin = -0.5
                 if abs(systInBin) > 0.01:
                     systLine += "{0} - ".format("%.2f" % (1+systInBin))
                 else:
@@ -115,7 +149,7 @@ if not os.path.exists(outputDir):
     os.makedirs(outputDir)
 
 bkg = dfBkg.iloc[0]
-with open('v8_v1_save2m.json') as f:
+with open('v8_v1_save2m_calibv5_5sr.json') as f:
   systematics = json.load(f)
 for index, row in dfSig.iterrows():
     mass = row["mass"]
@@ -137,9 +171,15 @@ for index, row in dfSig.iterrows():
                 labelFinal = label
         card = makeCardOneChannel(bkgY,sig,labelDict[labelFinal])
     else:
+        totalSig = 0
+        for label in ["StraightYieldLow","StraightYieldHigh","StraightPlusSlabYieldLow","StraightPlusSlabYieldHigh","StraightPlusTwoOrMoreSlabsYieldLow"]:
+            totalSig += row[label]
+        if totalSig < 1E-1: continue
         card = makeCard(paths,labelDict,bkg,row)
         card += addGammaLines(paths,bkg,row)
         systematicsPerModel = systematics["q_"+str(charge).replace(".","p")]["m_"+str(mass).replace(".","p")]
         card += addSystematicsLines(paths,systematicsPerModel)
+        card += addTimeShiftSystematicLines(paths,row)
+        card += addNoBeamSystematicLines(paths,bkg)
     with open(outputDir+"/"+cardName,'w') as f:
         f.write(card)

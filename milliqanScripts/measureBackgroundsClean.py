@@ -17,6 +17,7 @@ from readFitFunctions import readFitFunctions
 layersMap = {1:[0,1,24,25,8,9],2:[6,7,16,17,12,13],3:[2,3,22,23,4,5]}
 allBars = [0,1,24,25,8,9,6,7,16,17,12,13,2,3,22,23,4,5]
 restrictList = set([24,25,16,17,22,23])
+sampleTuple = pickle.load(open("sampleTuple.pkl","rb"))
 
 d = os.path.dirname(os.path.abspath(__file__))
 versionTag = "V19_finalForUnblindingMinNPEForVeto0p5"
@@ -373,6 +374,7 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
         nPECorrs = []
         Qs = []
         timeOrigs = []
+        heights = []
         panelPresent = False
         for iC,chan in enumerate(tree.chan):
             if chanMap[chan][3] == 2:
@@ -392,6 +394,7 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
             chans.append(tree.chan[iC])
             durations.append(tree.duration[iC])
             area = tree.area[iC]
+            heights.append(tree.height)
             if signal:
                 timeCorrectionsForSmallPulsesPerSpecies = timeCorrectionsForSmallPulses["signal",tubeSpecies[tree.chan[iC]]]
             else:
@@ -441,21 +444,21 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
         #     pulses[0] = []
         if (chansHit == set(slabs)):
             #Slabs are offset by 1
-            for nPE,nPECorr,Q,time,layer,chan,duration,timeOrig in zip(nPEs,nPECorrs,Qs,time_module_calibrateds,layers,chan,durations,timeOrigs):
-                pulses[layer+1].append([nPE,time,chan,nPECorr,Q,timeOrig])
+            for nPE,nPECorr,Q,time,layer,chan,duration,timeOrig,height in zip(nPEs,nPECorrs,Qs,time_module_calibrateds,layers,chan,durations,timeOrigs,heights):
+                pulses[layer+1].append([nPE,time,chan,nPECorr,Q,timeOrig,height])
         elif len(chansHit) == 3:
             #Only bars hit
             if 1 in types or 2 in types: continue
             #Hit in each layer
             if set(list(layers)) != set([1,2,3]): continue
-            for nPE,nPECorr,Q,time,layer,chan,duration,timeOrig in zip(nPEs,nPECorrs,Qs,time_module_calibrateds,layers,chans,durations,timeOrigs):
-                pulses[layer].append([nPE,time,chan,nPECorr,Q,timeOrig])
+            for nPE,nPECorr,Q,time,layer,chan,duration,timeOrig,height in zip(nPEs,nPECorrs,Qs,time_module_calibrateds,layers,chans,durations,timeOrigs,heights):
+                pulses[layer].append([nPE,time,chan,nPECorr,Q,timeOrig,height])
         elif len(chansHit) >= 4:
             #bars hit + N slab
             if 2 in types: continue
             #Hit in each layer
             layers4Slab = []
-            for nPE,nPECorr,Q,time,layer,chan,duration,typeC,timeOrig in zip(nPEs,nPECorrs,Qs,time_module_calibrateds,layers,chans,durations,types,timeOrigs):
+            for nPE,nPECorr,Q,time,layer,chan,duration,typeC,timeOrig,height in zip(nPEs,nPECorrs,Qs,time_module_calibrateds,layers,chans,durations,types,timeOrigs,heights):
                 if chan in [18,20,21,28] and nPECorr > 250: 
                     failCosmic= True
                 if chan in [18,20,21,28]: layerT = chan
@@ -464,12 +467,12 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
                     layers4Slab.append(layerT)
                 if layerT not in pulses:
                     pulses[layerT] = []
-                pulses[layerT].append([nPE,time,chan,nPECorr,Q,timeOrig])
+                pulses[layerT].append([nPE,time,chan,nPECorr,Q,timeOrig,height])
             if set(layers4Slab) != set([1,2,3]): continue
         elif any(chansHit == extraPathSet for extraPathSet in extraPathsSet):
             extraPathIndex = extraPathsSet.index(chansHit)
-            for nPE,nPECorr,Q,time,chan,duration,timeOrig in zip(nPEs,nPECorrs,Qs,time_module_calibrateds,chans,durations,timeOrigs):
-                pulses[allPaths["ExtraPaths"][extraPathIndex].index(chan)+1].append([nPE,time,chan,nPECorr,Q,timeOrig])
+            for nPE,nPECorr,Q,time,chan,duration,timeOrig,height in zip(nPEs,nPECorrs,Qs,time_module_calibrateds,chans,durations,timeOrigs,heights):
+                pulses[allPaths["ExtraPaths"][extraPathIndex].index(chan)+1].append([nPE,time,chan,nPECorr,Q,timeOrig,height])
 
         # elif len(chansHit) == 4:
         #     #bars hit + 1 slab
@@ -522,10 +525,31 @@ def measureBackgrounds(inputFile,blind,beamString,useSaved,nPEStrings,deltaTStri
         # chanSet = tuple(sorted(set(chans)))
         allDeltaTs = []
         triggerEff = 1
+        threshIndex = np.random.choice(len(sampleTuple["prob"]),1,sampleTuple["prob"])
+
         if signal:
-            triggerEffPulses1 = fitFuncs[pulses[1][0][2]].Eval(pulses[1][0][3])
-            triggerEffPulses2 = fitFuncs[pulses[2][0][2]].Eval(pulses[2][0][3])
-            triggerEffPulses3 = fitFuncs[pulses[3][0][2]].Eval(pulses[3][0][3])
+            triggerThreshPulse1 = sampleTuple["thresholds"][pulses[1][0][2]][threshIndex]
+            if abs(triggerThreshPulse1 - sampleTuple["mpv"][pulses[1][0][2]]) < 0.5:
+                triggerEffPulses1 = fitFuncs[pulses[1][0][2]].Eval(pulses[1][0][3])
+            else:
+                triggerEffPulses1 = 1
+                if pulses[1][0][6] < triggerThreshPulse1:
+                    continue
+            triggerThreshPulse2 = sampleTuple["thresholds"][pulses[2][0][2]][threshIndex]
+            if abs(triggerThreshPulse2 - sampleTuple["mpv"][pulses[2][0][2]]) < 0.5:
+                triggerEffPulses2 = fitFuncs[pulses[2][0][2]].Eval(pulses[2][0][3])
+            else:
+                triggerEffPulses2 = 1
+                if pulses[2][0][6] < triggerThreshPulse2:
+                    continue
+            triggerThreshPulse3 = sampleTuple["thresholds"][pulses[3][0][2]][threshIndex]
+            if abs(triggerThreshPulse3 - sampleTuple["mpv"][pulses[3][0][2]]) < 0.5:
+                triggerEffPulses3 = fitFuncs[pulses[3][0][2]].Eval(pulses[3][0][3])
+            else:
+                triggerEffPulses3 = 1
+                if pulses[3][0][6] < triggerThreshPulse3:
+                    continue
+
             triggerEff = triggerEffPulses1*triggerEffPulses2*triggerEffPulses3
             tree.scale1fb *= triggerEff
         nPassTriggerEff += tree.scale1fb*37
@@ -924,7 +948,7 @@ if __name__=="__main__":
     beamString = "beam"
     signal = False
     randN = 1
-    for beamString in ["beam","noBeam"][:-1]:
+    for beamString in ["beam","noBeam"][-1:]:
         if signal and beamString == "noBeam":
             continue
         if beamString  == "beam" and not signal:

@@ -12,7 +12,6 @@ for et in [9,17,24,25]:
     tubeSpecies[et]="ET"
 for r7 in [5,22]:
     tubeSpecies[r7]="R7725"
-
 # these are the non-bar channels that we will ignore
 # for the later runs channels 20/28 were a "fourth layer" of bars, so I removed them
 #for vet in [18,27,29,20,10,19,30,11,28,31,14,26,21]:

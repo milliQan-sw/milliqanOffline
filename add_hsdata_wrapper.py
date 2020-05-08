@@ -10,7 +10,7 @@ hs_file_dir= "/store/user/llavezzo/HSdata/2018/"
 count = 0 # testing
 
 for file in os.listdir(runDir):
-    if count > 0: exit()
+#     if count > 0: exit() # testing
     fileNum = file[file.find(runNum)+5:file.find("_",file.find(runNum))]
     outFileName = "/data/users/bmanley/HS_Run"+runNum+runDescription+"_"+fileNum+".root"
     inFileName = runDir+'/'+file

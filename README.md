@@ -135,7 +135,3 @@ python makeDisplaysDRS.py <timestamp> <nEvents> #other arguments as for makeDisp
 
 	
 
-
-
-
-

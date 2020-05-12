@@ -180,7 +180,7 @@ TString configurationFolder = "/net/cms26/cms26r0/milliqan/milliqanOffline/confi
 vector<TString> tubeSpecies = {"R878","R878","R878","R878",             // 0 1 2 3 
     "R878","R7725","R878","R878",       // 4 5 6 7	
     "R878","ET","R878","R878",	// 8 9 10 11
-    "R878","R878","R878","",    // 12 13 14 15
+    "R878","R878","R878","R878",    // 12 13 14 15
     "R878","ET","R878","R878",	// 16 17 18 19 
     "R878","R878","R7725","R878",	// 20 21 22 23
     "ET","ET","R878","R878",	// 24 25 26 27
@@ -214,12 +214,12 @@ vector< vector<int> > chanMap =
     {1,1,2,0}, //0.12
     {2,1,2,0}, //0.13
     {0,-2,3,2}, //0.14 
-    {0,0,0,3}, //0.15, timing card
+    {1,2,4,0}, //0.15, timing card
     {1,2,2,0}, //1.0
     {2,2,2,0}, //1.1
     {0,-1,0,1}, //1.2
     {1,-2,2,2}, //1.3
-    {0,-1,1,1}, //1.4
+    {1,1,4,0}, //1.4
     {0,-1,3,1}, //1.5
     {1,2,3,0}, //1.6
     {2,2,3,0}, //1.7
@@ -227,7 +227,7 @@ vector< vector<int> > chanMap =
     {2,2,1,0}, //1.9
     {1,-2,3,2}, //1.10
     {-1,-2,1,2}, //1.11
-    {0,-1,2,1}, //1.12
+    {2,2,4,0}, //1.12
     {1,-2,1,2}, //1.13
     {-1,-2,2,2}, //1.14
     {-1,-2,3,2} //1.15
@@ -361,7 +361,7 @@ float interModuleCalibrations[32] = { 33.125, 33.125, 13.75, 24.375, 23.75, 35.0
 float channelCalibrations[32];
 // float channelCalibrations[] = {0.,0.,-2.17,-7.49,0.48,0.,1.17,11.44,1.15,0.,-6.41,-4.81,1.2,0.,25.7,6.8};
 // float channelSPEAreas[] = {62.,66.,77.,65.,68.,84.,70.,75.,100.,62.,85.,80.,60.,95.,65.,1.,48.,46.,80.,82.,60.,80.,118.,52.,46.,32.,60.,73.,70.,47.,75.,65.};
-float channelSPEAreas[] = {62.,54.,73.,55.,62.,74.,68.,69.,92.,61.,85.,80.,51.,76.,65.,1.,52.,47.,80.,82.,60.,80.,86.,40.,51.,30.,60.,73.,70.,47.,75.,65.};
+float channelSPEAreas[] = {62.,54.,73.,55.,62.,74.,68.,69.,92.,61.,85.,80.,51.,76.,65.,75.,52.,47.,80.,82.,58.,80.,86.,40.,51.,30.,60.,73.,59.,47.,75.,65.};
 #ifndef _INCL_GUARD
 TTree * inTree;
 #endif
@@ -1045,7 +1045,7 @@ void prepareWave(int ic, float &sb_meanPerEvent, float &sb_RMSPerEvent, float &s
     for(int ibin = 1; ibin <= waves[ic]->GetNbinsX(); ibin++){
 	waves[ic]->SetBinContent(ibin,waves[ic]->GetBinContent(ibin)-sidebandPerFile[runNum][fileNum][ic]);
     }
-    if (injectPulses && ic != 15){
+    if (injectPulses){
 	int injectPulsesStartBin = waves[ic]->FindBin(200.-channelCalibrations[ic]);
 	TH1D * generatedTemplate = SPEGen(sample_rate[ic/16],tubeSpecies[ic],channelSPEAreas[ic],ic/16);
 
@@ -1317,7 +1317,7 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
 		if(beam) beamState="on";
 		if (calibrateDisplay) waveShifted->SetTitle(Form("Run %i, File %i, Event %i (beam %s);Time [ns];Amplitude [mV];",runNum,fileNum,event,beamState.Data()));
 		else waveShifted->SetTitle(Form("Run %i, File %i, Event %i (beam %s);Uncalibrated Time [ns];Amplitude [mV];",runNum,fileNum,event,beamState.Data()));
-		if(ic!=15){ 
+		if(ic!=-15){ 
 		    //Reset range to find correct maxima
 		    waveShifted->SetAxisRange(0,1024./sample_rate[ic/16]);
 		    //Keep track of max amplitude
@@ -1387,7 +1387,7 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
 	int ic = chanList[i];	
 	int chan = chanArray->GetAt(ic);
 	if (onlyForceChans && forceChan.find(chan)==forceChan.end()) continue;
-	if(ic==15 && forceChan.find(chan)==forceChan.end()) continue;
+	if(ic==-15 && forceChan.find(chan)==forceChan.end()) continue;
 	wavesShifted[ic]->SetAxisRange(timeRange[0],timeRange[1]);
 	originalMaxHeights[ic] = wavesShifted[ic]->GetMaximum();
 	if (rangeMinY > -999) wavesShifted[ic]->SetMinimum(rangeMinY);
@@ -1400,7 +1400,7 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
 
 	if(type==1) colorIndex = layer; //slabs: 0-3
 	if(type==2) colorIndex = 4 + 3*(layer-1) + (column+1); //sheets
-	if(ic==15) colorIndex=1;
+	if(ic==-15) colorIndex=1;
 	//if(type!=0) continue;
 	h1cosmetic(wavesShifted[ic],colorIndex);
 	if(type==1) wavesShifted[ic]->SetLineStyle(3);
@@ -1487,7 +1487,7 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
 	int ic = chanList[i];	
 	int chan = chanArray->GetAt(ic);
 	if (onlyForceChans && forceChan.find(chan)==forceChan.end()) continue;
-	if(ic==15 && forceChan.find(chan)==forceChan.end()) continue;
+	if(ic==-15 && forceChan.find(chan)==forceChan.end()) continue;
 	//if(i==15) continue;
 	//xyz
 	int column= chanMap[ic][0];
@@ -1499,7 +1499,7 @@ void displayEvent(vector<vector<vector<float> > > bounds, TString tag,float rang
 	if(type==1) colorIndex = layer; //slabs: 0-3
 	else if(type==2) colorIndex = 4 + 3*(layer-1) + (column+1); //sheets
 
-	if(ic==15) colorIndex=1;
+	if(ic==-15) colorIndex=1;
 
 	TPave * pave;
 	if (type==1){

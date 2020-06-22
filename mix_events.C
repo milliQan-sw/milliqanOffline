@@ -20,7 +20,16 @@ void prepareOutBranchesMix();
 vector<TBranch *> b_times;
 vector<TBranch *> b_voltages;
 TBranch * b_timestamp;
+double digisatV = -1250.;
 double timestamp;
+
+TBranch *         b_chan_muDist;
+TBranch *         b_chan_trueNPE;
+TBranch *         b_scale1fb;
+TBranch *         b_fileID;
+TBranch *         b_orig_evt;
+TBranch *         b_mcTruth_fourSlab;
+TBranch *         b_mcTruth_threeBarLine;
 
 Double_t times_0[1024];
 Double_t times_1[1024];
@@ -169,18 +178,23 @@ void mix_events(TString runToMixName, TString inFileName , TString tag, int file
 	else tubeTimeCorr.push_back(0);
     }
 
+    int runNum = atoi(runToMixName);
+    sidebandPerFile[runNum] = map<int, vector<float> > ();
+    loadSidebandList(Form("/net/cms26/cms26r0/milliqan/haddedTrees/sideband_files/sideband_mean_run_%i.txt",runNum), runNum);
+
     TFile * inFile = new TFile(inFileName);
     TTree * simTreeInput = (TTree *) inFile->Get("Events");
     uint totEvents = simTreeInput->GetEntries();
-    // totEvents -= startEvent;
     if (totEvents > maxEvents && maxEvents >= 0) totEvents = maxEvents;
+
     SimTree sTree = SimTree(simTreeInput);
-    // uint fileNumber = 2;
     TString mixFileName;
+    vector<int> fileNumbers;
     while (true){
 	mixFileName =  "/net/cms26/cms26r0/milliqan/UX5/Run"+runToMixName+"_software/MilliQan_Run"+runToMixName+"."+to_string(fileNumber)+"_software.root";
 	inTree->Add(mixFileName);
 	int totEventsMix = inTree->GetEntries();
+        fileNumbers.resize(totEventsMix, fileNumber);
 	if (totEventsMix >= totEvents-startEvent) break;
 	fileNumber++;
     }
@@ -212,6 +226,7 @@ void mix_events(TString runToMixName, TString inFileName , TString tag, int file
     Long64_t nbytes = 0, nb = 0;
     for(int i=startEvent;i<totEvents;i++){
 	if(i%100==0) cout<<"Processing event "<<i<<endl;
+        int this_fileNum = fileNumbers[i-startEvent];
 	TDatime time = TDatime();
 	timestamp = time.GetSecond()+60*time.GetMinute()+3600*time.GetHour();
 	sTree.LoadTree(i);
@@ -226,6 +241,15 @@ void mix_events(TString runToMixName, TString inFileName , TString tag, int file
 	TH1D * generatedTemplate = NULL;
 	// std::cout << sTree.chan0_PEtimes->size() << std::endl;
 	int nPhoton[32];
+	fileID = sTree.fileID;
+	scale1fb = sTree.scale1fb;
+	orig_evt = sTree.orig_evt;
+	mcTruth_threeBarLine = sTree.mcTruth_threeBarLine;
+	mcTruth_fourSlab = sTree.mcTruth_fourSlab;
+	for (uint ic = 0; ic < 32; ic++){
+	    chan_muDist[ic] = sTree.chan_muDist[ic];    
+	    chan_trueNPE[ic] = sTree.chan_nPE[ic];    
+	}
 	for (uint photonTime = 0; photonTime < 100; photonTime++){
 
 	    nPhoton[0] = sTree.chan0_PEtimes[photonTime]; 
@@ -267,8 +291,10 @@ void mix_events(TString runToMixName, TString inFileName , TString tag, int file
 		    for (uint arb = 0; arb < nPhoton[iChan]; arb++){
 			generatedTemplate = SPEGen(sample_rate[iChan/16],tubeSpecies[iChan],channelSPEAreas[iChan],iChan/16);
 			int signalPulsesStartBin = waves[iChan]->FindBin(380+photonTime+tubeTimeCorr[iChan]);
+			int templateStartBin = generatedTemplate->FindBin(-tubeTimeCorr[iChan]);
 			for(int ibin = 1; ibin <= 1024; ibin++){
 			    if (ibin+signalPulsesStartBin > waves[iChan]->GetNbinsX()) break;
+			    if (ibin < templateStartBin) continue;
 			    waves[iChan]->SetBinContent(ibin+signalPulsesStartBin,waves[iChan]->GetBinContent(ibin+signalPulsesStartBin)+generatedTemplate->GetBinContent(ibin));
 			}
 			generatedTemplate->Delete();
@@ -277,12 +303,20 @@ void mix_events(TString runToMixName, TString inFileName , TString tag, int file
 		else{
 		    generatedTemplate = SPEGenLargeN(sample_rate[iChan/16],tubeSpecies[iChan],channelSPEAreas[iChan],iChan/16,nPhoton[iChan]);
 		    int signalPulsesStartBin = waves[iChan]->FindBin(380+photonTime+tubeTimeCorr[iChan]);
+		    int templateStartBin = generatedTemplate->FindBin(-tubeTimeCorr[iChan]);
 		    for(int ibin = 1; ibin <= 1024; ibin++){
 			if (ibin+signalPulsesStartBin > waves[iChan]->GetNbinsX()) break;
+			if (ibin < templateStartBin) continue;
 			waves[iChan]->SetBinContent(ibin+signalPulsesStartBin,waves[iChan]->GetBinContent(ibin+signalPulsesStartBin)+generatedTemplate->GetBinContent(ibin));
 		    }
 		    generatedTemplate->Delete();
 		}
+
+                // subtract per-file sideband mean
+                for(int ibin = 1; ibin <= waves[iChan]->GetNbinsX(); ibin++){
+                    waves[iChan]->SetBinContent(ibin,waves[iChan]->GetBinContent(ibin)-sidebandPerFile[runNum][this_fileNum][iChan]);
+                }
+
 	    }
 	}
 	for (uint iChan = 0; iChan < 32; iChan++){
@@ -290,69 +324,69 @@ void mix_events(TString runToMixName, TString inFileName , TString tag, int file
 	}
 	for(int ibin = 1; ibin <= 1024; ibin++){
 	    times_0[ibin-1] = waves[0]->GetBinCenter(ibin);
-	    voltages_0[ibin-1] = waves[0]->GetBinContent(ibin);
+	    voltages_0[ibin-1] = std::min(-digisatV,std::max(digisatV,waves[0]->GetBinContent(ibin)));
 	    times_1[ibin-1] = waves[1]->GetBinCenter(ibin);
-	    voltages_1[ibin-1] = waves[1]->GetBinContent(ibin);
+	    voltages_1[ibin-1] = std::min(-digisatV,std::max(digisatV,waves[1]->GetBinContent(ibin)));
 	    times_2[ibin-1] = waves[2]->GetBinCenter(ibin);
-	    voltages_2[ibin-1] = waves[2]->GetBinContent(ibin);
+	    voltages_2[ibin-1] = std::min(-digisatV,std::max(digisatV,waves[2]->GetBinContent(ibin)));
 	    times_3[ibin-1] = waves[3]->GetBinCenter(ibin);
-	    voltages_3[ibin-1] = waves[3]->GetBinContent(ibin);
+	    voltages_3[ibin-1] = std::min(-digisatV,std::max(digisatV,waves[3]->GetBinContent(ibin)));
 	    times_4[ibin-1] = waves[4]->GetBinCenter(ibin);
-	    voltages_4[ibin-1] = waves[4]->GetBinContent(ibin);
+	    voltages_4[ibin-1] = std::min(-digisatV,std::max(digisatV,waves[4]->GetBinContent(ibin)));
 	    times_5[ibin-1] = waves[5]->GetBinCenter(ibin);
-	    voltages_5[ibin-1] = waves[5]->GetBinContent(ibin);
+	    voltages_5[ibin-1] = std::min(-digisatV,std::max(digisatV,waves[5]->GetBinContent(ibin)));
 	    times_6[ibin-1] = waves[6]->GetBinCenter(ibin);
-	    voltages_6[ibin-1] = waves[6]->GetBinContent(ibin);
+	    voltages_6[ibin-1] = std::min(-digisatV,std::max(digisatV,waves[6]->GetBinContent(ibin)));
 	    times_7[ibin-1] = waves[7]->GetBinCenter(ibin);
-	    voltages_7[ibin-1] = waves[7]->GetBinContent(ibin);
+	    voltages_7[ibin-1] = std::min(-digisatV,std::max(digisatV,waves[7]->GetBinContent(ibin)));
 	    times_8[ibin-1] = waves[8]->GetBinCenter(ibin);
-	    voltages_8[ibin-1] = waves[8]->GetBinContent(ibin);
+	    voltages_8[ibin-1] = std::min(-digisatV,std::max(digisatV,waves[8]->GetBinContent(ibin)));
 	    times_9[ibin-1] = waves[9]->GetBinCenter(ibin);
-	    voltages_9[ibin-1] = waves[9]->GetBinContent(ibin);
+	    voltages_9[ibin-1] = std::min(-digisatV,std::max(digisatV,waves[9]->GetBinContent(ibin)));
 	    times_10[ibin-1] = waves[10]->GetBinCenter(ibin);
-	    voltages_10[ibin-1] = waves[10]->GetBinContent(ibin);
+	    voltages_10[ibin-1] = std::min(-digisatV,std::max(digisatV,waves[10]->GetBinContent(ibin)));
 	    times_11[ibin-1] = waves[11]->GetBinCenter(ibin);
-	    voltages_11[ibin-1] = waves[11]->GetBinContent(ibin);
+	    voltages_11[ibin-1] = std::min(-digisatV,std::max(digisatV,waves[11]->GetBinContent(ibin)));
 	    times_12[ibin-1] = waves[12]->GetBinCenter(ibin);
-	    voltages_12[ibin-1] = waves[12]->GetBinContent(ibin);
+	    voltages_12[ibin-1] = std::min(-digisatV,std::max(digisatV,waves[12]->GetBinContent(ibin)));
 	    times_13[ibin-1] = waves[13]->GetBinCenter(ibin);
-	    voltages_13[ibin-1] = waves[13]->GetBinContent(ibin);
+	    voltages_13[ibin-1] = std::min(-digisatV,std::max(digisatV,waves[13]->GetBinContent(ibin)));
 	    times_14[ibin-1] = waves[14]->GetBinCenter(ibin);
-	    voltages_14[ibin-1] = waves[14]->GetBinContent(ibin);
+	    voltages_14[ibin-1] = std::min(-digisatV,std::max(digisatV,waves[14]->GetBinContent(ibin)));
 	    times_15[ibin-1] = waves[15]->GetBinCenter(ibin);
-	    voltages_15[ibin-1] = waves[15]->GetBinContent(ibin);
+	    voltages_15[ibin-1] = std::min(-digisatV,std::max(digisatV,waves[15]->GetBinContent(ibin)));
 	    times_16[ibin-1] = waves[16]->GetBinCenter(ibin);
-	    voltages_16[ibin-1] = waves[16]->GetBinContent(ibin);
+	    voltages_16[ibin-1] = std::min(-digisatV,std::max(digisatV,waves[16]->GetBinContent(ibin)));
 	    times_17[ibin-1] = waves[17]->GetBinCenter(ibin);
-	    voltages_17[ibin-1] = waves[17]->GetBinContent(ibin);
+	    voltages_17[ibin-1] = std::min(-digisatV,std::max(digisatV,waves[17]->GetBinContent(ibin)));
 	    times_18[ibin-1] = waves[18]->GetBinCenter(ibin);
-	    voltages_18[ibin-1] = waves[18]->GetBinContent(ibin);
+	    voltages_18[ibin-1] = std::min(-digisatV,std::max(digisatV,waves[18]->GetBinContent(ibin)));
 	    times_19[ibin-1] = waves[19]->GetBinCenter(ibin);
-	    voltages_19[ibin-1] = waves[19]->GetBinContent(ibin);
+	    voltages_19[ibin-1] = std::min(-digisatV,std::max(digisatV,waves[19]->GetBinContent(ibin)));
 	    times_20[ibin-1] = waves[20]->GetBinCenter(ibin);
-	    voltages_20[ibin-1] = waves[20]->GetBinContent(ibin);
+	    voltages_20[ibin-1] = std::min(-digisatV,std::max(digisatV,waves[20]->GetBinContent(ibin)));
 	    times_21[ibin-1] = waves[21]->GetBinCenter(ibin);
-	    voltages_21[ibin-1] = waves[21]->GetBinContent(ibin);
+	    voltages_21[ibin-1] = std::min(-digisatV,std::max(digisatV,waves[21]->GetBinContent(ibin)));
 	    times_22[ibin-1] = waves[22]->GetBinCenter(ibin);
-	    voltages_22[ibin-1] = waves[22]->GetBinContent(ibin);
+	    voltages_22[ibin-1] = std::min(-digisatV,std::max(digisatV,waves[22]->GetBinContent(ibin)));
 	    times_23[ibin-1] = waves[23]->GetBinCenter(ibin);
-	    voltages_23[ibin-1] = waves[23]->GetBinContent(ibin);
+	    voltages_23[ibin-1] = std::min(-digisatV,std::max(digisatV,waves[23]->GetBinContent(ibin)));
 	    times_24[ibin-1] = waves[24]->GetBinCenter(ibin);
-	    voltages_24[ibin-1] = waves[24]->GetBinContent(ibin);
+	    voltages_24[ibin-1] = std::min(-digisatV,std::max(digisatV,waves[24]->GetBinContent(ibin)));
 	    times_25[ibin-1] = waves[25]->GetBinCenter(ibin);
-	    voltages_25[ibin-1] = waves[25]->GetBinContent(ibin);
+	    voltages_25[ibin-1] = std::min(-digisatV,std::max(digisatV,waves[25]->GetBinContent(ibin)));
 	    times_26[ibin-1] = waves[26]->GetBinCenter(ibin);
-	    voltages_26[ibin-1] = waves[26]->GetBinContent(ibin);
+	    voltages_26[ibin-1] = std::min(-digisatV,std::max(digisatV,waves[26]->GetBinContent(ibin)));
 	    times_27[ibin-1] = waves[27]->GetBinCenter(ibin);
-	    voltages_27[ibin-1] = waves[27]->GetBinContent(ibin);
+	    voltages_27[ibin-1] = std::min(-digisatV,std::max(digisatV,waves[27]->GetBinContent(ibin)));
 	    times_28[ibin-1] = waves[28]->GetBinCenter(ibin);
-	    voltages_28[ibin-1] = waves[28]->GetBinContent(ibin);
+	    voltages_28[ibin-1] = std::min(-digisatV,std::max(digisatV,waves[28]->GetBinContent(ibin)));
 	    times_29[ibin-1] = waves[29]->GetBinCenter(ibin);
-	    voltages_29[ibin-1] = waves[29]->GetBinContent(ibin);
+	    voltages_29[ibin-1] = std::min(-digisatV,std::max(digisatV,waves[29]->GetBinContent(ibin)));
 	    times_30[ibin-1] = waves[30]->GetBinCenter(ibin);
-	    voltages_30[ibin-1] = waves[30]->GetBinContent(ibin);
+	    voltages_30[ibin-1] = std::min(-digisatV,std::max(digisatV,waves[30]->GetBinContent(ibin)));
 	    times_31[ibin-1] = waves[31]->GetBinCenter(ibin);
-	    voltages_31[ibin-1] = waves[31]->GetBinContent(ibin);
+	    voltages_31[ibin-1] = std::min(-digisatV,std::max(digisatV,waves[31]->GetBinContent(ibin)));
 	}
 	outTree->Fill();
     }
@@ -376,6 +410,13 @@ void clearOutBranchesMix(){
 }
 void prepareOutBranchesMix(){
     b_timestamp = outTree->Branch("timestamp",&timestamp,"timestamp/D");
+    b_chan_muDist = outTree->Branch("chan_muDist",chan_muDist,"chan_muDist[32]/F");
+    b_chan_trueNPE = outTree->Branch("chan_trueNPE",chan_trueNPE,"chan_trueNPE[32]/I");
+    b_scale1fb = outTree->Branch("scale1fb",&scale1fb,"scale1fb/F");
+    b_fileID = outTree->Branch("fileID",&fileID,"fileID/I");
+    b_orig_evt = outTree->Branch("orig_evt",&orig_evt,"orig_evt/I");
+    b_mcTruth_threeBarLine = outTree->Branch("mcTruth_threeBarLine",&mcTruth_threeBarLine,"mcTruth_threeBarLine/O");
+    b_mcTruth_fourSlab = outTree->Branch("mcTruth_fourSlab",&mcTruth_fourSlab,"mcTruth_fourSlab/O");
     // times.push_back(time);
     // voltages.push_back(voltage);
     b_times_0 = outTree->Branch("times_0",times_0,"times_0[1024]/D");

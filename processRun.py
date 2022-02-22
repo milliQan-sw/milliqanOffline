@@ -13,7 +13,7 @@ import config as cfg
 def main(arg1,arg2=None):
 	run = str(arg1)
         if arg2 == None:
-            make_tree_script = "make_tree"
+            make_tree_script = "simple_macro"
         else:
             make_tree_script = str(arg2)
 
@@ -35,7 +35,7 @@ def main(arg1,arg2=None):
 		scriptName= runDir+"/Job"+str(iJob)+".sh"
 		script = open(scriptName,"w")
 		script.write("#!/bin/bash\n")
-		script.write("cd /net/cms26/cms26r0/milliqan/milliqanOffline\n")
+		script.write("cd /home/milliqan/milliqanOffline\n")
 		for i in range(15):
 			if iFile>=nFiles: break
 			#script.write("root -b -q 'make_tree.C+(\""+fileList[iFile]+"\""")'\n")

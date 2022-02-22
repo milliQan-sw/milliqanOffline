@@ -4,6 +4,7 @@
 #include <sstream>
 #include <iomanip> // for setw()
 #include <time.h>
+#include <exception>
 #include <sys/stat.h>
 #include <sys/types.h>
 
@@ -18,6 +19,7 @@
 #include "TVirtualFFT.h"
 #include "TTree.h"
 #include "TChain.h"
+#include <set>
 #include "TMath.h"
 #include "TH1F.h"
 #include "TParameter.h"
@@ -27,6 +29,7 @@
 #include "TDirectory.h"
 #include "TBranch.h"
 #include "TString.h"
+#include "TObjString.h"
 #include "TStyle.h"
 #include "TPaveStats.h"
 #include "TLatex.h"
@@ -36,8 +39,10 @@
 #include "TLegend.h"
 #include "TColor.h"
 #include "TComplex.h"
-#include "/net/cms26/cms26r0/milliqan/milliDAQ/interface/GlobalEvent.h"
-#include "/net/cms26/cms26r0/milliqan/milliDAQ/interface/DemonstratorConfiguration.h"
+//#include "/net/cms26/cms26r0/milliqan/milliDAQ/interface/GlobalEvent.h"
+//#include "/net/cms26/cms26r0/milliqan/milliDAQ/interface/DemonstratorConfiguration.h"
+#include "/home/milliqan/MilliDAQ/interface/GlobalEvent.h"  // Path in local directory
+#include "/home/milliqan/MilliDAQ/interface/DemonstratorConfiguration.h" // Path in local directory
 #include "pmt-calibration/photon_template_generator/SPEGen.h"
 
 #include <string>
@@ -458,9 +463,9 @@ double timestampSecs = 0;
 
 //Temporary sanity check
 
-TString milliqanOfflineDir="/net/cms26/cms26r0/milliqan/milliqanOffline/";
+TString milliqanOfflineDir="/home/milliqan/milliqanOffline/";
 
-void make_tree(TString fileName, int eventNum=-1, TString tag="",float rangeMinX=-1.,float rangeMaxX=-1.,float rangeMinY=-1000.,float rangeMaxY=-1000., int displayPulseBounds=1, int onlyForceChans=0, int runFFT=0 , int applyLPFilter = 0,int injectPulses=0, float injectSignalQ=-1, int runDRS=0,set<int> forceChan={});
+void make_tree(TString fileName, int eventNum=-1, TString tag="",float rangeMinX=-1.,float rangeMaxX=-1.,float rangeMinY=-1000.,float rangeMaxY=-1000., int displayPulseBounds=1, int onlyForceChans=0, int runFFT=0 , int applyLPFilter = 0,int injectPulses=0, float injectSignalQ=-1, int runDRS=0,std::set<int> forceChan={});
 void loadFillList(TString fillFile=milliqanOfflineDir+"processedFillList2018.txt");
 vector<TString> getFieldFileList(TString location);
 void loadFieldList(TString fieldFile);
@@ -498,6 +503,7 @@ TRandom2 * areaRandom = new TRandom2();
 
 TH1D * SPEGenLargeN(float sampFreq,TString species, double chanArea,uint iDigi,uint nPulse) {
     TH1D * out;
+    /*
     double mean,rms,max;
     chanArea *= 1./1.6;
     if (species == "R878"){
@@ -517,10 +523,14 @@ TH1D * SPEGenLargeN(float sampFreq,TString species, double chanArea,uint iDigi,u
     }
     double randArea = areaRandom->Gaus(mean*nPulse,rms*TMath::Sqrt(1.*nPulse));
     out->Scale(randArea*chanArea/(out->Integral("width")*max));
+    */
+    std::cout << "Need to fix pmt-calib to use" << std::endl;
+    throw std::exception();
     return out;
 }
 TH1D * SPEGen(float sampFreq,TString species, double chanArea,uint iDigi) {
     TH1D * out;
+    /*
     chanArea *= 1./1.6;
     if (species == "R878"){
 	speR878[iDigi]->SetChanArea(chanArea);
@@ -534,6 +544,9 @@ TH1D * SPEGen(float sampFreq,TString species, double chanArea,uint iDigi) {
 	speET[iDigi]->SetChanArea(chanArea);
 	out = speET[iDigi]->Generate();
     }
+*/
+    std::cout << "Need to fix pmt-calib to use" << std::endl;
+    throw std::exception();
     return out;
 }
 void defineColors(){
@@ -590,6 +603,7 @@ int main(int argc, char **argv)
 
 void make_tree(TString fileName, int eventNum, TString tag, float rangeMinX,float rangeMaxX, float rangeMinY,float rangeMaxY, int displayPulseBounds, int onlyForceChans,int runFFT,int applyLPFilter,int injectPulses, float injectSignalQ,int runDRS, set<int> forceChan){
     //	gROOT->ProcessLine( "gErrorIgnoreLevel = kError");
+    std::cout << "1_" << endl;
     if (injectPulses) cout << "Running in pulse injection mode!" << endl;
     if (injectSignalQ > 0) cout << "Running in signal injection mode with Q = " << injectSignalQ << "!" << endl;
     if (applyLPFilter) cout << "Applying low pass filter to waveforms!" << endl;
@@ -602,12 +616,18 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMinX,floa
     else{
 	for (int ic=0;ic<=31;ic++) {channelCalibrations[ic] = interModuleCalibrations[ic];}//+intraModuleCalibrations[i];}
     }
+    std::cout << "2_" << endl;
     bool calibrateDisplay = true;
+    std::cout << "2.1_" << endl;
     defineColors();
+    std::cout << "2.2_" << endl;
     if(eventNum>=0) displayMode=true;
+    std::cout << "2.3_" << endl;
     if(displayMode) cout<<"Display tag is "<<tag<<endl;
-    loadFillList();
+    std::cout << "2.4_" << endl;
+    //loadFillList();   // This line was causing a seg fault.......
 
+    std::cout << "3_" << endl;
 
     TString inFileName = fileName;
     TFile *f = TFile::Open(inFileName, "READ");
@@ -617,15 +637,22 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMinX,floa
     TString runNumber = ((TObjString*)baseFileName.Tokenize(".")->At(0))->String().Data();
     runNumber.ReplaceAll("MilliQan_Run","");
 
+    std::cout << "4_" << endl;
+
     if(milliDAQ && runDRS <= 0){ 
 	inTree = (TTree*)f->Get("Events"); 
-
+         
+	std::cout << "5_" << endl;
+         
 	metadata = (TTree*)f->Get("Metadata");
 	metadata->SetBranchAddress("configuration", &cfg);
 	metadata->GetEntry(0);
 	fstream file; 
 	runNum = atoi(runNumber.Data());
 	file.open(configurationFolder+"Run"+runNum+".txt", ios::out); 
+        
+	std::cout << "5.1_" << endl;       
+
 	// Backup streambuffers of  cout 
 	streambuf* stream_buffer_cout = cout.rdbuf(); 
 	streambuf* stream_buffer_cin = cin.rdbuf(); 
@@ -643,29 +670,42 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMinX,floa
 	//SAMFrequency 1 -> 1.6 GHz
 	//SAMFrequency 2 -> 0.8 GHz
 	// actual rate = 3.2 / pow(2,SAMFrequency)
+	
+	std::cout << "5.2_" << endl;
 
 	sample_rate[0] = 3.2 / pow(2,cfg->digitizers[0].SAMFrequency);
 	sample_rate[1] = 3.2 / pow(2,cfg->digitizers[1].SAMFrequency);
 	for (int i =0; i < numChan; i++){
 	    float triggerThresh = cfg->digitizers[i/16].channels[i % 16].triggerThreshold;
+	    std::cout << "5.3_" << endl;
 	    bool triggerEnable = cfg->digitizers[i/16].channels[i % 16].triggerEnable;
+	    std::cout << "5.4_" << endl;
 	    int triggerMajority = cfg->digitizers[i/16].GroupTriggerMajorityLevel;
+	    std::cout << "5.5_" << endl;
 	    int triggerLogic = cfg->digitizers[i/16].GroupTriggerLogic;
+            std::cout << "5.6_" << endl;
 	    v_triggerThresholds->push_back(triggerThresh);
 	    v_triggerEnable->push_back(triggerEnable);
 	    v_triggerMajority->push_back(triggerMajority);
 	    v_triggerLogic->push_back(triggerLogic);
+	    std::cout << "5.7_" << endl;
 	}
 
 	cout<<"Sample frequencies, boards 0 and 1: "<<sample_rate[0]<<" GHz and "<<sample_rate[1]<<" GHz."<<endl;
-
+        
     }
 else if (runDRS > 0){
-    inTree = (TTree*)f->Get("Events"); 
+    std::cout << "6_" << endl;
+    inTree = (TTree*)f->Get("Events");
+    std::cout << "6.1_" << endl; 
     TParameter<float> * rate0 = (TParameter<float> *) f->Get("sampleRate0");
-    sample_rate[0] = rate0->GetVal();
+    std::cout << "6.2_" << endl;
+    //sample_rate[0] = rate0->GetVal();  // This line caused a seg fault
+    std::cout << "6.3_" << endl;
     TParameter<float> * rate1 = (TParameter<float> *) f->Get("sampleRate1");
-    sample_rate[1] = rate1->GetVal();
+    std::cout << "6.4_" << endl;
+    //sample_rate[1] = rate1->GetVal();  // This line caused a seg fault
+    std::cout << "6.5_" << endl;
     for (int i =0; i < numChan; i++){
 	float triggerThresh = 0.03;
 	bool triggerEnable = true;
@@ -676,64 +716,87 @@ else if (runDRS > 0){
 	v_triggerMajority->push_back(triggerMajority);
 	v_triggerLogic->push_back(triggerLogic);
     }
+    std::cout << "6.6_" << endl;
 }
 else {
+    std::cout << "7_" << endl;
     inTree = (TTree*)f->Get("data"); 
 }
 
 if (runDRS > 0){
+    std::cout << "8_" << endl;
     runNumber = "1";
 }
+/*
 	speR878[0] = new SPE("r878",sample_rate[0],false,-1);
 	speR878[1] = new SPE("r878",sample_rate[1],false,-1);
 	speR7725[0] = new SPE("r7725",sample_rate[0],false,-1);
 	speR7725[1] = new SPE("r7725",sample_rate[1],false,-1);
 	speET[0] = new SPE("et",sample_rate[0],false,-1);
 	speET[1] = new SPE("et",sample_rate[1],false,-1);
+*/
+
+std::cout << "9_" << endl;
 
 runNum=atoi(runNumber.Data());
 runNumOrig = runNum;
+
+std::cout << "10_" << endl;
+
 if (injectPulses) runNum *= -1;
 if (injectSignalQ > 0) {
+    std::cout << "11_" << endl;
     runNum *= 1E10;
     Long64_t injectSignalQ_long = Long64_t(round(injectSignalQ*1E5));
     runNum += injectSignalQ_long*1000;
     }
+    std::cout << "12_" << endl;
     TString signalString;
     if (injectSignalQ > 0){
+    std::cout << "13_" << endl;
     signalString += Form("SignalInjected_Q%.6f",injectSignalQ);
     signalString.ReplaceAll(".","p");
     }
+    std::cout << "14_" << endl;
     TString fileNumber;
     if (runDRS > 0){
+    std::cout << "15_" << endl;
     fileNumber = "0";
     }
     else{
     //Get file number from file name
+    std::cout << "16_" << endl;
     fileNumber = ((TObjString*)baseFileName.Tokenize(".")->At(1))->String().Data();
     fileNumber = ((TObjString*)fileNumber.Tokenize("_")->At(0))->String().Data();
     }
+    std::cout << "17_" << endl;
     fileNum=atoi(fileNumber.Data());
     TString configName; 
     if (runDRS > 0){
+    std::cout << "18_" << endl;
     TNamed * dateNamed = (TNamed *)f->Get("date");
-    date = TString(dateNamed->GetTitle());
-    configName = "DRS_"+date;
+    std::cout << "18.1_" << endl;
+    //date = TString(dateNamed->GetTitle());
+    std::cout << "18.2_" << endl;
+    //configName = "DRS_"+date;
+    configName = "DRS_";
+    std::cout << "18.3_" << endl;
     }
     else{
     //Get config name from filename
+    std::cout << "19_" << endl;
     configName = ((TObjString*)baseFileName.Tokenize(".")->At(1))->String().Data();
     configName = ((TObjString*)configName.Tokenize("_")->At(1))->String().Data();
     configName.ReplaceAll(".root","");
     }
-
+    std::cout << "20_" << endl;
     if (runDRS > 0){
     baseFileName="DRS"+baseFileName;
     }
     else{
 	baseFileName="UX5"+baseFileName;
     }
-
+    std::cout << "21_" << endl;
     baseFileName.ReplaceAll(".root","");
     baseFileName += signalString;
 
@@ -742,6 +805,8 @@ if (injectSignalQ > 0) {
     if(version.Contains("placeholder")){cout<<"This macro was compiled incorrectly. Please compile this macro using compile.sh"<<endl;return;}
 
     int offsetSignalQ = 0;
+    
+    std::cout << "22_" << endl;
 
     if (runDRS){
 	milliqanOfflineDir+="DRS/";
@@ -775,32 +840,39 @@ if (injectSignalQ > 0) {
     //if((int)tubeSpecies.size()!=numChan) cout<<"Tube species map does not match number of channels"<<endl;
 
     if(runDRS <= 0) {
+	std::cout << "23_" << endl;
 	chanArray = new TArrayI(numChan);
 	for(int ic=0;ic<numChan;ic++){
 	    chanArray->SetAt(ic,ic);
 	}
     }
     else {
+        std::cout << "24_" << endl;
 	chanArray = (TArrayI *) f->Get("chans");
-	numChan = chanArray->GetSize();
+        std::cout << "24.1_" << endl;
+	//numChan = chanArray->GetSize();   // This line causes a seg fault........
+        std::cout << "24.2_" << endl;
     }
 
+    std::cout << "25_" << endl;
     if(milliDAQ && runDRS <= 0) loadBranchesMilliDAQ();
     else if(runDRS) loadBranchesDRS();
     else loadBranchesInteractiveDAQ();	
-
+ 
+    std::cout << "26_" << endl;
     gSystem->mkdir(milliqanOfflineDir+"trees_"+version);	
     gSystem->mkdir(treeDirectory);	
     gSystem->mkdir(linkDirectory);
     TFile * outFile;
 
+    std::cout << "27_" << endl;
     if(!displayMode){
 	outFile = new TFile(outFileName,"recreate");
 	outTree = new TTree("t","t");
 	prepareOutBranches();
 	writeVersion(applyLPFilter);
     }
-
+    std::cout << "28_" << endl;
 
     if (runDRS){
 	displayDirectory = milliqanOfflineDir+"displaysDRS/Run"+to_string(runNum)+"_"+configName+signalString+"/";
@@ -810,8 +882,8 @@ if (injectSignalQ > 0) {
     }
     gSystem->mkdir(displayDirectory);
 
-
-
+    std::cout << "29_" << endl;
+   
 
     //if(!displayMode)
     std::vector<float> zeros(32,0.);
@@ -820,7 +892,7 @@ if (injectSignalQ > 0) {
     if (!runDRS){
 	loadSidebandList(Form("/net/cms26/cms26r0/milliqan/haddedTrees/sideband_files/sideband_mean_run_%i.txt",runNum), runNum);
     }
-
+    std::cout << "30_" << endl;
 
     //Load entry 0 in order to get timestamp of first event to find corret field information
     if (!runDRS){
@@ -1987,6 +2059,7 @@ void writeVersion(bool applyLPFilter){
 
 }
 void loadBranchesDRS(){
+    /*
     inTree->SetBranchAddress("chan_muDist",chan_muDistDRS);
     inTree->SetBranchAddress("chan_trueNPE",chan_trueNPEDRS);
     inTree->SetBranchAddress("fileID",&fileIDDRS);
@@ -2027,6 +2100,7 @@ void loadBranchesDRS(){
     inTree->SetBranchAddress("voltages_29",arrayVoltageDRS_29);
     inTree->SetBranchAddress("voltages_30",arrayVoltageDRS_30);
     inTree->SetBranchAddress("voltages_31",arrayVoltageDRS_31);
+    */
     for(int ic=0;ic<numChan;ic++) 
     { 	
 	int chan = chanArray->GetAt(ic);

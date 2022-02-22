@@ -22,13 +22,14 @@ def parse_args():
 	return args
 
 def main(inFiles,LPF,exe,pulseInject,signalInject,DRS):
-    for inFileText in inFiles:
-        inFilesTextExpanded = glob.glob(inFileText)
-        if len(inFilesTextExpanded) == 0:
-            print "No files found for string: ",inFileText
-        for inFile in inFilesTextExpanded:
-            args = [exe,inFile,"-1","","-1","-1","-1000","-1000","0","0","0",str(int(LPF)),str(int(pulseInject)),str(float(signalInject)),str(int(DRS))]
-            call(args)
+	for inFileText in inFiles:
+		inFilesTextExpanded = glob.glob(inFileText)
+		if len(inFilesTextExpanded) == 0:
+			print ("No files found for string: ")
+			print (inFileText)
+		for inFile in inFilesTextExpanded:
+			args = [exe,inFile,"-1","","-1","-1","-1000","-1000","0","0","0",str(int(LPF)),str(int(pulseInject)),str(float(signalInject)),str(int(DRS))]
+			call(args)
 
 if __name__ == "__main__":
 	#if len(sys.argv)<4:

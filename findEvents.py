@@ -12,8 +12,8 @@ def main(run,cuts,nevents,tag):
 	t = ROOT.TChain("t")
 	treeList=glob.glob(cfg.offlineDir+"trees/Run"+run+"*/*.root")
 	for f in treeList: 
-            if "SignalInjected" in f: continue
-	    t.Add(f)
+		if "SignalInjected" in f: continue
+		t.Add(f)
 
 	t.SetEstimate(nevents) # limit how many events are read to memory
 	#use Draw to generate table and store in memory
@@ -37,13 +37,14 @@ def main(run,cuts,nevents,tag):
 		table.append([int(runs[i]),int(files[i]),int(events[i])])
 		row = "%s %s %s\n" % (str(int(runs[i])),str(int(files[i])),str(int(events[i])))
 		outFile.write(row)
-	outFile.close()
-	print "Wrote list to",outFileName
+		outFile.close()
+	print ("Wrote list to")
+	print (outFileName)
 	return table
 
 
 if __name__ == "__main__":
 	if len(sys.argv)<4:
-		print "Usage: ./findEvents.py runNumber selection nEvents"
-		print "If you call this script from bash and use the symbol $ in selection, you must use single quotes or backslash to escape."
+		print ("Usage: ./findEvents.py runNumber selection nEvents")
+		print ("If you call this script from bash and use the symbol $ in selection, you must use single quotes or backslash to escape.")
 	else: main(sys.argv[1],sys.argv[2],int(sys.argv[3]))

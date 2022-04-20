@@ -90,7 +90,7 @@ Once you have activated the conda environment, you may execute the `runMakeTree.
 ```bash
    python3 runMakeTree.py --inFile "input_filename".root --exe ./executable.exe -d	
 ```
-Where `executable.exe` is the <target macro name> specified when running the compile.sh script.
+Where `executable.exe` is the "target_macro_name" specified when running the compile.sh script.
 	
 ### Link dependencies
 The above scripts rely on the following links in `/homes/milliqan/bin`

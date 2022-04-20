@@ -63,7 +63,8 @@ using namespace std;
 int numChan=16;
 TArrayI* chanArray;
 //int maxEvents=-1;
-int maxEvents = 1000;
+int maxEvents = 51000;  // need to change for combined files from calibration
+//int time_window = 0.0885;
 map<int, map<int,vector<float> > > sidebandPerFile;
 float sideband_range[2] = {0,50};
 float triggerBand_range[2] = {360,390};
@@ -72,7 +73,8 @@ float presampleEnd = 2.5;
 
 float sample_rate[] = {1.6,1.6};
 
-bool debug=true;
+bool debug=false;
+bool darkRate=true;
 
 bool milliDAQ=false;
 
@@ -99,6 +101,9 @@ Long64_t prevTDC=-1;
 
 int nRollOvers=0;
 
+int npulses_chan0 = 0;
+int npulses_chan2 = 0;
+int npulses_chan4 = 0;
 int event = 0;
 int fileNum=0;
 Long64_t runNum=0;
@@ -220,6 +225,20 @@ int main(int argc, char **argv)
         make_tree(argv[1],stoi(argv[2]),argv[3],stof(argv[4]),stof(argv[5]),stoi(argv[6]),stoi(argv[7]),stoi(argv[8]),stoi(argv[9]),stoi(argv[10]),stoi(argv[11]),stoi(argv[12]),atof(argv[13]),stoi(argv[14]),forceChans);
     }
 
+    cout<<"Number of pulses found in channel 0 = "<<npulses_chan0<<endl;
+    cout<<"Number of pulses found in channel 2 = "<<npulses_chan2<<endl;
+    cout<<"Number of pulses found in channel 4 = "<<npulses_chan4<<endl;
+    //float np_ch0 = (float) npulses_chan0;
+    //float np_ch2 = (float) npulses_chan2;
+    //float np_ch4 = (float) npulses_chan4;
+    //cout<<"Number of pulses found in channel 0 = "<<np_ch0<<endl;
+    //float DarkRate_ch0 = np_ch0/time_window;
+    //float DarkRate_ch2 = np_ch2/time_window;
+    //float DarkRate_ch4 = np_ch4/time_window;
+    //cout<<"Channel 0 Dark Rate = "<<DarkRate_ch0<<" Hz "<<endl;
+    //cout<<"Channel 2 Dark Rate = "<<DarkRate_ch2<<" Hz "<<endl;
+    //cout<<"Channel 4 Dark Rate = "<<DarkRate_ch4<<" Hz "<<endl;   
+
 }
 # endif 
 # endif
@@ -287,7 +306,8 @@ void make_tree(TString fileName, int eventNum, TString tag, float rangeMinX,floa
 	 vector<vector<vector<float> > > allPulseBounds;
 	 for(int ic=0;ic<numChan;ic++){
 	     allPulseBounds.push_back(processChannel(ic,applyLPFilter,injectPulses,injectSignalQ,runDRS));
-	     v_max->push_back(1.*waves[ic]->GetMaximum());
+	     if (ic==2) v_max->push_back(1.*waves[ic]->GetMaximum());
+             //The above if statement is used only for the PMT calibration studies
 	 }    
 
          for(int ig=0; ig<8; ig++){
@@ -351,7 +371,10 @@ vector< vector<float> > processChannel(int ic,bool applyLPFilter, bool injectPul
     //if (addTriggerTimes) findTriggerCandidates(ic,sb_mean);
 
     int npulses = pulseBounds.size();
-    cout<<"npulses = "<<npulses<<endl;
+    //cout<<"npulses = "<<npulses<<endl;
+    if (ic==0&&npulses>0) npulses_chan0 += npulses;
+    if (ic==2&&npulses>0) npulses_chan2 += npulses;
+    if (ic==4&&npulses>0) npulses_chan4 += npulses;
 
     v_sideband_mean->push_back(sb_meanPerEvent);
     //v_sideband_RMS->push_back(sb_RMSPerEvent);
@@ -458,8 +481,22 @@ vector< vector<float> > findPulses(int ic, bool applyLPFilter, int runDRS){
 
     int Nconsec = 6;
     int NconsecEnd = 12;
-    float thresh = 500.0;
-    float lowThresh = 250.0;
+    float thresh = 20.0;
+    float lowThresh = 15.0;
+    int istart = 80;
+    /*
+    if (darkRate){
+        int Nconsec = 3;
+        float thresh = 20.0;
+        float lowThresh = 15.0;
+        int istart = 80;
+    }
+    else{
+        int Nconsec = 6;
+        float thresh = 100.0;
+        float lowThresh = 50.0;
+	int istart = 0;
+    }*/
     //float thresh = 2.0;
     //float lowThresh = 1.0;
     /*
@@ -487,7 +524,7 @@ vector< vector<float> > findPulses(int ic, bool applyLPFilter, int runDRS){
     vector<vector<float> > bounds;
     //float tstart = sideband_range[1]+1;
     //int istart = waves[ic]->FindBin(tstart);
-    int istart = 0;
+    //int istart = 0;
 
     bool inpulse = false;
     int nover = 0;
@@ -496,12 +533,13 @@ vector< vector<float> > findPulses(int ic, bool applyLPFilter, int runDRS){
     //int i_begin = 0;
     int i_stop_searching = waves[ic]->GetNbinsX()-Nconsec;
     int i_stop_final_pulse = waves[ic]->GetNbinsX();
-
-    
+   
+    //cout<<"istart = "<<istart<<" , i_stop_searching = "<<i_stop_searching;
+ 
 
     for (int i=istart; i<i_stop_searching || (inpulse && i<i_stop_final_pulse); i++) {
         float v = waves[ic]->GetBinContent(i);
-        //cout<<"ic = "<<ic<<" , i = "<<i<<" , v = "<<v<<endl;
+        //if (ic==0 && i==394) cout<<"ic = "<<ic<<" , i = "<<i<<" , v = "<<v<<endl;
         if (!inpulse) {
             if (v<lowThresh) {   
                 nover = 0;     // If v dips below the low threshold, store the value of the sample index as i_begin
@@ -532,9 +570,13 @@ vector< vector<float> > findPulses(int ic, bool applyLPFilter, int runDRS){
 		nover = 0;
 		nunder = 0;
 		i_begin = i;
+
+                
+             
 	    }
 	}
     }
+
     return bounds;
 }
 

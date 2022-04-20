@@ -1,0 +1,5 @@
+Starting event loop
+Closed output tree.
+Number of pulses found in channel 0 = 983
+Number of pulses found in channel 2 = 929
+Number of pulses found in channel 4 = 1665

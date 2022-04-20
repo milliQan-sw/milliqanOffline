@@ -1,0 +1,9 @@
+Starting event loop
+Closed output tree.
+Number of pulses found in channel 0 = 770
+Number of pulses found in channel 2 = 666
+Number of pulses found in channel 4 = 1018
+Number of pulses found in channel 0 = 770
+Channel 0 Dark Rate = inf Hz 
+Channel 2 Dark Rate = inf Hz 
+Channel 4 Dark Rate = inf Hz 

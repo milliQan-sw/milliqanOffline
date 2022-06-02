@@ -76,7 +76,24 @@ v7-0-g57ec693
 This indicates the tagged version, the number of commits since the last tag was made, and the hash for the latest commit.
 
 
+### Running the Code
+The code is run by executing the `runMakeTree.py` script. To do so on photino, one must use a conda environment, which on photino is called `mq_offline`. 
+To activate the conda environment in order to execute the `runMakeTree.py` script, use the following command:
+```bash
+   conda activate mq_offline
+```
+If you need to recompile `simple_macro.C` (See section "Compiling the Code"), you must deactivate the conda environment:
+```bash
+   conda deactivate
+```
 
+Once you have activated the conda environment, you may execute the `runMakeTree.py` script using the following command:
+```bash
+   python3 runMakeTree.py --inFile "input_filename".root --exe ./executable.exe -d
+```
+Where `executable.exe` is the <target macro name> specified when running the `compile.sh` script.
+	
+	
 ### Link dependencies
 The above scripts rely on the following links in `/homes/milliqan/bin`
 	findEvents.py  

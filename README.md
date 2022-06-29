@@ -16,13 +16,40 @@ Each event of the tree contains several vectors storing details such as the chan
 
 The offline trees are automatically made at UCSB with the latest stable tag. They can be found in /net/cms26/cms26r0/milliqan/milliqanOffline/trees/
 
-### Compiling the code:
+### Installation and Dependencies
+
+Clone the milliqanOffline repo:
+
 ```bash
 
-./compile.sh <target macro name>
+git clone https://github.com/kdownham/milliqanOffline.git
 
 ```
-make_tree and make_tree_vN are both used by processRun and topUpRun, so both should be remade for official updates.
+Install pyROOT and python3-root (requires sudo privileges):
+
+```bash
+
+pip3 install pyROOT
+sudo yum install python3-root
+
+```
+
+### Compiling the code:
+
+For the compilation to succeed, one must specify the path to the MilliDAQ shared object file (libMilliDAQ.so) and `ConfigurationReader.cc` in the compile script 
+`compile.sh`.
+This involves editing line 22 of `compile.sh` (the compilation command). The macro that performs the offline tree-making is specified in line 17 of `compile.sh` (the 
+default is `simple_macro.C`).
+
+To compile the code, which produces an executable file (from the macro) that will be used for the tree-making, execute the following command
+
+```bash
+
+./compile.sh (target macro name).exe
+
+```
+
+Keep track of the "target macro name" as this macro will be needed when making the offline trees.
 
 ##To use common scripts, log onto milliqan username on SL6 machine (e.g. cms1, cms3, cms6, cms29)
 
@@ -76,36 +103,14 @@ v7-0-g57ec693
 This indicates the tagged version, the number of commits since the last tag was made, and the hash for the latest commit.
 
 
-### Running the Code
-The code is run by executing the `runMakeTree.py` script. To do so on photino, one must use a conda environment, which on photino is called `mq_offline`. 
-To activate the conda environment in order to execute the `runMakeTree.py` script, use the following command:
+### Making the Offline Trees
+The code is run by executing the `runMakeTree.py` script. You may execute the `runMakeTree.py` script using the following command:
 ```bash
-   conda activate mq_offline
+   python3 runMakeTree.py --inFile "input_filename".root --exe ./(target macro name).exe -d
 ```
-If you need to recompile `simple_macro.C` (See section "Compiling the Code"), you must deactivate the conda environment:
-```bash
-   conda deactivate
-```
-
-Once you have activated the conda environment, you may execute the `runMakeTree.py` script using the following command:
-```bash
-   python3 runMakeTree.py --inFile "input_filename".root --exe ./executable.exe -d
-```
-Where `executable.exe` is the <target macro name> specified when running the `compile.sh` script.
+Where `(target macro name).exe` is the one specified when running the `compile.sh` script.
 	
-	
-### Link dependencies
-The above scripts rely on the following links in `/homes/milliqan/bin`
-	findEvents.py  
-	makeDisplays.py  
-	make_tree  
-	processRun.py  
-	wrapper.sh
-They should all point to the corresponding executables in the milliqanOffline directory
-/homes/milliqan/bin must be added to the csh path in ~/.cshrc as well, since batch jobs are executed in csh.
-
-### Batch system
-Make sure the batch system has a reasonable skipped nodes list in $JOBS(see committed example as starting point).
+ROOT files containing the output trees are by default placed in the `milliqanOffline/trees` directory.
 
 ### MilliDAQ shared libraries
 To compile the MilliDAQ shared library, `libMilliDAQ.so`, necessary for reading the "raw" data, do the following:
@@ -113,40 +118,6 @@ To compile the MilliDAQ shared library, `libMilliDAQ.so`, necessary for reading 
 	cd /net/cms26/cms26r0/milliqan/MilliDAQ
 	make clean
 	make shared
-```
-The Makefile has 3 modified lines to avoid dependencies on unnecessary CAEN libraries (already done on the cms26 installation).
-
-The diff of the changes are:
-	-LDFLAGS = -L./. $(shell root-config --libs) -lCAENDigitizer -lCAENVME
-	+LDFLAGS = -L./. $(shell root-config --libs)
-
-	@@echo "Generating dictonary..."
-	-       @@rootcint -f $@ -c $(INCLUDE) interface/Event.h interface/V1743Configuration.h interface/LinkDef.h
-	+       @@rootcint -f $@ -c $(INCLUDE) interface/Event.h interface/LinkDef.h
-
-	 libMilliDAQ.so: Dict.cxx
-        @@echo "Making $@ ..."
-	-       @@$(CXX) $(CXXFLAGS) $(SOFLAGS) -o $@ $(LDFLAGS) src/Event.cc src/V1743Configuration.cc $<
-	+       @@$(CXX) $(CXXFLAGS) $(SOFLAGS) -o $@ $(LDFLAGS) src/Event.cc $<
-
-
-Also remove the following line from LinkDef.h:
-#pragma link C++ class mdaq::V1743Configuration+;
-
-### Running with DRS input (experimental!)
-
-Place the DRS input file (made using the processBinary script here: https://github.com/mcitron/pmt-calibration) in the /net/cms26/cms26r0/milliqan/DRS directory (DO NOT CHANGE THE FILE NAME!)
-
-Make offline trees by running:
-
-```bash
-python runMakeTree.py --inFile ../DRS/<input-file-name>.root --exe ./make_tree_withDRS -d
-```
-
-Make displays using the dedicated script (identify the input file from the timestamp):
-
-```bash
-python makeDisplaysDRS.py <timestamp> <nEvents> #other arguments as for makeDisplays.py detailed above
 ```
 
 

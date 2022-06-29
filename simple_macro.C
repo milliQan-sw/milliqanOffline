@@ -42,6 +42,8 @@
 
 #include "/home/milliqan/MilliDAQ/interface/GlobalEvent.h"
 #include "/home/milliqan/MilliDAQ/interface/DemonstratorConfiguration.h"
+#include "/home/milliqan/MilliDAQ/interface/V1743Configuration.h"
+#include "/home/milliqan/MilliDAQ/interface/V1743Event.h"
 
 #include <string>
 #include <sys/types.h>
@@ -351,8 +353,9 @@ vector< vector<float> > processChannel(int ic,bool applyLPFilter, bool injectPul
     //if (addTriggerTimes) findTriggerCandidates(ic,sb_mean);
 
     int npulses = pulseBounds.size();
-    cout<<"npulses = "<<npulses<<endl;
-
+    if(npulses > 0){ 
+    	cout<<"npulses = "<<npulses<<endl;
+    }
     v_sideband_mean->push_back(sb_meanPerEvent);
     //v_sideband_RMS->push_back(sb_RMSPerEvent);
     v_triggerBand_mean->push_back(sb_triggerMeanPerEvent);
@@ -458,8 +461,8 @@ vector< vector<float> > findPulses(int ic, bool applyLPFilter, int runDRS){
 
     int Nconsec = 6;
     int NconsecEnd = 12;
-    float thresh = 500.0;
-    float lowThresh = 250.0;
+    float thresh = 40.0;
+    float lowThresh = 20.0;
     //float thresh = 2.0;
     //float lowThresh = 1.0;
     /*

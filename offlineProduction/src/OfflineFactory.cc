@@ -39,33 +39,31 @@ void OfflineFactory::prepareOutBranches(){
     outTree->Branch("max",&outputTreeContents.v_max);
 }
 void OfflineFactory::resetOutBranches(){
-    outputTreeContents.v_triggerThresholds->clear();
-    outputTreeContents.v_triggerEnable->clear();
-    outputTreeContents.v_triggerMajority->clear();
-    outputTreeContents.v_triggerLogic->clear();
-    outputTreeContents.v_chan->clear();
-    outputTreeContents.v_height->clear();
-    outputTreeContents.v_area->clear();
-    outputTreeContents.v_nPE->clear();
-    outputTreeContents.v_ipulse->clear();
-    outputTreeContents.v_npulses->clear();
-    outputTreeContents.v_time->clear();
-    outputTreeContents.v_duration->clear();
-    outputTreeContents.v_delay->clear();
-    outputTreeContents.v_max->clear();
+    outputTreeContents.v_triggerThresholds.clear();
+    outputTreeContents.v_triggerEnable.clear();
+    outputTreeContents.v_triggerMajority.clear();
+    outputTreeContents.v_triggerLogic.clear();
+    outputTreeContents.v_chan.clear();
+    outputTreeContents.v_height.clear();
+    outputTreeContents.v_area.clear();
+    outputTreeContents.v_nPE.clear();
+    outputTreeContents.v_ipulse.clear();
+    outputTreeContents.v_npulses.clear();
+    outputTreeContents.v_time.clear();
+    outputTreeContents.v_duration.clear();
+    outputTreeContents.v_delay.clear();
+    outputTreeContents.v_max.clear();
 }
 void OfflineFactory::readMetaData(){
     inFile = TFile::Open(inFileName, "READ");
     TString baseFileName= ((TObjString*)inFileName.Tokenize("/")->Last())->String().Data();
-    TString runNumber = ((TObjString*)baseFileName.Tokenize(".")->At(0))->String().Data();
-    runNumber.ReplaceAll("MilliQan_Run","");
 
     TTree * metadata;
     metadata = (TTree*) inFile->Get("Metadata");
     metadata->SetBranchAddress("configuration", &cfg);
     metadata->GetEntry(0);
-    outputTreeContents.runNum = atoi(runNumber.Data());
-    outputTreeContents.fillNum = atoi(0);
+    outputTreeContents.runNum = 0;
+    outputTreeContents.fillNum = 0;
     int numBoards = cfg->digitizers.size();
     numChan = numBoards*16;
     chanArray = new TArrayI(numChan);
@@ -76,10 +74,10 @@ void OfflineFactory::readMetaData(){
         bool triggerEnable = cfg->digitizers[i/16].channels[i % 16].triggerEnable;
         int triggerMajority = cfg->digitizers[i/16].GroupTriggerMajorityLevel;
         int triggerLogic = cfg->digitizers[i/16].GroupTriggerLogic;
-        outputTreeContents.v_triggerThresholds->push_back(triggerThresh);
-        outputTreeContents.v_triggerEnable->push_back(triggerEnable);
-        outputTreeContents.v_triggerMajority->push_back(triggerMajority);
-        outputTreeContents.v_triggerLogic->push_back(triggerLogic);
+        outputTreeContents.v_triggerThresholds.push_back(triggerThresh);
+        outputTreeContents.v_triggerEnable.push_back(triggerEnable);
+        outputTreeContents.v_triggerMajority.push_back(triggerMajority);
+        outputTreeContents.v_triggerLogic.push_back(triggerLogic);
      }
 }
 
@@ -91,18 +89,21 @@ void OfflineFactory::makeOutputTree(){
 void OfflineFactory::readWaveData(){
     if (!inFile) inFile = TFile::Open(inFileName, "READ");
      inTree = (TTree*)inFile->Get("Events");
-     loadWavesMilliDAQ();
+     loadBranchesMilliDAQ();
      cout<<"Starting event loop"<<endl;
-     for(int i=0;i<inTree->GetEntries();i++){
+     int maxEvents = 10000;
+     // int maxEvents = inTree->GetEntries();
+     for(int i=0;i<maxEvents;i++){
+	 std::cout << i << std::endl;
          resetOutBranches();
          outputTreeContents.event=i;
          inTree->GetEntry(i);
-	 loadBranchesMilliDAQ(evt);
+	 loadWavesMilliDAQ();
          //Loop over channels
 	 vector<vector<pair<float,float> > > allPulseBounds;
 	 for(int ic=0;ic<numChan;ic++){
 	     allPulseBounds.push_back(processChannel(ic));
-	     outputTreeContents.v_max->push_back(1.*waves[ic]->GetMaximum());
+	     outputTreeContents.v_max.push_back(1.*waves[ic]->GetMaximum());
 	 }    
          outTree->Fill();
 
@@ -110,6 +111,7 @@ void OfflineFactory::readWaveData(){
 
 }
 void OfflineFactory::writeOutputTree(){
+     outFile->cd();
      outTree->Write();
      outFile->Close();
      if (inFile) inFile->Close();
@@ -167,7 +169,7 @@ vector< pair<float,float> > OfflineFactory::findPulses(int ic){
             // If the nunder is above or equal to 12 (or we reach the end of the file) store the values of the pulse bounds
             if (nunder>=NconsecEnd || i==(i_stop_final_pulse-1)) { 
 		bounds.push_back({(float)waves[ic]->GetBinLowEdge(i_begin), (float)waves[ic]->GetBinLowEdge(i+1)-0.01});
-		cout<<"i_begin, i: "<<i_begin<<" "<<i<<endl;       // i_begin is the 
+		// cout<<"i_begin, i: "<<i_begin<<" "<<i<<endl;       // i_begin is the 
                 inpulse = false;
 		nover = 0;
 		nunder = 0;
@@ -191,52 +193,52 @@ vector< pair<float,float> > OfflineFactory::processChannel(int ic){
         if (maxThreeConsec < tempMax) maxThreeConsec = tempMax;
 
     }
-    outputTreeContents.v_max_threeConsec->push_back(maxThreeConsec);
-    outputTreeContents.v_max_afterFilter->push_back(waves[ic]->GetMaximum());
-    outputTreeContents.v_min_afterFilter->push_back(waves[ic]->GetMinimum());
+    outputTreeContents.v_max_threeConsec.push_back(maxThreeConsec);
+    outputTreeContents.v_max_afterFilter.push_back(waves[ic]->GetMaximum());
+    outputTreeContents.v_min_afterFilter.push_back(waves[ic]->GetMinimum());
 
     for(int ipulse = 0; ipulse<npulses; ipulse++){
         waves[ic]->SetAxisRange(pulseBounds[ipulse].first,pulseBounds[ipulse].second);
 	if (chanMap.size() > 0){
-            outputTreeContents.v_column->push_back(chanMap[ic][0]);
-            outputTreeContents.v_row->push_back(chanMap[ic][1]);
-            outputTreeContents.v_layer->push_back(chanMap[ic][2]);
-            outputTreeContents.v_type->push_back(chanMap[ic][3]);
+            outputTreeContents.v_column.push_back(chanMap[ic][0]);
+            outputTreeContents.v_row.push_back(chanMap[ic][1]);
+            outputTreeContents.v_layer.push_back(chanMap[ic][2]);
+            outputTreeContents.v_type.push_back(chanMap[ic][3]);
 	}
         else{
-            outputTreeContents.v_column->push_back(0);
-            outputTreeContents.v_row->push_back(0);
-            outputTreeContents.v_layer->push_back(0);
-            outputTreeContents.v_type->push_back(0);
+            outputTreeContents.v_column.push_back(0);
+            outputTreeContents.v_row.push_back(0);
+            outputTreeContents.v_layer.push_back(0);
+            outputTreeContents.v_type.push_back(0);
         }
         
 	//FIXME need to add calibrations
 
-        outputTreeContents.v_chan->push_back(chanArray->GetAt(ic));
-        outputTreeContents.v_height->push_back(waves[ic]->GetMaximum());
-        outputTreeContents.v_time->push_back(pulseBounds[ipulse].first);
-        outputTreeContents.v_time_module_calibrated->push_back(pulseBounds[ipulse].first);//+channelCalibrations[ic]);
-        outputTreeContents.v_area->push_back(waves[ic]->Integral());
-        outputTreeContents.v_nPE->push_back(-1.);//(waves[ic]->Integral()/(channelSPEAreas[ic]))*(1.6/sample_rate));
-        outputTreeContents.v_ipulse->push_back(ipulse);
-        outputTreeContents.v_npulses->push_back(npulses);
-        outputTreeContents.v_duration->push_back(pulseBounds[ipulse].second - pulseBounds[ipulse].first);
-        if(ipulse>0) outputTreeContents.v_delay->push_back(pulseBounds[ipulse].first - pulseBounds[ipulse-1].second);
-        else outputTreeContents.v_delay->push_back(9999.);
+        outputTreeContents.v_chan.push_back(chanArray->GetAt(ic));
+        outputTreeContents.v_height.push_back(waves[ic]->GetMaximum());
+        outputTreeContents.v_time.push_back(pulseBounds[ipulse].first);
+        outputTreeContents.v_time_module_calibrated.push_back(pulseBounds[ipulse].first);//+channelCalibrations[ic]);
+        outputTreeContents.v_area.push_back(waves[ic]->Integral());
+        outputTreeContents.v_nPE.push_back(-1.);//(waves[ic]->Integral()/(channelSPEAreas[ic]))*(1.6/sample_rate));
+        outputTreeContents.v_ipulse.push_back(ipulse);
+        outputTreeContents.v_npulses.push_back(npulses);
+        outputTreeContents.v_duration.push_back(pulseBounds[ipulse].second - pulseBounds[ipulse].first);
+        if(ipulse>0) outputTreeContents.v_delay.push_back(pulseBounds[ipulse].first - pulseBounds[ipulse-1].second);
+        else outputTreeContents.v_delay.push_back(9999.);
         
         //FIXME add presample details
         //pair<float,float> presampleInfo = measureSideband(ic,pulseBounds[ipulse].first-presampleStart,pulseBounds[ipulse].first-presampleEnd);
-        //outputTreeContents.v_presample_mean->push_back(presampleInfo.first);
-        //outputTreeContents.v_presample_RMS->push_back(presampleInfo.second);
+        //outputTreeContents.v_presample_mean.push_back(presampleInfo.first);
+        //outputTreeContents.v_presample_RMS.push_back(presampleInfo.second);
         //bool quiet = (fabs(presampleInfo.first)<1. && presampleInfo.second <2.0 )&& (pulseBounds[ipulse].second < waves[ic]->GetBinLowEdge(waves[ic]->GetNbinsX())-0.01) ;
-        //outputTreeContents.v_quiet->push_back(quiet);
+        //outputTreeContents.v_quiet.push_back(quiet);
 
     }    
     
     return pulseBounds;
 }
 
-void OfflineFactory::loadBranchesMilliDAQ(mdaq::GlobalEvent * evt){
+void OfflineFactory::loadBranchesMilliDAQ(){
     inTree->SetBranchAddress("event", &evt);
     for(int ic=0;ic<numChan;ic++) waves.push_back(new TH1D());
 

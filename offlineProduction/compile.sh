@@ -25,6 +25,6 @@ if [ $? -eq 0 ]; then
 else
     echo "FAILED to compile macro $NAME"
 fi
-# rm make_tree_temporary_for_compile.C
+rm make_tree_temporary_for_compile.C
 
 

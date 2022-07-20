@@ -54,12 +54,7 @@
 #include <iostream>
 using namespace std;
 
-// void convertXaxis(TH1D *h, int ic,float sample_rate){
-//     TAxis * a = h->GetXaxis();
-//     a->Set( a->GetNbins(), a->GetXmin()/sample_rate, a->GetXmax()/sample_rate);
-//
-//     h->ResetStats();
-// }
+//Use struct to organise tree contents
 struct offline_tree_{
     int event ;
     int fileNum;
@@ -126,6 +121,7 @@ struct offline_tree_{
     vector<int> v_triggerMajority;
     vector<float> v_min_afterFilter;
 };
+//Offline factory class used to produce offline tree output
 class OfflineFactory {
     public:
 	OfflineFactory(TString,TString);

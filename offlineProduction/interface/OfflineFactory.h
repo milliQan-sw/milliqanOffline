@@ -7,7 +7,7 @@
 #include <sstream>
 #include <iomanip>
 #include <time.h>
-#include <exception>
+#include <stdexcept>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include "/home/milliqan/milliqanOffline/offlineProduction/interface/json.h"
@@ -128,6 +128,7 @@ class OfflineFactory {
 	OfflineFactory(TString,TString);
 	virtual ~OfflineFactory();
 	void makeOutputTree();
+	void loadChanMap(string);
 	void readMetaData();
 	void readWaveData();
 	void writeOutputTree();

@@ -9,27 +9,39 @@ OfflineFactory::~OfflineFactory() {
     if (inFile) inFile->Close();
     if (outFile) outFile->Close();
 }
+void OfflineFactory::loadChanMap(string configFileName){
+    
+    // string json = "{\"chanMap\":[[0,1,2,3],[4,5,6,7],[0,1,2,3],[4,5,6,7],[0,1,2,3],[4,5,6,7],[0,1,2,3],[4,5,6,7],[0,1,2,3],[4,5,6,7],[0,1,2,3],[4,5,6,7],[0,1,2,3],[4,5,6,7],[0,1,2,3],[4,5,6,7]]}";
+    std::ifstream t(configFileName);
+    std::stringstream buffer;
+    buffer << t.rdbuf();
 
-//Convenience function to produce offline tree output
-void OfflineFactory::process(){
     Json::Reader reader;
     Json::Value root;
-
-    // Testing json stuff
-    string json = "{\"chanMap\":[[0,1,2,3],[4,5,6,7]]}";
-
-    bool parseSuccess = reader.parse(json, root, false);
+    bool parseSuccess = reader.parse(buffer.str(), root, false);
     if (parseSuccess)
     {
 	const Json::Value chan0 = root["chanMap"];
 	for ( int index = 0; index < chan0.size(); ++index ){
-	    std::cout << "chan " << index << ": "<<std::endl;
+	    std::vector<int> chanMapPerChan;
+	    std::cout << "chan " << index << ": ";
 	    for ( int index2 = 0; index2 < chan0[index].size(); ++index2 ){
+		chanMapPerChan.push_back(chan0[index][index2].asInt());
 		std::cout << " " << chan0[index][index2].asInt();
 	    }
-	    std::cout << std::endl;
+	    std::cout << ", ";
+	    chanMap.push_back(chanMapPerChan);
 	}
+	std::cout << std::endl;
     }
+    else{
+	throw invalid_argument(configFileName);
+    }
+}
+//Convenience function to produce offline tree output
+void OfflineFactory::process(){
+
+    // Testing json stuff
 
     makeOutputTree();
     readMetaData();
@@ -225,7 +237,7 @@ vector< pair<float,float> > OfflineFactory::processChannel(int ic){
     for(int ipulse = 0; ipulse<npulses; ipulse++){
 	waves[ic]->SetAxisRange(pulseBounds[ipulse].first,pulseBounds[ipulse].second);
 	//FIXME add channel map as input possibility
-	if (chanMap.size() > 0){
+	if (chanMap.size() > 0 and ic < chanMap.size()){
 	    outputTreeContents.v_column.push_back(chanMap[ic][0]);
 	    outputTreeContents.v_row.push_back(chanMap[ic][1]);
 	    outputTreeContents.v_layer.push_back(chanMap[ic][2]);

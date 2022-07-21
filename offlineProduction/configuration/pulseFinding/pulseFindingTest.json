@@ -1,0 +1,8 @@
+{
+    "pulseParams":{"nConsecSamples":[3],
+    "nConsecSamplesEnd":[1],
+    "highThresh":[15],
+    "lowThresh":[15]},
+    "sampleRate":1.6
+}
+

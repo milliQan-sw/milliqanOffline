@@ -128,7 +128,7 @@ class OfflineFactory {
 	OfflineFactory(TString,TString);
 	virtual ~OfflineFactory();
 	void makeOutputTree();
-	void loadChanMap(string);
+	void loadJsonConfig(string);
 	void readMetaData();
 	void readWaveData();
 	void writeOutputTree();
@@ -142,15 +142,27 @@ class OfflineFactory {
 	vector<pair<float,float>> processChannel(int);
 	void loadBranchesMilliDAQ();
 	void loadWavesMilliDAQ();
+	void validateInput();
 
 	float sideband_range[2] = {0,50};
-	float sample_rate = 1.6;
+	float sampleRate = 1.6;
 	bool applyLPFilter = false;
 	TString inFileName;
 	TString outFileName;
 	mdaq::GlobalEvent * evt = new mdaq::GlobalEvent();
 	mdaq::DemonstratorConfiguration * cfg = new mdaq::DemonstratorConfiguration();
+    // int Nconsec = 3;
+    // int NconsecEnd = 1;
+    // float thresh = 15.0;
+    // float lowThresh = 5.0;
+	vector<float> highThresh = {15.};
+	vector<float> lowThresh = {5.};
+	vector<int> nConsecSamples = {3};
+	vector<int> nConsecSamplesEnd = {1};
 	vector< vector<int> > chanMap;
+	vector<float> timingCalibrations;
+	vector<float> pedestals;
+	vector<float> speAreas;
 	TArrayI * chanArray;
 
 	//Declare global variables

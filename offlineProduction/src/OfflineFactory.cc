@@ -9,33 +9,128 @@ OfflineFactory::~OfflineFactory() {
     if (inFile) inFile->Close();
     if (outFile) outFile->Close();
 }
-void OfflineFactory::loadChanMap(string configFileName){
+void OfflineFactory::loadJsonConfig(string configFileName){
     
-    // string json = "{\"chanMap\":[[0,1,2,3],[4,5,6,7],[0,1,2,3],[4,5,6,7],[0,1,2,3],[4,5,6,7],[0,1,2,3],[4,5,6,7],[0,1,2,3],[4,5,6,7],[0,1,2,3],[4,5,6,7],[0,1,2,3],[4,5,6,7],[0,1,2,3],[4,5,6,7]]}";
+    std::string json;
+    // configFileName = "{\"chanMap\":[[0,1,2,3],[4,5,6,7],[0,1,2,3],[4,5,6,7],[0,1,2,3],[4,5,6,7],[0,1,2,3],[4,5,6,7],[0,1,2,3],[4,5,6,7],[0,1,2,3],[4,5,6,7],[0,1,2,3],[4,5,6,7],[0,1,2,3],[4,5,6,7]]}";
+    if (configFileName.find("{") != std::string::npos){
+	json = configFileName;
+    }
+    else{
     std::ifstream t(configFileName);
     std::stringstream buffer;
     buffer << t.rdbuf();
+    json = buffer.str();
+    }
 
     Json::Reader reader;
-    Json::Value root;
-    bool parseSuccess = reader.parse(buffer.str(), root, false);
+    Json::Value jsonRoot;
+    bool parseSuccess = reader.parse(json, jsonRoot, false);
     if (parseSuccess)
     {
-	const Json::Value chan0 = root["chanMap"];
-	for ( int index = 0; index < chan0.size(); ++index ){
-	    std::vector<int> chanMapPerChan;
-	    std::cout << "chan " << index << ": ";
-	    for ( int index2 = 0; index2 < chan0[index].size(); ++index2 ){
-		chanMapPerChan.push_back(chan0[index][index2].asInt());
-		std::cout << " " << chan0[index][index2].asInt();
+	if (json.find("chanMap") != std::string::npos){
+	    const Json::Value chan0 = jsonRoot["chanMap"];
+	    for ( int index = 0; index < chan0.size(); ++index ){
+		std::vector<int> chanMapPerChan;
+		for ( int index2 = 0; index2 < chan0[index].size(); ++index2 ){
+		    chanMapPerChan.push_back(chan0[index][index2].asInt());
+		}
+		chanMap.push_back(chanMapPerChan);
 	    }
-	    std::cout << ", ";
-	    chanMap.push_back(chanMapPerChan);
 	}
-	std::cout << std::endl;
+	if (json.find("pulseParams") != std::string::npos){
+	    nConsecSamples.clear();
+	    nConsecSamplesEnd.clear();
+	    lowThresh.clear();
+	    highThresh.clear();
+	    const Json::Value pulseParams = jsonRoot["pulseParams"];
+	    const Json::Value nConsecSamplesJson = pulseParams["nConsecSamples"];
+	    const Json::Value nConsecSamplesEndJson = pulseParams["nConsecSamplesEnd"];
+	    const Json::Value highThreshJson = pulseParams["highThresh"];
+	    const Json::Value lowThreshJson = pulseParams["lowThresh"];
+	    for (int index = 0; index < nConsecSamplesJson.size(); index ++){
+		nConsecSamples.push_back(nConsecSamplesJson[index].asInt());
+	    }
+	    for (int index = 0; index < nConsecSamplesEndJson.size(); index ++){
+		nConsecSamplesEnd.push_back(nConsecSamplesEndJson[index].asInt());
+	    }
+	    for (int index = 0; index < highThreshJson.size(); index ++){
+		highThresh.push_back(highThreshJson[index].asFloat());
+	    }
+	    for (int index = 0; index < lowThreshJson.size(); index ++){
+		lowThresh.push_back(lowThreshJson[index].asFloat());
+	    }
+	}
+	if (json.find("timingCalibrations") != std::string::npos){
+	    const Json::Value timingCalibrationsJson = jsonRoot["timingCalibrations"];
+	    for (int index = 0; index < timingCalibrationsJson.size(); index ++){
+		timingCalibrations.push_back(timingCalibrationsJson[index].asFloat());
+	    }
+	}
+	if (json.find("speAreas") != std::string::npos){
+	    const Json::Value speAreasJson = jsonRoot["speAreas"];
+	    for (int index = 0; index < speAreasJson.size(); index ++){
+		speAreas.push_back(speAreasJson[index].asFloat());
+	    }
+	}
+	if (json.find("pedestals") != std::string::npos){
+	    const Json::Value pedestalsJson = jsonRoot["pedestals"];
+	    for (int index = 0; index < pedestalsJson.size(); index ++){
+		pedestals.push_back(pedestalsJson[index].asFloat());
+	    }
+	}
+	if (json.find("sampleRate") != std::string::npos){
+	    sampleRate = jsonRoot["sampleRate"].asFloat();
+	}
     }
     else{
 	throw invalid_argument(configFileName);
+    }
+}
+//Validate json input
+void OfflineFactory::validateInput(){
+    if (nConsecSamples.size() > 1){
+	if (nConsecSamples.size() != numChan) throw length_error("nConsecSamples should be length "+std::to_string(numChan) + "or 1");
+    }
+    else{ 
+	for (int ic = 0; ic < numChan-1; ic++) nConsecSamples.push_back(nConsecSamples.at(0));
+    }
+    if (nConsecSamplesEnd.size() > 1){
+	if (nConsecSamplesEnd.size() != numChan) throw length_error("nConsecSamplesEnd should be length "+std::to_string(numChan) + "or 1");
+    }
+    else{ 
+	for (int ic = 0; ic < numChan-1; ic++) nConsecSamplesEnd.push_back(nConsecSamplesEnd.at(0));
+    }
+    if (lowThresh.size() > 1){
+	if (lowThresh.size() != numChan) throw length_error("lowThresh should be length "+std::to_string(numChan) + "or 1");
+    }
+    else{ 
+	for (int ic = 0; ic < numChan-1; ic++) lowThresh.push_back(lowThresh.at(0));
+    }
+    if (highThresh.size() > 1){
+	if (highThresh.size() != numChan) throw length_error("highThresh should be length "+std::to_string(numChan) + "or 1");
+    }
+    else{ 
+	for (int ic = 0; ic < numChan-1; ic++) highThresh.push_back(highThresh.at(0));
+    }
+////Calibrations
+    if (timingCalibrations.size() > 0){
+	if (timingCalibrations.size() != numChan) throw length_error("timingCalibrations should be length "+std::to_string(numChan));
+    }
+    else{ 
+	for (int ic = 0; ic < numChan; ic++) timingCalibrations.push_back(0);
+    }
+    if (pedestals.size() > 0){
+	if (pedestals.size() != numChan) throw length_error("pedestals should be length "+std::to_string(numChan));
+    }
+    else{ 
+	for (int ic = 0; ic < numChan; ic++) pedestals.push_back(0);
+    }
+    if (speAreas.size() > 0){
+	if (speAreas.size() != numChan) throw length_error("speAreas should be length "+std::to_string(numChan));
+    }
+    else{ 
+	for (int ic = 0; ic < numChan; ic++) speAreas.push_back(1);
     }
 }
 //Convenience function to produce offline tree output
@@ -125,6 +220,7 @@ void OfflineFactory::makeOutputTree(){
 
 //Pulse finding and per channel processing
 void OfflineFactory::readWaveData(){
+    validateInput();
     if (!inFile) inFile = TFile::Open(inFileName, "READ");
     inTree = (TTree*)inFile->Get("Events");
     loadBranchesMilliDAQ();
@@ -153,17 +249,16 @@ void OfflineFactory::writeOutputTree(){
     if (inFile) inFile->Close();
 }
 void OfflineFactory::prepareWave(int ic){
-    // convertXaxis(waves[ic],ic,sample_rate);
     TAxis * a = waves[ic]->GetXaxis();
-    a->Set( a->GetNbins(), a->GetXmin()/sample_rate, a->GetXmax()/sample_rate);
+    a->Set( a->GetNbins(), a->GetXmin()/sampleRate, a->GetXmax()/sampleRate);
     waves[ic]->ResetStats();
+    //subtract calibrated mean
+    for(int ibin = 1; ibin <= waves[ic]->GetNbinsX(); ibin++){
+       waves[ic]->SetBinContent(ibin,waves[ic]->GetBinContent(ibin)-pedestals[ic]);
+    }
     //Need to add sideband measurements and subtraction here
 }
 vector< pair<float,float> > OfflineFactory::findPulses(int ic){
-    int Nconsec = 3;
-    int NconsecEnd = 1;
-    float thresh = 15.0;
-    float lowThresh = 5.0;
 
     vector<pair<float,float> > bounds;
     //float tstart = sideband_range[1]+1;
@@ -174,36 +269,36 @@ vector< pair<float,float> > OfflineFactory::findPulses(int ic){
     int nunder = 0;
     int i_begin = istart;
     //int i_begin = 0;
-    int i_stop_searching = waves[ic]->GetNbinsX()-Nconsec;
+    int i_stop_searching = waves[ic]->GetNbinsX()-nConsecSamples[ic];
     int i_stop_final_pulse = waves[ic]->GetNbinsX();
 
 
     for (int i=istart; i<i_stop_searching || (inpulse && i<i_stop_final_pulse); i++) {
 	float v = waves[ic]->GetBinContent(i);
 	if (!inpulse) {
-	    if (v<lowThresh) {   
+	    if (v<lowThresh[ic]) {   
 		nover = 0;     // If v dips below the low threshold, store the value of the sample index as i_begin
 		i_begin = i;
 	    }
-	    else if (v>=thresh){
+	    else if (v>=highThresh[ic]){
 		nover++;       // If v is above the threshold, start counting the number of sample indices
 	    }
 	    else{
 		i_begin = i;
 	    }
 
-	    if (nover>=Nconsec){   // If v is above threshold for long enough, we now have a pulse!
+	    if (nover>=nConsecSamples[ic]){   // If v is above threshold for long enough, we now have a pulse!
 		inpulse = true;    // Also reset the value of nunder
 		nunder = 0;
 	    }
 	}
 	else {  // Called if we have a pulse
-	    if (v<thresh) nunder++;   // If the pulse dips below the threshold, sum the number of sample indices for which this is true
-	    else if (v >= thresh){
+	    if (v<highThresh[ic]) nunder++;   // If the pulse dips below the threshold, sum the number of sample indices for which this is true
+	    else if (v >= highThresh[ic]){
 		nunder = 0;           // If the pulse stays above threshold, set nunder back to zero
 	    }
 	    // If the nunder is above or equal to 12 (or we reach the end of the file) store the values of the pulse bounds
-	    if (nunder>=NconsecEnd || i==(i_stop_final_pulse-1)) { 
+	    if (nunder>=nConsecSamplesEnd[ic] || i==(i_stop_final_pulse-1)) { 
 		bounds.push_back({(float)waves[ic]->GetBinLowEdge(i_begin), (float)waves[ic]->GetBinLowEdge(i+1)-0.01});
 		// cout<<"i_begin, i: "<<i_begin<<" "<<i<<endl;       // i_begin is the 
 		inpulse = false;
@@ -236,7 +331,6 @@ vector< pair<float,float> > OfflineFactory::processChannel(int ic){
 
     for(int ipulse = 0; ipulse<npulses; ipulse++){
 	waves[ic]->SetAxisRange(pulseBounds[ipulse].first,pulseBounds[ipulse].second);
-	//FIXME add channel map as input possibility
 	if (chanMap.size() > 0 and ic < chanMap.size()){
 	    outputTreeContents.v_column.push_back(chanMap[ic][0]);
 	    outputTreeContents.v_row.push_back(chanMap[ic][1]);
@@ -254,9 +348,9 @@ vector< pair<float,float> > OfflineFactory::processChannel(int ic){
 	outputTreeContents.v_chan.push_back(chanArray->GetAt(ic));
 	outputTreeContents.v_height.push_back(waves[ic]->GetMaximum());
 	outputTreeContents.v_time.push_back(pulseBounds[ipulse].first);
-	outputTreeContents.v_time_module_calibrated.push_back(pulseBounds[ipulse].first);//+channelCalibrations[ic]);
+	outputTreeContents.v_time_module_calibrated.push_back(pulseBounds[ipulse].first+timingCalibrations[ic]);
 	outputTreeContents.v_area.push_back(waves[ic]->Integral());
-	outputTreeContents.v_nPE.push_back(-1.);//(waves[ic]->Integral()/(channelSPEAreas[ic]))*(1.6/sample_rate));
+	outputTreeContents.v_nPE.push_back((waves[ic]->Integral()/(speAreas[ic]))*(1.6/sampleRate));
 	outputTreeContents.v_ipulse.push_back(ipulse);
 	outputTreeContents.v_npulses.push_back(npulses);
 	outputTreeContents.v_duration.push_back(pulseBounds[ipulse].second - pulseBounds[ipulse].first);

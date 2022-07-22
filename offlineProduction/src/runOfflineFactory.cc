@@ -24,6 +24,10 @@ int main(int argc, char **argv){
     //Read input and output files (necessary arguments)
     char * inputFilenameChar = getCmdOption(argv, argv + argc, "-i");
     char * outputFilenameChar = getCmdOption(argv, argv + argc, "-o");
+    int runNumber = -1;
+    int fileNumber = -1;
+    if (cmdOptionExists(argv, argv + argc, "-r")) runNumber = atoi(getCmdOption(argv, argv + argc, "-r"));
+    if (cmdOptionExists(argv, argv + argc, "-f")) fileNumber = atoi(getCmdOption(argv, argv + argc, "-f"));
     if (!inputFilenameChar || !outputFilenameChar || cmdOptionExists(argv, argv+argc, "-h"))
     {
 	std::cout << helpString << std::endl;

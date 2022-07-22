@@ -58,8 +58,8 @@ using namespace std;
 //Use struct to organise tree contents
 struct offline_tree_{
     int event ;
-    int fileNum;
-    Long64_t runNum;
+    Long64_t runNumber;
+    Long64_t fileNumber;
     Long64_t event_time_b0;
     Long64_t event_time_b1;
     double event_time_fromTDC;
@@ -126,6 +126,7 @@ struct offline_tree_{
 class OfflineFactory {
     public:
 	OfflineFactory(TString,TString);
+	OfflineFactory(TString,TString, int, int);
 	virtual ~OfflineFactory();
 	void makeOutputTree();
 	void loadJsonConfig(string);
@@ -134,6 +135,7 @@ class OfflineFactory {
 	void writeOutputTree();
 	void process();
 	void process(TString,TString);
+	void process(TString,TString,int, int);
     private:
 	void prepareOutBranches();
 	void resetOutBranches();
@@ -143,12 +145,15 @@ class OfflineFactory {
 	void loadBranchesMilliDAQ();
 	void loadWavesMilliDAQ();
 	void validateInput();
+        void writeVersion();
 
 	float sideband_range[2] = {0,50};
 	float sampleRate = 1.6;
 	bool applyLPFilter = false;
 	TString inFileName;
 	TString outFileName;
+        int runNumber;
+        int fileNumber;
 	mdaq::GlobalEvent * evt = new mdaq::GlobalEvent();
 	mdaq::DemonstratorConfiguration * cfg = new mdaq::DemonstratorConfiguration();
     // int Nconsec = 3;

@@ -2,8 +2,17 @@
 
 OfflineFactory::OfflineFactory(TString inFileName, TString outFileName) : 
     inFileName(inFileName),
-    outFileName(outFileName)
+    outFileName(outFileName),
+    runNumber(-1),
+    fileNumber(-1)
 {};
+OfflineFactory::OfflineFactory(TString inFileName, TString outFileName, int runNumber, int fileNumber) : 
+    inFileName(inFileName),
+    outFileName(outFileName),
+    runNumber(runNumber),
+    fileNumber(fileNumber)
+{};
+
 
 OfflineFactory::~OfflineFactory() {
     if (inFile) inFile->Close();
@@ -95,6 +104,10 @@ void OfflineFactory::loadJsonConfig(string configFileName){
 }
 //Validate json input
 void OfflineFactory::validateInput(){
+    //HACKY check if tag has been added
+    TString version = "shorttagplaceholder";
+    if(version.Contains("placeholder")) throw runtime_error("This macro was compiled incorrectly. Please compile this macro using compile.sh");
+
     if (nConsecSamples.size() > 1){
 	if (nConsecSamples.size() != numChan) throw length_error("nConsecSamples should be length "+std::to_string(numChan) + "or 1");
     }
@@ -153,6 +166,16 @@ void OfflineFactory::process(TString inFileName,TString outFileName)
 {
     inFileName = inFileName;
     outFileName = outFileName;
+    runNumber = -1;
+    fileNumber = -1;
+    process();
+}
+void OfflineFactory::process(TString inFileName,TString outFileName,int runNumber,int fileNumber)
+{
+    inFileName = inFileName;
+    outFileName = outFileName;
+    runNumber = runNumber;
+    fileNumber = fileNumber;
     process();
 }
 //Declare branches for offline tree output
@@ -199,8 +222,8 @@ void OfflineFactory::readMetaData(){
     metadata->SetBranchAddress("configuration", &cfg);
     metadata->GetEntry(0);
     //Currently run and fill set to zero - I think should be given as input
-    outputTreeContents.runNum = 0;
-    outputTreeContents.fillNum = 0;
+    outputTreeContents.runNumber = runNumber;
+    outputTreeContents.fileNumber = fileNumber;
     int numBoards = cfg->digitizers.size();
     numChan = numBoards*16;
     chanArray = new TArrayI(numChan);
@@ -269,6 +292,7 @@ void OfflineFactory::readWaveData(){
 void OfflineFactory::writeOutputTree(){
     outFile->cd();
     outTree->Write();
+    writeVersion();
     outFile->Close();
     if (inFile) inFile->Close();
 }
@@ -401,4 +425,12 @@ void OfflineFactory::loadWavesMilliDAQ(){
         chan = i<=15 ? i : i-16;
         waves[i] = (TH1D*)evt->GetWaveform(board, chan, Form("digitizers[%i].waveform[%i]",board,i));  
     }
+}
+void OfflineFactory::writeVersion(){
+    //This is very hacky but it works
+    string version = "longtagplaceholder";
+    cout<<"Git tag is "<<version<<endl;
+    TNamed v;
+    v = TNamed("tag",version);
+    v.Write();
 }

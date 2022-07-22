@@ -1,4 +1,4 @@
-#include "/home/milliqan/milliqanOffline/offlineProduction/interface/OfflineFactory.h"
+#include "./interface/OfflineFactory.h"
 
 OfflineFactory::OfflineFactory(TString inFileName, TString outFileName) : 
     inFileName(inFileName),

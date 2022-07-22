@@ -1,4 +1,4 @@
-#include "/home/milliqan/milliqanOffline/offlineProduction/interface/OfflineFactory.h"
+#include "./interface/OfflineFactory.h"
 int main(int argc, char **argv){
     OfflineFactory offlineFactory = OfflineFactory("/home/milliqan/data_2022/testing_07_12_22/MilliQan_Cd109Shell.root","testOutput.root");
     offlineFactory.loadJsonConfig("/home/milliqan/milliqanOffline/offlineProduction/configuration/chanMaps/testMap.json");

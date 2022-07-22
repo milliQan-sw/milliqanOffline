@@ -5,6 +5,8 @@ if [ $# != 1 ]
 	exit 
 fi
 
+MILLIDAQDIR=/home/milliqan/MilliDAQ/
+
 NAME=$1
 
 
@@ -17,9 +19,10 @@ echo "milliqanOffline version $LONG_TAG"
 sed "s/shorttagplaceholder/$SHORT_TAG/g" src/runOfflineFactory.cc > make_tree_temporary_for_compile.C
 sed -i "s/longtagplaceholder/$LONG_TAG/g" make_tree_temporary_for_compile.C
 
-#g++ -o $NAME make_tree_temporary_for_compile.C /net/cms26/cms26r0/milliqan/milliDAQ/libMilliDAQ.so `root-config --cflags --glibs` -Wno-narrowing  
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
-g++ -o $NAME make_tree_temporary_for_compile.C /home/milliqan/milliqanOffline/offlineProduction/src/jsoncpp.cpp /home/milliqan/milliqanOffline/offlineProduction/src/OfflineFactory.cc /home/milliqan/MilliDAQ/src/ConfigurationReader.cc /home/milliqan/MilliDAQ/libMilliDAQ.so -lpython2.7 `root-config --cflags --glibs` -Wno-narrowing  # same as above but with correct local file path
+g++ -o $NAME make_tree_temporary_for_compile.C ./src/jsoncpp.cpp ./src/OfflineFactory.cc ${MILLIDAQDIR}/src/ConfigurationReader.cc ${MILLIDAQDIR}/libMilliDAQ.so -lpython2.7 `root-config --cflags --glibs` -Wno-narrowing -I$SCRIPT_DIR -I$MILLIDAQDIR # same as above but with correct local file path
+
 if [ $? -eq 0 ]; then
     echo "Compiled macro $NAME"
 else

@@ -73,7 +73,7 @@ license you like.
 
 
 
-#include "/home/milliqan/milliqanOffline/offlineProduction/interface/json.h"
+#include "./interface/json.h"
 
 #ifndef JSON_IS_AMALGAMATION
 #error "Compile with -I PATH_TO_JSON_DIRECTORY"

@@ -10,7 +10,7 @@
 #include <stdexcept>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include "/home/milliqan/milliqanOffline/offlineProduction/interface/json.h"
+#include "./interface/json.h"
 
 #include "TSystem.h"
 #include "TRandom2.h"
@@ -43,10 +43,10 @@
 #include "TColor.h"
 #include "TComplex.h"
 
-#include "/home/milliqan/MilliDAQ/interface/GlobalEvent.h"
-#include "/home/milliqan/MilliDAQ/interface/DemonstratorConfiguration.h"
-#include "/home/milliqan/MilliDAQ/interface/V1743Configuration.h"
-#include "/home/milliqan/MilliDAQ/interface/V1743Event.h"
+#include "interface/GlobalEvent.h"
+#include "interface/DemonstratorConfiguration.h"
+#include "interface/V1743Configuration.h"
+#include "interface/V1743Event.h"
 
 #include <string>
 #include <sys/types.h>

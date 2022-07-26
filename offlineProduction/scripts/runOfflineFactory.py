@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python3
 import os, sys, re
 import json
 import ROOT as r
@@ -8,6 +8,7 @@ from subprocess import call
 import argparse
 import traceback
 from pprint import pprint
+from mongoConnect import mongoConnect
 
 site = os.getenv("OFFLINESITE")
 if not site:
@@ -20,6 +21,7 @@ def parse_args():
     parser.add_argument("-i","--inputFile",help="File to run over",type=str, required=True)
     parser.add_argument("-o","--outputFile",help="Output file name",type=str, required=True)
     parser.add_argument("-e","--exe",help="Executable to run",type=str,default="./test.exe")
+    parser.add_argument("-d","--database",help="Database string",default=None)
     parser.add_argument("-p","--publish",help="Publish dataset",action="store_true",default=False)
     parser.add_argument("-f","--force_publish",help="Force publish dataset",action="store_true",default=False)
     parser.add_argument("-c","--configurations",help="JSON Configuration files or string",type=str,nargs="+")
@@ -44,7 +46,7 @@ def validateOutput(outputFile):
         print ("removing output file because it does not deserve to live (result will not be published)")
         os.system("rm "+outputFile)
     return tag 
-def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publish):
+def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publish,database):
     if force_publish:
         publish = True
     try:
@@ -77,21 +79,15 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
     os.system(args)
 
     tag = validateOutput(outputFile)
+    if database:
+        db = mongoConnect(database)
+    else:
+        db = mongoConnect()
     if tag != None and publish:  
-        publishDataset(configurationsJSON,inputFile,outputFile,fileNumber,runNumber,tag,site=site,inputType="MilliDAQ",force_publish=force_publish)
+        publishDataset(configurationsJSON,inputFile,outputFile,fileNumber,runNumber,tag,site=site,inputType="MilliDAQ",force_publish=force_publish,db=db)
     return tag != None
 
-def publishDataset(configurationsJSON,inputFile,outputFile,fileNumber,runNumber,tag,site=site,inputType="MilliDAQ",force_publish=False):
-    from pymongo import MongoClient
-    # from bson.objectid import ObjectId
-    try:
-        client = MongoClient("mongodb+srv://mcitron:milliqan@testcluster.ffkkz.mongodb.net/?retryWrites=true&w=majority")
-        db=client.milliQanData
-        serverStatusResult=db.command("serverStatus")
-        # Issue the serverStatus command and print the results
-    except:
-        print ("Could not publish as failed to connect to mongo server")
-        return;
+def publishDataset(configurationsJSON,inputFile,outputFile,fileNumber,runNumber,tag,site=site,inputType="MilliDAQ",force_publish=False,db=None):
     _id = "{}_{}_{}_{}_{}".format(runNumber,fileNumber,tag,inputType,site)
     milliQanOfflineDataset = configurationsJSON
     milliQanOfflineDataset["_id"] = "{}_{}_{}_{}_{}".format(runNumber,fileNumber,tag,inputType,site)
@@ -103,7 +99,7 @@ def publishDataset(configurationsJSON,inputFile,outputFile,fileNumber,runNumber,
     milliQanOfflineDataset["site"] = site
 
     nX = 0
-    # for x in db.milliQanOfflineDatasets.find({"run" : runNumber}):
+    #Check for existing entry
     for x in (db.milliQanOfflineDatasets.find({"_id" : _id})):
         nX +=1
     if nX:
@@ -115,7 +111,7 @@ def publishDataset(configurationsJSON,inputFile,outputFile,fileNumber,runNumber,
             exit()
     else:
         db.milliQanOfflineDatasets.insert_one(milliQanOfflineDataset)
-    # pprint library is used to make the output look more pretty
+
 if __name__ == "__main__":
     valid = runOfflineFactory(**vars(parse_args()))
     if valid:

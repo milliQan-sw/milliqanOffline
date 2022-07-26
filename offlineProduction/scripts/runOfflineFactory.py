@@ -20,6 +20,7 @@ def parse_args():
     parser=argparse.ArgumentParser()
     parser.add_argument("-i","--inputFile",help="File to run over",type=str, required=True)
     parser.add_argument("-o","--outputFile",help="Output file name",type=str, required=True)
+    parser.add_argument("-a","--appendToTag",help="Append to database tag",type=str)
     parser.add_argument("-e","--exe",help="Executable to run",type=str,default="./test.exe")
     parser.add_argument("-d","--database",help="Database string",default=None)
     parser.add_argument("-p","--publish",help="Publish dataset",action="store_true",default=False)
@@ -46,7 +47,7 @@ def validateOutput(outputFile):
         print ("removing output file because it does not deserve to live (result will not be published)")
         os.system("rm "+outputFile)
     return tag 
-def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publish,database):
+def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publish,database,appendToTag):
     if force_publish:
         publish = True
     try:
@@ -84,6 +85,8 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
     else:
         db = mongoConnect()
     if tag != None and publish:  
+        if appendToTag:
+            tag += "_"+appendToTag
         publishDataset(configurationsJSON,inputFile,outputFile,fileNumber,runNumber,tag,site=site,inputType="MilliDAQ",force_publish=force_publish,db=db)
     return tag != None
 

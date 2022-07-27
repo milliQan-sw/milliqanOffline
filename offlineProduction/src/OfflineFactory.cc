@@ -107,7 +107,11 @@ void OfflineFactory::validateInput(){
     //HACKY check if tag has been added
     TString version = "shorttagplaceholder";
     if(version.Contains("placeholder")) throw runtime_error("This macro was compiled incorrectly. Please compile this macro using compile.sh");
-
+    if (chanMap.size()) 
+    {
+	if (chanMap.size() != numChan) std::cout << "WARNING: alterning number of channels to match channel map length: " <<  chanMap.size() << std::endl;
+	numChan = chanMap.size();
+    }
     if (nConsecSamples.size() > 1){
 	if (nConsecSamples.size() != numChan) throw length_error("nConsecSamples should be length "+std::to_string(numChan) + "or 1");
     }

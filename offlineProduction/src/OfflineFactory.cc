@@ -4,13 +4,19 @@ OfflineFactory::OfflineFactory(TString inFileName, TString outFileName) :
     inFileName(inFileName),
     outFileName(outFileName),
     runNumber(-1),
-    fileNumber(-1)
+    fileNumber(-1),
+    isDRSdata(0),
+    DRS_number(0),
+    numChanDRS(0)
 {};
-OfflineFactory::OfflineFactory(TString inFileName, TString outFileName, int runNumber, int fileNumber) : 
+OfflineFactory::OfflineFactory(TString inFileName, TString outFileName, int runNumber, int fileNumber, bool isDRSdata, int DRS_number, int numChanDRS) : 
     inFileName(inFileName),
     outFileName(outFileName),
     runNumber(runNumber),
-    fileNumber(fileNumber)
+    fileNumber(fileNumber),
+    isDRSdata(isDRSdata),
+    DRS_number(DRS_number),
+    numChanDRS(numChanDRS)
 {};
 
 
@@ -166,28 +172,35 @@ void OfflineFactory::process(){
     readWaveData();
     writeOutputTree();
 }
-void OfflineFactory::process(TString inFileName,TString outFileName)
+void OfflineFactory::process(TString inFileName,TString outFileName, bool isDRSdata, int DRS_number, int numChanDRS)
 {
     inFileName = inFileName;
     outFileName = outFileName;
     runNumber = -1;
     fileNumber = -1;
+    isDRSdata = isDRSdata;
+    DRS_number = DRS_number;
+    numChanDRS = numChanDRS;
     process();
 }
-void OfflineFactory::process(TString inFileName,TString outFileName,int runNumber,int fileNumber)
+void OfflineFactory::process(TString inFileName,TString outFileName,int runNumber,int fileNumber, bool isDRSdata)
 {
     inFileName = inFileName;
     outFileName = outFileName;
     runNumber = runNumber;
     fileNumber = fileNumber;
+    isDRSdata = isDRSdata;
     process();
 }
 //Declare branches for offline tree output
 void OfflineFactory::prepareOutBranches(){
+    // May need to change for DRS input
+    if (!isDRSdata){
     outTree->Branch("triggerThreshold",&outputTreeContents.v_triggerThresholds);
     outTree->Branch("triggerEnable",&outputTreeContents.v_triggerEnable);
     outTree->Branch("triggerMajority",&outputTreeContents.v_triggerMajority);
     outTree->Branch("triggerLogic",&outputTreeContents.v_triggerLogic);
+    }
     outTree->Branch("chan",&outputTreeContents.v_chan);
     outTree->Branch("height",&outputTreeContents.v_height);
     outTree->Branch("area",&outputTreeContents.v_area);
@@ -201,6 +214,7 @@ void OfflineFactory::prepareOutBranches(){
 }
 //Clear vectors and reset 
 void OfflineFactory::resetOutBranches(){
+    // May need to change for DRS input
     // outputTreeContents.v_triggerThresholds.clear();
     // outputTreeContents.v_triggerEnable.clear();
     // outputTreeContents.v_triggerMajority.clear();
@@ -218,6 +232,8 @@ void OfflineFactory::resetOutBranches(){
 }
 //Read meta data from configuration
 void OfflineFactory::readMetaData(){
+    //May need to change for DRS input
+    if (!isDRSdata){
     inFile = TFile::Open(inFileName, "READ");
     TString baseFileName= ((TObjString*)inFileName.Tokenize("/")->Last())->String().Data();
 
@@ -243,10 +259,16 @@ void OfflineFactory::readMetaData(){
 	outputTreeContents.v_triggerMajority.push_back(triggerMajority);
 	outputTreeContents.v_triggerLogic.push_back(triggerLogic);
     }
+    }
+    if (isDRSdata){
+	//inFile = TFile::Open(inFileName, "READ");
+        numChan = numChanDRS;
+    }
 }
 
 void OfflineFactory::makeOutputTree(){
-    outFile = new TFile(outFileName,"recreate");
+    if (!isDRSdata) outFile = new TFile(outFileName,"recreate");
+    if (isDRSdata) outFile = new TFile("DRS_"+outFileName,"recreate");
     outTree = new TTree("t","t");
     prepareOutBranches(); 
 }
@@ -255,8 +277,9 @@ void OfflineFactory::makeOutputTree(){
 void OfflineFactory::readWaveData(){
     validateInput();
     if (!inFile) inFile = TFile::Open(inFileName, "READ");
-    inTree = (TTree*)inFile->Get("Events");
-    loadBranchesMilliDAQ();
+    inTree = (TTree*)inFile->Get("Events"); // Same for DRS and Digi data
+    if (!isDRSdata) loadBranchesMilliDAQ();
+    //if (isDRSdata) loadBranchesDRS();
     cout<<"Starting event loop"<<endl;
     // int maxEvents = 1000;
     float progress = 0.0;
@@ -268,7 +291,8 @@ void OfflineFactory::readWaveData(){
         resetOutBranches();
         outputTreeContents.event=i;
         inTree->GetEntry(i);
-        loadWavesMilliDAQ();
+        if (!isDRSdata) loadWavesMilliDAQ();
+	if (isDRSdata) loadWavesDRS();
         //Loop over channels
         vector<vector<pair<float,float> > > allPulseBounds;
         for(int ic=0;ic<numChan;ic++){
@@ -397,7 +421,8 @@ vector< pair<float,float> > OfflineFactory::processChannel(int ic){
         }
 
         //FIXME need to add calibrations (when available)
-        outputTreeContents.v_chan.push_back(chanArray->GetAt(ic));
+        if (!isDRSdata) outputTreeContents.v_chan.push_back(chanArray->GetAt(ic));
+	if (isDRSdata) outputTreeContents.v_chan.push_back(ic);
         outputTreeContents.v_height.push_back(waves[ic]->GetMaximum());
         outputTreeContents.v_time.push_back(pulseBounds[ipulse].first);
         outputTreeContents.v_time_module_calibrated.push_back(pulseBounds[ipulse].first+timingCalibrations[ic]);
@@ -417,9 +442,32 @@ vector< pair<float,float> > OfflineFactory::processChannel(int ic){
 void OfflineFactory::loadBranchesMilliDAQ(){
     inTree->SetBranchAddress("event", &evt);
     for(int ic=0;ic<numChan;ic++) waves.push_back(new TH1D());
-
 }
+
+/*void OfflineFactory::loadBranchesDRS(){
+    double arrayVoltageDRS_0[1024];
+    double arrayVoltageDRS_1[1024];
+    double arrayVoltageDRS_2[1024];
+    double arrayVoltageDRS_3[1024];
+    double arrayVoltageDRS_4[1024];
+    double arrayVoltageDRS_5[1024];
+    double arrayVoltageDRS_6[1024];
+    double arrayVoltageDRS_7[1024];
+    double arrayVoltageDRS_8[1024];
+    double arrayVoltageDRS_9[1024];
+    double arrayVoltageDRS_10[1024];
+    double arrayVoltageDRS_11[1024];
+    double arrayVoltageDRS_12[1024];
+    
+    for(int chn=0;chn<numChanDRS;chn++){
+        inTree->SetBranchAddress(Form("voltages_%i_%i",DRS_number,chn+1),Form("arrayVoltageDRS_%i",chn+1));          
+	waves.push_back(new TH1D(TString(chn),"",1024,0,1024*1./1.6));
+    }    
+
+}*/
+
 void OfflineFactory::loadWavesMilliDAQ(){
+    
     int board,chan;
     //FIXME does this work if > 1 board?
     for(int i=0;i<numChan;i++){
@@ -429,6 +477,51 @@ void OfflineFactory::loadWavesMilliDAQ(){
         chan = i<=15 ? i : i-16;
         waves[i] = (TH1D*)evt->GetWaveform(board, chan, Form("digitizers[%i].waveform[%i]",board,i));  
     }
+
+}    
+    // Need to add a separate loop here in the case we have DRS data
+    
+void OfflineFactory::loadWavesDRS(){
+
+    double arrayVoltageDRS_0[1024];
+    double arrayVoltageDRS_1[1024];
+    double arrayVoltageDRS_2[1024];
+    double arrayVoltageDRS_3[1024];
+    double arrayVoltageDRS_4[1024];
+    double arrayVoltageDRS_5[1024];
+    double arrayVoltageDRS_6[1024];
+    double arrayVoltageDRS_7[1024];
+    double arrayVoltageDRS_8[1024];
+    double arrayVoltageDRS_9[1024];
+    double arrayVoltageDRS_10[1024];
+    double arrayVoltageDRS_11[1024];
+    double arrayVoltageDRS_12[1024];
+
+    for(int chn=0;chn<numChanDRS;chn++){
+         inTree->SetBranchAddress(Form("voltages_%i_%i",DRS_number,chn+1),Form("arrayVoltageDRS_%i",chn+1));
+         waves.push_back(new TH1D(TString(chn),"",1024,0,1024*1./1.6));
+    }
+
+
+    for(int i=0;i<1024;i++){
+        //for (int chn=0;chn<numChanDRS;chn++){
+	//     waves[chn]->SetBinContent(i+1,Form("arrayVoltageDRS_%i[%i]",chn+1,i));
+	//}   
+        waves[0]->SetBinContent(i+1,arrayVoltageDRS_0[i]);
+	waves[1]->SetBinContent(i+1,arrayVoltageDRS_1[i]);
+        waves[2]->SetBinContent(i+1,arrayVoltageDRS_2[i]);
+	waves[3]->SetBinContent(i+1,arrayVoltageDRS_3[i]);
+        waves[4]->SetBinContent(i+1,arrayVoltageDRS_4[i]);
+        waves[5]->SetBinContent(i+1,arrayVoltageDRS_5[i]);
+	waves[6]->SetBinContent(i+1,arrayVoltageDRS_6[i]);
+        waves[7]->SetBinContent(i+1,arrayVoltageDRS_7[i]);
+	waves[8]->SetBinContent(i+1,arrayVoltageDRS_8[i]);
+	waves[9]->SetBinContent(i+1,arrayVoltageDRS_9[i]);
+	waves[10]->SetBinContent(i+1,arrayVoltageDRS_10[i]);
+	waves[11]->SetBinContent(i+1,arrayVoltageDRS_11[i]);
+	waves[12]->SetBinContent(i+1,arrayVoltageDRS_12[i]);
+    }
+    
 }
 void OfflineFactory::writeVersion(){
     //This is very hacky but it works

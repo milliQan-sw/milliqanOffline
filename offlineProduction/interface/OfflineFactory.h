@@ -126,7 +126,7 @@ struct offline_tree_{
 class OfflineFactory {
     public:
 	OfflineFactory(TString,TString);
-	OfflineFactory(TString,TString, int, int);
+	OfflineFactory(TString,TString, int, int, bool, int, int);
 	virtual ~OfflineFactory();
 	void makeOutputTree();
 	void loadJsonConfig(string);
@@ -134,8 +134,8 @@ class OfflineFactory {
 	void readWaveData();
 	void writeOutputTree();
 	void process();
-	void process(TString,TString);
-	void process(TString,TString,int, int);
+	void process(TString,TString,bool,int,int);
+	void process(TString,TString,int, int, bool);
     private:
 	void prepareOutBranches();
 	void resetOutBranches();
@@ -143,7 +143,9 @@ class OfflineFactory {
 	vector<pair<float,float>> findPulses(int);
 	vector<pair<float,float>> processChannel(int);
 	void loadBranchesMilliDAQ();
+	//void loadBranchesDRS();
 	void loadWavesMilliDAQ();
+	void loadWavesDRS();
 	void validateInput();
         void writeVersion();
 
@@ -154,6 +156,9 @@ class OfflineFactory {
 	TString outFileName;
         int runNumber;
         int fileNumber;
+	bool isDRSdata;
+	int DRS_number;
+	int numChanDRS;
 	mdaq::GlobalEvent * evt = new mdaq::GlobalEvent();
 	mdaq::DemonstratorConfiguration * cfg = new mdaq::DemonstratorConfiguration();
     // int Nconsec = 3;

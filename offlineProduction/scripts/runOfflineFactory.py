@@ -75,7 +75,7 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
                 for key in configurationsJSONTemp.keys():
                     configurationsJSON[key] = configurationsJSONTemp[key]
         configurationsJSONString = json.dumps(configurationsJSON)
-    args = " ".join(["echo",exe,"-i "+inputFile,"-o "+outputFile,"-c "+"'"+configurationsJSONString+"'","-r "+str(runNumber),"-f "+str(fileNumber)])
+    args = " ".join([exe,"-i "+inputFile,"-o "+outputFile,"-c "+"'"+configurationsJSONString+"'","-r "+str(runNumber),"-f "+str(fileNumber)])
 
     os.system(args)
 

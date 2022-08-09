@@ -225,8 +225,6 @@ void OfflineFactory::resetOutBranches(){
 void OfflineFactory::readMetaData(){
     //May need to change for DRS input
     if (!isDRS){
-	TString baseFileName= ((TObjString*)inFileName.Tokenize("/")->Last())->String().Data();
-
 	TTree * metadata;
 	metadata = (TTree*) inFile->Get("Metadata");
 	metadata->SetBranchAddress("configuration", &cfg);
@@ -236,6 +234,7 @@ void OfflineFactory::readMetaData(){
 	outputTreeContents.fileNumber = fileNumber;
 	int numBoards = cfg->digitizers.size();
 	numChan = numBoards*16;
+	chanArray = new TArrayI(numChan);
 	//Read trigger info and set channel array
 	for (int ic =0; ic < numChan; ic++){
 	    chanArray->SetAt(ic,ic);

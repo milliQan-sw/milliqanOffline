@@ -125,8 +125,8 @@ struct offline_tree_{
 //Offline factory class used to produce offline tree output
 class OfflineFactory {
     public:
-	OfflineFactory(TString,TString);
-	OfflineFactory(TString,TString, int, int, bool, int, int);
+	OfflineFactory(TString,TString,bool);
+	OfflineFactory(TString,TString, bool, int, int);
 	virtual ~OfflineFactory();
 	void makeOutputTree();
 	void loadJsonConfig(string);
@@ -134,16 +134,15 @@ class OfflineFactory {
 	void readWaveData();
 	void writeOutputTree();
 	void process();
-	void process(TString,TString,bool,int,int);
-	void process(TString,TString,int, int, bool);
+	void process(TString,TString);
+	void process(TString,TString,int, int);
     private:
 	void prepareOutBranches();
 	void resetOutBranches();
 	void prepareWave(int);
 	vector<pair<float,float>> findPulses(int);
 	vector<pair<float,float>> processChannel(int);
-	void loadBranchesMilliDAQ();
-	//void loadBranchesDRS();
+	void loadBranches();
 	void loadWavesMilliDAQ();
 	void loadWavesDRS();
 	void validateInput();
@@ -156,15 +155,10 @@ class OfflineFactory {
 	TString outFileName;
         int runNumber;
         int fileNumber;
-	bool isDRSdata;
+	bool isDRS;
 	int DRS_number;
-	int numChanDRS;
 	mdaq::GlobalEvent * evt = new mdaq::GlobalEvent();
 	mdaq::DemonstratorConfiguration * cfg = new mdaq::DemonstratorConfiguration();
-    // int Nconsec = 3;
-    // int NconsecEnd = 1;
-    // float thresh = 15.0;
-    // float lowThresh = 5.0;
 	vector<float> highThresh = {15.};
 	vector<float> lowThresh = {5.};
 	vector<int> nConsecSamples = {3};
@@ -176,6 +170,7 @@ class OfflineFactory {
 	TArrayI * chanArray;
 
 	//Declare global variables
+	double arrayVoltageDRS[1024];
 	int numChan;
 	vector<TH1D*> waves;
 	TTree * inTree;

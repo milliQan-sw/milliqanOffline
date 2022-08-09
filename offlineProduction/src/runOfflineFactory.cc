@@ -24,11 +24,10 @@ int main(int argc, char **argv){
     //Read input and output files (necessary arguments)
     char * inputFilenameChar = getCmdOption(argv, argv + argc, "-i");
     char * outputFilenameChar = getCmdOption(argv, argv + argc, "-o");
-    char * isDRSdata = getCmdOption(argv, argv + argc, "-data");
+    bool isDRSdata = cmdOptionExists(argv, argv + argc, "--drs");
+    if (isDRSdata) std::cout << "Assuming DRS input" << std::endl;
     //char * DRS_num = getCmdOption(argv, argv + argc, "-DRS_num");
     //char * numChanDRS = getCmdOption(argv, argv + argc, "-nDRSchan");
-    int DRS_num = atoi(getCmdOption(argv, argv + argc, "-DRS_num"));
-    int numChanDRS = atoi(getCmdOption(argv, argv + argc, "-nDRSchan"));
     int runNumber = -1;
     int fileNumber = -1;
     if (cmdOptionExists(argv, argv + argc, "-r")) runNumber = atoi(getCmdOption(argv, argv + argc, "-r"));
@@ -39,8 +38,7 @@ int main(int argc, char **argv){
 	return 0;
     }
     std::cout << "Running with:\nInput file: " << inputFilenameChar << "\nOutput file: " << outputFilenameChar << std::endl;
-    OfflineFactory offlineFactory = OfflineFactory(inputFilenameChar,outputFilenameChar);
-    //OfflineFactory offlineFactory = OfflineFactory(inputFilenameChar,outputFilenameChar,isDRSdata,DRS_num,numChanDRS);
+    OfflineFactory offlineFactory = OfflineFactory(inputFilenameChar,outputFilenameChar,isDRSdata,runNumber,fileNumber);
     //Read configuration files
     char * configChar = getCmdOption(argv, argv + argc, "-c");
     if (configChar){
@@ -61,8 +59,7 @@ int main(int argc, char **argv){
     // offlineFactory.loadJsonConfig("/home/milliqan/milliqanOffline/offlineProduction/configuration/chanMaps/testMap.json");
     // offlineFactory.loadJsonConfig("/home/milliqan/milliqanOffline/offlineProduction/configuration/pulseFinding/pulseFindingTest.json");
     // offlineFactory.loadJsonConfig("/home/milliqan/milliqanOffline/offlineProduction/configuration/calibrations/testCalibration.json");
-    //offlineFactory.process();
-    offlineFactory.process(inputFilenameChar,outputFilenameChar,isDRSdata,DRS_num,numChanDRS);
+    offlineFactory.process();
     return 0;
 }
 

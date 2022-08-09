@@ -21,7 +21,7 @@ def parse_args():
     parser.add_argument("-i","--inputFile",help="File to run over",type=str, required=True)
     parser.add_argument("-o","--outputFile",help="Output file name",type=str, required=True)
     parser.add_argument("-a","--appendToTag",help="Append to database tag",type=str)
-    parser.add_argument("-e","--exe",help="Executable to run",type=str,default="./test.exe")
+    parser.add_argument("-e","--exe",help="Executable to run",type=str,default="./script.exe")
     parser.add_argument("-d","--database",help="Database string",default=None)
     parser.add_argument("-p","--publish",help="Publish dataset",action="store_true",default=False)
     parser.add_argument("-f","--force_publish",help="Force publish dataset",action="store_true",default=False)
@@ -75,19 +75,20 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
                 for key in configurationsJSONTemp.keys():
                     configurationsJSON[key] = configurationsJSONTemp[key]
         configurationsJSONString = json.dumps(configurationsJSON)
-    args = " ".join([exe,"-i "+inputFile,"-o "+outputFile,"-c "+"'"+configurationsJSONString+"'","-r "+str(runNumber),"-f "+str(fileNumber)])
+    args = " ".join(["echo",exe,"-i "+inputFile,"-o "+outputFile,"-c "+"'"+configurationsJSONString+"'","-r "+str(runNumber),"-f "+str(fileNumber)])
 
     os.system(args)
 
     tag = validateOutput(outputFile)
-    if database:
-        db = mongoConnect(database)
-    else:
-        db = mongoConnect()
-    if tag != None and publish:  
-        if appendToTag:
-            tag += "_"+appendToTag
-        publishDataset(configurationsJSON,inputFile,outputFile,fileNumber,runNumber,tag,site=site,inputType="MilliDAQ",force_publish=force_publish,db=db)
+    if publish:
+        if database:
+            db = mongoConnect(database)
+        else:
+            db = mongoConnect()
+        if tag != None:  
+            if appendToTag:
+                tag += "_"+appendToTag
+            publishDataset(configurationsJSON,inputFile,outputFile,fileNumber,runNumber,tag,site=site,inputType="MilliDAQ",force_publish=force_publish,db=db)
     return tag != None
 
 def publishDataset(configurationsJSON,inputFile,outputFile,fileNumber,runNumber,tag,site=site,inputType="MilliDAQ",force_publish=False,db=None):

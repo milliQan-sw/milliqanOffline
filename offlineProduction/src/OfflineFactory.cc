@@ -1,22 +1,18 @@
 #include "./interface/OfflineFactory.h"
 
-OfflineFactory::OfflineFactory(TString inFileName, TString outFileName) : 
+OfflineFactory::OfflineFactory(TString inFileName, TString outFileName, bool isDRS) : 
     inFileName(inFileName),
     outFileName(outFileName),
+    isDRS(isDRS),
     runNumber(-1),
-    fileNumber(-1),
-    isDRSdata(0),
-    DRS_number(0),
-    numChanDRS(0)
+    fileNumber(-1)
 {};
-OfflineFactory::OfflineFactory(TString inFileName, TString outFileName, int runNumber, int fileNumber, bool isDRSdata, int DRS_number, int numChanDRS) : 
+OfflineFactory::OfflineFactory(TString inFileName, TString outFileName, bool isDRS, int runNumber, int fileNumber) : 
     inFileName(inFileName),
     outFileName(outFileName),
+    isDRS(isDRS),
     runNumber(runNumber),
-    fileNumber(fileNumber),
-    isDRSdata(isDRSdata),
-    DRS_number(DRS_number),
-    numChanDRS(numChanDRS)
+    fileNumber(fileNumber)
 {};
 
 
@@ -115,7 +111,7 @@ void OfflineFactory::validateInput(){
     if(version.Contains("placeholder")) throw runtime_error("This macro was compiled incorrectly. Please compile this macro using compile.sh");
     if (chanMap.size()) 
     {
-	if (chanMap.size() != numChan) std::cout << "WARNING: alterning number of channels to match channel map length: " <<  chanMap.size() << std::endl;
+	if (chanMap.size() != numChan) std::cout << "WARNING: altering number of channels to match channel map length: " <<  chanMap.size() << std::endl;
 	numChan = chanMap.size();
     }
     if (nConsecSamples.size() > 1){
@@ -168,39 +164,34 @@ void OfflineFactory::process(){
     // Testing json stuff
 
     makeOutputTree();
+    inFile = TFile::Open(inFileName, "READ");
     readMetaData();
     readWaveData();
     writeOutputTree();
 }
-void OfflineFactory::process(TString inFileName,TString outFileName, bool isDRSdata, int DRS_number, int numChanDRS)
+void OfflineFactory::process(TString inFileName,TString outFileName)
 {
     inFileName = inFileName;
     outFileName = outFileName;
     runNumber = -1;
     fileNumber = -1;
-    isDRSdata = isDRSdata;
-    DRS_number = DRS_number;
-    numChanDRS = numChanDRS;
     process();
 }
-void OfflineFactory::process(TString inFileName,TString outFileName,int runNumber,int fileNumber, bool isDRSdata)
+void OfflineFactory::process(TString inFileName,TString outFileName,int runNumber,int fileNumber)
 {
     inFileName = inFileName;
     outFileName = outFileName;
     runNumber = runNumber;
     fileNumber = fileNumber;
-    isDRSdata = isDRSdata;
     process();
 }
 //Declare branches for offline tree output
 void OfflineFactory::prepareOutBranches(){
     // May need to change for DRS input
-    if (!isDRSdata){
     outTree->Branch("triggerThreshold",&outputTreeContents.v_triggerThresholds);
     outTree->Branch("triggerEnable",&outputTreeContents.v_triggerEnable);
     outTree->Branch("triggerMajority",&outputTreeContents.v_triggerMajority);
     outTree->Branch("triggerLogic",&outputTreeContents.v_triggerLogic);
-    }
     outTree->Branch("chan",&outputTreeContents.v_chan);
     outTree->Branch("height",&outputTreeContents.v_height);
     outTree->Branch("area",&outputTreeContents.v_area);
@@ -215,10 +206,10 @@ void OfflineFactory::prepareOutBranches(){
 //Clear vectors and reset 
 void OfflineFactory::resetOutBranches(){
     // May need to change for DRS input
-    // outputTreeContents.v_triggerThresholds.clear();
-    // outputTreeContents.v_triggerEnable.clear();
-    // outputTreeContents.v_triggerMajority.clear();
-    // outputTreeContents.v_triggerLogic.clear();
+    outputTreeContents.v_triggerThresholds.clear();
+    outputTreeContents.v_triggerEnable.clear();
+    outputTreeContents.v_triggerMajority.clear();
+    outputTreeContents.v_triggerLogic.clear();
     outputTreeContents.v_chan.clear();
     outputTreeContents.v_height.clear();
     outputTreeContents.v_area.clear();
@@ -233,42 +224,44 @@ void OfflineFactory::resetOutBranches(){
 //Read meta data from configuration
 void OfflineFactory::readMetaData(){
     //May need to change for DRS input
-    if (!isDRSdata){
-    inFile = TFile::Open(inFileName, "READ");
-    TString baseFileName= ((TObjString*)inFileName.Tokenize("/")->Last())->String().Data();
+    if (!isDRS){
+	TString baseFileName= ((TObjString*)inFileName.Tokenize("/")->Last())->String().Data();
 
-    TTree * metadata;
-    metadata = (TTree*) inFile->Get("Metadata");
-    metadata->SetBranchAddress("configuration", &cfg);
-    metadata->GetEntry(0);
-    //Currently run and fill set to zero - I think should be given as input
-    outputTreeContents.runNumber = runNumber;
-    outputTreeContents.fileNumber = fileNumber;
-    int numBoards = cfg->digitizers.size();
-    numChan = numBoards*16;
-    chanArray = new TArrayI(numChan);
-    //Read trigger info and set channel array
-    for (int i =0; i < numChan; i++){
-	chanArray->SetAt(i,i);
-	float triggerThresh = cfg->digitizers[i/16].channels[i % 16].triggerThreshold;
-	bool triggerEnable = cfg->digitizers[i/16].channels[i % 16].triggerEnable;
-	int triggerMajority = cfg->digitizers[i/16].GroupTriggerMajorityLevel;
-	int triggerLogic = cfg->digitizers[i/16].GroupTriggerLogic;
-	outputTreeContents.v_triggerThresholds.push_back(triggerThresh);
-	outputTreeContents.v_triggerEnable.push_back(triggerEnable);
-	outputTreeContents.v_triggerMajority.push_back(triggerMajority);
-	outputTreeContents.v_triggerLogic.push_back(triggerLogic);
+	TTree * metadata;
+	metadata = (TTree*) inFile->Get("Metadata");
+	metadata->SetBranchAddress("configuration", &cfg);
+	metadata->GetEntry(0);
+	//Currently run and fill set to zero - I think should be given as input
+	outputTreeContents.runNumber = runNumber;
+	outputTreeContents.fileNumber = fileNumber;
+	int numBoards = cfg->digitizers.size();
+	numChan = numBoards*16;
+	//Read trigger info and set channel array
+	for (int ic =0; ic < numChan; ic++){
+	    chanArray->SetAt(ic,ic);
+	    float triggerThresh = cfg->digitizers[ic/16].channels[ic % 16].triggerThreshold;
+	    bool triggerEnable = cfg->digitizers[ic/16].channels[ic % 16].triggerEnable;
+	    int triggerMajority = cfg->digitizers[ic/16].GroupTriggerMajorityLevel;
+	    int triggerLogic = cfg->digitizers[ic/16].GroupTriggerLogic;
+	    outputTreeContents.v_triggerThresholds.push_back(triggerThresh);
+	    outputTreeContents.v_triggerEnable.push_back(triggerEnable);
+	    outputTreeContents.v_triggerMajority.push_back(triggerMajority);
+	    outputTreeContents.v_triggerLogic.push_back(triggerLogic);
+	}
     }
-    }
-    if (isDRSdata){
-	//inFile = TFile::Open(inFileName, "READ");
-        numChan = numChanDRS;
+    else{
+	//ADD SOMETHING TO DRS INPUT SUCH THAT THIS CAN BE EASILY READ!
+	numChan = 1;
+	chanArray = new TArrayI(numChan);
+	DRS_number = 3044;
+	for (int ic =0; ic < numChan; ic++){
+	    chanArray->SetAt(ic,ic);
+	}
     }
 }
 
 void OfflineFactory::makeOutputTree(){
-    if (!isDRSdata) outFile = new TFile(outFileName,"recreate");
-    if (isDRSdata) outFile = new TFile("DRS_"+outFileName,"recreate");
+    outFile = new TFile(outFileName,"recreate");
     outTree = new TTree("t","t");
     prepareOutBranches(); 
 }
@@ -276,44 +269,42 @@ void OfflineFactory::makeOutputTree(){
 //Pulse finding and per channel processing
 void OfflineFactory::readWaveData(){
     validateInput();
-    if (!inFile) inFile = TFile::Open(inFileName, "READ");
-    inTree = (TTree*)inFile->Get("Events"); // Same for DRS and Digi data
-    if (!isDRSdata) loadBranchesMilliDAQ();
-    //if (isDRSdata) loadBranchesDRS();
-    cout<<"Starting event loop"<<endl;
+    inTree = (TTree*)inFile->Get("Events"); 
+    loadBranches();
     // int maxEvents = 1000;
     float progress = 0.0;
     int maxEvents = inTree->GetEntries();
     bool showBar = true;
+    cout<<"Starting event loop"<<endl;
     for(int i=0;i<maxEvents;i++){
 
-        progress += 1./maxEvents; // for demonstration only
-        resetOutBranches();
-        outputTreeContents.event=i;
-        inTree->GetEntry(i);
-        if (!isDRSdata) loadWavesMilliDAQ();
-	if (isDRSdata) loadWavesDRS();
-        //Loop over channels
-        vector<vector<pair<float,float> > > allPulseBounds;
-        for(int ic=0;ic<numChan;ic++){
-            //Pulse finding
-            allPulseBounds.push_back(processChannel(ic));
-            outputTreeContents.v_max.push_back(1.*waves[ic]->GetMaximum());
-        }    
-        outTree->Fill();
-        //Totally necessary progress bar
-        if (showBar){
-        int barWidth = 70;
-        std::cout << "[";
-        int pos = barWidth * progress;
-        for (int i = 0; i < barWidth; ++i) {
-            if (i < pos) std::cout << "=";
-            else if (i == pos) std::cout << ">";
-            else std::cout << " ";
-        }
-        std::cout << "] " << round(progress * 100.0) << " %\r";
-        std::cout.flush();
-        }
+	progress += 1./maxEvents; // for demonstration only
+	resetOutBranches();
+	outputTreeContents.event=i;
+	inTree->GetEntry(i);
+	if (!isDRS) loadWavesMilliDAQ();
+	else loadWavesDRS();
+	//Loop over channels
+	vector<vector<pair<float,float> > > allPulseBounds;
+	for(int ic=0;ic<numChan;ic++){
+	    //Pulse finding
+	    allPulseBounds.push_back(processChannel(ic));
+	    outputTreeContents.v_max.push_back(1.*waves[ic]->GetMaximum());
+	}    
+	outTree->Fill();
+	//Totally necessary progress bar
+	if (showBar){
+	    int barWidth = 70;
+	    std::cout << "[";
+	    int pos = barWidth * progress;
+	    for (int i = 0; i < barWidth; ++i) {
+		if (i < pos) std::cout << "=";
+		else if (i == pos) std::cout << ">";
+		else std::cout << " ";
+	    }
+	    std::cout << "] " << round(progress * 100.0) << " %\r";
+	    std::cout.flush();
+	}
     }
     std::cout << std::endl;
 }
@@ -330,7 +321,7 @@ void OfflineFactory::prepareWave(int ic){
     waves[ic]->ResetStats();
     //subtract calibrated mean
     for(int ibin = 1; ibin <= waves[ic]->GetNbinsX(); ibin++){
-        waves[ic]->SetBinContent(ibin,waves[ic]->GetBinContent(ibin)-pedestals[ic]);
+	waves[ic]->SetBinContent(ibin,waves[ic]->GetBinContent(ibin)-pedestals[ic]);
     }
     //Need to add sideband measurements and subtraction here
 }
@@ -350,39 +341,39 @@ vector< pair<float,float> > OfflineFactory::findPulses(int ic){
 
 
     for (int i=istart; i<i_stop_searching || (inpulse && i<i_stop_final_pulse); i++) {
-        float v = waves[ic]->GetBinContent(i);
-        if (!inpulse) {
-            if (v<lowThresh[ic]) {   
-                nover = 0;     // If v dips below the low threshold, store the value of the sample index as i_begin
-                i_begin = i;
-            }
-            else if (v>=highThresh[ic]){
-                nover++;       // If v is above the threshold, start counting the number of sample indices
-            }
-            else{
-                i_begin = i;
-            }
+	float v = waves[ic]->GetBinContent(i);
+	if (!inpulse) {
+	    if (v<lowThresh[ic]) {   
+		nover = 0;     // If v dips below the low threshold, store the value of the sample index as i_begin
+		i_begin = i;
+	    }
+	    else if (v>=highThresh[ic]){
+		nover++;       // If v is above the threshold, start counting the number of sample indices
+	    }
+	    else{
+		i_begin = i;
+	    }
 
-            if (nover>=nConsecSamples[ic]){   // If v is above threshold for long enough, we now have a pulse!
-                inpulse = true;    // Also reset the value of nunder
-                nunder = 0;
-            }
-        }
-        else {  // Called if we have a pulse
-            if (v<highThresh[ic]) nunder++;   // If the pulse dips below the threshold, sum the number of sample indices for which this is true
-            else if (v >= highThresh[ic]){
-                nunder = 0;           // If the pulse stays above threshold, set nunder back to zero
-            }
-            // If the nunder is above or equal to 12 (or we reach the end of the file) store the values of the pulse bounds
-            if (nunder>=nConsecSamplesEnd[ic] || i==(i_stop_final_pulse-1)) { 
-                bounds.push_back({(float)waves[ic]->GetBinLowEdge(i_begin), (float)waves[ic]->GetBinLowEdge(i+1)-0.01});
-                // cout<<"i_begin, i: "<<i_begin<<" "<<i<<endl;       // i_begin is the 
-                inpulse = false;
-                nover = 0;
-                nunder = 0;
-                i_begin = i;
-            }
-        }
+	    if (nover>=nConsecSamples[ic]){   // If v is above threshold for long enough, we now have a pulse!
+		inpulse = true;    // Also reset the value of nunder
+		nunder = 0;
+	    }
+	}
+	else {  // Called if we have a pulse
+	    if (v<highThresh[ic]) nunder++;   // If the pulse dips below the threshold, sum the number of sample indices for which this is true
+	    else if (v >= highThresh[ic]){
+		nunder = 0;           // If the pulse stays above threshold, set nunder back to zero
+	    }
+	    // If the nunder is above or equal to 12 (or we reach the end of the file) store the values of the pulse bounds
+	    if (nunder>=nConsecSamplesEnd[ic] || i==(i_stop_final_pulse-1)) { 
+		bounds.push_back({(float)waves[ic]->GetBinLowEdge(i_begin), (float)waves[ic]->GetBinLowEdge(i+1)-0.01});
+		// cout<<"i_begin, i: "<<i_begin<<" "<<i<<endl;       // i_begin is the 
+		inpulse = false;
+		nover = 0;
+		nunder = 0;
+		i_begin = i;
+	    }
+	}
     }
     return bounds;
 }
@@ -395,9 +386,9 @@ vector< pair<float,float> > OfflineFactory::processChannel(int ic){
     //Useful variable for defining pulses
     float maxThreeConsec = -100;
     for (int iBin = 1; iBin < waves[ic]->GetNbinsX(); iBin++){
-        float maxList[] = {waves[ic]->GetBinContent(iBin),waves[ic]->GetBinContent(iBin+1),waves[ic]->GetBinContent(iBin+2)};
-        float tempMax = *std::min_element(maxList,maxList+3);
-        if (maxThreeConsec < tempMax) maxThreeConsec = tempMax;
+	float maxList[] = {waves[ic]->GetBinContent(iBin),waves[ic]->GetBinContent(iBin+1),waves[ic]->GetBinContent(iBin+2)};
+	float tempMax = *std::min_element(maxList,maxList+3);
+	if (maxThreeConsec < tempMax) maxThreeConsec = tempMax;
 
     }
     outputTreeContents.v_max_threeConsec.push_back(maxThreeConsec);
@@ -406,122 +397,72 @@ vector< pair<float,float> > OfflineFactory::processChannel(int ic){
     outputTreeContents.v_min_afterFilter.push_back(waves[ic]->GetMinimum());
 
     for(int ipulse = 0; ipulse<npulses; ipulse++){
-        waves[ic]->SetAxisRange(pulseBounds[ipulse].first,pulseBounds[ipulse].second);
-        if (chanMap.size() > 0 and ic < chanMap.size()){
-            outputTreeContents.v_column.push_back(chanMap[ic][0]);
-            outputTreeContents.v_row.push_back(chanMap[ic][1]);
-            outputTreeContents.v_layer.push_back(chanMap[ic][2]);
-            outputTreeContents.v_type.push_back(chanMap[ic][3]);
-        }
-        else{
-            outputTreeContents.v_column.push_back(0);
-            outputTreeContents.v_row.push_back(0);
-            outputTreeContents.v_layer.push_back(0);
-            outputTreeContents.v_type.push_back(0);
-        }
+	waves[ic]->SetAxisRange(pulseBounds[ipulse].first,pulseBounds[ipulse].second);
+	if (chanMap.size() > 0 and ic < chanMap.size()){
+	    outputTreeContents.v_column.push_back(chanMap[ic][0]);
+	    outputTreeContents.v_row.push_back(chanMap[ic][1]);
+	    outputTreeContents.v_layer.push_back(chanMap[ic][2]);
+	    outputTreeContents.v_type.push_back(chanMap[ic][3]);
+	}
+	else{
+	    outputTreeContents.v_column.push_back(0);
+	    outputTreeContents.v_row.push_back(0);
+	    outputTreeContents.v_layer.push_back(0);
+	    outputTreeContents.v_type.push_back(0);
+	}
 
-        //FIXME need to add calibrations (when available)
-        if (!isDRSdata) outputTreeContents.v_chan.push_back(chanArray->GetAt(ic));
-	if (isDRSdata) outputTreeContents.v_chan.push_back(ic);
-        outputTreeContents.v_height.push_back(waves[ic]->GetMaximum());
-        outputTreeContents.v_time.push_back(pulseBounds[ipulse].first);
-        outputTreeContents.v_time_module_calibrated.push_back(pulseBounds[ipulse].first+timingCalibrations[ic]);
-        outputTreeContents.v_area.push_back(waves[ic]->Integral());
-        outputTreeContents.v_nPE.push_back((waves[ic]->Integral()/(speAreas[ic]))*(1.6/sampleRate));
-        outputTreeContents.v_ipulse.push_back(ipulse);
-        outputTreeContents.v_npulses.push_back(npulses);
-        outputTreeContents.v_duration.push_back(pulseBounds[ipulse].second - pulseBounds[ipulse].first);
-        if(ipulse>0) outputTreeContents.v_delay.push_back(pulseBounds[ipulse].first - pulseBounds[ipulse-1].second);
-        else outputTreeContents.v_delay.push_back(9999.);
+	//FIXME need to add calibrations (when available)
+	outputTreeContents.v_chan.push_back(chanArray->GetAt(ic));
+	outputTreeContents.v_height.push_back(waves[ic]->GetMaximum());
+	outputTreeContents.v_time.push_back(pulseBounds[ipulse].first);
+	outputTreeContents.v_time_module_calibrated.push_back(pulseBounds[ipulse].first+timingCalibrations[ic]);
+	outputTreeContents.v_area.push_back(waves[ic]->Integral());
+	outputTreeContents.v_nPE.push_back((waves[ic]->Integral()/(speAreas[ic]))*(1.6/sampleRate));
+	outputTreeContents.v_ipulse.push_back(ipulse);
+	outputTreeContents.v_npulses.push_back(npulses);
+	outputTreeContents.v_duration.push_back(pulseBounds[ipulse].second - pulseBounds[ipulse].first);
+	if(ipulse>0) outputTreeContents.v_delay.push_back(pulseBounds[ipulse].first - pulseBounds[ipulse-1].second);
+	else outputTreeContents.v_delay.push_back(9999.);
 
     }    
 
     return pulseBounds;
 }
 
-void OfflineFactory::loadBranchesMilliDAQ(){
-    inTree->SetBranchAddress("event", &evt);
-    for(int ic=0;ic<numChan;ic++) waves.push_back(new TH1D());
+void OfflineFactory::loadBranches(){
+    int lenDRS = sizeof(arrayVoltageDRS)/sizeof(arrayVoltageDRS[0]);
+    if (!isDRS) {
+	inTree->SetBranchAddress("event", &evt);
+	for(int ic=0;ic<numChan;ic++) waves.push_back(new TH1D());
+    }
+    else{
+	for(int ic=0;ic<numChan;ic++) waves.push_back(new TH1D(TString(ic),"",lenDRS,0,lenDRS*1./sampleRate));
+    }
 }
 
-/*void OfflineFactory::loadBranchesDRS(){
-    double arrayVoltageDRS_0[1024];
-    double arrayVoltageDRS_1[1024];
-    double arrayVoltageDRS_2[1024];
-    double arrayVoltageDRS_3[1024];
-    double arrayVoltageDRS_4[1024];
-    double arrayVoltageDRS_5[1024];
-    double arrayVoltageDRS_6[1024];
-    double arrayVoltageDRS_7[1024];
-    double arrayVoltageDRS_8[1024];
-    double arrayVoltageDRS_9[1024];
-    double arrayVoltageDRS_10[1024];
-    double arrayVoltageDRS_11[1024];
-    double arrayVoltageDRS_12[1024];
-    
-    for(int chn=0;chn<numChanDRS;chn++){
-        inTree->SetBranchAddress(Form("voltages_%i_%i",DRS_number,chn+1),Form("arrayVoltageDRS_%i",chn+1));          
-	waves.push_back(new TH1D(TString(chn),"",1024,0,1024*1./1.6));
-    }    
-
-}*/
-
 void OfflineFactory::loadWavesMilliDAQ(){
-    
+
     int board,chan;
     //FIXME does this work if > 1 board?
-    for(int i=0;i<numChan;i++){
-        if(waves[i]) delete waves[i];
-        //board = i<=15 ? 0 : 1;
-        board = 0;
-        chan = i<=15 ? i : i-16;
-        waves[i] = (TH1D*)evt->GetWaveform(board, chan, Form("digitizers[%i].waveform[%i]",board,i));  
+    for(int ic=0;ic<numChan;ic++){
+	if(waves[ic]) delete waves[ic];
+	//board = ic<=15 ? 0 : 1;
+	board = 0;
+	chan = ic<=15 ? ic : ic-16;
+	waves[ic] = (TH1D*)evt->GetWaveform(board, chan, Form("digitizers[%i].waveform[%i]",board,ic));  
     }
 
 }    
-    // Need to add a separate loop here in the case we have DRS data
-    
+// Need to add a separate loop here in the case we have DRS data
+
 void OfflineFactory::loadWavesDRS(){
-
-    double arrayVoltageDRS_0[1024];
-    double arrayVoltageDRS_1[1024];
-    double arrayVoltageDRS_2[1024];
-    double arrayVoltageDRS_3[1024];
-    double arrayVoltageDRS_4[1024];
-    double arrayVoltageDRS_5[1024];
-    double arrayVoltageDRS_6[1024];
-    double arrayVoltageDRS_7[1024];
-    double arrayVoltageDRS_8[1024];
-    double arrayVoltageDRS_9[1024];
-    double arrayVoltageDRS_10[1024];
-    double arrayVoltageDRS_11[1024];
-    double arrayVoltageDRS_12[1024];
-
-    for(int chn=0;chn<numChanDRS;chn++){
-         inTree->SetBranchAddress(Form("voltages_%i_%i",DRS_number,chn+1),Form("arrayVoltageDRS_%i",chn+1));
-         waves.push_back(new TH1D(TString(chn),"",1024,0,1024*1./1.6));
+    int lenDRS = sizeof(arrayVoltageDRS)/sizeof(arrayVoltageDRS[0]);
+    for(int ic=0;ic<numChan;ic++){
+	inTree->SetBranchAddress(Form("voltages_%i_%i",DRS_number,ic+1),arrayVoltageDRS);
+	for(int it=0;it<lenDRS;it++){
+	    waves[ic]->SetBinContent(it,arrayVoltageDRS[it]);
+	}
     }
-
-
-    for(int i=0;i<1024;i++){
-        //for (int chn=0;chn<numChanDRS;chn++){
-	//     waves[chn]->SetBinContent(i+1,Form("arrayVoltageDRS_%i[%i]",chn+1,i));
-	//}   
-        waves[0]->SetBinContent(i+1,arrayVoltageDRS_0[i]);
-	waves[1]->SetBinContent(i+1,arrayVoltageDRS_1[i]);
-        waves[2]->SetBinContent(i+1,arrayVoltageDRS_2[i]);
-	waves[3]->SetBinContent(i+1,arrayVoltageDRS_3[i]);
-        waves[4]->SetBinContent(i+1,arrayVoltageDRS_4[i]);
-        waves[5]->SetBinContent(i+1,arrayVoltageDRS_5[i]);
-	waves[6]->SetBinContent(i+1,arrayVoltageDRS_6[i]);
-        waves[7]->SetBinContent(i+1,arrayVoltageDRS_7[i]);
-	waves[8]->SetBinContent(i+1,arrayVoltageDRS_8[i]);
-	waves[9]->SetBinContent(i+1,arrayVoltageDRS_9[i]);
-	waves[10]->SetBinContent(i+1,arrayVoltageDRS_10[i]);
-	waves[11]->SetBinContent(i+1,arrayVoltageDRS_11[i]);
-	waves[12]->SetBinContent(i+1,arrayVoltageDRS_12[i]);
-    }
-    
 }
 void OfflineFactory::writeVersion(){
     //This is very hacky but it works

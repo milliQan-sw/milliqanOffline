@@ -193,6 +193,7 @@ void OfflineFactory::prepareOutBranches(){
     outTree->Branch("triggerMajority",&outputTreeContents.v_triggerMajority);
     outTree->Branch("triggerLogic",&outputTreeContents.v_triggerLogic);
     outTree->Branch("chan",&outputTreeContents.v_chan);
+    outTree->Branch("board",&outputTreeContents.v_board);
     outTree->Branch("height",&outputTreeContents.v_height);
     outTree->Branch("area",&outputTreeContents.v_area);
     outTree->Branch("nPE",&outputTreeContents.v_nPE);
@@ -211,6 +212,7 @@ void OfflineFactory::resetOutBranches(){
     outputTreeContents.v_triggerMajority.clear();
     outputTreeContents.v_triggerLogic.clear();
     outputTreeContents.v_chan.clear();
+    outputTreeContents.v_board.clear();
     outputTreeContents.v_height.clear();
     outputTreeContents.v_area.clear();
     outputTreeContents.v_nPE.clear();
@@ -224,9 +226,9 @@ void OfflineFactory::resetOutBranches(){
 //Read meta data from configuration
 void OfflineFactory::readMetaData(){
     //May need to change for DRS input
+    TTree * metadata;
+    metadata = (TTree*) inFile->Get("Metadata");
     if (!isDRS){
-	TTree * metadata;
-	metadata = (TTree*) inFile->Get("Metadata");
 	metadata->SetBranchAddress("configuration", &cfg);
 	metadata->GetEntry(0);
 	//Currently run and fill set to zero - I think should be given as input
@@ -235,9 +237,11 @@ void OfflineFactory::readMetaData(){
 	int numBoards = cfg->digitizers.size();
 	numChan = numBoards*16;
 	chanArray = new TArrayI(numChan);
+	boardArray = new TArrayI(numChan);
 	//Read trigger info and set channel array
 	for (int ic =0; ic < numChan; ic++){
 	    chanArray->SetAt(ic,ic);
+	    boardArray->SetAt(ic/16,ic);
 	    float triggerThresh = cfg->digitizers[ic/16].channels[ic % 16].triggerThreshold;
 	    bool triggerEnable = cfg->digitizers[ic/16].channels[ic % 16].triggerEnable;
 	    int triggerMajority = cfg->digitizers[ic/16].GroupTriggerMajorityLevel;
@@ -250,11 +254,16 @@ void OfflineFactory::readMetaData(){
     }
     else{
 	//ADD SOMETHING TO DRS INPUT SUCH THAT THIS CAN BE EASILY READ!
-	numChan = 1;
+	//output_trees_test/CMS31.root
+	metadata->SetBranchAddress("boards", &boardsDRS);
+	metadata->SetBranchAddress("channels", &chansDRS);
+	metadata->SetBranchAddress("numChan", &numChan);
+	metadata->GetEntry(0);
 	chanArray = new TArrayI(numChan);
-	DRS_number = 3044;
+	boardArray = new TArrayI(numChan);
 	for (int ic =0; ic < numChan; ic++){
-	    chanArray->SetAt(ic,ic);
+	    chanArray->AddAt(chansDRS[ic],ic);
+	    boardArray->AddAt(boardsDRS[ic],ic);
 	}
     }
 }
@@ -270,7 +279,7 @@ void OfflineFactory::readWaveData(){
     validateInput();
     inTree = (TTree*)inFile->Get("Events"); 
     loadBranches();
-    // int maxEvents = 1000;
+    // int maxEvents = 1;
     float progress = 0.0;
     int maxEvents = inTree->GetEntries();
     bool showBar = true;
@@ -352,7 +361,6 @@ vector< pair<float,float> > OfflineFactory::findPulses(int ic){
 	    else{
 		i_begin = i;
 	    }
-
 	    if (nover>=nConsecSamples[ic]){   // If v is above threshold for long enough, we now have a pulse!
 		inpulse = true;    // Also reset the value of nunder
 		nunder = 0;
@@ -412,6 +420,7 @@ vector< pair<float,float> > OfflineFactory::processChannel(int ic){
 
 	//FIXME need to add calibrations (when available)
 	outputTreeContents.v_chan.push_back(chanArray->GetAt(ic));
+	outputTreeContents.v_board.push_back(boardArray->GetAt(ic));
 	outputTreeContents.v_height.push_back(waves[ic]->GetMaximum());
 	outputTreeContents.v_time.push_back(pulseBounds[ipulse].first);
 	outputTreeContents.v_time_module_calibrated.push_back(pulseBounds[ipulse].first+timingCalibrations[ic]);
@@ -447,7 +456,7 @@ void OfflineFactory::loadWavesMilliDAQ(){
 	if(waves[ic]) delete waves[ic];
 	//board = ic<=15 ? 0 : 1;
 	board = 0;
-	chan = ic<=15 ? ic : ic-16;
+	chan = chanArray->GetAt(ic);
 	waves[ic] = (TH1D*)evt->GetWaveform(board, chan, Form("digitizers[%i].waveform[%i]",board,ic));  
     }
 
@@ -457,7 +466,9 @@ void OfflineFactory::loadWavesMilliDAQ(){
 void OfflineFactory::loadWavesDRS(){
     int lenDRS = sizeof(arrayVoltageDRS)/sizeof(arrayVoltageDRS[0]);
     for(int ic=0;ic<numChan;ic++){
-	inTree->SetBranchAddress(Form("voltages_%i_%i",DRS_number,ic+1),arrayVoltageDRS);
+	int chan =  chanArray->GetAt(ic);
+	int board = boardArray->GetAt(ic);
+	inTree->SetBranchAddress(Form("voltages_%i_%i",board,chan),arrayVoltageDRS);
 	for(int it=0;it<lenDRS;it++){
 	    waves[ic]->SetBinContent(it,arrayVoltageDRS[it]);
 	}

@@ -81,6 +81,7 @@ struct offline_tree_{
     vector<int> v_npulses;
     vector<int> v_ipulse;
     vector<int> v_chan;
+    vector<int> v_board;
     vector<int> v_layer;
     vector<int> v_row;
     vector<int> v_column;
@@ -156,7 +157,6 @@ class OfflineFactory {
         int runNumber;
         int fileNumber;
 	bool isDRS;
-	int DRS_number;
 	mdaq::GlobalEvent * evt = new mdaq::GlobalEvent();
 	mdaq::DemonstratorConfiguration * cfg = new mdaq::DemonstratorConfiguration();
 	vector<float> highThresh = {15.};
@@ -168,10 +168,14 @@ class OfflineFactory {
 	vector<float> pedestals;
 	vector<float> speAreas;
 	TArrayI * chanArray;
+	TArrayI * boardArray;
 
 	//Declare global variables
 	double arrayVoltageDRS[1024];
 	int numChan;
+	int numBoards;
+	int boardsDRS[50];
+	int chansDRS[50];
 	vector<TH1D*> waves;
 	TTree * inTree;
 	TFile * inFile;

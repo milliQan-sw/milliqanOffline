@@ -26,6 +26,7 @@ def parse_args():
     parser.add_argument("-p","--publish",help="Publish dataset",action="store_true",default=False)
     parser.add_argument("-f","--force_publish",help="Force publish dataset",action="store_true",default=False)
     parser.add_argument("-c","--configurations",help="JSON Configuration files or string",type=str,nargs="+")
+    parser.add_argument("--drs",help="DRS input",action="store_true",default=False)
     args = parser.parse_args()
     return args
 def validateOutput(outputFile):
@@ -47,12 +48,16 @@ def validateOutput(outputFile):
         print ("removing output file because it does not deserve to live (result will not be published)")
         os.system("rm "+outputFile)
     return tag 
-def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publish,database,appendToTag):
+def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publish,database,appendToTag,drs):
     if force_publish:
         publish = True
     try:
-        runNumber = int(inputFile.split("/")[-1].split("Run")[-1].split(".")[0])
-        fileNumber = int(inputFile.split("/")[-1].split(".")[1].split("_")[0])    
+        if drs:
+            runNumber = int(inputFile.split("/")[-1].split("CMS")[-1].split(".")[0])
+            fileNumber = 0
+        else:
+            runNumber = int(inputFile.split("/")[-1].split("Run")[-1].split(".")[0])
+            fileNumber = int(inputFile.split("/")[-1].split(".")[1].split("_")[0])    
     except:
         if publish:
             print ("Could not identify file and/or run number so cannot publish")
@@ -61,7 +66,10 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
         runNumber = -1
 
     if not configurations:
-        configurations = ["/home/milliqan/milliqanOffline/offlineProduction/configuration/chanMaps/testMap.json","/home/milliqan/milliqanOffline/offlineProduction/configuration/pulseFinding/pulseFindingTest.json","/home/milliqan/milliqanOffline/offlineProduction/configuration/calibrations/testCalibration.json"]
+        if drs:
+            configurations = ["/home/milliqan/milliqanOffline/offlineProduction/configuration/pulseFinding/pulseFindingTest.json"]
+        else:
+            configurations = ["/home/milliqan/milliqanOffline/offlineProduction/configuration/chanMaps/testMap.json","/home/milliqan/milliqanOffline/offlineProduction/configuration/pulseFinding/pulseFindingTest.json","/home/milliqan/milliqanOffline/offlineProduction/configuration/calibrations/testCalibration.json"]
 
     if "{" in configurations and "}" in configurations:
         configurationsJSONString = configurations
@@ -75,7 +83,10 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
                 for key in configurationsJSONTemp.keys():
                     configurationsJSON[key] = configurationsJSONTemp[key]
         configurationsJSONString = json.dumps(configurationsJSON)
-    args = " ".join([exe,"-i "+inputFile,"-o "+outputFile,"-c "+"'"+configurationsJSONString+"'","-r "+str(runNumber),"-f "+str(fileNumber)])
+    argList = [exe,"-i "+inputFile,"-o "+outputFile,"-c "+"'"+configurationsJSONString+"'","-r "+str(runNumber),"-f "+str(fileNumber)]
+    if drs:
+        argList.append("--drs")
+    args = " ".join(argList)
 
     os.system(args)
 
@@ -88,7 +99,11 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
         if tag != None:  
             if appendToTag:
                 tag += "_"+appendToTag
-            publishDataset(configurationsJSON,inputFile,outputFile,fileNumber,runNumber,tag,site=site,inputType="MilliDAQ",force_publish=force_publish,db=db)
+            if drs:
+                inputType = "DRS"
+            else:
+                inputType = "MilliDAQ"
+            publishDataset(configurationsJSON,inputFile,outputFile,fileNumber,runNumber,tag,site=site,inputType=inputType,force_publish=force_publish,db=db)
     return tag != None
 
 def publishDataset(configurationsJSON,inputFile,outputFile,fileNumber,runNumber,tag,site=site,inputType="MilliDAQ",force_publish=False,db=None):
@@ -109,12 +124,14 @@ def publishDataset(configurationsJSON,inputFile,outputFile,fileNumber,runNumber,
     if nX:
         if force_publish:
             db.milliQanOfflineDatasets.replace_one({"_id": _id},milliQanOfflineDataset)
+            print ("Replaced exisiting entry in database")
         else:
             print ("Entry already exists in database. To overwrite use --force_publish.")
             print("Output made successfully but not published")
             exit()
     else:
         db.milliQanOfflineDatasets.insert_one(milliQanOfflineDataset)
+        print ("Added new entry in database")
 
 if __name__ == "__main__":
     valid = runOfflineFactory(**vars(parse_args()))

@@ -111,8 +111,7 @@ void OfflineFactory::validateInput(){
     if(version.Contains("placeholder")) throw runtime_error("This macro was compiled incorrectly. Please compile this macro using compile.sh");
     if (chanMap.size()) 
     {
-	if (chanMap.size() != numChan) std::cout << "WARNING: altering number of channels to match channel map length: " <<  chanMap.size() << std::endl;
-	numChan = chanMap.size();
+	if (chanMap.size() != numChan) throw length_error("Number of channels ("+std::to_string(numChan)+") does not match channel map length: "+std::to_string(chanMap.size()));
     }
     if (nConsecSamples.size() > 1){
 	if (nConsecSamples.size() != numChan) throw length_error("nConsecSamples should be length "+std::to_string(numChan) + "or 1");
@@ -240,7 +239,7 @@ void OfflineFactory::readMetaData(){
 	boardArray = new TArrayI(numChan);
 	//Read trigger info and set channel array
 	for (int ic =0; ic < numChan; ic++){
-	    chanArray->SetAt(ic,ic);
+	    chanArray->SetAt(ic % 16,ic);
 	    boardArray->SetAt(ic/16,ic);
 	    float triggerThresh = cfg->digitizers[ic/16].channels[ic % 16].triggerThreshold;
 	    bool triggerEnable = cfg->digitizers[ic/16].channels[ic % 16].triggerEnable;
@@ -455,7 +454,7 @@ void OfflineFactory::loadWavesMilliDAQ(){
     for(int ic=0;ic<numChan;ic++){
 	if(waves[ic]) delete waves[ic];
 	//board = ic<=15 ? 0 : 1;
-	board = 0;
+	board = boardArray->GetAt(ic);
 	chan = chanArray->GetAt(ic);
 	waves[ic] = (TH1D*)evt->GetWaveform(board, chan, Form("digitizers[%i].waveform[%i]",board,ic));  
     }

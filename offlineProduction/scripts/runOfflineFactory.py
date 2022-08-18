@@ -64,12 +64,13 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
             exit()
         fileNumber = -1
         runNumber = -1
-
+    
     if not configurations:
+        offlineDir = os.getenv("OFFLINEDIR")
         if drs:
-            configurations = ["/home/milliqan/milliqanOffline/offlineProduction/configuration/pulseFinding/pulseFindingTest.json"]
+            configurations = [offlineDir+"/configuration/pulseFinding/pulseFindingTest.json"]
         else:
-            configurations = ["/home/milliqan/milliqanOffline/offlineProduction/configuration/chanMaps/testMap.json","/home/milliqan/milliqanOffline/offlineProduction/configuration/pulseFinding/pulseFindingTest.json","/home/milliqan/milliqanOffline/offlineProduction/configuration/calibrations/testCalibration.json"]
+            configurations = [offlineDir+"/configuration/chanMaps/oneSuperModuleMap.json",offlineDir+"/configuration/pulseFinding/pulseFindingTest.json"]
 
     if "{" in configurations and "}" in configurations:
         configurationsJSONString = configurations

@@ -20,6 +20,6 @@ From the milliqanOffline directory you can run on a single file using the runMak
 ### Making the Offline Trees
 The code is run by executing the `runMakeTree.py` script. You may execute the `runMakeTree.py` script using the following command:
 ```bash
-   python3 runMakeTree.py --inFile "input_filename".root --outputFile "output_filename".root --exe ./(target macro name).exe (--publish) ...
+   python3 scripts/runOfflineFactory.py --inFile "input_filename".root --outputFile "output_filename".root --exe ./(target macro name).exe (--publish) ...
 ```
 Where `(target macro name).exe` is the one specified when running the `compile.sh` script. The publish option will include the file details in the mongoDB database.

@@ -274,6 +274,23 @@ void OfflineFactory::makeOutputTree(){
     prepareOutBranches(); 
 }
 
+void OfflineFactory::readWaveDataperEvent(TTree* intree, int i){
+    outputTreeContents.event=i;	
+    inTree->GetEntry(i);
+    if (!isDRS) loadWavesMilliDAQ();
+    else loadWavesDRS();
+    //Loop over channels
+    vector<vector<pair<float,float> > > allPulseBounds;
+    for(int ic=0;ic<numChan;ic++){
+        //Pulse finding
+        allPulseBounds.push_back(processChannel(ic));
+        outputTreeContents.v_max.push_back(1.*waves[ic]->GetMaximum());
+    }    
+    outTree->Fill();
+    
+}
+    
+
 //Pulse finding and per channel processing
 void OfflineFactory::readWaveData(){
     validateInput();
@@ -284,38 +301,29 @@ void OfflineFactory::readWaveData(){
     int maxEvents = inTree->GetEntries();
     bool showBar = true;
     cout<<"Starting event loop"<<endl;
+    
     for(int i=0;i<maxEvents;i++){
 
 	progress += 1./maxEvents; // for demonstration only
-	resetOutBranches();
-	outputTreeContents.event=i;
-	inTree->GetEntry(i);
-	if (!isDRS) loadWavesMilliDAQ();
-	else loadWavesDRS();
-	//Loop over channels
-	vector<vector<pair<float,float> > > allPulseBounds;
-	for(int ic=0;ic<numChan;ic++){
-	    //Pulse finding
-	    allPulseBounds.push_back(processChannel(ic));
-	    outputTreeContents.v_max.push_back(1.*waves[ic]->GetMaximum());
-	}    
-	outTree->Fill();
-	//Totally necessary progress bar
-	if (showBar){
-	    int barWidth = 70;
-	    std::cout << "[";
-	    int pos = barWidth * progress;
-	    for (int i = 0; i < barWidth; ++i) {
-		if (i < pos) std::cout << "=";
-		else if (i == pos) std::cout << ">";
-		else std::cout << " ";
-	    }
-	    std::cout << "] " << round(progress * 100.0) << " %\r";
-	    std::cout.flush();
-	}
+	resetOutBranches();	
+        readWaveDataperEvent(inTree,i);
+    }
+    //Totally necessary progress bar
+    if (showBar){
+        int barWidth = 70;
+        std::cout << "[";
+        int pos = barWidth * progress;
+        for (int i = 0; i < barWidth; ++i) {
+            if (i < pos) std::cout << "=";
+            else if (i == pos) std::cout << ">";
+            else std::cout << " ";
+        }
+        std::cout << "] " << round(progress * 100.0) << " %\r";
+        std::cout.flush();
     }
     std::cout << std::endl;
 }
+
 void OfflineFactory::writeOutputTree(){
     outFile->cd();
     outTree->Write();

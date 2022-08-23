@@ -131,8 +131,9 @@ class OfflineFactory {
 	virtual ~OfflineFactory();
 	void makeOutputTree();
 	void loadJsonConfig(string);
-	void readMetaData();
-	void readWaveData();
+        void readMetaData();
+        void readWaveDataperEvent(TTree*,int);
+        void readWaveData();
 	void writeOutputTree();
 	void process();
 	void process(TString,TString);

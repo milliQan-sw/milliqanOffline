@@ -132,10 +132,15 @@ class OfflineFactory {
 	void makeOutputTree();
 	void loadJsonConfig(string);
         void readMetaData();
-        void readWaveDataperEvent(TTree*,int);
+        vector<vector<pair<float,float> > > readWaveDataperEvent(int,int);
+    //        void defineColors(vector<int>, vector<TColor*>, vector<float>, vector<float>, vector<float>);
+    //vector<int>colors, vector<TColor*> palette, vector<float> reds, vector<float> greens, vector<float> blues
+        void h1cosmetic(TH1D*,int,vector<int>);
+        void displayEvent(int,vector<vector<pair<float,float> > >);
+        void displayEventold(int,vector<vector<pair<float,float> > >,TString,float ,float,float,float,bool,bool,bool,bool,set<int>);
         void readWaveData();
 	void writeOutputTree();
-	void process();
+    	void process();
 	void process(TString,TString);
 	void process(TString,TString,int, int);
     private:
@@ -183,5 +188,6 @@ class OfflineFactory {
 	TFile * outFile;
 	TTree * outTree;
 	offline_tree_ outputTreeContents;
+    
 };
 #endif

@@ -339,7 +339,7 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
     //Get the waves
     vector<vector<pair<float,float>>> boundsShifted;
     vector<TH1D*> wavesShifted;
-    float originalMaxHeights[32];
+    float originalMaxHeights[80];
     cout<<3<<endl;
     for(uint ic=0;ic<bounds.size();ic++){
         int chan = chanArray->GetAt(ic);
@@ -478,17 +478,17 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
     TPave L1frame(xstart[0]-0.006,ystart[0]-0.01,xstart[0]+barw+boxw+0.006,ystart[2]+boxh+0.01,1,"NDC");
     L1frame.SetFillColor(0);
     L1frame.SetLineWidth(2);
-    L1frame.Draw();
+    //L1frame.Draw();
 
     TPave L2frame(xstart[1]-0.006,ystart[0]-0.01,xstart[1]+barw+boxw+0.006,ystart[2]+boxh+0.01,1,"NDC");
     L2frame.SetFillColor(0);
     L2frame.SetLineWidth(2);
-    L2frame.Draw();
+    //L2frame.Draw();
 
     TPave L3frame(xstart[2]-0.006,ystart[0]-0.01,xstart[2]+barw+boxw+0.006,ystart[2]+boxh+0.01,1,"NDC");
     L3frame.SetFillColor(0);
     L3frame.SetLineWidth(2);
-    L3frame.Draw();
+    //L3frame.Draw();
     
     TLatex tla;
     tla.SetTextSize(0.04);
@@ -506,6 +506,7 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
     for(uint i=0;i<chanList.size();i++){
         int ic = chanList[i];
         int chan = chanArray->GetAt(ic);
+        cout<<ic<<" ic,chan "<<chan<<endl;
         int column= chanMap[ic][0];
         int row= chanMap[ic][1];
         int layer= chanMap[ic][2];
@@ -521,7 +522,7 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
             xpos = slab_xstart[layer];
             pave = new TPave(xpos,ypos,xpos+slab_width,ypos+slab_height,0,"NDC");
             pave->SetFillColor(colors[colorIndex]);
-            pave->Draw();
+            //pave->Draw();
         }
 
         else if (type==2){
@@ -540,7 +541,7 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
             }
 
             pave->SetFillColor(colors[colorIndex]);
-            pave->Draw();
+            //pave->Draw();
 
         }
         else if(type==0){
@@ -548,15 +549,16 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
             float ypos= ystart[row-1];
             pave = new TPave(xpos,ypos,xpos+boxw,ypos+boxh,0,"NDC");
             pave->SetFillColor(colors[colorIndex]);
-            pave->Draw();
+            //pave->Draw();
         }
 
         tla.SetTextColor(colors[colorIndex]);
-        tla.SetTextSize(0.04);
-        tla.DrawLatexNDC(headerX,currentYpos,Form("Channel %i, V_{max} = %0.0f, N_{pulses}= %i",chan,originalMaxHeights[ic],(int)boundsShifted[ic].size()));
+        tla.SetTextSize(0.03);
+        tla.DrawLatexNDC(headerX,currentYpos+0.15,Form("Channel %i, V_{max} = %0.0f, N_{pulses}= %i",ic,originalMaxHeights[ic],(int)boundsShifted[ic].size()));
         tla.SetTextColor(kBlack);
-        currentYpos-=height;
-        tla.SetTextSize(0.035);
+        currentYpos=currentYpos-(height*0.7);
+        //currentYpos-=height;
+        tla.SetTextSize(0.03);
         
         for(int ip=0;ip<boundsShifted[ic].size();ip++){
             TString row;
@@ -583,323 +585,6 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
     cout<<10<<endl;
     
 }
-
-
-void OfflineFactory::displayEventold(int event, vector<vector<pair<float,float> > > bounds, TString tag,float rangeMinX,float rangeMaxX,float rangeMinY,float rangeMaxY,bool calibrateDisplay, bool displayPulseBounds,bool onlyForceChans,bool runFFT, set<int> forceChan){
-
-    cout<<1<<endl;
-  //if (runFFT) displayPulseBounds = false;
-    vector<float> reds ={255./255.,31./255.,235./255.,111./255.,219./255.,151./255.,185./255.,194./255.,127./255.,98./255.,211./255.,69./255.,220./255.,72./255.,225./255.,145./255.,233./255.,125./255.,147./255.,110./255.,209./255.,44};
-    vector<float> greens={255./255.,30./255.,205./255.,48./255.,106./255.,206./255.,32./255.,188./255.,128./255.,166./255.,134./255.,120./255.,132./255.,56./255.,161./255.,39./255.,232./255.,23./255.,173./255.,53./255.,45./255.,54};
-    vector<float> blues={255./255.,30./255.,62./255.,139./255.,41./255.,230./255.,54./255.,130./255.,129./255.,71./255.,178./255.,179./255.,101./255.,150./255.,49./255.,139./255.,87./255.,22./255.,60./255.,21./255.,39./255.,23};
-
-    vector<TColor *> palette;
-    vector<int> colors;
-    
-    //
-    //    defineColors(colors,palette,reds,greens,blues);
-    for(int icolor=0;icolor<reds.size();icolor++){
-        palette.push_back(new TColor(2000+icolor,reds[icolor],greens[icolor],blues[icolor]));
-        colors.push_back(2000+icolor);
-    }
-    colors[9] = 419; //kGreen+3;
-    colors[2] = 2009;
-    //colors[3] = 2013;
-    colors[12]= 30;
-    colors[0]=28;
-    cout<<2<<endl;
-    
-    TCanvas c("c1","",1400,800);
-    gPad->SetRightMargin(0.39);
-    gStyle->SetGridStyle(3);
-    gStyle->SetGridColor(13);
-    c.SetGrid();
-    
-    float drawThresh=5;
-
-    gStyle->SetTitleX(0.35);
-    vector<int> chanList;
-    float maxheight=0;
-    float timeRange[2];
-    timeRange[1]=1024./sampleRate; timeRange[0]=0.;
-
-    vector<vector<pair<float,float>>> boundsShifted;
-    vector<TH1D*> wavesShifted;
-    vector<TH1D*> wavesShiftedTemp;
-    float originalMaxHeights[32];
-    cout<<3<<endl;
-    for(uint ic=0;ic<bounds.size();ic++){
-        int chan = chanArray->GetAt(ic);
-        vector<pair<float,float>> boundShifted = bounds[ic];
-        TH1D * waveShifted = (TH1D*) waves[ic]->Clone();
-      
-
-        //calibration
-        /*
-          if(calibrateDisplay){
-          waveShifted->Reset();
-
-            for (uint iBin = 1;iBin <= waves[ic]->GetNbinsX();iBin++)
-                {
-                    float binLowEdgeShifted = waves[ic]->GetBinLowEdge(iBin) + timingCalibrations[ic];
-                    int iBinShifted = waveShifted->FindBin(binLowEdgeShifted + 1E-4);
-                    if (iBinShifted > 0 && iBinShifted <= waves[ic]->GetNbinsX()){
-                        waveShifted->SetBinContent(iBinShifted,waves[ic]->GetBinContent(iBin));
-                        waveShifted->SetBinError(iBinShifted,waves[ic]->GetBinError(iBin));
-                    }
-
-                }
-            for(uint iBoundVec =0;iBoundVec < bounds[ic].size();iBoundVec++){
-                for(uint iBoundVec2 =0;iBoundVec2 < bounds[ic][iBoundVec].size();iBoundVec2++){
-                    boundShifted[iBoundVec][iBoundVec2] += timingCalibrations[ic]; 
-                }
-            }
-        }
-        */
-        
-        cout<<4<<endl;
-        if(boundShifted.size()>0 || waveShifted->GetMaximum()>drawThresh || forceChan.find(chan)!=forceChan.end()){
-            //if(ic==15 && forceChan.find(ic)==forceChan.end()) continue;
-            //        if (!(onlyForceChans && forceChan.find(chan)==forceChan.end())){
-            //    if(boundShifted.size()>0 || waveShifted->GetMaximum()>drawThresh){
-                    {        
-                        chanList.push_back(ic);
-                        TString beamState = "off";
-                        //Put it to off now
-                        //if(beam) beamState="on";
-                        if (calibrateDisplay) waveShifted->SetTitle(Form("Run %i, File %i, Event %i (beam %s);Time [ns];Amplitude [mV];",runNumber,fileNumber,event,beamState.Data()));
-                        else waveShifted->SetTitle(Form("Run %i, File %i, Event %i (beam %s);Uncalibrated Time [ns];Amplitude [mV];",runNumber,fileNumber,event,beamState.Data()));
-                        
-                    }
-                }
-                cout<<5<<endl;
-                if (runFFT) wavesShiftedTemp.push_back(waveShifted);
-                else {
-                    // TH1D * waveShiftedFiltered = LPFilter(waveShifted);
-                    // wavesShifted.push_back(waveShiftedFiltered);
-                    wavesShifted.push_back(waveShifted);
-                }
-                boundsShifted.push_back(boundShifted);
-    }
-    int maxheightbin = -1;
-    maxheight*=1.1;
-    cout<<6<<endl;
-    //maxheight=30;
-    if (rangeMaxY > -999) maxheight = rangeMaxY;
-    if (rangeMinX < 0) timeRange[0]*=0.9;
-    else timeRange[0] = rangeMinX;
-    if (runFFT){
-        if (rangeMaxX < 0) timeRange[1]= sampleRate/2.;
-        else timeRange[1] = rangeMaxX;
-    }
-    else {
-        if (rangeMaxX < 0) timeRange[1]= min(1.1*timeRange[1],1024./sampleRate);
-        else timeRange[1] = rangeMaxX;
-    }
-    
-    float depth = 0.075*chanList.size();
-    TLegend leg(0.45,0.9-depth,0.65,0.9);
-    for(uint i=0;i<chanList.size();i++){
-        int ic = chanList[i];
-        int chan = chanArray->GetAt(ic);
-        //if (onlyForceChans && forceChan.find(chan)==forceChan.end()) continue;
-        //if(ic==-15 && forceChan.find(chan)==forceChan.end()) continue;
-        wavesShifted[ic]->SetAxisRange(timeRange[0],timeRange[1]);
-        originalMaxHeights[ic] = wavesShifted[ic]->GetMaximum();
-        if (rangeMinY > -999) wavesShifted[ic]->SetMinimum(rangeMinY);
-        wavesShifted[ic]->SetMaximum(maxheight);
-        int column= chanMap[ic][0];
-        int row= chanMap[ic][1];
-        int layer= chanMap[ic][2];
-        int type= chanMap[ic][3];
-        int colorIndex = 4-2*(row-1)+column-1+6*(layer-1);
-        cout<<7<<endl;
-        
-        if(type==1) colorIndex = layer; //slabs: 0-3
-        if(type==2) colorIndex = 4 + 3*(layer-1) + (column+1); //sheets
-        if(ic==-15) colorIndex=1;
-        //if(type!=0) continue;
-        h1cosmetic(wavesShifted[ic],colorIndex,colors);
-        if(type==1) wavesShifted[ic]->SetLineStyle(3);
-        if(type==2) wavesShifted[ic]->SetLineStyle(7);
-        if(i==0) wavesShifted[ic]->Draw("hist");
-        else wavesShifted[ic]->Draw("hist same");
-        
-        leg.AddEntry(wavesShifted[ic],Form("Channel %i",ic),"l");
-        //Show boundaries of pulse
-        if(displayPulseBounds){
-            TLine line; line.SetLineWidth(2); line.SetLineStyle(3);line.SetLineColor(colors[colorIndex]);
-            for(uint ip=0; ip<boundsShifted[ic].size();ip++){
-                if (boundsShifted[ic][ip].first > timeRange[0] && boundsShifted[ic][ip].second < timeRange[1]){
-                    line.DrawLine(boundsShifted[ic][ip].first,0,boundsShifted[ic][ip].first,0.2*maxheight);
-                    line.DrawLine(boundsShifted[ic][ip].second,0,boundsShifted[ic][ip].second,0.2*maxheight);
-                }
-            }
-        }   
-        //Display values stored for this pulse
-    }
-    cout<<8<<endl;
-    
-    float boxw= 0.025;
-    float boxh=0.0438;
-    float barw=0.03;
-    float barh=0.53;
-    //    vector<float> xpos = {0.93,0.96,0.93,0.96,0.93,0.96,
-    // 0.815,0.845,0.815,0.845,0.815,0.845,
-    // 0.7,0.73,0.7,0.73,0.7,0.73
-    //    };
-    //    
-    
-
-    vector<float> xstart = {0.66,0.78,0.9};
-    vector<float> ystart= {0.798,0.851,0.904};
-
-    float sheet_width = 0.006;
-    float sheet_offset= 0.013+sheet_width/2.;
-    float sheet_left_to_right = 4*0.006+barw+boxw+0.002;
-    vector<float> xstart_leftsheets = {xstart[0]-sheet_offset,xstart[1]-sheet_offset,xstart[2]-sheet_offset}; 
-    vector<float> xstart_topsheets = {xstart[0]-0.002,xstart[1]-0.002,xstart[2]-0.002};
-    float ystart_topsheets = ystart[2]+boxh+0.017;
-    float ystart_sidesheets = ystart[0]-0.006;
-    float vert_sheet_length = ystart[2]-ystart[0]+boxh+0.01;
-    float hori_sheet_length= barw+boxw+0.004;
-
-    float slab_width = 0.015;
-    vector<float> slab_xstart = {xstart_leftsheets[0]-0.008-slab_width,xstart_leftsheets[1]-0.008-slab_width,xstart_leftsheets[2]-0.008-slab_width,xstart_leftsheets[2]+0.01+sheet_left_to_right}; 
-    float slab_height = vert_sheet_length-0.02;
-    float slab_ystart = ystart_sidesheets+0.01;
-    // vector<float> ypos = 
-    // {0.924,0.924,0.871,0.871,0.818,0.818,
-    //     0.924,0.924,0.871,0.871,0.818,0.818,
-    //     0.924,0.924,0.871,0.871,0.818,0.818
-    // };
-
-    TPave L1frame(xstart[0]-0.006,ystart[0]-0.01,xstart[0]+barw+boxw+0.006,ystart[2]+boxh+0.01,1,"NDC");
-    L1frame.SetFillColor(0);
-    L1frame.SetLineWidth(2);
-    L1frame.Draw();
-
-    TPave L2frame(xstart[1]-0.006,ystart[0]-0.01,xstart[1]+barw+boxw+0.006,ystart[2]+boxh+0.01,1,"NDC");
-    L2frame.SetFillColor(0);
-    L2frame.SetLineWidth(2);
-    L2frame.Draw();
-
-    TPave L3frame(xstart[2]-0.006,ystart[0]-0.01,xstart[2]+barw+boxw+0.006,ystart[2]+boxh+0.01,1,"NDC");
-    L3frame.SetFillColor(0);
-    L3frame.SetLineWidth(2);
-    L3frame.Draw();
-
-
-    TLatex tla;
-    tla.SetTextSize(0.04);
-    tla.SetTextFont(42);
-    float height= 0.06;
-    //tla.DrawLatexNDC(0.13,0.83,Form("Number of pulses: %i",(int)bounds.size()));
-    float currentYpos=0.737;
-    float headerX=0.67;
-    float rowX=0.69;
-    int pulseIndex=0; // Keep track of pulse index, since all pulses for all channels are actually stored in the same 1D vectors
-    int maxPerChannel = 0;
-    if (chanList.size() > 0) maxPerChannel = 10/chanList.size();
-
-    cout<<9<<endl;
-    
-    for(uint i=0;i<chanList.size();i++){
-        int ic = chanList[i];
-        int chan = chanArray->GetAt(ic);
-        //if (onlyForceChans && forceChan.find(chan)==forceChan.end()) continue;
-        //if(ic==-15 && forceChan.find(chan)==forceChan.end()) continue;
-        //if(i==15) continue;
-        //xyz
-        int column= chanMap[ic][0];
-        int row= chanMap[ic][1];
-        int layer= chanMap[ic][2];
-        int type= chanMap[ic][3];
-
-        int colorIndex = 4-2*(row-1)+column-1+6*(layer-1);
-        if(type==1) colorIndex = layer; //slabs: 0-3
-        else if(type==2) colorIndex = 4 + 3*(layer-1) + (column+1); //sheets
-
-        TPave * pave;
-        if (type==1){
-            float xpos,ypos;
-            ypos = slab_ystart;
-            xpos = slab_xstart[layer];
-            pave = new TPave(xpos,ypos,xpos+slab_width,ypos+slab_height,0,"NDC");
-            pave->SetFillColor(colors[colorIndex]);
-            pave->Draw();
-        }
-
-        else if (type==2){
-            float xpos,ypos;
-
-            if (column!=0){
-                xpos= xstart_leftsheets[layer-1];
-                if(column>0) xpos += sheet_left_to_right;
-                ypos = ystart_sidesheets;
-                pave = new TPave(xpos,ypos,xpos+sheet_width,ypos+vert_sheet_length,0,"NDC");
-            }
-            else{
-                xpos = xstart_topsheets[layer-1];
-                ypos = ystart_topsheets;
-                pave = new TPave(xpos,ypos,xpos+hori_sheet_length,ypos+1.4/0.8*sheet_width,0,"NDC");
-            }
-
-            pave->SetFillColor(colors[colorIndex]);
-            pave->Draw();
-
-        }
-        else if(type==0){
-            float xpos = xstart[layer-1]+(column-1)*barw;
-            float ypos= ystart[row-1];
-            pave = new TPave(xpos,ypos,xpos+boxw,ypos+boxh,0,"NDC");
-            pave->SetFillColor(colors[colorIndex]);
-            pave->Draw();
-        }
-
-        tla.SetTextColor(colors[colorIndex]);
-        tla.SetTextSize(0.04);
-        tla.DrawLatexNDC(headerX,currentYpos,Form("Channel %i, V_{max} = %0.0f, N_{pulses}= %i",chan,originalMaxHeights[ic],(int)boundsShifted[ic].size()));
-        tla.SetTextColor(kBlack);
-        currentYpos-=height;
-        tla.SetTextSize(0.035);
-
-        for(int ip=0;ip<boundsShifted[ic].size();ip++){
-            while (chanArray->GetAt(pulseIndex) != chan){
-                pulseIndex++; 
-            }
-            TString digis="%.1f";
-            if(waves[ic]->GetMaximum()>10) digis = "%.0f";
-            TString row = "Row";
-            /*
-              if (calibrateDisplay) row = Form("%.0f ns: "+digis+" mV, %.0f pVs, %.0f ns",bounds[pulseIndex].first+timingCalibrations[ic],waves[ic]->GetMaximum(),waves[ic]->Integral(),bounds[pulseIndex].second - bounds[pulseIndex].first);
-        else row = Form("%.0f ns: "+digis+" mV, %.0f pVs, %.0f ns",v_time->at(pulseIndex),waves[ic]->GetMaximum(),waves[ic]->Integral(),bounds[pulseIndex].second - bounds[pulseIndex].first);
-            */
-            pulseIndex++; 
-            if(ip < maxPerChannel){
-                tla.DrawLatexNDC(rowX,currentYpos,row);
-                currentYpos-=height*0.8;
-            }
-        }
-        currentYpos-=height*0.2;
-
-    }
-    cout<<10<<endl;
-    
-    // tla.DrawLatexNDC(0.13,0.78,Form("Area: %0.2f",v_area->back()));
-    // tla.DrawLatexNDC(0.13,0.73,Form("Duration: %0.2f",v_duration->back()));
-    // leg.Draw();
-    TString displayDirectory;
-    displayDirectory = "displaysDRStest/Run"+to_string(runNumber)+"/";
-    
-    cout<<"Display directory is "<<displayDirectory<<endl;
-    TString displayName;
-    //displayName=Form(displayDirectory+"Run%i_File%i_Event%i_%s_FFT.pdf",runNumber,fileNumber,event,tag.Data()); 
-    displayName=Form(displayDirectory+"Run%i_File%i_Event%i_%s_FFT.pdf",runNumber,fileNumber,event); 
-    c.Print(displayName);
-    cout<<11<<endl;
-    
-    }
 
 vector<vector<pair<float,float>>> OfflineFactory::readWaveDataperEvent(int i, int maxEvents){
     bool showBar = true;

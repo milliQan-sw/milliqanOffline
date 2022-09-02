@@ -1,4 +1,3 @@
-
 #include "./interface/OfflineFactory.h"
 
 OfflineFactory::OfflineFactory(TString inFileName, TString outFileName, bool isDRS) : 
@@ -239,7 +238,12 @@ void OfflineFactory::readMetaData(){
 	numChan = numBoards*16;
 	chanArray = new TArrayI(numChan);
 	boardArray = new TArrayI(numChan);
-	//Read trigger info and set channel array
+        //Read sampling rate from the metadata
+        double secondsPerSample = cfg->digitizers[0].secondsPerSample;
+        sampleRate = 1.0/(secondsPerSample*1e+09);
+        //cout<<"secondspersample = "<<secondsPerSample<<" samplingrate="<<1.0/(secondsPerSample*1e+09)<< "GHz"<<endl;
+            
+        //Read trigger info and set channel array
 	for (int ic =0; ic < numChan; ic++){
 	    chanArray->SetAt(ic % 16,ic);
 	    boardArray->SetAt(ic/16,ic);
@@ -247,7 +251,7 @@ void OfflineFactory::readMetaData(){
 	    bool triggerEnable = cfg->digitizers[ic/16].channels[ic % 16].triggerEnable;
 	    int triggerMajority = cfg->digitizers[ic/16].GroupTriggerMajorityLevel;
 	    int triggerLogic = cfg->digitizers[ic/16].GroupTriggerLogic;
-	    outputTreeContents.v_triggerThresholds.push_back(triggerThresh);
+            outputTreeContents.v_triggerThresholds.push_back(triggerThresh);
 	    outputTreeContents.v_triggerEnable.push_back(triggerEnable);
 	    outputTreeContents.v_triggerMajority.push_back(triggerMajority);
 	    outputTreeContents.v_triggerLogic.push_back(triggerLogic);
@@ -303,7 +307,7 @@ void defineColors(vector<int>colors, vector<TColor*> palette, vector<float> reds
 */
 //Display making
 void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > > bounds){
-    cout<<1<<endl;
+    //cout<<1<<endl;
     //Set a color palette for 16 channels now, fix this for 80 channels in the future
     vector<float> reds ={255./255.,31./255.,235./255.,111./255.,219./255.,151./255.,185./255.,194./255.,127./255.,98./255.,211./255.,69./255.,220./255.,72./255.,225./255.,145./255.,233./255.,125./255.,147./255.,110./255.,209./255.,44};
     vector<float> greens={255./255.,30./255.,205./255.,48./255.,106./255.,206./255.,32./255.,188./255.,128./255.,166./255.,134./255.,120./255.,132./255.,56./255.,161./255.,39./255.,232./255.,23./255.,173./255.,53./255.,45./255.,54};
@@ -321,7 +325,7 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
     //colors[3] = 2013;
     colors[12]= 30;
     colors[0]=28;
-    cout<<2<<endl;
+    //cout<<2<<endl;
     
     TCanvas c("c1","",1400,800);
     gPad->SetRightMargin(0.39);
@@ -340,12 +344,11 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
     vector<vector<pair<float,float>>> boundsShifted;
     vector<TH1D*> wavesShifted;
     float originalMaxHeights[80];
-    cout<<3<<endl;
+    //cout<<3<<endl;
     for(uint ic=0;ic<bounds.size();ic++){
         int chan = chanArray->GetAt(ic);
         vector<pair<float,float>> boundShifted = bounds[ic];
         TH1D * waveShifted = (TH1D*) waves[ic]->Clone();
-        cout<<4<<endl;
     
         //FIX here: Add calibration for the timing
         /*
@@ -393,7 +396,7 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
         wavesShifted.push_back(waveShifted);
         boundsShifted.push_back(boundShifted);
     } //channel loop
-    cout<<5<<endl;
+    //cout<<5<<endl;
     
     int maxheightbin = -1;
     maxheight*=1.1;
@@ -410,11 +413,11 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
 
     if (rangeMinX < 0) timeRange[0]*=1.1;
     else timeRange[0] = rangeMinX*0.9;
-    cout<<"timeRange="<<timeRange[1]<<endl;
+    //cout<<"timeRange="<<timeRange[1]<<endl;
     
     if (rangeMaxX < 0) timeRange[1]= min(0.9*timeRange[1],1024./sampleRate);
     else timeRange[1] = max(1.1*timeRange[1],1024./sampleRate);
-    cout<<"timeRange="<<timeRange[1]<<endl;
+    //cout<<"timeRange="<<timeRange[1]<<endl;
     
     float depth = 0.075*chanList.size();
     TLegend leg(0.45,0.9-depth,0.65,0.9);
@@ -445,50 +448,56 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
         //Show boundaries of pulse
         TLine line; line.SetLineWidth(2); line.SetLineStyle(3);line.SetLineColor(colors[colorIndex]);
         for(uint ip=0; ip<boundsShifted[ic].size();ip++){
-            cout<<timeRange[1]<<endl;    
+            //cout<<timeRange[1]<<endl;    
         if (boundsShifted[ic][ip].first > timeRange[0] && boundsShifted[ic][ip].second < timeRange[1]){
                 line.DrawLine(boundsShifted[ic][ip].first,0,boundsShifted[ic][ip].first,0.2*maxheight);
                 line.DrawLine(boundsShifted[ic][ip].second,0,boundsShifted[ic][ip].second,0.2*maxheight);
             }
         }
     } //channel loop close
-    cout<<7<<endl;
+    //cout<<7<<endl;
     
     float boxw= 0.025;
     float boxh=0.0438;
     float barw=0.03;
     float barh=0.53;
-    vector<float> xstart = {0.66,0.78,0.9};
-    vector<float> ystart= {0.798,0.851,0.904};
+    vector<float> xstart = {0.64,0.73,0.82,0.91};
+    vector<float> ystart= {0.798,0.851,0.904,0.957};
 
     float sheet_width = 0.006;
     float sheet_offset= 0.013+sheet_width/2.;
     float sheet_left_to_right = 4*0.006+barw+boxw+0.002;
-    vector<float> xstart_leftsheets = {xstart[0]-sheet_offset,xstart[1]-sheet_offset,xstart[2]-sheet_offset}; 
-    vector<float> xstart_topsheets = {xstart[0]-0.002,xstart[1]-0.002,xstart[2]-0.002};
+    vector<float> xstart_leftsheets = {xstart[0]-sheet_offset,xstart[1]-sheet_offset,xstart[2]-sheet_offset,xstart[3]-sheet_offset}; 
+    vector<float> xstart_topsheets = {xstart[0]-0.002,xstart[1]-0.002,xstart[2]-0.002,xstart[3]-0.002};
     float ystart_topsheets = ystart[2]+boxh+0.017;
     float ystart_sidesheets = ystart[0]-0.006;
     float vert_sheet_length = ystart[2]-ystart[0]+boxh+0.01;
     float hori_sheet_length= barw+boxw+0.004;
     
     float slab_width = 0.015;
-    vector<float> slab_xstart = {xstart_leftsheets[0]-0.008-slab_width,xstart_leftsheets[1]-0.008-slab_width,xstart_leftsheets[2]-0.008-slab_width,xstart_leftsheets[2]+0.01+sheet_left_to_right}; 
+    vector<float> slab_xstart = {xstart_leftsheets[0]-0.008-slab_width,xstart_leftsheets[1]-0.008-slab_width,xstart_leftsheets[2]-0.008-slab_width,xstart_leftsheets[3]-0.008-slab_width,xstart_leftsheets[3]+0.01+sheet_left_to_right}; 
     float slab_height = vert_sheet_length-0.02;
     float slab_ystart = ystart_sidesheets+0.01;
+
     TPave L1frame(xstart[0]-0.006,ystart[0]-0.01,xstart[0]+barw+boxw+0.006,ystart[2]+boxh+0.01,1,"NDC");
     L1frame.SetFillColor(0);
     L1frame.SetLineWidth(2);
-    //L1frame.Draw();
+    L1frame.Draw();
 
     TPave L2frame(xstart[1]-0.006,ystart[0]-0.01,xstart[1]+barw+boxw+0.006,ystart[2]+boxh+0.01,1,"NDC");
     L2frame.SetFillColor(0);
     L2frame.SetLineWidth(2);
-    //L2frame.Draw();
+    L2frame.Draw();
 
     TPave L3frame(xstart[2]-0.006,ystart[0]-0.01,xstart[2]+barw+boxw+0.006,ystart[2]+boxh+0.01,1,"NDC");
     L3frame.SetFillColor(0);
     L3frame.SetLineWidth(2);
-    //L3frame.Draw();
+    L3frame.Draw();
+    
+    TPave L4frame(xstart[3]-0.006,ystart[0]-0.01,xstart[3]+barw+boxw+0.006,ystart[2]+boxh+0.01,1,"NDC");
+    L4frame.SetFillColor(0);
+    L4frame.SetLineWidth(2);
+    L4frame.Draw();
     
     TLatex tla;
     tla.SetTextSize(0.04);
@@ -501,12 +510,12 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
     int pulseIndex=0; // Keep track of pulse index, since all pulses for all channels are actually stored in the same 1D vectors
     int maxPerChannel = 0;
     if (chanList.size() > 0) maxPerChannel = 10/chanList.size();
-    cout<<8<<endl;
+    //cout<<8<<endl;
     
     for(uint i=0;i<chanList.size();i++){
         int ic = chanList[i];
         int chan = chanArray->GetAt(ic);
-        cout<<ic<<" ic,chan "<<chan<<endl;
+        //cout<<ic<<" ic,chan "<<chan<<endl;
         int column= chanMap[ic][0];
         int row= chanMap[ic][1];
         int layer= chanMap[ic][2];
@@ -516,13 +525,18 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
         if(type==1) colorIndex = layer; //slabs: 0-3
         else if(type==2) colorIndex = 4 + 3*(layer-1) + (column+1); //sheets
         TPave * pave;
+        if(type==0){
+            float xpos,ypos;
+            ypos = slab_ystart;
+            xpos = slab_xstart[layer];
+        }
         if (type==1){
             float xpos,ypos;
             ypos = slab_ystart;
             xpos = slab_xstart[layer];
             pave = new TPave(xpos,ypos,xpos+slab_width,ypos+slab_height,0,"NDC");
             pave->SetFillColor(colors[colorIndex]);
-            //pave->Draw();
+            pave->Draw();
         }
 
         else if (type==2){
@@ -541,7 +555,7 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
             }
 
             pave->SetFillColor(colors[colorIndex]);
-            //pave->Draw();
+            pave->Draw();
 
         }
         else if(type==0){
@@ -549,7 +563,7 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
             float ypos= ystart[row-1];
             pave = new TPave(xpos,ypos,xpos+boxw,ypos+boxh,0,"NDC");
             pave->SetFillColor(colors[colorIndex]);
-            //pave->Draw();
+            pave->Draw();
         }
 
         tla.SetTextColor(colors[colorIndex]);
@@ -571,18 +585,22 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
         }
         currentYpos-=height*0.2;
     } //channel loop closed
-    cout<<9<<endl;
+    //cout<<9<<endl;
     
     TString displayDirectory;
-    displayDirectory = "displaysDRStest/Run"+to_string(runNumber)+"/";
+    displayDirectory = "displaysDigitizer/Run"+to_string(runNumber)+"/";
     
-    cout<<"Display directory is "<<displayDirectory<<endl;
+    //cout<<"Display directory is "<<displayDirectory<<endl;
     TString displayName;
     displayName=Form(displayDirectory+"Run%i_File%i_Event%i.pdf",runNumber,fileNumber,event); 
+    TString displayName1;
+    displayName1=Form(displayDirectory+"Run%i_File%i_Event%i.png",runNumber,fileNumber,event); 
+    
     //c.Print(displayName);
     c.SaveAs(displayName);
+    c.SaveAs(displayName1);
     
-    cout<<10<<endl;
+    //cout<<10<<endl;
     
 }
 
@@ -625,13 +643,13 @@ void OfflineFactory::readWaveData(){
     loadBranches();
     // int maxEvents = 1;
     int maxEvents = inTree->GetEntries();
+    cout<<"Processing "<<maxEvents<<" events in this file"<<endl;
     cout<<"Starting event loop"<<endl;
 
     //Display directory
     TString displayDirectory;
     displayDirectory = "displaysDRStest/Run"+to_string(runNumber)+"/";
     gSystem->mkdir(displayDirectory);
-    
     for(int i=0;i<maxEvents;i++){
 
 	resetOutBranches();	
@@ -640,13 +658,17 @@ void OfflineFactory::readWaveData(){
         vector<vector<pair<float,float> > > allPulseBounds;
         allPulseBounds = readWaveDataperEvent(i,maxEvents);
         outTree->Fill();
-        if(i==10) {
+    
+        /*
+          //Display some selected events here - Uncommented for now
+        if(i<1) {
          
             //Display event
             //displayEventold(i,allPulseBounds,"tag",allPulseBounds[0][0].first,allPulseBounds[0][0].second,waves[0]->GetMinimum(),waves[0]->GetMaximum(),0,1,0,0,forceChan);
             displayEvent(i,allPulseBounds);
             cout<<"Finished displaying event"<<endl;
         }
+        */
     }
     std::cout << std::endl;
     

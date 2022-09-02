@@ -155,7 +155,7 @@ class OfflineFactory {
         void writeVersion();
 
 	float sideband_range[2] = {0,50};
-	float sampleRate = 1.6;
+        float sampleRate = 1.6; //Dummy value here, actual value read in from MetaData
 	bool applyLPFilter = false;
 	TString inFileName;
 	TString outFileName;

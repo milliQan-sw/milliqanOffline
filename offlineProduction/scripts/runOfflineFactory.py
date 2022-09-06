@@ -27,6 +27,7 @@ def parse_args():
     parser.add_argument("-f","--force_publish",help="Force publish dataset",action="store_true",default=False)
     parser.add_argument("-c","--configurations",help="JSON Configuration files or string",type=str,nargs="+")
     parser.add_argument("--drs",help="DRS input",action="store_true",default=False)
+    parser.add_argument("--display",help="Display events",type=int,nargs="+")
     args = parser.parse_args()
     return args
 def validateOutput(outputFile):
@@ -48,7 +49,7 @@ def validateOutput(outputFile):
         print ("removing output file because it does not deserve to live (result will not be published)")
         os.system("rm "+outputFile)
     return tag 
-def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publish,database,appendToTag,drs):
+def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publish,database,appendToTag,drs,display):
     if force_publish:
         publish = True
     try:
@@ -64,6 +65,9 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
             exit()
         fileNumber = -1
         runNumber = -1
+    if display and publish:
+        print("Can't publish in display mode!")
+        exit()
     
     if not configurations:
         offlineDir = os.getenv("OFFLINEDIR")
@@ -84,14 +88,17 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
                 for key in configurationsJSONTemp.keys():
                     configurationsJSON[key] = configurationsJSONTemp[key]
         configurationsJSONString = json.dumps(configurationsJSON)
-    argList = [exe,"-i "+inputFile,"-o "+outputFile,"-c "+"'"+configurationsJSONString+"'","-r "+str(runNumber),"-f "+str(fileNumber)]
+    argList = [exe,"-i "+inputFile,"-o "+outputFile,"-c "+"'"+configurationsJSONString+"'","-r "+str(runNumber),"-f "+str(fileNumber),"--offlineDir "+offlineDir]
     if drs:
         argList.append("--drs")
+    if display:
+        argList.append("--display "+",".join([str(x) for x in display]))
     args = " ".join(argList)
 
     os.system(args)
-
-    tag = validateOutput(outputFile)
+    if display == None:
+        tag = validateOutput(outputFile)
+        return True
     if publish:
         if database:
             db = mongoConnect(database)
@@ -105,7 +112,7 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
             else:
                 inputType = "MilliDAQ"
             publishDataset(configurationsJSON,inputFile,outputFile,fileNumber,runNumber,tag,site=site,inputType=inputType,force_publish=force_publish,db=db)
-    return tag != None
+        return tag != None
 
 def publishDataset(configurationsJSON,inputFile,outputFile,fileNumber,runNumber,tag,site=site,inputType="MilliDAQ",force_publish=False,db=None):
     _id = "{}_{}_{}_{}_{}".format(runNumber,fileNumber,tag,inputType,site)

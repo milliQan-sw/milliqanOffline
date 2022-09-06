@@ -1,25 +1,38 @@
 #include "./interface/OfflineFactory.h"
 
-OfflineFactory::OfflineFactory(TString inFileName, TString outFileName, bool isDRS) : 
-    inFileName(inFileName),
-    outFileName(outFileName),
-    isDRS(isDRS),
-    runNumber(-1),
-    fileNumber(-1)
-{};
 OfflineFactory::OfflineFactory(TString inFileName, TString outFileName, bool isDRS, int runNumber, int fileNumber) : 
     inFileName(inFileName),
     outFileName(outFileName),
     isDRS(isDRS),
     runNumber(runNumber),
     fileNumber(fileNumber)
-{};
+{
+
+    vector<float> reds ={255./255.,31./255.,235./255.,111./255.,219./255.,151./255.,185./255.,194./255.,127./255.,98./255.,211./255.,69./255.,220./255.,72./255.,225./255.,145./255.,233./255.,125./255.,147./255.,110./255.,209./255.,44};
+    vector<float> greens={255./255.,30./255.,205./255.,48./255.,106./255.,206./255.,32./255.,188./255.,128./255.,166./255.,134./255.,120./255.,132./255.,56./255.,161./255.,39./255.,232./255.,23./255.,173./255.,53./255.,45./255.,54};
+    vector<float> blues={255./255.,30./255.,62./255.,139./255.,41./255.,230./255.,54./255.,130./255.,129./255.,71./255.,178./255.,179./255.,101./255.,150./255.,49./255.,139./255.,87./255.,22./255.,60./255.,21./255.,39./255.,23};
+    
+    for(int icolor=0;icolor<reds.size();icolor++){
+        palette.push_back(new TColor(2000+icolor,reds[icolor],greens[icolor],blues[icolor]));
+        colors.push_back(2000+icolor);
+    }
+    colors[9] = 419; //kGreen+3;
+    colors[2] = 2009;
+    //colors[3] = 2013;
+    colors[12]= 30;
+    colors[0]=28;
+    //cout<<2<<endl;
+};
+
+OfflineFactory::OfflineFactory(TString inFileName, TString outFileName, bool isDRS) {
+    OfflineFactory(inFileName,outFileName,isDRS,-1,-1);
+};
 
 
-OfflineFactory::~OfflineFactory() {
-    if (inFile) inFile->Close();
-    if (outFile) outFile->Close();
-}
+// OfflineFactory::~OfflineFactory() {
+//     if (inFile) inFile->Close();
+//     if (outFile) outFile->Close();
+// }
 void OfflineFactory::loadJsonConfig(string configFileName){
     
     std::string json;
@@ -98,6 +111,7 @@ void OfflineFactory::loadJsonConfig(string configFileName){
 	if (json.find("sampleRate") != std::string::npos){
 	    sampleRate = jsonRoot["sampleRate"].asFloat();
 	    std::cout << "Loaded sample rate: " << sampleRate << " GHz" << std::endl;
+	    std::cout << "This will be overwritten by metadata if available" << std::endl;
 	}
     }
     else{
@@ -159,6 +173,25 @@ void OfflineFactory::validateInput(){
 }
 //Convenience function to produce offline tree output
 //Makedisplays and then not save the output tree //makeoutputtree is not called
+void OfflineFactory::processDisplays(vector<int> & eventsToDisplay,TString displayDirectory){
+    inFile = TFile::Open(inFileName,"READ");
+    readMetaData();
+    displayEvents(eventsToDisplay,displayDirectory);
+}
+void OfflineFactory::processDisplays(vector<int> & eventsToDisplay,TString displayDirectory,TString inFileName)
+{
+    inFileName = inFileName;
+    runNumber = -1;
+    fileNumber = -1;
+    processDisplays(eventsToDisplay,displayDirectory);
+}
+void OfflineFactory::processDisplays( vector<int> & eventsToDisplay,TString displayDirectory,TString inFileName,int runNumber,int fileNumber)
+{
+    inFileName = inFileName;
+    runNumber = runNumber;
+    fileNumber = fileNumber;
+    processDisplays(eventsToDisplay,displayDirectory);
+}
 void OfflineFactory::process(){
 
     // Testing json stuff
@@ -241,6 +274,7 @@ void OfflineFactory::readMetaData(){
         //Read sampling rate from the metadata
         double secondsPerSample = cfg->digitizers[0].secondsPerSample;
         sampleRate = 1.0/(secondsPerSample*1e+09);
+	cout << "Overwriting sample rate from metadata: " << sampleRate <<" GHz" << endl; 
         //cout<<"secondspersample = "<<secondsPerSample<<" samplingrate="<<1.0/(secondsPerSample*1e+09)<< "GHz"<<endl;
             
         //Read trigger info and set channel array
@@ -306,26 +340,7 @@ void defineColors(vector<int>colors, vector<TColor*> palette, vector<float> reds
 }
 */
 //Display making
-void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > > bounds){
-    //cout<<1<<endl;
-    //Set a color palette for 16 channels now, fix this for 80 channels in the future
-    vector<float> reds ={255./255.,31./255.,235./255.,111./255.,219./255.,151./255.,185./255.,194./255.,127./255.,98./255.,211./255.,69./255.,220./255.,72./255.,225./255.,145./255.,233./255.,125./255.,147./255.,110./255.,209./255.,44};
-    vector<float> greens={255./255.,30./255.,205./255.,48./255.,106./255.,206./255.,32./255.,188./255.,128./255.,166./255.,134./255.,120./255.,132./255.,56./255.,161./255.,39./255.,232./255.,23./255.,173./255.,53./255.,45./255.,54};
-    vector<float> blues={255./255.,30./255.,62./255.,139./255.,41./255.,230./255.,54./255.,130./255.,129./255.,71./255.,178./255.,179./255.,101./255.,150./255.,49./255.,139./255.,87./255.,22./255.,60./255.,21./255.,39./255.,23};
-
-    vector<TColor *> palette;
-    vector<int> colors;
-    
-    for(int icolor=0;icolor<reds.size();icolor++){
-        palette.push_back(new TColor(2000+icolor,reds[icolor],greens[icolor],blues[icolor]));
-        colors.push_back(2000+icolor);
-    }
-    colors[9] = 419; //kGreen+3;
-    colors[2] = 2009;
-    //colors[3] = 2013;
-    colors[12]= 30;
-    colors[0]=28;
-    //cout<<2<<endl;
+void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >& bounds,TString displayDirectory){
     
     TCanvas c("c1","",1400,800);
     gPad->SetRightMargin(0.39);
@@ -348,7 +363,7 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
     for(uint ic=0;ic<bounds.size();ic++){
         int chan = chanArray->GetAt(ic);
         vector<pair<float,float>> boundShifted = bounds[ic];
-        TH1D * waveShifted = (TH1D*) waves[ic]->Clone();
+        TH1D * waveShifted = (TH1D*) waves[ic]->Clone(TString(waves[ic]->GetName())+" shifted");
     
         //FIX here: Add calibration for the timing
         /*
@@ -456,7 +471,7 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
         }
     } //channel loop close
     //cout<<7<<endl;
-    
+     
     float boxw= 0.025;
     float boxh=0.0438;
     float barw=0.03;
@@ -587,27 +602,21 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
     } //channel loop closed
     //cout<<9<<endl;
     
-    TString displayDirectory;
-    displayDirectory = "displaysDigitizer/Run"+to_string(runNumber)+"/";
-    
     //cout<<"Display directory is "<<displayDirectory<<endl;
     TString displayName;
-    displayName=Form(displayDirectory+"Run%i_File%i_Event%i.pdf",runNumber,fileNumber,event); 
-    TString displayName1;
-    displayName1=Form(displayDirectory+"Run%i_File%i_Event%i.png",runNumber,fileNumber,event); 
-    
-    //c.Print(displayName);
+    displayName=Form(displayDirectory+"Run%i_File%i_Event%i_Version_%s.pdf",runNumber,fileNumber,event,"shorttagplaceholder"); 
     c.SaveAs(displayName);
-    c.SaveAs(displayName1);
-    
+    displayName=Form(displayDirectory+"Run%i_File%i_Event%i_Version_%s.png",runNumber,fileNumber,event,"shorttagplaceholder"); 
+    c.SaveAs(displayName);
+
+    for(uint i=0;i<chanList.size();i++){
+	delete wavesShifted[i];
+    }
     //cout<<10<<endl;
     
 }
 
-vector<vector<pair<float,float>>> OfflineFactory::readWaveDataperEvent(int i, int maxEvents){
-    bool showBar = true;
-    float progress = 1.0*i/maxEvents; // for demonstration only
-    outputTreeContents.event=i;	
+vector<vector<pair<float,float>>> OfflineFactory::readWaveDataPerEvent(int i){
     inTree->GetEntry(i);
     if (!isDRS) loadWavesMilliDAQ();
     else loadWavesDRS();
@@ -616,26 +625,27 @@ vector<vector<pair<float,float>>> OfflineFactory::readWaveDataperEvent(int i, in
     for(int ic=0;ic<numChan;ic++){
         //Pulse finding
         allPulseBounds.push_back(processChannel(ic));
-        outputTreeContents.v_max.push_back(1.*waves[ic]->GetMaximum());
     }   
     
-    //Totally necessary progress bar
-    if (showBar){
-        int barWidth = 70;
-        std::cout << "[";
-        int pos = barWidth * progress;
-        for (int i = 0; i < barWidth; ++i) {
-            if (i < pos) std::cout << "=";
-            else if (i == pos) std::cout << ">";
-            else std::cout << " ";
-        }
-        std::cout << "] " << round(progress * 100.0) << " %\r";
-        std::cout.flush();
-    }
     return allPulseBounds;
 }
     
-
+void OfflineFactory::displayEvents(std::vector<int> & eventsToDisplay,TString displayDirectory){
+    validateInput();
+    inTree = (TTree*)inFile->Get("Events"); 
+    loadBranches();
+    //Display directory
+    //argv, argv + argc,
+    TString displayDirectoryForRun = displayDirectory+"/Run"+to_string(runNumber)+"/";
+    gSystem->mkdir(displayDirectoryForRun,true);
+    for(auto iEvent: eventsToDisplay){
+	resetOutBranches();	
+        vector<vector<pair<float,float> > > allPulseBounds;
+        allPulseBounds = readWaveDataPerEvent(iEvent);
+	displayEvent(iEvent,allPulseBounds,displayDirectoryForRun);
+    }
+    inFile->Close();
+}
 //Pulse finding and per channel processing
 void OfflineFactory::readWaveData(){
     validateInput();
@@ -645,30 +655,32 @@ void OfflineFactory::readWaveData(){
     int maxEvents = inTree->GetEntries();
     cout<<"Processing "<<maxEvents<<" events in this file"<<endl;
     cout<<"Starting event loop"<<endl;
+    bool showBar = true;
 
-    //Display directory
-    TString displayDirectory;
-    displayDirectory = "displaysDRStest/Run"+to_string(runNumber)+"/";
-    gSystem->mkdir(displayDirectory);
     for(int i=0;i<maxEvents;i++){
 
 	resetOutBranches();	
         //Process each event
         //Notes: Remove the inTree and move progress bar into the loop
         vector<vector<pair<float,float> > > allPulseBounds;
-        allPulseBounds = readWaveDataperEvent(i,maxEvents);
+	outputTreeContents.event=i;	
+        allPulseBounds = readWaveDataPerEvent(i);
         outTree->Fill();
-    
-        /*
-          //Display some selected events here - Uncommented for now
-        if(i<1) {
-         
-            //Display event
-            //displayEventold(i,allPulseBounds,"tag",allPulseBounds[0][0].first,allPulseBounds[0][0].second,waves[0]->GetMinimum(),waves[0]->GetMaximum(),0,1,0,0,forceChan);
-            displayEvent(i,allPulseBounds);
-            cout<<"Finished displaying event"<<endl;
-        }
-        */
+	//Totally necessary progress bar
+	float progress = 1.0*i/maxEvents; 
+	if (showBar){
+	    int barWidth = 70;
+	    std::cout << "[";
+	    int pos = barWidth * progress;
+	    for (int i = 0; i < barWidth; ++i) {
+		if (i < pos) std::cout << "=";
+		else if (i == pos) std::cout << ">";
+		else std::cout << " ";
+	    }
+	    std::cout << "] " << round(progress * 100.0) << " %\r";
+	    std::cout.flush();
+	}
+        
     }
     std::cout << std::endl;
     
@@ -683,9 +695,8 @@ void OfflineFactory::writeOutputTree(){
 }
 void OfflineFactory::prepareWave(int ic){
     TAxis * a = waves[ic]->GetXaxis();
-    cout<<"a->getxmax() = "<<a->GetXmax()<<endl;
-    a->Set( a->GetNbins(), a->GetXmin()/sampleRate, a->GetXmax()/sampleRate);
-    waves[ic]->ResetStats();
+    // a->Set( a->GetNbins(), a->GetXmin()/sampleRate, a->GetXmax()/sampleRate);
+    // waves[ic]->ResetStats();
     //subtract calibrated mean
     for(int ibin = 1; ibin <= waves[ic]->GetNbinsX(); ibin++){
 	waves[ic]->SetBinContent(ibin,waves[ic]->GetBinContent(ibin)-pedestals[ic]);
@@ -745,6 +756,7 @@ vector< pair<float,float> > OfflineFactory::findPulses(int ic){
 }
 //Pulse finding and per channel processing
 vector< pair<float,float> > OfflineFactory::processChannel(int ic){
+    prepareWave(ic);
     //Pulse finding
     vector<pair<float,float>> pulseBounds = findPulses(ic);
     int npulses = pulseBounds.size();
@@ -757,6 +769,7 @@ vector< pair<float,float> > OfflineFactory::processChannel(int ic){
 	if (maxThreeConsec < tempMax) maxThreeConsec = tempMax;
 
     }
+    outputTreeContents.v_max.push_back(waves[ic]->GetMaximum());
     outputTreeContents.v_max_threeConsec.push_back(maxThreeConsec);
     //FIXME Need to add low pass filter option back
     outputTreeContents.v_max_afterFilter.push_back(waves[ic]->GetMaximum());

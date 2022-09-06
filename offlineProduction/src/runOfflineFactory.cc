@@ -24,6 +24,7 @@ int main(int argc, char **argv){
     //Read input and output files (necessary arguments)
     char * inputFilenameChar = getCmdOption(argv, argv + argc, "-i");
     char * outputFilenameChar = getCmdOption(argv, argv + argc, "-o");
+    char * offlineDir = getCmdOption(argv,argv+argc,"--offlineDir");
     bool isDRSdata = cmdOptionExists(argv, argv + argc, "--drs");
     if (isDRSdata) std::cout << "Assuming DRS input" << std::endl;
     //char * DRS_num = getCmdOption(argv, argv + argc, "-DRS_num");
@@ -37,8 +38,22 @@ int main(int argc, char **argv){
 	std::cout << helpString << std::endl;
 	return 0;
     }
-    std::cout << "Running with:\nInput file: " << inputFilenameChar << "\nOutput file: " << outputFilenameChar << std::endl;
+    bool displayMode = false;
+    std::vector<int> eventsToDisplay;
+    if (cmdOptionExists(argv, argv + argc, "--display")){
+	displayMode = true;
+	char * eventsToDisplayChar = getCmdOption(argv, argv + argc, "--display"); 
+	stringstream ss(eventsToDisplayChar);
+	while (ss.good()){
+	    string substr;
+	    getline(ss, substr,',');
+	    eventsToDisplay.push_back(stoi(substr));
+	}
+    }
+
+    std::cout << "Running in standard mode with:\nInput file: " << inputFilenameChar << "\nOutput file: " << outputFilenameChar << std::endl;
     OfflineFactory offlineFactory = OfflineFactory(inputFilenameChar,outputFilenameChar,isDRSdata,runNumber,fileNumber);
+
     //Read configuration files
     char * configChar = getCmdOption(argv, argv + argc, "-c");
     if (configChar){
@@ -59,7 +74,15 @@ int main(int argc, char **argv){
     // offlineFactory.loadJsonConfig("/home/milliqan/milliqanOffline/offlineProduction/configuration/chanMaps/testMap.json");
     // offlineFactory.loadJsonConfig("/home/milliqan/milliqanOffline/offlineProduction/configuration/pulseFinding/pulseFindingTest.json");
     // offlineFactory.loadJsonConfig("/home/milliqan/milliqanOffline/offlineProduction/configuration/calibrations/testCalibration.json");
-    offlineFactory.process();
+    if (displayMode) {
+	if (isDRSdata){
+	    offlineFactory.processDisplays(eventsToDisplay,TString(offlineDir)+"/displaysDRS/");
+	}
+	else{
+	    offlineFactory.processDisplays(eventsToDisplay,TString(offlineDir)+"/displays/");
+	}
+    }
+    else offlineFactory.process();
     return 0;
 }
 

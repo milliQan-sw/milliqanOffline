@@ -96,9 +96,11 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
     args = " ".join(argList)
 
     os.system(args)
-    if display == None:
-        tag = validateOutput(outputFile)
+    tag = None
+    if display:
         return True
+    else:
+        tag = validateOutput(outputFile)
     if publish:
         if database:
             db = mongoConnect(database)

@@ -1,26 +1,38 @@
-
 #include "./interface/OfflineFactory.h"
 
-OfflineFactory::OfflineFactory(TString inFileName, TString outFileName, bool isDRS) : 
-    inFileName(inFileName),
-    outFileName(outFileName),
-    isDRS(isDRS),
-    runNumber(-1),
-    fileNumber(-1)
-{};
 OfflineFactory::OfflineFactory(TString inFileName, TString outFileName, bool isDRS, int runNumber, int fileNumber) : 
     inFileName(inFileName),
     outFileName(outFileName),
     isDRS(isDRS),
     runNumber(runNumber),
     fileNumber(fileNumber)
-{};
+{
+
+    vector<float> reds ={255./255.,31./255.,235./255.,111./255.,219./255.,151./255.,185./255.,194./255.,127./255.,98./255.,211./255.,69./255.,220./255.,72./255.,225./255.,145./255.,233./255.,125./255.,147./255.,110./255.,209./255.,44};
+    vector<float> greens={255./255.,30./255.,205./255.,48./255.,106./255.,206./255.,32./255.,188./255.,128./255.,166./255.,134./255.,120./255.,132./255.,56./255.,161./255.,39./255.,232./255.,23./255.,173./255.,53./255.,45./255.,54};
+    vector<float> blues={255./255.,30./255.,62./255.,139./255.,41./255.,230./255.,54./255.,130./255.,129./255.,71./255.,178./255.,179./255.,101./255.,150./255.,49./255.,139./255.,87./255.,22./255.,60./255.,21./255.,39./255.,23};
+    
+    for(int icolor=0;icolor<reds.size();icolor++){
+        palette.push_back(new TColor(2000+icolor,reds[icolor],greens[icolor],blues[icolor]));
+        colors.push_back(2000+icolor);
+    }
+    colors[9] = 419; //kGreen+3;
+    colors[2] = 2009;
+    //colors[3] = 2013;
+    colors[12]= 30;
+    colors[0]=28;
+    //cout<<2<<endl;
+};
+
+OfflineFactory::OfflineFactory(TString inFileName, TString outFileName, bool isDRS) {
+    OfflineFactory(inFileName,outFileName,isDRS,-1,-1);
+};
 
 
-OfflineFactory::~OfflineFactory() {
-    if (inFile) inFile->Close();
-    if (outFile) outFile->Close();
-}
+// OfflineFactory::~OfflineFactory() {
+//     if (inFile) inFile->Close();
+//     if (outFile) outFile->Close();
+// }
 void OfflineFactory::loadJsonConfig(string configFileName){
     
     std::string json;
@@ -99,6 +111,7 @@ void OfflineFactory::loadJsonConfig(string configFileName){
 	if (json.find("sampleRate") != std::string::npos){
 	    sampleRate = jsonRoot["sampleRate"].asFloat();
 	    std::cout << "Loaded sample rate: " << sampleRate << " GHz" << std::endl;
+	    std::cout << "This will be overwritten by metadata if available" << std::endl;
 	}
     }
     else{
@@ -159,6 +172,26 @@ void OfflineFactory::validateInput(){
     }
 }
 //Convenience function to produce offline tree output
+//Makedisplays and then not save the output tree //makeoutputtree is not called
+void OfflineFactory::processDisplays(vector<int> & eventsToDisplay,TString displayDirectory){
+    inFile = TFile::Open(inFileName,"READ");
+    readMetaData();
+    displayEvents(eventsToDisplay,displayDirectory);
+}
+void OfflineFactory::processDisplays(vector<int> & eventsToDisplay,TString displayDirectory,TString inFileName)
+{
+    inFileName = inFileName;
+    runNumber = -1;
+    fileNumber = -1;
+    processDisplays(eventsToDisplay,displayDirectory);
+}
+void OfflineFactory::processDisplays( vector<int> & eventsToDisplay,TString displayDirectory,TString inFileName,int runNumber,int fileNumber)
+{
+    inFileName = inFileName;
+    runNumber = runNumber;
+    fileNumber = fileNumber;
+    processDisplays(eventsToDisplay,displayDirectory);
+}
 void OfflineFactory::process(){
 
     // Testing json stuff
@@ -238,7 +271,13 @@ void OfflineFactory::readMetaData(){
 	numChan = numBoards*16;
 	chanArray = new TArrayI(numChan);
 	boardArray = new TArrayI(numChan);
-	//Read trigger info and set channel array
+        //Read sampling rate from the metadata
+        double secondsPerSample = cfg->digitizers[0].secondsPerSample;
+        sampleRate = 1.0/(secondsPerSample*1e+09);
+	cout << "Overwriting sample rate from metadata: " << sampleRate <<" GHz" << endl; 
+        //cout<<"secondspersample = "<<secondsPerSample<<" samplingrate="<<1.0/(secondsPerSample*1e+09)<< "GHz"<<endl;
+            
+        //Read trigger info and set channel array
 	for (int ic =0; ic < numChan; ic++){
 	    chanArray->SetAt(ic % 16,ic);
 	    boardArray->SetAt(ic/16,ic);
@@ -246,7 +285,7 @@ void OfflineFactory::readMetaData(){
 	    bool triggerEnable = cfg->digitizers[ic/16].channels[ic % 16].triggerEnable;
 	    int triggerMajority = cfg->digitizers[ic/16].GroupTriggerMajorityLevel;
 	    int triggerLogic = cfg->digitizers[ic/16].GroupTriggerLogic;
-	    outputTreeContents.v_triggerThresholds.push_back(triggerThresh);
+            outputTreeContents.v_triggerThresholds.push_back(triggerThresh);
 	    outputTreeContents.v_triggerEnable.push_back(triggerEnable);
 	    outputTreeContents.v_triggerMajority.push_back(triggerMajority);
 	    outputTreeContents.v_triggerLogic.push_back(triggerLogic);
@@ -274,33 +313,361 @@ void OfflineFactory::makeOutputTree(){
     prepareOutBranches(); 
 }
 
+//Plots cosmetic changes
+void OfflineFactory::h1cosmetic(TH1D* hist,int ic, vector<int>colors){
+    hist->SetLineWidth(2);
+    hist->SetLineColor(colors[ic]);
+    hist->SetStats(0);
+    hist->GetXaxis()->SetTitleSize(0.045);
+    hist->GetXaxis()->SetLabelSize(0.04);
+    hist->GetYaxis()->SetTitleSize(0.045);
+    hist->GetYaxis()->SetLabelSize(0.04);
+    hist->GetYaxis()->SetTitleOffset(1.01);
+    hist->GetXaxis()->SetTitleOffset(0.96);
+
+}
+/*
+void defineColors(vector<int>colors, vector<TColor*> palette, vector<float> reds, vector<float> greens, vector<float> blues){
+    for(int icolor=0;icolor<reds.size();icolor++){
+        palette.push_back(new TColor(2000+icolor,reds[icolor],greens[icolor],blues[icolor]));
+        colors.push_back(2000+icolor);
+    }
+    colors[9] = 419; //kGreen+3;
+    colors[2] = 2009;
+    //colors[3] = 2013;
+    colors[12]= 30;
+    colors[0]=28;
+}
+*/
+//Display making
+void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >& bounds,TString displayDirectory){
+    
+    TCanvas c("c1","",1400,800);
+    gPad->SetRightMargin(0.39);
+    gStyle->SetGridStyle(3);
+    gStyle->SetGridColor(13);
+    c.SetGrid();
+    
+    float drawThresh=5;
+
+    gStyle->SetTitleX(0.35);
+    vector<int> chanList;
+    float maxheight=0; float minheight=0;
+    float timeRange[2];
+    timeRange[1]=1024./sampleRate; timeRange[0]=0.;
+    //Get the waves
+    vector<vector<pair<float,float>>> boundsShifted;
+    vector<TH1D*> wavesShifted;
+    float originalMaxHeights[80];
+    //cout<<3<<endl;
+    for(uint ic=0;ic<bounds.size();ic++){
+        int chan = chanArray->GetAt(ic);
+        vector<pair<float,float>> boundShifted = bounds[ic];
+        TH1D * waveShifted = (TH1D*) waves[ic]->Clone(TString(waves[ic]->GetName())+" shifted");
+    
+        //FIX here: Add calibration for the timing
+        /*
+        waveShifted->Reset();
+
+        for (uint iBin = 1;iBin <= waves[ic]->GetNbinsX();iBin++)
+            {
+                float binLowEdgeShifted = waves[ic]->GetBinLowEdge(iBin) + timingCalibrations[ic];
+                int iBinShifted = waveShifted->FindBin(binLowEdgeShifted + 1E-4);
+                if (iBinShifted > 0 && iBinShifted <= waves[ic]->GetNbinsX()){
+                    waveShifted->SetBinContent(iBinShifted,waves[ic]->GetBinContent(iBin));
+                    waveShifted->SetBinError(iBinShifted,waves[ic]->GetBinError(iBin));
+                }
+                
+            }
+        for(uint iBoundVec =0;iBoundVec < bounds[ic].size();iBoundVec++){
+        //Equivalent code needs modification here
+            boundShifted[iBoundVec].second += timingCalibrations[ic]; 
+            boundShifted[iBoundVec].first += timingCalibrations[ic]; 
+            
+        }
+        */
+        //FIX above if needed
+        
+        if(boundShifted.size()>0 || waveShifted->GetMaximum()>drawThresh){
+            chanList.push_back(ic);
+            //FIX here: Check for the run for beam state. By default set to on for now
+            TString beamState = "on";
+            waveShifted->SetTitle(Form("Run %i, File %i, Event %i;Uncalibrated Time [ns];Amplitude [mV];",runNumber,fileNumber,event));
+            waveShifted->SetAxisRange(0,1024.*1.1/sampleRate);
+            //Keep track of max amplitude
+            if(waveShifted->GetMaximum()>maxheight) maxheight=waveShifted->GetMaximum();
+            if(waveShifted->GetMinimum()<minheight) minheight=waveShifted->GetMinimum();
+            
+            if(boundShifted.size()>0){
+                //keep track of earliest pulse start time
+                //if(boundShifted[0].first<timeRange[0]) timeRange[0]=boundShifted[0].first;
+                //keep track of latest pulse end time (pulses are ordered chronologicaly for each channel)
+                //if(boundShifted[boundShifted.size()-1].second>timeRange[1]) timeRange[1]=boundShifted[boundShifted.size()-1].second;
+                //In case the pulses are not time ordered in each channel
+                if(boundShifted[ic].first<timeRange[0]) timeRange[0]=boundShifted[ic].first;
+                if(boundShifted[ic].second>timeRange[1]) timeRange[1]=boundShifted[ic].second;
+            }
+        }
+        wavesShifted.push_back(waveShifted);
+        boundsShifted.push_back(boundShifted);
+    } //channel loop
+    //cout<<5<<endl;
+    
+    int maxheightbin = -1;
+    maxheight*=1.1;
+    if(minheight<0) minheight=minheight*1.1;
+    else minheight=minheight*0.9;
+
+    //maxheight=30;
+    float rangeMaxX = timeRange[1];
+    float rangeMinX = timeRange[0];
+    float rangeMaxY = maxheight;
+    float rangeMinY = minheight;
+    
+    if (rangeMaxY > -999) maxheight = rangeMaxY;
+
+    if (rangeMinX < 0) timeRange[0]*=1.1;
+    else timeRange[0] = rangeMinX*0.9;
+    //cout<<"timeRange="<<timeRange[1]<<endl;
+    
+    if (rangeMaxX < 0) timeRange[1]= min(0.9*timeRange[1],1024./sampleRate);
+    else timeRange[1] = max(1.1*timeRange[1],1024./sampleRate);
+    //cout<<"timeRange="<<timeRange[1]<<endl;
+    
+    float depth = 0.075*chanList.size();
+    TLegend leg(0.45,0.9-depth,0.65,0.9);
+    for(uint i=0;i<chanList.size();i++){
+        int ic = chanList[i];
+        int chan = chanArray->GetAt(ic);
+        originalMaxHeights[ic] = wavesShifted[ic]->GetMaximum();
+        if (rangeMinY > -999) wavesShifted[ic]->SetMinimum(rangeMinY);
+        wavesShifted[ic]->SetMaximum(maxheight);
+        wavesShifted[ic]->SetAxisRange(timeRange[0],timeRange[1],"X");
+        
+        int column= chanMap[ic][0];
+        int row= chanMap[ic][1];
+        int layer= chanMap[ic][2];
+        int type= chanMap[ic][3];
+        int colorIndex = 4-2*(row-1)+column-1+6*(layer-1);
+
+        if(type==1) colorIndex = layer; //slabs: 0-3
+        if(type==2) colorIndex = 4 + 3*(layer-1) + (column+1); //sheets
+        h1cosmetic(wavesShifted[ic],colorIndex,colors);
+        if(type==1) wavesShifted[ic]->SetLineStyle(3);
+        if(type==2) wavesShifted[ic]->SetLineStyle(7);
+        if(i==0) wavesShifted[ic]->Draw("hist");
+        else wavesShifted[ic]->Draw("hist same");
+        leg.AddEntry(wavesShifted[ic],Form("Channel %i",ic),"l");
+        wavesShifted[ic]->SetAxisRange(timeRange[0],timeRange[1],"X");
+
+        //Show boundaries of pulse
+        TLine line; line.SetLineWidth(2); line.SetLineStyle(3);line.SetLineColor(colors[colorIndex]);
+        for(uint ip=0; ip<boundsShifted[ic].size();ip++){
+            //cout<<timeRange[1]<<endl;    
+        if (boundsShifted[ic][ip].first > timeRange[0] && boundsShifted[ic][ip].second < timeRange[1]){
+                line.DrawLine(boundsShifted[ic][ip].first,0,boundsShifted[ic][ip].first,0.2*maxheight);
+                line.DrawLine(boundsShifted[ic][ip].second,0,boundsShifted[ic][ip].second,0.2*maxheight);
+            }
+        }
+    } //channel loop close
+    //cout<<7<<endl;
+     
+    float boxw= 0.025;
+    float boxh=0.0438;
+    float barw=0.03;
+    float barh=0.53;
+    vector<float> xstart = {0.64,0.73,0.82,0.91};
+    vector<float> ystart= {0.798,0.851,0.904,0.957};
+
+    float sheet_width = 0.006;
+    float sheet_offset= 0.013+sheet_width/2.;
+    float sheet_left_to_right = 4*0.006+barw+boxw+0.002;
+    vector<float> xstart_leftsheets = {xstart[0]-sheet_offset,xstart[1]-sheet_offset,xstart[2]-sheet_offset,xstart[3]-sheet_offset}; 
+    vector<float> xstart_topsheets = {xstart[0]-0.002,xstart[1]-0.002,xstart[2]-0.002,xstart[3]-0.002};
+    float ystart_topsheets = ystart[2]+boxh+0.017;
+    float ystart_sidesheets = ystart[0]-0.006;
+    float vert_sheet_length = ystart[2]-ystart[0]+boxh+0.01;
+    float hori_sheet_length= barw+boxw+0.004;
+    
+    float slab_width = 0.015;
+    vector<float> slab_xstart = {xstart_leftsheets[0]-0.008-slab_width,xstart_leftsheets[1]-0.008-slab_width,xstart_leftsheets[2]-0.008-slab_width,xstart_leftsheets[3]-0.008-slab_width,xstart_leftsheets[3]+0.01+sheet_left_to_right}; 
+    float slab_height = vert_sheet_length-0.02;
+    float slab_ystart = ystart_sidesheets+0.01;
+
+    TPave L1frame(xstart[0]-0.006,ystart[0]-0.01,xstart[0]+barw+boxw+0.006,ystart[2]+boxh+0.01,1,"NDC");
+    L1frame.SetFillColor(0);
+    L1frame.SetLineWidth(2);
+    L1frame.Draw();
+
+    TPave L2frame(xstart[1]-0.006,ystart[0]-0.01,xstart[1]+barw+boxw+0.006,ystart[2]+boxh+0.01,1,"NDC");
+    L2frame.SetFillColor(0);
+    L2frame.SetLineWidth(2);
+    L2frame.Draw();
+
+    TPave L3frame(xstart[2]-0.006,ystart[0]-0.01,xstart[2]+barw+boxw+0.006,ystart[2]+boxh+0.01,1,"NDC");
+    L3frame.SetFillColor(0);
+    L3frame.SetLineWidth(2);
+    L3frame.Draw();
+    
+    TPave L4frame(xstart[3]-0.006,ystart[0]-0.01,xstart[3]+barw+boxw+0.006,ystart[2]+boxh+0.01,1,"NDC");
+    L4frame.SetFillColor(0);
+    L4frame.SetLineWidth(2);
+    L4frame.Draw();
+    
+    TLatex tla;
+    tla.SetTextSize(0.04);
+    tla.SetTextFont(42);
+    float height= 0.06;
+    //tla.DrawLatexNDC(0.13,0.83,Form("Number of pulses: %i",(int)bounds.size()));
+    float currentYpos=0.737;
+    float headerX=0.67;
+    float rowX=0.69;
+    int pulseIndex=0; // Keep track of pulse index, since all pulses for all channels are actually stored in the same 1D vectors
+    int maxPerChannel = 0;
+    if (chanList.size() > 0) maxPerChannel = 10/chanList.size();
+    //cout<<8<<endl;
+    
+    for(uint i=0;i<chanList.size();i++){
+        int ic = chanList[i];
+        int chan = chanArray->GetAt(ic);
+        //cout<<ic<<" ic,chan "<<chan<<endl;
+        int column= chanMap[ic][0];
+        int row= chanMap[ic][1];
+        int layer= chanMap[ic][2];
+        int type= chanMap[ic][3];
+
+        int colorIndex = 4-2*(row-1)+column-1+6*(layer-1);
+        if(type==1) colorIndex = layer; //slabs: 0-3
+        else if(type==2) colorIndex = 4 + 3*(layer-1) + (column+1); //sheets
+        TPave * pave;
+        if(type==0){
+            float xpos,ypos;
+            ypos = slab_ystart;
+            xpos = slab_xstart[layer];
+        }
+        if (type==1){
+            float xpos,ypos;
+            ypos = slab_ystart;
+            xpos = slab_xstart[layer];
+            pave = new TPave(xpos,ypos,xpos+slab_width,ypos+slab_height,0,"NDC");
+            pave->SetFillColor(colors[colorIndex]);
+            pave->Draw();
+        }
+
+        else if (type==2){
+            float xpos,ypos;
+
+            if (column!=0){
+                xpos= xstart_leftsheets[layer-1];
+                if(column>0) xpos += sheet_left_to_right;
+                ypos = ystart_sidesheets;
+                pave = new TPave(xpos,ypos,xpos+sheet_width,ypos+vert_sheet_length,0,"NDC");
+            }
+            else{
+                xpos = xstart_topsheets[layer-1];
+                ypos = ystart_topsheets;
+                pave = new TPave(xpos,ypos,xpos+hori_sheet_length,ypos+1.4/0.8*sheet_width,0,"NDC");
+            }
+
+            pave->SetFillColor(colors[colorIndex]);
+            pave->Draw();
+
+        }
+        else if(type==0){
+            float xpos = xstart[layer-1]+(column-1)*barw;
+            float ypos= ystart[row-1];
+            pave = new TPave(xpos,ypos,xpos+boxw,ypos+boxh,0,"NDC");
+            pave->SetFillColor(colors[colorIndex]);
+            pave->Draw();
+        }
+
+        tla.SetTextColor(colors[colorIndex]);
+        tla.SetTextSize(0.03);
+        tla.DrawLatexNDC(headerX,currentYpos+0.15,Form("Channel %i, V_{max} = %0.0f, N_{pulses}= %i",ic,originalMaxHeights[ic],(int)boundsShifted[ic].size()));
+        tla.SetTextColor(kBlack);
+        currentYpos=currentYpos-(height*0.7);
+        //currentYpos-=height;
+        tla.SetTextSize(0.03);
+        
+        for(int ip=0;ip<boundsShifted[ic].size();ip++){
+            TString row;
+            row = Form("Channel number = %d",ip);
+            pulseIndex++; 
+            if(ip < maxPerChannel){
+                tla.DrawLatexNDC(rowX,currentYpos,row);
+                currentYpos-=height*0.8;
+            }
+        }
+        currentYpos-=height*0.2;
+    } //channel loop closed
+    //cout<<9<<endl;
+    
+    //cout<<"Display directory is "<<displayDirectory<<endl;
+    TString displayName;
+    displayName=Form(displayDirectory+"Run%i_File%i_Event%i_Version_%s.pdf",runNumber,fileNumber,event,"shorttagplaceholder"); 
+    c.SaveAs(displayName);
+    displayName=Form(displayDirectory+"Run%i_File%i_Event%i_Version_%s.png",runNumber,fileNumber,event,"shorttagplaceholder"); 
+    c.SaveAs(displayName);
+
+    for(uint i=0;i<chanList.size();i++){
+	delete wavesShifted[i];
+    }
+    //cout<<10<<endl;
+    
+}
+
+vector<vector<pair<float,float>>> OfflineFactory::readWaveDataPerEvent(int i){
+    inTree->GetEntry(i);
+    if (!isDRS) loadWavesMilliDAQ();
+    else loadWavesDRS();
+    //Loop over channels
+    vector<vector<pair<float,float> > > allPulseBounds;
+    for(int ic=0;ic<numChan;ic++){
+        //Pulse finding
+        allPulseBounds.push_back(processChannel(ic));
+    }   
+    
+    return allPulseBounds;
+}
+    
+void OfflineFactory::displayEvents(std::vector<int> & eventsToDisplay,TString displayDirectory){
+    validateInput();
+    inTree = (TTree*)inFile->Get("Events"); 
+    loadBranches();
+    //Display directory
+    //argv, argv + argc,
+    TString displayDirectoryForRun = displayDirectory+"/Run"+to_string(runNumber)+"/";
+    gSystem->mkdir(displayDirectoryForRun,true);
+    for(auto iEvent: eventsToDisplay){
+	resetOutBranches();	
+        vector<vector<pair<float,float> > > allPulseBounds;
+        allPulseBounds = readWaveDataPerEvent(iEvent);
+	displayEvent(iEvent,allPulseBounds,displayDirectoryForRun);
+    }
+    inFile->Close();
+}
 //Pulse finding and per channel processing
 void OfflineFactory::readWaveData(){
     validateInput();
     inTree = (TTree*)inFile->Get("Events"); 
     loadBranches();
     // int maxEvents = 1;
-    float progress = 0.0;
     int maxEvents = inTree->GetEntries();
-    bool showBar = true;
+    cout<<"Processing "<<maxEvents<<" events in this file"<<endl;
     cout<<"Starting event loop"<<endl;
+    bool showBar = true;
+
     for(int i=0;i<maxEvents;i++){
 
-	progress += 1./maxEvents; // for demonstration only
-	resetOutBranches();
-	outputTreeContents.event=i;
-	inTree->GetEntry(i);
-	if (!isDRS) loadWavesMilliDAQ();
-	else loadWavesDRS();
-	//Loop over channels
-	vector<vector<pair<float,float> > > allPulseBounds;
-	for(int ic=0;ic<numChan;ic++){
-	    //Pulse finding
-	    allPulseBounds.push_back(processChannel(ic));
-	    outputTreeContents.v_max.push_back(1.*waves[ic]->GetMaximum());
-	}    
-	outTree->Fill();
+	resetOutBranches();	
+        //Process each event
+        //Notes: Remove the inTree and move progress bar into the loop
+        vector<vector<pair<float,float> > > allPulseBounds;
+	outputTreeContents.event=i;	
+        allPulseBounds = readWaveDataPerEvent(i);
+        outTree->Fill();
 	//Totally necessary progress bar
+	float progress = 1.0*i/maxEvents; 
 	if (showBar){
 	    int barWidth = 70;
 	    std::cout << "[";
@@ -313,9 +680,12 @@ void OfflineFactory::readWaveData(){
 	    std::cout << "] " << round(progress * 100.0) << " %\r";
 	    std::cout.flush();
 	}
+        
     }
     std::cout << std::endl;
+    
 }
+
 void OfflineFactory::writeOutputTree(){
     outFile->cd();
     outTree->Write();
@@ -325,8 +695,8 @@ void OfflineFactory::writeOutputTree(){
 }
 void OfflineFactory::prepareWave(int ic){
     TAxis * a = waves[ic]->GetXaxis();
-    a->Set( a->GetNbins(), a->GetXmin()/sampleRate, a->GetXmax()/sampleRate);
-    waves[ic]->ResetStats();
+    // a->Set( a->GetNbins(), a->GetXmin()/sampleRate, a->GetXmax()/sampleRate);
+    // waves[ic]->ResetStats();
     //subtract calibrated mean
     for(int ibin = 1; ibin <= waves[ic]->GetNbinsX(); ibin++){
 	waves[ic]->SetBinContent(ibin,waves[ic]->GetBinContent(ibin)-pedestals[ic]);
@@ -386,6 +756,7 @@ vector< pair<float,float> > OfflineFactory::findPulses(int ic){
 }
 //Pulse finding and per channel processing
 vector< pair<float,float> > OfflineFactory::processChannel(int ic){
+    prepareWave(ic);
     //Pulse finding
     vector<pair<float,float>> pulseBounds = findPulses(ic);
     int npulses = pulseBounds.size();
@@ -398,6 +769,7 @@ vector< pair<float,float> > OfflineFactory::processChannel(int ic){
 	if (maxThreeConsec < tempMax) maxThreeConsec = tempMax;
 
     }
+    outputTreeContents.v_max.push_back(waves[ic]->GetMaximum());
     outputTreeContents.v_max_threeConsec.push_back(maxThreeConsec);
     //FIXME Need to add low pass filter option back
     outputTreeContents.v_max_afterFilter.push_back(waves[ic]->GetMaximum());

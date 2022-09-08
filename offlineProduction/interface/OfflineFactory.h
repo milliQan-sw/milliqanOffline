@@ -128,15 +128,24 @@ class OfflineFactory {
     public:
 	OfflineFactory(TString,TString,bool);
 	OfflineFactory(TString,TString, bool, int, int);
-	virtual ~OfflineFactory();
+	// virtual ~OfflineFactory();
 	void makeOutputTree();
 	void loadJsonConfig(string);
-	void readMetaData();
-	void readWaveData();
+        void readMetaData();
+        vector<vector<pair<float,float> > > readWaveDataPerEvent(int);
+    //        void defineColors(vector<int>, vector<TColor*>, vector<float>, vector<float>, vector<float>);
+    //vector<int>colors, vector<TColor*> palette, vector<float> reds, vector<float> greens, vector<float> blues
+        void h1cosmetic(TH1D*,int,vector<int>);
+        void displayEvent(int,vector<vector<pair<float,float> > >&,TString);
+        void displayEvents(vector<int> &,TString);
+        void readWaveData();
 	void writeOutputTree();
-	void process();
+    	void process();
 	void process(TString,TString);
 	void process(TString,TString,int, int);
+    	void processDisplays(vector<int>&,TString);
+	void processDisplays(vector<int>&,TString,TString);
+	void processDisplays(vector<int>&,TString,TString,int, int);
     private:
 	void prepareOutBranches();
 	void resetOutBranches();
@@ -150,7 +159,7 @@ class OfflineFactory {
         void writeVersion();
 
 	float sideband_range[2] = {0,50};
-	float sampleRate = 1.6;
+        float sampleRate = 1.6; //Dummy value here, actual value read in from MetaData
 	bool applyLPFilter = false;
 	TString inFileName;
 	TString outFileName;
@@ -182,5 +191,8 @@ class OfflineFactory {
 	TFile * outFile;
 	TTree * outTree;
 	offline_tree_ outputTreeContents;
+	vector<TColor *> palette;
+	vector<int> colors;
+    
 };
 #endif

@@ -135,7 +135,7 @@ class OfflineFactory {
         vector<vector<pair<float,float> > > readWaveDataPerEvent(int);
     //        void defineColors(vector<int>, vector<TColor*>, vector<float>, vector<float>, vector<float>);
     //vector<int>colors, vector<TColor*> palette, vector<float> reds, vector<float> greens, vector<float> blues
-        void h1cosmetic(TH1D*,int,vector<int>);
+        void h1cosmetic(TH1D*,int,vector<int> &);
         void displayEvent(int,vector<vector<pair<float,float> > >&,TString);
         void displayEvents(vector<int> &,TString);
         void readWaveData();

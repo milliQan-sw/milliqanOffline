@@ -226,6 +226,10 @@ void OfflineFactory::prepareOutBranches(){
     outTree->Branch("triggerMajority",&outputTreeContents.v_triggerMajority);
     outTree->Branch("triggerLogic",&outputTreeContents.v_triggerLogic);
     outTree->Branch("chan",&outputTreeContents.v_chan);
+    outTree->Branch("row",&outputTreeContents.v_row);
+    outTree->Branch("column",&outputTreeContents.v_column);
+    outTree->Branch("layer",&outputTreeContents.v_layer);
+    outTree->Branch("type",&outputTreeContents.v_type);
     outTree->Branch("board",&outputTreeContents.v_board);
     outTree->Branch("height",&outputTreeContents.v_height);
     outTree->Branch("area",&outputTreeContents.v_area);
@@ -245,6 +249,10 @@ void OfflineFactory::resetOutBranches(){
     outputTreeContents.v_triggerMajority.clear();
     outputTreeContents.v_triggerLogic.clear();
     outputTreeContents.v_chan.clear();
+    outputTreeContents.v_row.clear();
+    outputTreeContents.v_column.clear();
+    outputTreeContents.v_layer.clear();
+    outputTreeContents.v_type.clear();
     outputTreeContents.v_board.clear();
     outputTreeContents.v_height.clear();
     outputTreeContents.v_area.clear();

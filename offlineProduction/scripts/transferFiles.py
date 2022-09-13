@@ -97,5 +97,5 @@ if __name__ == "__main__":
     source = "/home/milliqan/data/"
     logFile = "/home/milliqan/MilliDAQ_FileTransfers.log"
 
-    destinations = {"UCSB":"milliqan@cms26.physics.ucsb.edu:/net/cms26/cms26r0/milliqan/Run3/"}
+    destinations = {"UCSB":"milliqan@cms26.physics.ucsb.edu:/net/cms26/cms26r0/milliqan/Run3/", "OSU":"milliqan@cms-t3.mps.ohio-state.edu:/data/users/milliqan/run3/"}
     transferFiles(source,destinations,logFile,force=False)

@@ -122,12 +122,20 @@ struct offline_tree_{
     vector<int> v_triggerLogic;
     vector<int> v_triggerMajority;
     vector<float> v_min_afterFilter;
+
+    float tClockCount;
+    float tTime;
+    float tStartTime;
+    float tTriggerNumber;
+    float tTimeDiff;
+    float tMatchingTimeCut;
+    //Trigger tree members
 };
 //Offline factory class used to produce offline tree output
 class OfflineFactory {
     public:
-	OfflineFactory(TString,TString,bool);
-	OfflineFactory(TString,TString, bool, int, int);
+	OfflineFactory(TString,TString,TString,bool);
+	OfflineFactory(TString,TString,TString, bool, int, int);
 	// virtual ~OfflineFactory();
 	void makeOutputTree();
 	void loadJsonConfig(string);
@@ -139,6 +147,8 @@ class OfflineFactory {
         void displayEvent(int,vector<vector<pair<float,float> > >&,TString);
         void displayEvents(vector<int> &,TString);
         void readWaveData();
+        void addFriendTree();
+        void setFriendFile(TString);
 	void writeOutputTree();
     	void process();
 	void process(TString,TString);
@@ -163,6 +173,8 @@ class OfflineFactory {
 	bool applyLPFilter = false;
 	TString inFileName;
 	TString outFileName;
+        TString friendFileName = "";
+        TString appendToTag;
         int runNumber;
         int fileNumber;
 	bool isDRS;
@@ -193,6 +205,13 @@ class OfflineFactory {
 	offline_tree_ outputTreeContents;
 	vector<TColor *> palette;
 	vector<int> colors;
+        //Trigger friend variables
+        float tClockCount = -1.;
+        float tTime = -1.;
+        float tStartTime = -1.;
+        float tTriggerNumber = -1.;
+        float tTimeDiff = -1.;
+        float tMatchingTimeCut = -1.;
     
 };
 #endif

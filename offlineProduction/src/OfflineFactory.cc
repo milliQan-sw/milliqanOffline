@@ -1,8 +1,9 @@
 #include "./interface/OfflineFactory.h"
 
-OfflineFactory::OfflineFactory(TString inFileName, TString outFileName, bool isDRS, int runNumber, int fileNumber) : 
+OfflineFactory::OfflineFactory(TString inFileName, TString outFileName, TString appendToTag, bool isDRS, int runNumber, int fileNumber) : 
     inFileName(inFileName),
     outFileName(outFileName),
+    appendToTag(appendToTag),
     isDRS(isDRS),
     runNumber(runNumber),
     fileNumber(fileNumber)
@@ -43,10 +44,21 @@ OfflineFactory::OfflineFactory(TString inFileName, TString outFileName, bool isD
     colors.push_back(860-9); colors.push_back(400-5); colors.push_back(416-8); colors.push_back(880-8); 
 };
 
-OfflineFactory::OfflineFactory(TString inFileName, TString outFileName, bool isDRS) {
-    OfflineFactory(inFileName,outFileName,isDRS,-1,-1);
+OfflineFactory::OfflineFactory(TString inFileName, TString outFileName, TString appendToTag, bool isDRS) {
+    OfflineFactory(inFileName,outFileName,appendToTag,isDRS,-1,-1);
 };
-
+void OfflineFactory::setFriendFile(TString friendFileNameIn){
+    friendFileName = friendFileNameIn;
+}
+void OfflineFactory::addFriendTree(){
+    inTree->AddFriend("matchedTrigEvents",friendFileName);
+    inTree->SetBranchAddress("clockCount", &tClockCount);
+    inTree->SetBranchAddress("time", &tTime);
+    inTree->SetBranchAddress("startTime", &tStartTime);
+    inTree->SetBranchAddress("triggerNumber", &tTriggerNumber);
+    inTree->SetBranchAddress("timeDiff", &tTimeDiff);
+    inTree->SetBranchAddress("matchingTimeCut", &tMatchingTimeCut);
+}
 
 // OfflineFactory::~OfflineFactory() {
 //     if (inFile) inFile->Close();
@@ -258,6 +270,13 @@ void OfflineFactory::prepareOutBranches(){
     outTree->Branch("duration",&outputTreeContents.v_duration);
     outTree->Branch("delay",&outputTreeContents.v_delay);
     outTree->Branch("max",&outputTreeContents.v_max);
+
+    outTree->Branch("tClockCount", &outputTreeContents.tClockCount);
+    outTree->Branch("tTime", &outputTreeContents.tTime);
+    outTree->Branch("tStartTime", &outputTreeContents.tStartTime);
+    outTree->Branch("tTriggerNumber", &outputTreeContents.tTriggerNumber);
+    outTree->Branch("tTimeDiff", &outputTreeContents.tTimeDiff);
+    outTree->Branch("tMatchingTimeCut", &outputTreeContents.tMatchingTimeCut);
 }
 //Clear vectors and reset 
 void OfflineFactory::resetOutBranches(){
@@ -692,6 +711,7 @@ void OfflineFactory::displayEvents(std::vector<int> & eventsToDisplay,TString di
 void OfflineFactory::readWaveData(){
     validateInput();
     inTree = (TTree*)inFile->Get("Events"); 
+    if (friendFileName != "") addFriendTree();
     loadBranches();
     // int maxEvents = 1;
     int maxEvents = inTree->GetEntries();
@@ -706,6 +726,12 @@ void OfflineFactory::readWaveData(){
         vector<vector<pair<float,float> > > allPulseBounds;
 	outputTreeContents.event=i;	
         allPulseBounds = readWaveDataPerEvent(i);
+	outputTreeContents.tClockCount = tClockCount;
+	outputTreeContents.tTime = tTime;
+	outputTreeContents.tStartTime = tStartTime;
+	outputTreeContents.tTriggerNumber = tTriggerNumber;
+	outputTreeContents.tTimeDiff = tTimeDiff;
+	outputTreeContents.tMatchingTimeCut = tMatchingTimeCut;
         outTree->Fill();
 	//Totally necessary progress bar
 	float progress = 1.0*i/maxEvents; 

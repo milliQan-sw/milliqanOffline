@@ -22,6 +22,12 @@ int main(int argc, char **argv){
 			 \n-i input file\n-o output file \n-c configuration files (comma sep list of files with NO spaces) or json as string \n-h show this message";
 
     //Read input and output files (necessary arguments)
+    bool versionMode = cmdOptionExists(argv, argv + argc, "-v");
+    if (versionMode){
+        OfflineFactory offlineFactory = OfflineFactory("","",false,-1,-1);
+        std::cout << offlineFactory.getVersion() << std::endl;
+        return 0;
+    }
     char * inputFilenameChar = getCmdOption(argv, argv + argc, "-i");
     char * outputFilenameChar = getCmdOption(argv, argv + argc, "-o");
     char * offlineDir = getCmdOption(argv,argv+argc,"--offlineDir");

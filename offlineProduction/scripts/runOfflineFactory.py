@@ -49,22 +49,23 @@ def validateOutput(outputFile):
         print ("removing output file because it does not deserve to live (result will not be published)")
         os.system("rm "+outputFile)
     return tag 
-def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publish,database,appendToTag,drs,display):
+def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publish,database,appendToTag,drs,display,runNumber=None,fileNumber=None):
     if force_publish:
         publish = True
-    try:
-        if drs:
-            runNumber = int(inputFile.split("/")[-1].split("CMS")[-1].split(".")[0])
-            fileNumber = 0
-        else:
-            runNumber = int(inputFile.split("/")[-1].split("Run")[-1].split(".")[0])
-            fileNumber = int(inputFile.split("/")[-1].split(".")[1].split("_")[0])    
-    except:
-        if publish:
-            print ("Could not identify file and/or run number so cannot publish")
-            exit()
-        fileNumber = -1
-        runNumber = -1
+    if runNumber == None:
+        try:
+            if drs:
+                runNumber = int(inputFile.split("/")[-1].split("CMS")[-1].split(".")[0])
+                fileNumber = 0
+            else:
+                runNumber = int(inputFile.split("/")[-1].split("Run")[-1].split(".")[0])
+                fileNumber = int(inputFile.split("/")[-1].split(".")[1].split("_")[0])    
+        except:
+            if publish:
+                print ("Could not identify file and/or run number so cannot publish")
+                exit()
+            fileNumber = -1
+            runNumber = -1
     if display and publish:
         print("Can't publish in display mode!")
         exit()
@@ -115,9 +116,12 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
                 inputType = "MilliDAQ"
             publishDataset(configurationsJSON,inputFile,outputFile,fileNumber,runNumber,tag,site=site,inputType=inputType,force_publish=force_publish,db=db)
         return tag != None
+def getId(runNumber,fileNumber,tag,inputType,site):
+    _id = "{}_{}_{}_{}_{}".format(runNumber,fileNumber,tag,inputType,site)
+    return _id
 
 def publishDataset(configurationsJSON,inputFile,outputFile,fileNumber,runNumber,tag,site=site,inputType="MilliDAQ",force_publish=False,db=None):
-    _id = "{}_{}_{}_{}_{}".format(runNumber,fileNumber,tag,inputType,site)
+    _id = getId(runNumber,fileNumber,tag,inputType,site)
     milliQanOfflineDataset = configurationsJSON
     milliQanOfflineDataset["_id"] = "{}_{}_{}_{}_{}".format(runNumber,fileNumber,tag,inputType,site)
     milliQanOfflineDataset["run"] = runNumber

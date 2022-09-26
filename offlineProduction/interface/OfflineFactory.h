@@ -146,6 +146,7 @@ class OfflineFactory {
     	void processDisplays(vector<int>&,TString);
 	void processDisplays(vector<int>&,TString,TString);
 	void processDisplays(vector<int>&,TString,TString,int, int);
+        TString getVersion();
     private:
 	void prepareOutBranches();
 	void resetOutBranches();
@@ -159,6 +160,8 @@ class OfflineFactory {
         void writeVersion();
 
 	float sideband_range[2] = {0,50};
+        TString versionShort;
+        TString versionLong = "asddsf";
         float sampleRate = 1.6; //Dummy value here, actual value read in from MetaData
 	bool applyLPFilter = false;
 	TString inFileName;

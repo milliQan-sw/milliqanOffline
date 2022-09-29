@@ -51,6 +51,6 @@ From: /home/mcarrigan/work/milliqanOfflineContainer/offline
     bash compile.sh test.exe
 
     cd ../
-    chmod a+rwx milliqanOffline
-    chmod a+rwx MilliDAQ
+    chmod -R a+rwx milliqanOffline
+    chmod -R a+rwx MilliDAQ
 

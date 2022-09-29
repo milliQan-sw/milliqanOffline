@@ -40,10 +40,10 @@
 #include "TColor.h"
 #include "TComplex.h"
 
-#include "/home/milliqan/MilliDAQ/interface/GlobalEvent.h"
-#include "/home/milliqan/MilliDAQ/interface/DemonstratorConfiguration.h"
-#include "/home/milliqan/MilliDAQ/interface/V1743Configuration.h"
-#include "/home/milliqan/MilliDAQ/interface/V1743Event.h"
+#include "GlobalEvent.h"
+#include "DemonstratorConfiguration.h"
+#include "V1743Configuration.h"
+#include "V1743Event.h"
 
 #include <string>
 #include <sys/types.h>

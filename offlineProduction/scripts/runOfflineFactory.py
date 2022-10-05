@@ -135,14 +135,14 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
             if drs:
                 inputType = "DRS"
             else:
-                inputType = "MilliDAQ"
+                inputType = "MilliQan"
             publishDataset(configurationsJSON,inputFile,outputFile,fileNumber,runNumber,tag,site=site,inputType=inputType,force_publish=force_publish,db=db)
         return tag != None
 def getId(runNumber,fileNumber,tag,inputType,site):
     _id = "{}_{}_{}_{}_{}".format(runNumber,fileNumber,tag,inputType,site)
     return _id
 
-def publishDataset(configurationsJSON,inputFile,outputFile,fileNumber,runNumber,tag,site=site,inputType="MilliDAQ",force_publish=False,db=None):
+def publishDataset(configurationsJSON,inputFile,outputFile,fileNumber,runNumber,tag,site=site,inputType="MilliQan",force_publish=False,db=None):
     _id = getId(runNumber,fileNumber,tag,inputType,site)
     milliQanOfflineDataset = configurationsJSON
     milliQanOfflineDataset["_id"] = "{}_{}_{}_{}_{}".format(runNumber,fileNumber,tag,inputType,site)

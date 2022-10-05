@@ -122,12 +122,20 @@ struct offline_tree_{
     vector<int> v_triggerLogic;
     vector<int> v_triggerMajority;
     vector<float> v_min_afterFilter;
+
+    float tClockCount;
+    float tTime;
+    float tStartTime;
+    float tTriggerNumber;
+    float tTimeDiff;
+    float tMatchingTimeCut;
+    //Trigger tree members
 };
 //Offline factory class used to produce offline tree output
 class OfflineFactory {
     public:
-	OfflineFactory(TString,TString,bool);
-	OfflineFactory(TString,TString, bool, int, int);
+	OfflineFactory(TString,TString,TString,bool);
+	OfflineFactory(TString,TString,TString, bool, int, int);
 	// virtual ~OfflineFactory();
 	void makeOutputTree();
 	void loadJsonConfig(string);
@@ -135,10 +143,12 @@ class OfflineFactory {
         vector<vector<pair<float,float> > > readWaveDataPerEvent(int);
     //        void defineColors(vector<int>, vector<TColor*>, vector<float>, vector<float>, vector<float>);
     //vector<int>colors, vector<TColor*> palette, vector<float> reds, vector<float> greens, vector<float> blues
-        void h1cosmetic(TH1D*,int,vector<int>);
+        void h1cosmetic(TH1D*,int,vector<int> &);
         void displayEvent(int,vector<vector<pair<float,float> > >&,TString);
         void displayEvents(vector<int> &,TString);
         void readWaveData();
+        void addFriendTree();
+        void setFriendFile(TString);
 	void writeOutputTree();
     	void process();
 	void process(TString,TString);
@@ -146,6 +156,7 @@ class OfflineFactory {
     	void processDisplays(vector<int>&,TString);
 	void processDisplays(vector<int>&,TString,TString);
 	void processDisplays(vector<int>&,TString,TString,int, int);
+        TString getVersion();
     private:
 	void prepareOutBranches();
 	void resetOutBranches();
@@ -159,10 +170,14 @@ class OfflineFactory {
         void writeVersion();
 
 	float sideband_range[2] = {0,50};
+        TString versionShort;
+        TString versionLong = "asddsf";
         float sampleRate = 1.6; //Dummy value here, actual value read in from MetaData
 	bool applyLPFilter = false;
 	TString inFileName;
 	TString outFileName;
+        TString friendFileName = "";
+        TString appendToTag;
         int runNumber;
         int fileNumber;
 	bool isDRS;
@@ -193,6 +208,13 @@ class OfflineFactory {
 	offline_tree_ outputTreeContents;
 	vector<TColor *> palette;
 	vector<int> colors;
+        //Trigger friend variables
+        float tClockCount = -1.;
+        float tTime = -1.;
+        float tStartTime = -1.;
+        float tTriggerNumber = -1.;
+        float tTimeDiff = -1.;
+        float tMatchingTimeCut = -1.;
     
 };
 #endif

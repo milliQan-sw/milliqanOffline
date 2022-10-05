@@ -18,13 +18,23 @@ bool cmdOptionExists(char** begin, char** end, const std::string& option)
 
 int main(int argc, char **argv){
 
-    string helpString = "Usage: ./script.exe -i <inputFileName> -o <outputFileName> [-c CONFIGS] [-h] \n\nOPTIONS:\
-			 \n-i input file\n-o output file \n-c configuration files (comma sep list of files with NO spaces) or json as string \n-h show this message";
+    // string helpString = "Usage: ./script.exe -i <inputFileName> -o <outputFileName> [-a APPEND] [--drs] [-c CONFIGS] [-h] \n\nOPTIONS:\
+	// 		 \n-i input file\n-o output file \n-c configuration files \
+    //                      (comma sep list of files with NO spaces) or json as string \n \
+    //                      -a text to appendToTag \n --drs runs with DRS input \n -h show this message \";
 
     //Read input and output files (necessary arguments)
+    bool versionMode = cmdOptionExists(argv, argv + argc, "-v");
+    if (versionMode){
+        OfflineFactory offlineFactory = OfflineFactory("","",false,-1,-1);
+        std::cout << offlineFactory.getVersion() << std::endl;
+        return 0;
+    }
     char * inputFilenameChar = getCmdOption(argv, argv + argc, "-i");
     char * outputFilenameChar = getCmdOption(argv, argv + argc, "-o");
     char * offlineDir = getCmdOption(argv,argv+argc,"--offlineDir");
+    char * appendToTag = getCmdOption(argv,argv+argc,"-a");
+    char * mergedTriggerFile = getCmdOption(argv, argv + argc, "-m");
     bool isDRSdata = cmdOptionExists(argv, argv + argc, "--drs");
     if (isDRSdata) std::cout << "Assuming DRS input" << std::endl;
     //char * DRS_num = getCmdOption(argv, argv + argc, "-DRS_num");
@@ -35,7 +45,7 @@ int main(int argc, char **argv){
     if (cmdOptionExists(argv, argv + argc, "-f")) fileNumber = atoi(getCmdOption(argv, argv + argc, "-f"));
     if (!inputFilenameChar || !outputFilenameChar || cmdOptionExists(argv, argv+argc, "-h"))
     {
-	std::cout << helpString << std::endl;
+	std::cout << "Need input and output file" << std::endl;
 	return 0;
     }
     bool displayMode = false;
@@ -52,7 +62,7 @@ int main(int argc, char **argv){
     }
 
     std::cout << "Running in standard mode with:\nInput file: " << inputFilenameChar << "\nOutput file: " << outputFilenameChar << std::endl;
-    OfflineFactory offlineFactory = OfflineFactory(inputFilenameChar,outputFilenameChar,isDRSdata,runNumber,fileNumber);
+    OfflineFactory offlineFactory = OfflineFactory(inputFilenameChar,outputFilenameChar,appendToTag,isDRSdata,runNumber,fileNumber);
 
     //Read configuration files
     char * configChar = getCmdOption(argv, argv + argc, "-c");
@@ -74,6 +84,7 @@ int main(int argc, char **argv){
     // offlineFactory.loadJsonConfig("/home/milliqan/milliqanOffline/offlineProduction/configuration/chanMaps/testMap.json");
     // offlineFactory.loadJsonConfig("/home/milliqan/milliqanOffline/offlineProduction/configuration/pulseFinding/pulseFindingTest.json");
     // offlineFactory.loadJsonConfig("/home/milliqan/milliqanOffline/offlineProduction/configuration/calibrations/testCalibration.json");
+    offlineFactory.setFriendFile(mergedTriggerFile);
     if (displayMode) {
 	if (isDRSdata){
 	    offlineFactory.processDisplays(eventsToDisplay,TString(offlineDir)+"/displaysDRS/");

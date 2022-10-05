@@ -1,13 +1,16 @@
 #include "./interface/OfflineFactory.h"
 
-OfflineFactory::OfflineFactory(TString inFileName, TString outFileName, bool isDRS, int runNumber, int fileNumber) : 
+OfflineFactory::OfflineFactory(TString inFileName, TString outFileName, TString appendToTag, bool isDRS, int runNumber, int fileNumber) : 
     inFileName(inFileName),
     outFileName(outFileName),
+    appendToTag(appendToTag),
     isDRS(isDRS),
     runNumber(runNumber),
     fileNumber(fileNumber)
 {
-
+    versionShort = "shorttagplaceholder";
+    versionLong = "longtagplaceholder";
+    /*
     vector<float> reds ={255./255.,31./255.,235./255.,111./255.,219./255.,151./255.,185./255.,194./255.,127./255.,98./255.,211./255.,69./255.,220./255.,72./255.,225./255.,145./255.,233./255.,125./255.,147./255.,110./255.,209./255.,44};
     vector<float> greens={255./255.,30./255.,205./255.,48./255.,106./255.,206./255.,32./255.,188./255.,128./255.,166./255.,134./255.,120./255.,132./255.,56./255.,161./255.,39./255.,232./255.,23./255.,173./255.,53./255.,45./255.,54};
     vector<float> blues={255./255.,30./255.,62./255.,139./255.,41./255.,230./255.,54./255.,130./255.,129./255.,71./255.,178./255.,179./255.,101./255.,150./255.,49./255.,139./255.,87./255.,22./255.,60./255.,21./255.,39./255.,23};
@@ -22,12 +25,40 @@ OfflineFactory::OfflineFactory(TString inFileName, TString outFileName, bool isD
     colors[12]= 30;
     colors[0]=28;
     //cout<<2<<endl;
+    */
+    colors.push_back(800); colors.push_back(400-10); colors.push_back(632-2); colors.push_back(880+1); 
+    colors.push_back(432); colors.push_back(600-6); colors.push_back(416); colors.push_back(920); 
+    colors.push_back(800-7); colors.push_back(400); colors.push_back(840); colors.push_back(632); 
+    colors.push_back(860); colors.push_back(400-2); colors.push_back(416+2); colors.push_back(880); 
+    colors.push_back(800-1); colors.push_back(632-10); colors.push_back(632+3); colors.push_back(616-1); 
+    colors.push_back(432+1); colors.push_back(600-5); colors.push_back(416-7); colors.push_back(920+1); 
+    colors.push_back(800+6); colors.push_back(400-9); colors.push_back(840-5); colors.push_back(632-7); 
+    colors.push_back(860-2); colors.push_back(400-8); colors.push_back(416-3); colors.push_back(880-1); 
+    colors.push_back(800-5); colors.push_back(820-9); colors.push_back(632-6); colors.push_back(616-9);
+    colors.push_back(432-10); colors.push_back(600-9); colors.push_back(416-9); colors.push_back(920+2); 
+    colors.push_back(800+1); colors.push_back(400+1); colors.push_back(840-4); colors.push_back(632-9); 
+    colors.push_back(860-4); colors.push_back(400+3); colors.push_back(416-6); colors.push_back(880-4); 
+    colors.push_back(800-9); colors.push_back(600-2); colors.push_back(632-3); colors.push_back(616-10); 
+    colors.push_back(432-8); colors.push_back(600-10); colors.push_back(416-10); colors.push_back(1);
+    colors.push_back(800-4); colors.push_back(400-6); colors.push_back(840-8); colors.push_back(632+1); 
+    colors.push_back(860-9); colors.push_back(400-5); colors.push_back(416-8); colors.push_back(880-8); 
 };
 
-OfflineFactory::OfflineFactory(TString inFileName, TString outFileName, bool isDRS) {
-    OfflineFactory(inFileName,outFileName,isDRS,-1,-1);
+OfflineFactory::OfflineFactory(TString inFileName, TString outFileName, TString appendToTag, bool isDRS) {
+    OfflineFactory(inFileName,outFileName,appendToTag,isDRS,-1,-1);
 };
-
+void OfflineFactory::setFriendFile(TString friendFileNameIn){
+    friendFileName = friendFileNameIn;
+}
+void OfflineFactory::addFriendTree(){
+    inTree->AddFriend("matchedTrigEvents",friendFileName);
+    inTree->SetBranchAddress("clockCount", &tClockCount);
+    inTree->SetBranchAddress("time", &tTime);
+    inTree->SetBranchAddress("startTime", &tStartTime);
+    inTree->SetBranchAddress("triggerNumber", &tTriggerNumber);
+    inTree->SetBranchAddress("timeDiff", &tTimeDiff);
+    inTree->SetBranchAddress("matchingTimeCut", &tMatchingTimeCut);
+}
 
 // OfflineFactory::~OfflineFactory() {
 //     if (inFile) inFile->Close();
@@ -121,8 +152,7 @@ void OfflineFactory::loadJsonConfig(string configFileName){
 //Validate json input
 void OfflineFactory::validateInput(){
     //HACKY check if tag has been added
-    TString version = "shorttagplaceholder";
-    if(version.Contains("placeholder")) throw runtime_error("This macro was compiled incorrectly. Please compile this macro using compile.sh");
+    if(versionShort.Contains("placeholder")) throw runtime_error("This macro was compiled incorrectly. Please compile this macro using compile.sh");
     if (chanMap.size()) 
     {
 	if (chanMap.size() != numChan) throw length_error("Number of channels ("+std::to_string(numChan)+") does not match channel map length: "+std::to_string(chanMap.size()));
@@ -226,6 +256,10 @@ void OfflineFactory::prepareOutBranches(){
     outTree->Branch("triggerMajority",&outputTreeContents.v_triggerMajority);
     outTree->Branch("triggerLogic",&outputTreeContents.v_triggerLogic);
     outTree->Branch("chan",&outputTreeContents.v_chan);
+    outTree->Branch("row",&outputTreeContents.v_row);
+    outTree->Branch("column",&outputTreeContents.v_column);
+    outTree->Branch("layer",&outputTreeContents.v_layer);
+    outTree->Branch("type",&outputTreeContents.v_type);
     outTree->Branch("board",&outputTreeContents.v_board);
     outTree->Branch("height",&outputTreeContents.v_height);
     outTree->Branch("area",&outputTreeContents.v_area);
@@ -236,6 +270,13 @@ void OfflineFactory::prepareOutBranches(){
     outTree->Branch("duration",&outputTreeContents.v_duration);
     outTree->Branch("delay",&outputTreeContents.v_delay);
     outTree->Branch("max",&outputTreeContents.v_max);
+
+    outTree->Branch("tClockCount", &outputTreeContents.tClockCount);
+    outTree->Branch("tTime", &outputTreeContents.tTime);
+    outTree->Branch("tStartTime", &outputTreeContents.tStartTime);
+    outTree->Branch("tTriggerNumber", &outputTreeContents.tTriggerNumber);
+    outTree->Branch("tTimeDiff", &outputTreeContents.tTimeDiff);
+    outTree->Branch("tMatchingTimeCut", &outputTreeContents.tMatchingTimeCut);
 }
 //Clear vectors and reset 
 void OfflineFactory::resetOutBranches(){
@@ -245,6 +286,10 @@ void OfflineFactory::resetOutBranches(){
     outputTreeContents.v_triggerMajority.clear();
     outputTreeContents.v_triggerLogic.clear();
     outputTreeContents.v_chan.clear();
+    outputTreeContents.v_row.clear();
+    outputTreeContents.v_column.clear();
+    outputTreeContents.v_layer.clear();
+    outputTreeContents.v_type.clear();
     outputTreeContents.v_board.clear();
     outputTreeContents.v_height.clear();
     outputTreeContents.v_area.clear();
@@ -314,7 +359,7 @@ void OfflineFactory::makeOutputTree(){
 }
 
 //Plots cosmetic changes
-void OfflineFactory::h1cosmetic(TH1D* hist,int ic, vector<int>colors){
+void OfflineFactory::h1cosmetic(TH1D* hist,int ic, vector<int> & colors){
     hist->SetLineWidth(2);
     hist->SetLineColor(colors[ic]);
     hist->SetStats(0);
@@ -448,15 +493,27 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
         int row= chanMap[ic][1];
         int layer= chanMap[ic][2];
         int type= chanMap[ic][3];
-        int colorIndex = 4-2*(row-1)+column-1+6*(layer-1);
-
-        if(type==1) colorIndex = layer; //slabs: 0-3
+        int colorIndex = ic;
+        if(ic>63) colorIndex=ic-64;
+        //int colorIndex = 4-2*(row-1)+column-1+6*(layer+1);
+        cout<<"("<<column<<","<<row<<","<<layer<<") , Color="<<colorIndex<<endl;
+        
+        //if(type==1) colorIndex = layer; //slabs: 0-3
         if(type==2) colorIndex = 4 + 3*(layer-1) + (column+1); //sheets
         h1cosmetic(wavesShifted[ic],colorIndex,colors);
+        cout<<"("<<column<<","<<row<<","<<layer<<") , Color="<<colorIndex<<endl;
         if(type==1) wavesShifted[ic]->SetLineStyle(3);
         if(type==2) wavesShifted[ic]->SetLineStyle(7);
         if(i==0) wavesShifted[ic]->Draw("hist");
         else wavesShifted[ic]->Draw("hist same");
+        
+        TLatex tlabelpeak;
+        if(wavesShifted[ic]->GetMaximum()>50){
+            tlabelpeak.SetTextSize(0.05);
+            tlabelpeak.SetTextFont(42);
+            tlabelpeak.DrawLatexNDC(wavesShifted[ic]->GetBinWidth(1)*wavesShifted[ic]->GetMaximumBin(),wavesShifted[ic]->GetMaximum()*1.1,Form("%i",ic));
+        }
+            
         leg.AddEntry(wavesShifted[ic],Form("Channel %i",ic),"l");
         wavesShifted[ic]->SetAxisRange(timeRange[0],timeRange[1],"X");
 
@@ -472,12 +529,15 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
     } //channel loop close
     //cout<<7<<endl;
      
-    float boxw= 0.025;
+    float boxw= 0.0438;
     float boxh=0.0438;
-    float barw=0.03;
-    float barh=0.53;
-    vector<float> xstart = {0.64,0.73,0.82,0.91};
-    vector<float> ystart= {0.798,0.851,0.904,0.957};
+    float barw=0.017;
+    float barh=0.017;
+    //    float barw=0.017;
+    //    float barh=0.017;
+    vector<float> xstart = {0.63,0.72,0.81,0.90};
+    //vector<float> ystart= {0.798,0.851,0.904,0.957};
+    vector<float> ystart= {0.79,0.824,0.858,0.8662};
 
     float sheet_width = 0.006;
     float sheet_offset= 0.013+sheet_width/2.;
@@ -494,22 +554,22 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
     float slab_height = vert_sheet_length-0.02;
     float slab_ystart = ystart_sidesheets+0.01;
 
-    TPave L1frame(xstart[0]-0.006,ystart[0]-0.01,xstart[0]+barw+boxw+0.006,ystart[2]+boxh+0.01,1,"NDC");
+    TPave L1frame(xstart[0]-0.006,ystart[0]-0.01,xstart[0]+barw+boxw+0.006,ystart[3]+boxh+0.01,1,"NDC");
     L1frame.SetFillColor(0);
     L1frame.SetLineWidth(2);
     L1frame.Draw();
 
-    TPave L2frame(xstart[1]-0.006,ystart[0]-0.01,xstart[1]+barw+boxw+0.006,ystart[2]+boxh+0.01,1,"NDC");
+    TPave L2frame(xstart[1]-0.006,ystart[0]-0.01,xstart[1]+barw+boxw+0.006,ystart[3]+boxh+0.01,1,"NDC");
     L2frame.SetFillColor(0);
     L2frame.SetLineWidth(2);
     L2frame.Draw();
 
-    TPave L3frame(xstart[2]-0.006,ystart[0]-0.01,xstart[2]+barw+boxw+0.006,ystart[2]+boxh+0.01,1,"NDC");
+    TPave L3frame(xstart[2]-0.006,ystart[0]-0.01,xstart[2]+barw+boxw+0.006,ystart[3]+boxh+0.01,1,"NDC");
     L3frame.SetFillColor(0);
     L3frame.SetLineWidth(2);
     L3frame.Draw();
     
-    TPave L4frame(xstart[3]-0.006,ystart[0]-0.01,xstart[3]+barw+boxw+0.006,ystart[2]+boxh+0.01,1,"NDC");
+    TPave L4frame(xstart[3]-0.006,ystart[0]-0.01,xstart[3]+barw+boxw+0.006,ystart[3]+boxh+0.01,1,"NDC");
     L4frame.SetFillColor(0);
     L4frame.SetLineWidth(2);
     L4frame.Draw();
@@ -536,22 +596,21 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
         int layer= chanMap[ic][2];
         int type= chanMap[ic][3];
 
+        int colorIndex=ic;
+        if(ic>63) colorIndex=ic-64;
+        /*
         int colorIndex = 4-2*(row-1)+column-1+6*(layer-1);
         if(type==1) colorIndex = layer; //slabs: 0-3
         else if(type==2) colorIndex = 4 + 3*(layer-1) + (column+1); //sheets
+        */
         TPave * pave;
-        if(type==0){
-            float xpos,ypos;
-            ypos = slab_ystart;
-            xpos = slab_xstart[layer];
-        }
         if (type==1){
             float xpos,ypos;
             ypos = slab_ystart;
             xpos = slab_xstart[layer];
             pave = new TPave(xpos,ypos,xpos+slab_width,ypos+slab_height,0,"NDC");
             pave->SetFillColor(colors[colorIndex]);
-            pave->Draw();
+            //pave->Draw();
         }
 
         else if (type==2){
@@ -561,33 +620,35 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
                 xpos= xstart_leftsheets[layer-1];
                 if(column>0) xpos += sheet_left_to_right;
                 ypos = ystart_sidesheets;
-                pave = new TPave(xpos,ypos,xpos+sheet_width,ypos+vert_sheet_length,0,"NDC");
+                //pave = new TPave(xpos,ypos,xpos+sheet_width,ypos+vert_sheet_length,0,"NDC");
             }
             else{
                 xpos = xstart_topsheets[layer-1];
                 ypos = ystart_topsheets;
-                pave = new TPave(xpos,ypos,xpos+hori_sheet_length,ypos+1.4/0.8*sheet_width,0,"NDC");
+                //pave = new TPave(xpos,ypos,xpos+hori_sheet_length,ypos+1.4/0.8*sheet_width,0,"NDC");
             }
 
             pave->SetFillColor(colors[colorIndex]);
-            pave->Draw();
+            //pave->Draw();
 
         }
         else if(type==0){
-            float xpos = xstart[layer-1]+(column-1)*barw;
-            float ypos= ystart[row-1];
-            pave = new TPave(xpos,ypos,xpos+boxw,ypos+boxh,0,"NDC");
+            //cout<<"Layer="<<layer<<" , Column="<<column<<" , Row="<<row<<endl;
+            float xpos = xstart[layer]+((column)*0.017)-0.002;
+            float ypos = ystart[row]-0.005;
+            if(row==3) ypos = ystart[row-1]+0.03;
+            pave = new TPave(xpos,ypos,xpos+0.015,ypos+0.03,0,"NDC");
             pave->SetFillColor(colors[colorIndex]);
             pave->Draw();
         }
-
+        
         tla.SetTextColor(colors[colorIndex]);
-        tla.SetTextSize(0.03);
-        tla.DrawLatexNDC(headerX,currentYpos+0.15,Form("Channel %i, V_{max} = %0.0f, N_{pulses}= %i",ic,originalMaxHeights[ic],(int)boundsShifted[ic].size()));
+        tla.SetTextSize(0.02);
+        tla.DrawLatexNDC(headerX,currentYpos,Form("Channel %i, V_{max} = %0.0f, N_{pulses}= %i",ic,originalMaxHeights[ic],(int)boundsShifted[ic].size()));
         tla.SetTextColor(kBlack);
-        currentYpos=currentYpos-(height*0.7);
+        currentYpos=currentYpos-(height*0.4);
         //currentYpos-=height;
-        tla.SetTextSize(0.03);
+        tla.SetTextSize(0.02);
         
         for(int ip=0;ip<boundsShifted[ic].size();ip++){
             TString row;
@@ -650,6 +711,7 @@ void OfflineFactory::displayEvents(std::vector<int> & eventsToDisplay,TString di
 void OfflineFactory::readWaveData(){
     validateInput();
     inTree = (TTree*)inFile->Get("Events"); 
+    if (friendFileName != "") addFriendTree();
     loadBranches();
     // int maxEvents = 1;
     int maxEvents = inTree->GetEntries();
@@ -661,10 +723,15 @@ void OfflineFactory::readWaveData(){
 
 	resetOutBranches();	
         //Process each event
-        //Notes: Remove the inTree and move progress bar into the loop
         vector<vector<pair<float,float> > > allPulseBounds;
 	outputTreeContents.event=i;	
         allPulseBounds = readWaveDataPerEvent(i);
+	outputTreeContents.tClockCount = tClockCount;
+	outputTreeContents.tTime = tTime;
+	outputTreeContents.tStartTime = tStartTime;
+	outputTreeContents.tTriggerNumber = tTriggerNumber;
+	outputTreeContents.tTimeDiff = tTimeDiff;
+	outputTreeContents.tMatchingTimeCut = tMatchingTimeCut;
         outTree->Fill();
 	//Totally necessary progress bar
 	float progress = 1.0*i/maxEvents; 
@@ -848,9 +915,11 @@ void OfflineFactory::loadWavesDRS(){
 }
 void OfflineFactory::writeVersion(){
     //This is very hacky but it works
-    string version = "longtagplaceholder";
-    cout<<"Git tag is "<<version<<endl;
+    cout<<"Git tag is "<<"longtagplaceholder"<<endl;
     TNamed v;
-    v = TNamed("tag",version);
+    v = TNamed("tag","longtagplaceholder");
     v.Write();
+}
+TString OfflineFactory::getVersion(){
+    return versionLong;
 }

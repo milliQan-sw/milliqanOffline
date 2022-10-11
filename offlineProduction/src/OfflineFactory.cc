@@ -495,13 +495,8 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
         int type= chanMap[ic][3];
         int colorIndex = ic;
         if(ic>63) colorIndex=ic-64;
-        //int colorIndex = 4-2*(row-1)+column-1+6*(layer+1);
-        cout<<"("<<column<<","<<row<<","<<layer<<") , Color="<<colorIndex<<endl;
-        
-        //if(type==1) colorIndex = layer; //slabs: 0-3
-        if(type==2) colorIndex = 4 + 3*(layer-1) + (column+1); //sheets
+        //cout<<"Channel,ic,column,row,layer,type: "<<i<<" "<<ic<<" "<<column<<" "<<row<<" "<<layer<<" "<<type<<endl;
         h1cosmetic(wavesShifted[ic],colorIndex,colors);
-        cout<<"("<<column<<","<<row<<","<<layer<<") , Color="<<colorIndex<<endl;
         if(type==1) wavesShifted[ic]->SetLineStyle(3);
         if(type==2) wavesShifted[ic]->SetLineStyle(7);
         if(i==0) wavesShifted[ic]->Draw("hist");
@@ -513,10 +508,10 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
             tlabelpeak.SetTextFont(42);
             tlabelpeak.DrawLatexNDC(wavesShifted[ic]->GetBinWidth(1)*wavesShifted[ic]->GetMaximumBin(),wavesShifted[ic]->GetMaximum()*1.1,Form("%i",ic));
         }
-            
+        
         leg.AddEntry(wavesShifted[ic],Form("Channel %i",ic),"l");
         wavesShifted[ic]->SetAxisRange(timeRange[0],timeRange[1],"X");
-
+        
         //Show boundaries of pulse
         TLine line; line.SetLineWidth(2); line.SetLineStyle(3);line.SetLineColor(colors[colorIndex]);
         for(uint ip=0; ip<boundsShifted[ic].size();ip++){
@@ -542,13 +537,12 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
     float sheet_width = 0.006;
     float sheet_offset= 0.013+sheet_width/2.;
     float sheet_left_to_right = 4*0.006+barw+boxw+0.002;
-    vector<float> xstart_leftsheets = {xstart[0]-sheet_offset,xstart[1]-sheet_offset,xstart[2]-sheet_offset,xstart[3]-sheet_offset}; 
-    vector<float> xstart_topsheets = {xstart[0]-0.002,xstart[1]-0.002,xstart[2]-0.002,xstart[3]-0.002};
+    vector<float> xstart_leftsheets = {xstart[0]-sheet_offset,xstart[1]-sheet_offset,xstart[2]-sheet_offset,xstart[3]-sheet_offset,xstart[3]+barw+boxw+0.009}; 
+    vector<float> xstart_topsheets = {xstart[0]-0.002,xstart[1]-0.002,xstart[2]-0.002,xstart[3]-0.002,xstart[4]-0.002};
     float ystart_topsheets = ystart[2]+boxh+0.017;
     float ystart_sidesheets = ystart[0]-0.006;
     float vert_sheet_length = ystart[2]-ystart[0]+boxh+0.01;
     float hori_sheet_length= barw+boxw+0.004;
-    
     float slab_width = 0.015;
     vector<float> slab_xstart = {xstart_leftsheets[0]-0.008-slab_width,xstart_leftsheets[1]-0.008-slab_width,xstart_leftsheets[2]-0.008-slab_width,xstart_leftsheets[3]-0.008-slab_width,xstart_leftsheets[3]+0.01+sheet_left_to_right}; 
     float slab_height = vert_sheet_length-0.02;
@@ -598,12 +592,9 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
 
         int colorIndex=ic;
         if(ic>63) colorIndex=ic-64;
-        /*
-        int colorIndex = 4-2*(row-1)+column-1+6*(layer-1);
-        if(type==1) colorIndex = layer; //slabs: 0-3
-        else if(type==2) colorIndex = 4 + 3*(layer-1) + (column+1); //sheets
-        */
+        
         TPave * pave;
+        /*
         if (type==1){
             float xpos,ypos;
             ypos = slab_ystart;
@@ -613,7 +604,8 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
             //pave->Draw();
         }
 
-        else if (type==2){
+        cout<<"pave: i,ic,column,row,layer,type: Draw "<<i<<" "<<ic<<" "<<column<<" "<<row<<" "<<layer<<" "<<type<<" "<<colorIndex<<endl;
+        if (type==2){
             float xpos,ypos;
 
             if (column!=0){
@@ -632,19 +624,78 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
             //pave->Draw();
 
         }
-        else if(type==0){
-            //cout<<"Layer="<<layer<<" , Column="<<column<<" , Row="<<row<<endl;
+        */
+        if(type==0){
+            //cout<<"Column="<<column<<" , Row="<<row<<" layer="<<layer<<" type="<<type<<" colorindex="<<colorIndex<<endl;
             float xpos = xstart[layer]+((column)*0.017)-0.002;
             float ypos = ystart[row]-0.005;
             if(row==3) ypos = ystart[row-1]+0.03;
             pave = new TPave(xpos,ypos,xpos+0.015,ypos+0.03,0,"NDC");
             pave->SetFillColor(colors[colorIndex]);
+            pave->SetFillColor(colors[colorIndex]);
+            pave->Draw();
+        }
+        //Draw panels
+        if(column==0 && row==0 && layer==-1 && type==1){
+            pave = new TPave(xstart_leftsheets[0],ystart_sidesheets,xstart_leftsheets[0]+(sheet_width*1.0),ystart_sidesheets+(vert_sheet_length),0,"NDC");
+            pave->SetFillColor(colors[colorIndex]);
+            //cout<<"column,row,layer,type: Draw "<<column<<" "<<row<<" "<<layer<<" "<<type<<endl;
+            pave->Draw();
+        }
+        if(column==0 && row==0 && layer==4 && type==1){
+            pave = new TPave(xstart_leftsheets[4],ystart_sidesheets,xstart_leftsheets[4]+(sheet_width*1.0),ystart_sidesheets+vert_sheet_length,0,"NDC");
+            pave->SetFillColor(colors[colorIndex]);
+            pave->Draw();
+        }
+        if(column==0 && row==4 && layer==0 && type==2){
+            pave = new TPave(xstart[0]-0.006,ystart[3]+boxh+0.015,xstart[1]+barw+boxw+0.006,ystart[3]+boxh+0.015+(sheet_width*2.0),0,"NDC");
+            pave->SetFillColor(colors[colorIndex]);
+            pave->Draw();
+        }
+        if(column==0 && row==4 && layer==2 && type==2){
+            pave = new TPave(xstart[2]-0.006,ystart[3]+boxh+0.015,xstart[3]+barw+boxw+0.006,ystart[3]+boxh+0.015+(sheet_width*2.0),0,"NDC");
+            pave->SetFillColor(colors[colorIndex]);
             pave->Draw();
         }
         
+        if(column==-1 && row==0 && layer==2 && type==2){
+            pave = new TPave(xstart[2]-0.006,ystart[3]+boxh+0.015+(sheet_width*2.5),xstart[3]+barw+boxw+0.006,ystart[3]+boxh+0.015+(sheet_width*4.5),1,"NDC");
+            pave->SetFillColor(colors[colorIndex]);
+            pave->SetFillStyle(3154);
+            pave->SetFillColor(colors[colorIndex]);
+            pave->Draw();
+        }
+        
+        if(column==4 && row==0 && layer==2 && type==2){
+            pave = new TPave(xstart[2]-0.006,ystart[3]+boxh+0.015+(sheet_width*5.0),xstart[3]+barw+boxw+0.006,ystart[3]+boxh+0.015+(sheet_width*7.0),1,"NDC");
+            pave->SetFillColor(colors[colorIndex]);
+            pave->SetFillStyle(3145);
+            pave->SetFillColor(colors[colorIndex]);
+            pave->Draw();
+        }
+        
+        if(column==-1 && row==0 && layer==0 && type==2){
+            pave = new TPave(xstart[0]-0.006,ystart[3]+boxh+0.015+(sheet_width*2.5),xstart[1]+barw+boxw+0.006,ystart[3]+boxh+0.015+(sheet_width*4.5),1,"NDC");
+            pave->SetFillColor(colors[colorIndex]);
+            pave->SetFillStyle(3154);
+            pave->SetFillColor(colors[colorIndex]);
+            pave->Draw();
+        }
+        
+        if(column==4 && row==0 && layer==0 && type==2){
+            pave = new TPave(xstart[0]-0.006,ystart[3]+boxh+0.015+(sheet_width*5.0),xstart[1]+barw+boxw+0.006,ystart[3]+boxh+0.015+(sheet_width*7.0),1,"NDC");
+            pave->SetFillColor(colors[colorIndex]);
+            pave->SetFillStyle(3145);
+            pave->SetFillColor(colors[colorIndex]);
+            pave->Draw();
+        }
+        
+        //cout<<"pave: i,ic,column,row,layer,type: Draw "<<i<<" "<<ic<<" "<<column<<" "<<row<<" "<<layer<<" "<<type<<" "<<colorIndex<<endl;
+        
         tla.SetTextColor(colors[colorIndex]);
-        tla.SetTextSize(0.02);
-        tla.DrawLatexNDC(headerX,currentYpos,Form("Channel %i, V_{max} = %0.0f, N_{pulses}= %i",ic,originalMaxHeights[ic],(int)boundsShifted[ic].size()));
+        tla.SetTextSize(0.015);
+        //tla.DrawLatexNDC(headerX,currentYpos,Form("Channel %i, V_{max} = %0.0f, N_{pulses}= %i",ic,originalMaxHeights[ic],(int)boundsShifted[ic].size()));
+        tla.DrawLatexNDC(headerX,currentYpos,Form("Channel %i, V_{max} = %0.0f, N_{pulses}= %i (%i,%i,%i,%i)",ic,originalMaxHeights[ic],(int)boundsShifted[ic].size(),column,row,layer,type));
         tla.SetTextColor(kBlack);
         currentYpos=currentYpos-(height*0.4);
         //currentYpos-=height;

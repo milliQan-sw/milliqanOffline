@@ -26,7 +26,7 @@ int main(int argc, char **argv){
     //Read input and output files (necessary arguments)
     bool versionMode = cmdOptionExists(argv, argv + argc, "-v");
     if (versionMode){
-        OfflineFactory offlineFactory = OfflineFactory("","",false,-1,-1);
+        OfflineFactory offlineFactory = OfflineFactory("","","",false,-1,-1);
         std::cout << offlineFactory.getVersion() << std::endl;
         return 0;
     }

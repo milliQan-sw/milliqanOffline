@@ -46,7 +46,7 @@ From: centos:centos7
     echo "Compiled MilliDAQ shared library"
     cd ../milliqanOffline
     #cd ../
-    #git checkout -b compilationUpdates origin/compilationUpdates
+    #git checkout -b singularity origin/singularity
     echo $PWD
     bash compile.sh test.exe
 

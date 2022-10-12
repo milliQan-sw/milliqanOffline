@@ -78,24 +78,24 @@ def transferFiles(source,destinations,logFile,force=False):
                 transfer = os.system(command)
                 if transfer != 0:
                     os.system("echo 'Transfer of {0} failed' >> {1}".format(inputFile, logFile))
-                    continue
-                os.system("echo '\t{0}:\t {1:.2f} MB' >> {2}".format(inputFile, sizeInMB, logFile))
+                else:
+                    os.system("echo '\t{0}:\t {1:.2f} MB' >> {2}".format(inputFile, sizeInMB, logFile))
 
-                #Add entry to database
-                milliQanRawDataset = {}
-                milliQanRawDataset["_id"] = _id
-                milliQanRawDataset["run"] = runNumber
-                milliQanRawDataset["file"] = fileNumber
-                milliQanRawDataset["site"] = site
-                milliQanRawDataset["type"] = dataType
-                milliQanRawDataset["location"] = os.path.join(destination.split(":")[-1],inputFile.split("/")[-1])
-                updateMongoDB(milliQanRawDataset, db, replace = entryInMongo)
+                    #Add entry to database
+                    milliQanRawDataset = {}
+                    milliQanRawDataset["_id"] = _id
+                    milliQanRawDataset["run"] = runNumber
+                    milliQanRawDataset["file"] = fileNumber
+                    milliQanRawDataset["site"] = site
+                    milliQanRawDataset["type"] = dataType
+                    milliQanRawDataset["location"] = os.path.join(destination.split(":")[-1],inputFile.split("/")[-1])
+                    updateMongoDB(milliQanRawDataset, db, replace = entryInMongo)
 
     os.system("echo 'Transferred {0:.2f} MB in {1} file(s).' >> {2}".format(mbytesTransferred, nTransferred, logFile))
 
 if __name__ == "__main__":
-    source = "/home/milliqan/totransfer/"
+    source = "/home/milliqan/data/"
     logFile = "/home/milliqan/MilliDAQ_FileTransfers.log"
 
-    destinations = {"UCSB":"milliqan@cms26.physics.ucsb.edu:/net/cms26/cms26r0/milliqan/test_transfer"}
-    transferFiles(source,destinations,logFile,force=True)
+    destinations = {"UCSB":"milliqan@cms26.physics.ucsb.edu:/net/cms26/cms26r0/milliqan/Run3/", "OSU":"milliqan@cms-t3.mps.ohio-state.edu:/data/users/milliqan/run3/"}
+    transferFiles(source,destinations,logFile,force=False)

@@ -16,8 +16,8 @@ echo 10000 > /proc/sys/user/max_user_namespaces
 
 Creating Sandbox:
 
-Download the setup script only
-wget <script name>
+Download the setup script createContainer.sh
+wget https://github.com/carriganm95/milliqanOffline/blob/singularity/singularity/createContainer.sh
 
 Run the script to create a sandbox container
 bash createContainer.sh 

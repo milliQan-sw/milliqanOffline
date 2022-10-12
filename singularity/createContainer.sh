@@ -21,7 +21,7 @@ fi
 if [ ! -e "mQContainer.def" ]
   then
     echo "Downloading mQContainer.def file"
-    wget https://github.com/carriganm95/milliqanOffline/blob/singularity/singularity/mQContainer.def
+    wget https://raw.githubusercontent.com/carriganm95/milliqanOffline/singularity/singularity/mQContainer.def
 fi
 
 singularity build --fakeroot --sandbox $container mQContainer.def

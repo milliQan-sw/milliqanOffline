@@ -20,7 +20,7 @@ sed -i "s/longtagplaceholder/$LONG_TAG/g" src/OfflineFactory_temporary_for_compi
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 source ${SCRIPT_DIR}/setup.sh
 
-g++ -o $NAME src/runOfflineFactory.cc ./src/jsoncpp.cpp ./src/OfflineFactory_temporary_for_compile.cc ${MILLIDAQDIR}/src/ConfigurationReader.cc ${MILLIDAQDIR}/libMilliDAQ.so -lpython2.7 `root-config --cflags --glibs` -Wno-narrowing -I$SCRIPT_DIR -I$MILLIDAQDIR # same as above but with correct local file path
+g++ -o $NAME src/runOfflineFactory.cc ./src/jsoncpp.cpp ./src/OfflineFactory_temporary_for_compile.cc ${MILLIDAQDIR}/src/ConfigurationReader.cc ${MILLIDAQDIR}/libMilliDAQ.so -lpython2.7 `root-config --cflags --glibs` -Wno-narrowing -I$SCRIPT_DIR -I$MILLIDAQDIR -I$ROOT_INCLUDE_PATH # same as above but with correct local file path
 
 if [ $? -eq 0 ]; then
     echo "Compiled macro $NAME"

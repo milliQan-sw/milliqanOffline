@@ -77,7 +77,7 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
         if drs:
             configurations = [offlineDir+"/configuration/pulseFinding/pulseFindingTest.json"]
         else:
-            configurations = [offlineDir+"/configuration/chanMaps/fullSuperModuleMapReversedColumns.json",offlineDir+"/configuration/pulseFinding/pulseFindingTest.json"]
+            configurations = [offlineDir+"/configuration/chanMaps/fullSuperModuleMapReversedColumns.json",offlineDir+"/configuration/pulseFinding/pulseFindingTest.json",offlineDir+"/configuration/calibrations/firstSupermodulesCalibration.json"]
 
     if "{" in configurations and "}" in configurations:
         configurationsJSONString = configurations
@@ -142,7 +142,7 @@ def getId(runNumber,fileNumber,tag,inputType,site):
     _id = "{}_{}_{}_{}_{}".format(runNumber,fileNumber,tag,inputType,site)
     return _id
 
-def publishDataset(configurationsJSON,inputFile,outputFile,fileNumber,runNumber,tag,site=site,inputType="MilliQan",force_publish=False,db=None):
+def publishDataset(configurationsJSON,inputFile,outputFile,fileNumber,runNumber,tag,site=site,inputType="MilliQan",force_publish=False,db=None,quiet=False):
     _id = getId(runNumber,fileNumber,tag,inputType,site)
     milliQanOfflineDataset = configurationsJSON
     milliQanOfflineDataset["_id"] = "{}_{}_{}_{}_{}".format(runNumber,fileNumber,tag,inputType,site)
@@ -167,7 +167,8 @@ def publishDataset(configurationsJSON,inputFile,outputFile,fileNumber,runNumber,
             exit()
     else:
         db.milliQanOfflineDatasets.insert_one(milliQanOfflineDataset)
-        print ("Added new entry in database")
+        if not quiet:
+            print ("Added new entry in database")
 
 if __name__ == "__main__":
     valid = runOfflineFactory(**vars(parse_args()))

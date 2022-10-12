@@ -250,11 +250,18 @@ void OfflineFactory::process(TString inFileName,TString outFileName,int runNumbe
 }
 //Declare branches for offline tree output
 void OfflineFactory::prepareOutBranches(){
+    //Meta
+    outTree->Branch("event",&outputTreeContents.event);
+    outTree->Branch("runNumber",&outputTreeContents.runNumber);
+    outTree->Branch("fileNumber",&outputTreeContents.fileNumber);
     // May need to change for DRS input
     outTree->Branch("triggerThreshold",&outputTreeContents.v_triggerThresholds);
     outTree->Branch("triggerEnable",&outputTreeContents.v_triggerEnable);
     outTree->Branch("triggerMajority",&outputTreeContents.v_triggerMajority);
     outTree->Branch("triggerLogic",&outputTreeContents.v_triggerLogic);
+    outTree->Branch("sidebandMean",&outputTreeContents.v_sideband_mean);
+    outTree->Branch("sidebandRMS",&outputTreeContents.v_sideband_RMS);
+    outTree->Branch("maxThreeConsec",&outputTreeContents.v_max_threeConsec);
     outTree->Branch("chan",&outputTreeContents.v_chan);
     outTree->Branch("row",&outputTreeContents.v_row);
     outTree->Branch("column",&outputTreeContents.v_column);
@@ -285,6 +292,9 @@ void OfflineFactory::resetOutBranches(){
     outputTreeContents.v_triggerEnable.clear();
     outputTreeContents.v_triggerMajority.clear();
     outputTreeContents.v_triggerLogic.clear();
+    outputTreeContents.v_sideband_mean.clear();
+    outputTreeContents.v_sideband_RMS.clear();
+    outputTreeContents.v_max_threeConsec.clear();
     outputTreeContents.v_chan.clear();
     outputTreeContents.v_row.clear();
     outputTreeContents.v_column.clear();
@@ -309,7 +319,7 @@ void OfflineFactory::readMetaData(){
     if (!isDRS){
 	metadata->SetBranchAddress("configuration", &cfg);
 	metadata->GetEntry(0);
-	//Currently run and fill set to zero - I think should be given as input
+
 	outputTreeContents.runNumber = runNumber;
 	outputTreeContents.fileNumber = fileNumber;
 	int numBoards = cfg->digitizers.size();
@@ -604,6 +614,8 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
         else if(type==2) colorIndex = 4 + 3*(layer-1) + (column+1); //sheets
         */
         TPave * pave;
+        cout<<"Channel,ic,column,row,layer,type: "<<i<<" "<<ic<<" "<<column<<" "<<row<<" "<<layer<<" "<<type<<endl;
+        
         if (type==1){
             float xpos,ypos;
             ypos = slab_ystart;
@@ -769,13 +781,36 @@ void OfflineFactory::prepareWave(int ic){
 	waves[ic]->SetBinContent(ibin,waves[ic]->GetBinContent(ibin)-pedestals[ic]);
     }
     //Need to add sideband measurements and subtraction here
+    pair<float,float> mean_rms = measureSideband(ic);
+    outputTreeContents.v_sideband_mean.push_back(mean_rms.first);
+    outputTreeContents.v_sideband_RMS.push_back(mean_rms.second);
+}
+//Measure mean and RMS of samples in range from start to end (in ns)
+pair<float,float> OfflineFactory::measureSideband(int ic){
+
+    float sum_sb=0.;
+    float sum2_sb=0.;
+    int startbin = waves[ic]->FindBin(sideband_range[0]);
+    int endbin = waves[ic]->FindBin(sideband_range[1]);
+    int n_sb = 0;
+    for(int ibin=startbin; ibin <= endbin; ibin++){
+	sum_sb = sum_sb + waves[ic]->GetBinContent(ibin);
+	sum2_sb = sum2_sb + pow(waves[ic]->GetBinContent(ibin),2);
+	n_sb++;
+    }
+    if(n_sb == 0) n_sb = 1.;
+    float mean = sum_sb/n_sb;
+    float RMS =pow( sum2_sb/n_sb - pow(mean,2), 0.5);
+
+    return make_pair(mean,RMS);
+
 }
 vector< pair<float,float> > OfflineFactory::findPulses(int ic){
 
     vector<pair<float,float> > bounds;
-    //float tstart = sideband_range[1]+1;
-    //int istart = waves[ic]->FindBin(tstart);
-    int istart = 1;
+    float tstart = sideband_range[1]+1;
+    int istart = waves[ic]->FindBin(tstart);
+    // int istart = 1;
     bool inpulse = false;
     int nover = 0;
     int nunder = 0;

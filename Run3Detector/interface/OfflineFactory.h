@@ -161,6 +161,7 @@ class OfflineFactory {
 	void prepareOutBranches();
 	void resetOutBranches();
 	void prepareWave(int);
+	pair<float,float> measureSideband(int);
 	vector<pair<float,float>> findPulses(int);
 	vector<pair<float,float>> processChannel(int);
 	void loadBranches();

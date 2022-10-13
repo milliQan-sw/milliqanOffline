@@ -34,12 +34,14 @@ def checkMongoDB(db,_id):
     #Check for existing entry 
     for x in (db.milliQanRawDatasets.find({"_id" : _id})):
         nX +=1
-    return nX
+        currentLocation = x["location"]
+
+    return nX, currentLocation
 
 def checkFileAtDest(inputFile,destination):
     host = destination.split(":")[0]
     filePath = os.path.join(destination.split(":")[-1],inputFile.split("/")[-1])
-    fileAtDest = os.system('ssh -q {0} [[ -f {1} ]]'.format(host,filePath)) == 0
+    fileAtDest = os.system('ssh -q {0} [ -f {1} ]'.format(host,filePath)) == 0
     #To be implemented!
     return fileAtDest
 
@@ -68,7 +70,9 @@ def transferFiles(source,destinations,logFile,force=False):
                 fileNumber = int(inputFile.split("/")[-1].split(".")[1].split("_")[0])    
                 dataType = inputFile.split("/")[-1].split("_")[0]
                 _id = "{}_{}_{}_{}".format(runNumber,fileNumber,dataType,site)
-                entryInMongo = checkMongoDB(db,_id)
+                entryInMongo, currentLocation = checkMongoDB(db,_id)
+                currentLocation = currentLocation.split(inputFile)[0]
+                if currentLocation != destination.split(":")[-1]: destination = destination.split(":")[0] + ":" + currentLocation
                 fileAtDestAndDB = entryInMongo and checkFileAtDest(inputFile,destination)
                 #Don't transfer files that have already been sent (unless forced)
                 if fileAtDestAndDB and not force:

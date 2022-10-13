@@ -26,7 +26,7 @@ Where `(target macro name).exe` is the one specified when running the `compile.s
 
 NB. The jsons used to define the configurations are set by default within the scripts/runOfflineFactory.py script but this can be overrided with the --configuration option. Use the -h option to see more details.
 
-### processing full runs
+### Processing full runs
 
 At UCSB, use the processRuns.py script to run over larger quantities of data on the UCSB batch system. The input is determined by a mongoDB selection string and the command to run can be as follows:
 

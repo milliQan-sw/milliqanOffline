@@ -21,9 +21,9 @@ fi
 if [ ! -e "mQContainer.def" ]
   then
     echo "Downloading mQContainer.def file"
-    wget https://raw.githubusercontent.com/carriganm95/milliqanOffline/singularity/singularity/mQContainer.def
+    wget https://raw.githubusercontent.com/carriganm95/milliqanOffline/singularity/Run3Detector/singularity/mQContainer.def
 fi
 
 singularity build --fakeroot --sandbox $container mQContainer.def
 
-singularity exec $container bash -c "cd $container/milliqanOffline/offlineProduction && echo $PWD && sed -i 's|/home/milliqan/MilliDAQ/|$PWD/../../MilliDAQ|' setup.sh && source setup.sh && bash compile.sh ${executable}.exe"
+singularity exec $container bash -c "cd $container/milliqanOffline/Run3Detector/scripts && echo $PWD && sed -i 's|/home/milliqan/MilliDAQ/|$PWD/../../MilliDAQ|' setup.sh && source setup.sh && bash compile.sh ${executable}.exe"

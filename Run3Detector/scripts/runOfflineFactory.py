@@ -77,7 +77,7 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
         if drs:
             configurations = [offlineDir+"/configuration/pulseFinding/pulseFindingTest.json"]
         else:
-            configurations = [offlineDir+"/configuration/chanMaps/fullSuperModuleMapReversedColumns.json",offlineDir+"/configuration/pulseFinding/pulseFindingTest.json",offlineDir+"/configuration/calibrations/firstSupermodulesCalibration.json"]
+            configurations = [offlineDir+"/configuration/chanMaps/fullSuperModuleMap.json",offlineDir+"/configuration/pulseFinding/pulseFindingTest.json",offlineDir+"/configuration/calibrations/firstSupermodulesCalibration.json"]
 
     if "{" in configurations and "}" in configurations:
         configurationsJSONString = configurations

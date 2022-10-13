@@ -263,6 +263,7 @@ void OfflineFactory::prepareOutBranches(){
     outTree->Branch("sidebandRMS",&outputTreeContents.v_sideband_RMS);
     outTree->Branch("maxThreeConsec",&outputTreeContents.v_max_threeConsec);
     outTree->Branch("chan",&outputTreeContents.v_chan);
+    outTree->Branch("chanWithinBoard",&outputTreeContents.v_chanWithinBoard);
     outTree->Branch("row",&outputTreeContents.v_row);
     outTree->Branch("column",&outputTreeContents.v_column);
     outTree->Branch("layer",&outputTreeContents.v_layer);
@@ -296,6 +297,7 @@ void OfflineFactory::resetOutBranches(){
     outputTreeContents.v_sideband_RMS.clear();
     outputTreeContents.v_max_threeConsec.clear();
     outputTreeContents.v_chan.clear();
+    outputTreeContents.v_chanWithinBoard.clear();
     outputTreeContents.v_row.clear();
     outputTreeContents.v_column.clear();
     outputTreeContents.v_layer.clear();
@@ -944,7 +946,8 @@ vector< pair<float,float> > OfflineFactory::processChannel(int ic){
 	}
 
 	//FIXME need to add calibrations (when available)
-	outputTreeContents.v_chan.push_back(chanArray->GetAt(ic));
+	outputTreeContents.v_chanWithinBoard.push_back(chanArray->GetAt(ic));
+	outputTreeContents.v_chan.push_back(ic);
 	outputTreeContents.v_board.push_back(boardArray->GetAt(ic));
 	outputTreeContents.v_height.push_back(waves[ic]->GetMaximum());
 	outputTreeContents.v_time.push_back(pulseBounds[ipulse].first);

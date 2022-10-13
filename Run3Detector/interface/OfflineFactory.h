@@ -81,6 +81,7 @@ struct offline_tree_{
     vector<int> v_npulses;
     vector<int> v_ipulse;
     vector<int> v_chan;
+    vector<int> v_chanWithinBoard;
     vector<int> v_board;
     vector<int> v_layer;
     vector<int> v_row;

@@ -22,12 +22,15 @@ def get_lock(process_name):
         sys.exit()
 
 def FileIsGood(path):
-    f = TFile.Open(path, "READ")
-    if not f or f.IsZombie():
-        os.system("echo '{0} is not ready to be transferred' >> {1}".format(path, logFile))
+    try:
+        f = TFile.Open(path, "READ")
+        if not f or f.IsZombie():
+            os.system("echo '{0} is not ready to be transferred' >> {1}".format(path, logFile))
+            return False
+        f.Close()
+        return True
+    except:
         return False
-    f.Close()
-    return True
 
 def checkMongoDB(db,_id):
     nX = 0
@@ -71,7 +74,7 @@ def transferFiles(source,destinations,logFile,force=False):
                 dataType = inputFile.split("/")[-1].split("_")[0]
                 _id = "{}_{}_{}_{}".format(runNumber,fileNumber,dataType,site)
                 entryInMongo, currentLocation = checkMongoDB(db,_id)
-                currentLocation = currentLocation.split(inputFile)[0]
+                currentLocation = currentLocation.split(inputFile.split("/")[-1])[0]
                 if currentLocation != destination.split(":")[-1]: destination = destination.split(":")[0] + ":" + currentLocation
                 fileAtDestAndDB = entryInMongo and checkFileAtDest(inputFile,destination)
                 #Don't transfer files that have already been sent (unless forced)
@@ -101,5 +104,7 @@ if __name__ == "__main__":
     source = "/home/milliqan/data/"
     logFile = "/home/milliqan/MilliDAQ_FileTransfers.log"
 
-    destinations = {"UCSB":"milliqan@cms26.physics.ucsb.edu:/net/cms26/cms26r0/milliqan/Run3/", "OSU":"milliqan@cms-t3.mps.ohio-state.edu:/data/users/milliqan/run3/"}
+    #destinations = {"UCSB":"milliqan@cms3.physics.ucsb.edu:/net/cms26/cms26r0/milliqan/Run3/", "OSU":"milliqan@cms-t3.mps.ohio-state.edu:/data/users/milliqan/run3/"}
+    destinations = {"UCSB":"milliqan@cms3.physics.ucsb.edu:/net/cms26/cms26r0/milliqan/Run3/", "OSU":"milliqan@128.146.39.20:/data/users/milliqan/run3/"}
     transferFiles(source,destinations,logFile,force=False)
+

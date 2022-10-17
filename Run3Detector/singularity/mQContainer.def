@@ -37,6 +37,9 @@ From: centos:centos7
     yum -y install python3-root
 
     yum -y install make
+    
+    python3 -m pip install pymongo
+    python3 -m pip install pymongo[srv]
 
     git clone https://github.com/carriganm95/milliqanOffline.git    
     git clone https://gitlab.cern.ch/MilliQan/MilliDAQ.git

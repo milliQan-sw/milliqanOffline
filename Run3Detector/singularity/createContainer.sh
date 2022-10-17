@@ -26,4 +26,4 @@ fi
 
 singularity build --fakeroot --sandbox $container mQContainer.def
 
-singularity exec $container bash -c "cd $container/milliqanOffline/Run3Detector/scripts && echo $PWD && sed -i 's|/home/milliqan/MilliDAQ/|$PWD/../../MilliDAQ|' setup.sh && source setup.sh && bash compile.sh ${executable}.exe"
+singularity exec $container bash -c "cd $container/milliqanOffline/Run3Detector && echo $PWD && sed -i 's|/home/milliqan/MilliDAQ/|$PWD/../../MilliDAQ|' setup.sh && source setup.sh && bash compile.sh ${executable}.exe"

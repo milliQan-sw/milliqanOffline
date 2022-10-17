@@ -12,23 +12,29 @@ Actual sudo user must do:
 `singularity config fakeroot --add <username>`
 
 Note: on OSUT3 need to also do
+
 `echo 10000 > /proc/sys/user/max_user_namespaces`
 
 ## Creating Sandbox:
 
 Download the setup script createContainer.sh
-`wget https://raw.githubusercontent.com/carriganm95/milliqanOffline/singularity/singularity/createContainer.sh`
+
+`wget https://raw.githubusercontent.com/carriganm95/milliqanOffline/singularity/Run3Detector/singularity/createContainer.sh`
 
 Run the script to create a sandbox container
+
 `bash createContainer.sh <container name> <executable name>`
 
 Run the container
-`singularity shell --bind /store:/mnt <container name>`
+
+`singularity shell <container name>`
 
 Now you can run the offline analysis!
 
 ## Notes:
-Here  is a soft link to hadoop storage and needs to be bound to the singularity container. Any links need to be bound to the container this way to access them. 
+If you have soft links to storage areas you will need to bind them to the container in order to access them. For example the OSUT3 stores the files in /data (raid storage) or /store (hadoop storage). These both need to be bound to the container by doing
+
+`singularity shell --bind /store,/data <container name>`
 
 Singularity has changed to apptainer so if installing for the first time it is better to install apptainer. If using CMSSW certain versions of will have singularity or apptainer. All singularity commands should be changed to apptainer. 
 

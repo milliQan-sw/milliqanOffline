@@ -19,7 +19,7 @@ sed -i "s/longtagplaceholder/$LONG_TAG/g" make_tree_temporary_for_compile.C
 
 #g++ -o $NAME make_tree_temporary_for_compile.C /net/cms26/cms26r0/milliqan/milliDAQ/libMilliDAQ.so `root-config --cflags --glibs` -Wno-narrowing  
 
-g++ -o $NAME make_tree_temporary_for_compile.C /home/milliqan/MilliDAQ/src/ConfigurationReader.cc /home/milliqan/MilliDAQ/libMilliDAQ.so -lpython2.7 `root-config --cflags --glibs` -Wno-narrowing  # same as above but with correct local file path
+g++ -o $NAME make_tree_temporary_for_compile.C -I../MilliDAQ/interface/ ../MilliDAQ/src/ConfigurationReader.cc ../MilliDAQ/libMilliDAQ.so -lpython2.7 `root-config --cflags --glibs` -Wno-narrowing  # same as above but with correct local file path
 if [ $? -eq 0 ]; then
     echo "Compiled macro $NAME"
 else

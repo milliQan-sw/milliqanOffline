@@ -34,3 +34,12 @@ At UCSB, use the processRuns.py script to run over larger quantities of data on 
 python3 scripts/processRuns.py -a <string to append to tag for output naming> -s <selection string> 
 ```
  NB. Use the -h option to see more details
+
+### Making the event displays for specific events
+The code is run by executing the `runOfflineFactory.py` script and providing the event numbers to be displayed
+```bash
+   python3 scripts/runOfflineFactory.py --inFile "input_filename".root --outputFile "output_filename".root --exe ./(target macro name).exe (--publish) --display "event_number1" "event_number2"
+```
+Where `(target macro name).exe` is the one specified when running the `compile.sh` script. The publish option will include the file details in the mongoDB database. The display option will provide event displays for specified events. The event displays are saved in a displays//Run(run_number) directory.
+The event displays show the waveform in all the channels above the threshold, the hit map for the detector and details of 10 pulses with maximum height.
+

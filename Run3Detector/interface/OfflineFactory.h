@@ -148,6 +148,7 @@ class OfflineFactory {
     //vector<int>colors, vector<TColor*> palette, vector<float> reds, vector<float> greens, vector<float> blues
         void h1cosmetic(TH1D*,int,vector<int> &);
         void displayEvent(int,vector<vector<pair<float,float> > >&,TString);
+        void displaychannelEvent(int,vector<vector<pair<float,float> > >&,TString);
         void displayEvents(vector<int> &,TString);
         void readWaveData();
         void addFriendTree();

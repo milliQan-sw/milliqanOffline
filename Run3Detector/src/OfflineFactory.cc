@@ -52,12 +52,14 @@ void OfflineFactory::setFriendFile(TString friendFileNameIn){
 }
 void OfflineFactory::addFriendTree(){
     inTree->AddFriend("matchedTrigEvents",friendFileName);
-    inTree->SetBranchAddress("clockCount", &tClockCount);
+    inTree->SetBranchAddress("clockCycles", &tClockCycles);
     inTree->SetBranchAddress("time", &tTime);
     inTree->SetBranchAddress("startTime", &tStartTime);
-    inTree->SetBranchAddress("triggerNumber", &tTriggerNumber);
+    inTree->SetBranchAddress("trigger", &tTrigger);
     inTree->SetBranchAddress("timeDiff", &tTimeDiff);
     inTree->SetBranchAddress("matchingTimeCut", &tMatchingTimeCut);
+    inTree->SetBranchAddress("evtNum", &tEvtNum);
+    inTree->SetBranchAddress("runNum", &tRunNum);
 }
 
 // OfflineFactory::~OfflineFactory() {
@@ -279,12 +281,14 @@ void OfflineFactory::prepareOutBranches(){
     outTree->Branch("delay",&outputTreeContents.v_delay);
     outTree->Branch("max",&outputTreeContents.v_max);
 
-    outTree->Branch("tClockCount", &outputTreeContents.tClockCount);
+    outTree->Branch("tClockCycles", &outputTreeContents.tClockCycles);
     outTree->Branch("tTime", &outputTreeContents.tTime);
     outTree->Branch("tStartTime", &outputTreeContents.tStartTime);
-    outTree->Branch("tTriggerNumber", &outputTreeContents.tTriggerNumber);
+    outTree->Branch("tTrigger", &outputTreeContents.tTrigger);
     outTree->Branch("tTimeDiff", &outputTreeContents.tTimeDiff);
     outTree->Branch("tMatchingTimeCut", &outputTreeContents.tMatchingTimeCut);
+    outTree->Branch("tEvtNum", &outputTreeContents.tEvtNum);
+    outTree->Branch("tRunNum", &outputTreeContents.tRunNum);
 }
 //Clear vectors and reset 
 void OfflineFactory::resetOutBranches(){
@@ -791,12 +795,14 @@ void OfflineFactory::readWaveData(){
         vector<vector<pair<float,float> > > allPulseBounds;
 	outputTreeContents.event=i;	
         allPulseBounds = readWaveDataPerEvent(i);
-	outputTreeContents.tClockCount = tClockCount;
+	outputTreeContents.tClockCycles = tClockCycles;
 	outputTreeContents.tTime = tTime;
 	outputTreeContents.tStartTime = tStartTime;
-	outputTreeContents.tTriggerNumber = tTriggerNumber;
+	outputTreeContents.tTrigger = tTrigger;
 	outputTreeContents.tTimeDiff = tTimeDiff;
 	outputTreeContents.tMatchingTimeCut = tMatchingTimeCut;
+	outputTreeContents.tEvtNum = tEvtNum;
+	outputTreeContents.tRunNum = tRunNum;
         outTree->Fill();
 	//Totally necessary progress bar
 	float progress = 1.0*i/maxEvents; 

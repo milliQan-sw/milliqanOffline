@@ -5,7 +5,7 @@ from subprocess import check_output
 import argparse
 import json, math
 import os
-exe_default = os.getenv("OFFLINEDIR")+"/display_MC.exe"
+exe_default = os.getenv("OFFLINEDIR")+"/exe/v23.exe"
 site = os.getenv("OFFLINESITE")
 import calendar;
 import time;
@@ -21,22 +21,49 @@ def parse_args():
     args = parser.parse_args()
     return args
 
-def checkMongoDB(db,_id):
+def checkMongoDB(db,allIds):
     nX = 0
     #Check for existing entry 
-    # milliQanOfflineDataset["_id"] = "{}_{}_{}_{}_{}".format(runNumber,fileNumber,tag,inputType,site)
-    # milliQanOfflineDataset["run"] = runNumber
-    # milliQanOfflineDataset["file"] = fileNumber
-    # milliQanOfflineDataset["version"] = tag
-    # milliQanOfflineDataset["location"] = os.path.abspath(outputFile)
-    # milliQanOfflineDataset["type"] = inputType
-    # milliQanOfflineDataset["site"] = site
-    location = None
-    for x in (db.milliQanOfflineDatasets.find({"_id" : _id})):
-        nX +=1
-        location = x["location"]
-    return nX,location
+    locationsInDb = []
+    indicesInDb = []
+    for x in (db.milliQanOfflineDatasets.find({"_id" :{"$in": allIds}})):
+        indexInDb = allIds.index(x["_id"])
+        indicesInDb.append(indexInDb)
+        locationsInDb.append(x["location"])
+    allLocations = []
+    allOfflineEntriesExist = []
+    for index in range(len(allIds)):
+        if index in indicesInDb:
+            allLocations.append(locationsInDb[indicesInDb.index(index)])
+            allOfflineEntriesExist.append(True)
+        else:
+            allLocations.append(None)
+            allOfflineEntriesExist.append(False)
+    return allOfflineEntriesExist,allLocations
+
+def checkQueueStatus():
+    readyFile = "/net/cms2/cms2r0/milliqan/jobs/ready.list"
+    runningFile = "/net/cms2/cms2r0/milliqan/jobs/running.list"
+    queuedFile = "/net/cms2/cms2r0/milliqan/jobs/queued.list"
+    allFiles = [readyFile,runningFile,queuedFile]
+    offDir = os.getenv("OFFLINEDIR")
+    allJobs = 0
+    locations = []
+    for iFile in allFiles:
+        if not os.path.exists(iFile): continue
+        with open(iFile,"r") as iF:
+            for iJob in iF.readlines():
+                if offDir in iJob:
+                    shellScript = iJob.split(" ")[-1].strip()
+                    with open(shellScript,"r") as iS:
+                        for iSub in iS.readlines():
+                            if "python" in iSub:
+                                location = iSub.split("-o")[-1].split(".root")[0]+".root"
+                                locations.append(location.strip())
+    return locations
+        
 def processRuns(selectionString="{}",outputDir="/net/cms26/cms26r0/milliqan/Run3Offline/",appendToTag=None,exe=None,force =False, recovery=False):
+    locationsRunningJobs = checkQueueStatus()
     inputDatabase = mongoConnect()
     if exe == None:
         exe = exe_default
@@ -52,30 +79,52 @@ def processRuns(selectionString="{}",outputDir="/net/cms26/cms26r0/milliqan/Run3
     selectionDict["type"] = "MilliQan"
     #checking input samples to run
     outputSamplesToRun = inputDatabase.milliQanRawDatasets.find(selectionDict)
+    selectionDictMatch = selectionDict.copy()
+    selectionDictMatch["type"] = "MatchedEvents"
+    matchedSamplesToRun = inputDatabase.milliQanRawDatasets.find(selectionDictMatch)
     submissions = []
     if not os.path.exists(outputDir):
         os.mkdir(outputDir)
     #making output samples
     runs = []
     totalSamples = inputDatabase.milliQanRawDatasets.count_documents(selectionDict)
-    ix = 0
+    allSampleIds,allInputs,allMatchedLocations = [],[],[]
     for x in outputSamplesToRun:
-        ix += 1
-        if (ix % 20 == 0): print ("Progress: {}%".format("%.1f"%(ix*100./totalSamples)))
         sampleId = "_".join(str(e) for e in [x["run"],x["file"],version,selectionDict["type"],selectionDict["site"]])
+        idMatched = x["_id"].split("_")
+        idMatched[2] = "MatchedEvents"
+        idMatched = "_".join(idMatched)
+        matchedLocation = None
+        for xM in matchedSamplesToRun:
+            if xM["_id"] == idMatched:
+                matchedLocation = xM["location"]
         inputName = x["location"]
-        offlineEntryExists,location = checkMongoDB(inputDatabase,sampleId)
-        if not offlineEntryExists or force or (recovery and location == "DUMMY"):
+        allSampleIds.append(sampleId)
+        allInputs.append(inputName)
+        allMatchedLocations.append(matchedLocation)
+    #Check if output already made
+    allOfflineEntryExists,allLocations = checkMongoDB(inputDatabase,allSampleIds)
+
+    for sampleId,inputName,matchedLocation,offlineEntryExists,location in zip(allSampleIds,allInputs,allMatchedLocations,allOfflineEntryExists,allLocations):
+        if not offlineEntryExists or force or (recovery and "DUMMY" in location):
             outputName = outputDir+inputName.split("/")[-1]
             outputName = outputName.replace(".root","_"+version+".root")
-            submissions.append("python3 {}/scripts/runOfflineFactory.py -i {} -o {} -e {} -f".format(os.getenv("OFFLINEDIR"),inputName,outputName,exe))
+            if outputName in locationsRunningJobs:
+                continue
+            if matchedLocation == None:
+                submissions.append("python3 {}/scripts/runOfflineFactory.py -i {} -o {} -e {} -f -a {}".format(os.getenv("OFFLINEDIR"),inputName,outputName,exe,appendToTag))
+            else:
+                submissions.append("python3 {}/scripts/runOfflineFactory.py -i {} -o {} -m {} -e {} -f -a {}".format(os.getenv("OFFLINEDIR"),inputName,outputName,matchedLocation,exe,appendToTag))
             #Add dummy entries to database to avoid resubmission
             runs.append(x["run"])
             if not offlineEntryExists:
                 publishDataset({},"DUMMY","DUMMY",x["file"],x["run"],version,site,"MilliQan",False,inputDatabase,quiet=True)
 
     filesPerJob=15.
-    print ("Submiting runs:",sorted(list(set(runs))))
+    if len(runs) > 0:
+        print ("Submiting runs:",sorted(list(set(runs))))
+    else:
+        print ("No jobs to submit")
     nFiles=len(submissions)
     iFile=0
     nJobs= int(math.ceil(nFiles/filesPerJob))

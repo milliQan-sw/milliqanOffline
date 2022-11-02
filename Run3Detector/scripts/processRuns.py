@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 from runOfflineFactory import runOfflineFactory,publishDataset
 from mongoConnect import mongoConnect
 from subprocess import call
@@ -88,7 +89,7 @@ def processRuns(selectionString="{}",outputDir="/net/cms26/cms26r0/milliqan/Run3
     #making output samples
     runs = []
     totalSamples = inputDatabase.milliQanRawDatasets.count_documents(selectionDict)
-    allSampleIds,allInputs,allMatchedLocations = [],[],[]
+    allSampleIds,allInputs,allMatchedLocations,allIFiles,allRuns = [],[],[],[],[]
     for x in outputSamplesToRun:
         sampleId = "_".join(str(e) for e in [x["run"],x["file"],version,selectionDict["type"],selectionDict["site"]])
         idMatched = x["_id"].split("_")
@@ -102,10 +103,12 @@ def processRuns(selectionString="{}",outputDir="/net/cms26/cms26r0/milliqan/Run3
         allSampleIds.append(sampleId)
         allInputs.append(inputName)
         allMatchedLocations.append(matchedLocation)
+        allIFiles.append(x["file"])
+        allRuns.append(x["run"])
     #Check if output already made
     allOfflineEntryExists,allLocations = checkMongoDB(inputDatabase,allSampleIds)
 
-    for sampleId,inputName,matchedLocation,offlineEntryExists,location in zip(allSampleIds,allInputs,allMatchedLocations,allOfflineEntryExists,allLocations):
+    for sampleId,inputName,matchedLocation,offlineEntryExists,location,iFile,run in zip(allSampleIds,allInputs,allMatchedLocations,allOfflineEntryExists,allLocations,allIFiles,allRuns):
         if not offlineEntryExists or force or (recovery and "DUMMY" in location):
             outputName = outputDir+inputName.split("/")[-1]
             outputName = outputName.replace(".root","_"+version+".root")
@@ -116,10 +119,9 @@ def processRuns(selectionString="{}",outputDir="/net/cms26/cms26r0/milliqan/Run3
             else:
                 submissions.append("python3 {}/scripts/runOfflineFactory.py -i {} -o {} -m {} -e {} -f -a {}".format(os.getenv("OFFLINEDIR"),inputName,outputName,matchedLocation,exe,appendToTag))
             #Add dummy entries to database to avoid resubmission
-            runs.append(x["run"])
+            runs.append(run)
             if not offlineEntryExists:
-                publishDataset({},"DUMMY","DUMMY",x["file"],x["run"],version,site,"MilliQan",False,inputDatabase,quiet=True)
-
+                publishDataset({},"DUMMY","DUMMY",iFile,run,version,site,"MilliQan",False,inputDatabase,quiet=True)
     filesPerJob=15.
     if len(runs) > 0:
         print ("Submiting runs:",sorted(list(set(runs))))

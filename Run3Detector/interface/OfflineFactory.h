@@ -124,12 +124,14 @@ struct offline_tree_{
     vector<int> v_triggerMajority;
     vector<float> v_min_afterFilter;
 
-    float tClockCount;
+    float tClockCycles;
     float tTime;
     float tStartTime;
-    float tTriggerNumber;
+    float tTrigger;
     float tTimeDiff;
     float tMatchingTimeCut;
+    int tEvtNum;
+    int tRunNum;
     //Trigger tree members
 };
 //Offline factory class used to produce offline tree output
@@ -211,12 +213,14 @@ class OfflineFactory {
 	vector<TColor *> palette;
 	vector<int> colors;
         //Trigger friend variables
-        float tClockCount = -1.;
+        float tClockCycles = -1.;
         float tTime = -1.;
         float tStartTime = -1.;
-        float tTriggerNumber = -1.;
+        float tTrigger = -1.;
         float tTimeDiff = -1.;
         float tMatchingTimeCut = -1.;
+	int tEvtNum = 0;
+	int tRunNum = 0;
     
 };
 #endif

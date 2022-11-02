@@ -164,11 +164,12 @@ def publishDataset(configurationsJSON,inputFile,outputFile,fileNumber,runNumber,
         else:
             print ("Entry already exists in database. To overwrite use --force_publish.")
             print("Output made successfully but not published")
-            exit()
+            return False
     else:
         db.milliQanOfflineDatasets.insert_one(milliQanOfflineDataset)
         if not quiet:
             print ("Added new entry in database")
+    return True
 
 if __name__ == "__main__":
     valid = runOfflineFactory(**vars(parse_args()))

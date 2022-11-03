@@ -26,3 +26,4 @@ triggerFile = sys.argv[2] + "MatchedEvents_Run{0}.{1}.root".format(runNum, fileN
 
 print("In tree wrapper calling subprocess")
 subprocess.call('source $PWD/setup.sh && python3 $PWD/scripts/runOfflineFactory.py --inputFile {0} --outputFile {1} -m {2} --exe ./run.exe'.format(inFile, outFile, triggerFile), shell=True)
+

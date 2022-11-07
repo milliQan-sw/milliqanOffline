@@ -6,7 +6,7 @@ from subprocess import check_output
 import argparse
 import json, math
 import os
-exe_default = os.getenv("OFFLINEDIR")+"/exe/v23.exe"
+exe_default = os.getenv("OFFLINEDIR")+"/exe/v25.exe"
 site = os.getenv("OFFLINESITE")
 import calendar;
 import time;
@@ -54,7 +54,7 @@ def checkQueueStatus():
         if not os.path.exists(iFile): continue
         with open(iFile,"r") as iF:
             for iJob in iF.readlines():
-                if offDir in iJob:
+                if "MilliQanJob" in iJob:
                     shellScript = iJob.split(" ")[-1].strip()
                     with open(shellScript,"r") as iS:
                         for iSub in iS.readlines():
@@ -114,10 +114,12 @@ def processRuns(selectionString="{}",outputDir="/net/cms26/cms26r0/milliqan/Run3
             outputName = outputName.replace(".root","_"+version+".root")
             if outputName in locationsRunningJobs:
                 continue
-            if matchedLocation == None:
-                submissions.append("python3 {}/scripts/runOfflineFactory.py -i {} -o {} -e {} -f -a {}".format(os.getenv("OFFLINEDIR"),inputName,outputName,exe,appendToTag))
-            else:
-                submissions.append("python3 {}/scripts/runOfflineFactory.py -i {} -o {} -m {} -e {} -f -a {}".format(os.getenv("OFFLINEDIR"),inputName,outputName,matchedLocation,exe,appendToTag))
+            submitCommand = "python3 {}/scripts/runOfflineFactory.py -i {} -o {} -e {} -f".format(os.getenv("OFFLINEDIR"),inputName,outputName,exe)
+            if matchedLocation != None:
+                submitCommand += " -m {}".format(matchedLocation)
+            if appendToTag != None:
+                submitCommand += " -a {}".format(appendToTag)
+            submissions.append(submitCommand)
             #Add dummy entries to database to avoid resubmission
             runs.append(run)
             if not offlineEntryExists:
@@ -139,7 +141,7 @@ def processRuns(selectionString="{}",outputDir="/net/cms26/cms26r0/milliqan/Run3
     if not os.path.exists(submitDir):
         os.makedirs(submitDir)
     for iJob in range(nJobs):
-        scriptName= submitDir+"/Job_"+str(iJob)+"ID_"+str(ts)+".sh"
+        scriptName= submitDir+"/MilliQanJob_"+str(iJob)+"ID_"+str(ts)+".sh"
         script = open(scriptName,"w")
         script.write("#!/bin/bash\n")
         script.write("cd {}\n".format(os.getenv("OFFLINEDIR")))
@@ -152,7 +154,7 @@ def processRuns(selectionString="{}",outputDir="/net/cms26/cms26r0/milliqan/Run3
         script.close()
         os.chmod(scriptName,0o777)
         # call(["JobSubmit.csh",scriptName])
-        call(["JobSubmit.csh","-node","py3",scriptName])
+        call(["/net/cms2/cms2r0/Job/JobSubmit.csh","-node","py2",scriptName])
 
 
 if __name__ == "__main__":

@@ -154,7 +154,7 @@ def processRuns(selectionString="{}",outputDir="/net/cms26/cms26r0/milliqan/Run3
         script.close()
         os.chmod(scriptName,0o777)
         # call(["JobSubmit.csh",scriptName])
-        call(["/net/cms2/cms2r0/Job/JobSubmit.csh","-node","py2",scriptName])
+        call(["/net/cms2/cms2r0/Job/JobSubmit.csh","-node","py3",scriptName])
 
 
 if __name__ == "__main__":

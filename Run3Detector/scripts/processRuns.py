@@ -12,8 +12,8 @@ import time;
   
 def parse_args():
     parser=argparse.ArgumentParser()
-    parser.add_argument("-s","--selectionString",help="MongoDB selection string",type=str,default='{"run" : {"$gt" : 468}}')
-    parser.add_argument("-o","--outputDir",help="Output file name",type=str,default="/net/cms26/cms26r0/milliqan/Run3Offline/")
+    parser.add_argument("-s","--selectionString",help="MongoDB selection string",type=str,default='{"run" : {"$gt" : 469}}')
+    parser.add_argument("-o","--outputDir",help="Output file name",type=str,default="/net/cms26/cms26r0/milliqan/Run3Offlinedisplays/")
     parser.add_argument("-a","--appendToTag",help="Append to database tag",default=None)
     parser.add_argument("-e","--exe",help="Executable to run")
     parser.add_argument("-f","--force",help="Force overwrite",action="store_true",default=False)
@@ -36,7 +36,7 @@ def checkMongoDB(db,_id):
         nX +=1
         location = x["location"]
     return nX,location
-def processRuns(selectionString="{}",outputDir="/net/cms26/cms26r0/milliqan/Run3Offline/",appendToTag=None,exe=None,force =False, recovery=False):
+def processRuns(selectionString="{}",outputDir="/net/cms26/cms26r0/milliqan/Run3Offlinedisplays/",appendToTag=None,exe=None,force =False, recovery=False):
     inputDatabase = mongoConnect()
     if exe == None:
         exe = exe_default

@@ -524,6 +524,7 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
         if(i==0) wavesShifted[ic]->Draw("hist");
         else wavesShifted[ic]->Draw("hist same");
         
+
         TLatex tlabelpeak;
         if(wavesShifted[ic]->GetMaximum()>50){
             tlabelpeak.SetTextSize(0.05);
@@ -607,7 +608,6 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
     int maxPerChannel = 0;
     if (chanList.size() > 0) maxPerChannel = 10/chanList.size();
     //cout<<8<<endl;
-    
     for(uint i=0;i<chanList.size();i++){
         int ic = chanList[i];
         int chan = chanArray->GetAt(ic);
@@ -736,7 +736,7 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
             currentYpos=currentYpos-(height*0.6);
             //currentYpos-=height;
             tla.SetTextSize(0.04);
-        
+            /*
             for(int ip=0;ip<boundsShifted[ic].size();ip++){
                 TString row;
                 row = Form("Channel number = %d",ip);
@@ -746,19 +746,20 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
                     currentYpos-=height*1.0;
                 }
             }
-        
+            */
             currentYpos-=height*0.35;
         } //added
     } //channel loop closed
     //cout<<9<<endl;
     
     //cout<<"Display directory is "<<displayDirectory<<endl;
+    
     TString displayName;
     displayName=Form(displayDirectory+"Run%i_File%i_Event%i_Version_%s.pdf",runNumber,fileNumber,event,"shorttagplaceholder"); 
     c.SaveAs(displayName);
     displayName=Form(displayDirectory+"Run%i_File%i_Event%i_Version_%s.png",runNumber,fileNumber,event,"shorttagplaceholder"); 
     c.SaveAs(displayName);
-
+    
     for(uint i=0;i<chanList.size();i++){
         delete wavesShifted[i];
     }
@@ -897,7 +898,7 @@ void OfflineFactory::displaychannelEvent(int event, vector<vector<pair<float,flo
         //cout<<8<<endl;
     
     
-        float drawThresh=15;
+        float drawThresh=-10;
         int ic = chanList[i];
         int chan = chanArray->GetAt(ic);
         //cout<<ic<<" ic,chan "<<chan<<endl;
@@ -1129,12 +1130,14 @@ void OfflineFactory::displayEvents(std::vector<int> & eventsToDisplay,TString di
     gSystem->mkdir(displayDirectoryForRun,true);
     TString displayDirectoryForRun1 = displayDirectory+"/Run"+to_string(runNumber)+"allchannels100events/";
     gSystem->mkdir(displayDirectoryForRun1,true);
+
+    //Get list of events
     for(auto iEvent: eventsToDisplay){
 	resetOutBranches();	
         vector<vector<pair<float,float> > > allPulseBounds;
         allPulseBounds = readWaveDataPerEvent(iEvent);
-	displayEvent(iEvent,allPulseBounds,displayDirectoryForRun);
-        //displaychannelEvent(iEvent,allPulseBounds,displayDirectoryForRun1);
+	//displayEvent(iEvent,allPulseBounds,displayDirectoryForRun);
+        displaychannelEvent(iEvent,allPulseBounds,displayDirectoryForRun1);
     }
     inFile->Close();
 }
@@ -1197,7 +1200,8 @@ void OfflineFactory::prepareWave(int ic){
     // waves[ic]->ResetStats();
     //subtract calibrated mean
     for(int ibin = 1; ibin <= waves[ic]->GetNbinsX(); ibin++){
-	waves[ic]->SetBinContent(ibin,waves[ic]->GetBinContent(ibin)-pedestals[ic]);
+	//waves[ic]->SetBinContent(ibin,waves[ic]->GetBinContent(ibin)-pedestals[ic]);
+        waves[ic]->SetBinContent(ibin,waves[ic]->GetBinContent(ibin));
     }
     //Need to add sideband measurements and subtraction here
     pair<float,float> mean_rms = measureSideband(ic);

@@ -73,6 +73,7 @@ struct offline_tree_{
     float fillTotalLumi;
     bool beam;
     bool hardNoBeam;
+    bool boardsMatched;
 
     //pulse vectors
     vector<int> v_npulses;

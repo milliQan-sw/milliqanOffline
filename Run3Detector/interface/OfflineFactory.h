@@ -60,22 +60,20 @@ struct offline_tree_{
     int event ;
     Long64_t runNumber;
     Long64_t fileNumber;
-    Long64_t event_time_b0;
-    Long64_t event_time_b1;
+    std::vector<Long64_t> event_time;
     double event_time_fromTDC;
-    bool present_b0;
-    bool present_b1;
+    std::vector<Long64_t> present;
+    std::vector<Long64_t> event_trigger_time_tag;
     int t_since_fill_start;
     int t_since_fill_end;
     int t_until_next_fill;
     string event_t_string;
-    Long64_t event_trigger_time_tag_b0;
-    Long64_t event_trigger_time_tag_b1;
     int fillNum;
     float fillAvgLumi;
     float fillTotalLumi;
     bool beam;
     bool hardNoBeam;
+    bool boardsMatched;
 
     //pulse vectors
     vector<int> v_npulses;
@@ -109,8 +107,14 @@ struct offline_tree_{
     vector<float> v_triggerBand_RMS;
     vector<float> v_sideband_mean_calib;
     vector<float> v_sideband_RMS_calib;
-    vector<Long64_t> v_groupTDC_b0;
-    vector<Long64_t> v_groupTDC_b1;
+    vector<Long64_t> v_groupTDC_g0;
+    vector<Long64_t> v_groupTDC_g1;
+    vector<Long64_t> v_groupTDC_g2;
+    vector<Long64_t> v_groupTDC_g3;
+    vector<Long64_t> v_groupTDC_g4;
+    vector<Long64_t> v_groupTDC_g5;
+    vector<Long64_t> v_groupTDC_g6;
+    vector<Long64_t> v_groupTDC_g7;
     vector<float> v_bx;
     vector<float> v_by;
     vector<float> v_bz;
@@ -124,12 +128,14 @@ struct offline_tree_{
     vector<int> v_triggerMajority;
     vector<float> v_min_afterFilter;
 
-    float tClockCount;
+    float tClockCycles;
     float tTime;
     float tStartTime;
-    float tTriggerNumber;
+    float tTrigger;
     float tTimeDiff;
     float tMatchingTimeCut;
+    int tEvtNum;
+    int tRunNum;
     //Trigger tree members
 };
 //Offline factory class used to produce offline tree output
@@ -203,6 +209,10 @@ class OfflineFactory {
 	int numBoards;
 	int boardsDRS[50];
 	int chansDRS[50];
+	Long64_t initTDC=-1;
+	Long64_t initSecs=-1;
+	Long64_t prevTDC=-1;
+	int nRollOvers=0;
 	vector<TH1D*> waves;
 	TTree * inTree;
 	TFile * inFile;
@@ -212,12 +222,14 @@ class OfflineFactory {
 	vector<TColor *> palette;
 	vector<int> colors;
         //Trigger friend variables
-        float tClockCount = -1.;
+        float tClockCycles = -1.;
         float tTime = -1.;
         float tStartTime = -1.;
-        float tTriggerNumber = -1.;
+        float tTrigger = -1.;
         float tTimeDiff = -1.;
         float tMatchingTimeCut = -1.;
+	int tEvtNum = 0;
+	int tRunNum = 0;
     
 };
 #endif

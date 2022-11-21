@@ -52,12 +52,14 @@ void OfflineFactory::setFriendFile(TString friendFileNameIn){
 }
 void OfflineFactory::addFriendTree(){
     inTree->AddFriend("matchedTrigEvents",friendFileName);
-    inTree->SetBranchAddress("clockCount", &tClockCount);
+    inTree->SetBranchAddress("clockCycles", &tClockCycles);
     inTree->SetBranchAddress("time", &tTime);
     inTree->SetBranchAddress("startTime", &tStartTime);
-    inTree->SetBranchAddress("triggerNumber", &tTriggerNumber);
+    inTree->SetBranchAddress("trigger", &tTrigger);
     inTree->SetBranchAddress("timeDiff", &tTimeDiff);
     inTree->SetBranchAddress("matchingTimeCut", &tMatchingTimeCut);
+    inTree->SetBranchAddress("evtNum", &tEvtNum);
+    inTree->SetBranchAddress("runNum", &tRunNum);
 }
 
 // OfflineFactory::~OfflineFactory() {
@@ -254,6 +256,8 @@ void OfflineFactory::prepareOutBranches(){
     outTree->Branch("event",&outputTreeContents.event);
     outTree->Branch("runNumber",&outputTreeContents.runNumber);
     outTree->Branch("fileNumber",&outputTreeContents.fileNumber);
+    outTree->Branch("boardsMatched", &outputTreeContents.boardsMatched);
+
     // May need to change for DRS input
     outTree->Branch("triggerThreshold",&outputTreeContents.v_triggerThresholds);
     outTree->Branch("triggerEnable",&outputTreeContents.v_triggerEnable);
@@ -279,12 +283,27 @@ void OfflineFactory::prepareOutBranches(){
     outTree->Branch("delay",&outputTreeContents.v_delay);
     outTree->Branch("max",&outputTreeContents.v_max);
 
-    outTree->Branch("tClockCount", &outputTreeContents.tClockCount);
+    outTree->Branch("present",&outputTreeContents.present);
+    outTree->Branch("event_trigger_time_tag",&outputTreeContents.event_trigger_time_tag);
+    outTree->Branch("event_time",&outputTreeContents.event_time);
+    outTree->Branch("event_time_fromTDC",&outputTreeContents.event_time_fromTDC);
+    outTree->Branch("v_groupTDC_g0",&outputTreeContents.v_groupTDC_g0);
+    outTree->Branch("v_groupTDC_g1",&outputTreeContents.v_groupTDC_g1);
+    outTree->Branch("v_groupTDC_g2",&outputTreeContents.v_groupTDC_g2);
+    outTree->Branch("v_groupTDC_g3",&outputTreeContents.v_groupTDC_g3);
+    outTree->Branch("v_groupTDC_g4",&outputTreeContents.v_groupTDC_g4);
+    outTree->Branch("v_groupTDC_g5",&outputTreeContents.v_groupTDC_g5);
+    outTree->Branch("v_groupTDC_g6",&outputTreeContents.v_groupTDC_g6);
+    outTree->Branch("v_groupTDC_g7",&outputTreeContents.v_groupTDC_g7);
+
+    outTree->Branch("tClockCycles", &outputTreeContents.tClockCycles);
     outTree->Branch("tTime", &outputTreeContents.tTime);
     outTree->Branch("tStartTime", &outputTreeContents.tStartTime);
-    outTree->Branch("tTriggerNumber", &outputTreeContents.tTriggerNumber);
+    outTree->Branch("tTrigger", &outputTreeContents.tTrigger);
     outTree->Branch("tTimeDiff", &outputTreeContents.tTimeDiff);
     outTree->Branch("tMatchingTimeCut", &outputTreeContents.tMatchingTimeCut);
+    outTree->Branch("tEvtNum", &outputTreeContents.tEvtNum);
+    outTree->Branch("tRunNum", &outputTreeContents.tRunNum);
 }
 //Clear vectors and reset 
 void OfflineFactory::resetOutBranches(){
@@ -312,6 +331,17 @@ void OfflineFactory::resetOutBranches(){
     outputTreeContents.v_duration.clear();
     outputTreeContents.v_delay.clear();
     outputTreeContents.v_max.clear();
+   outputTreeContents.present.clear();
+   outputTreeContents.event_trigger_time_tag.clear();
+   outputTreeContents.event_time.clear();
+   outputTreeContents.v_groupTDC_g0.clear();
+   outputTreeContents.v_groupTDC_g1.clear();
+   outputTreeContents.v_groupTDC_g2.clear();
+   outputTreeContents.v_groupTDC_g3.clear();
+   outputTreeContents.v_groupTDC_g4.clear();
+   outputTreeContents.v_groupTDC_g5.clear();
+   outputTreeContents.v_groupTDC_g6.clear();
+   outputTreeContents.v_groupTDC_g7.clear();
 }
 //Read meta data from configuration
 void OfflineFactory::readMetaData(){
@@ -324,7 +354,7 @@ void OfflineFactory::readMetaData(){
 
 	outputTreeContents.runNumber = runNumber;
 	outputTreeContents.fileNumber = fileNumber;
-	int numBoards = cfg->digitizers.size();
+	numBoards = cfg->digitizers.size();
 	numChan = numBoards*16;
 	chanArray = new TArrayI(numChan);
 	boardArray = new TArrayI(numChan);
@@ -898,7 +928,7 @@ void OfflineFactory::displaychannelEvent(int event, vector<vector<pair<float,flo
         //cout<<8<<endl;
     
     
-        float drawThresh=-10;
+        float drawThresh=10;
         int ic = chanList[i];
         int chan = chanArray->GetAt(ic);
         //cout<<ic<<" ic,chan "<<chan<<endl;
@@ -1108,10 +1138,62 @@ void OfflineFactory::displaychannelEvent(int event, vector<vector<pair<float,flo
 
 vector<vector<pair<float,float>>> OfflineFactory::readWaveDataPerEvent(int i){
     inTree->GetEntry(i);
-    if (!isDRS) loadWavesMilliDAQ();
+    if (!isDRS) {
+	//Read timing information
+	if(initSecs<0){ //if timestamps for first event are uninitialized
+	    if(evt->digitizers[0].DataPresent){ //If this event exists
+		initSecs=evt->digitizers[0].DAQTimeStamp.GetSec();
+		initTDC=evt->digitizers[0].TDC[0];
+		prevTDC=initTDC;
+	    }
+	}
+	Long64_t thisTDC;
+	if(evt->digitizers[0].DataPresent) thisTDC = evt->digitizers[0].TDC[0];
+	else thisTDC=prevTDC;
+
+	//Check if rollover has happened since last event: if previous time is more than 10 minutes later than current time 
+	//NB events are not written strictly in chronological order
+	Long64_t diff = prevTDC - thisTDC;
+	if(diff > 1.2e+11) nRollOvers++;
+	//For each tDC rollover: add max value: pow(2,40)
+	outputTreeContents.event_time_fromTDC = 5.0e-9*(thisTDC+nRollOvers*pow(2,40)-initTDC)+initSecs;
+	// outputTreeContents.event_t_string = TTimeStamp(outputTreeContents.event_time_fromTDC).AsString("s");
+	//update previous TDC holder for next event
+	prevTDC = thisTDC;
+	for (int ib =0; ib < numBoards; ib++){
+
+	    int secs = evt->digitizers[ib].DAQTimeStamp.GetSec();
+	    //This defines the time in seconds in standard unix epoch since 1970
+	    outputTreeContents.event_time.push_back(secs);
+
+	    outputTreeContents.event_trigger_time_tag.push_back(evt->digitizers[ib].TriggerTimeTag);
+	    //
+	    //event_t_string = evt->digitizers[0].DAQTimeStamp.AsString("s");
+	    //
+	    //Can probably uncomment this bit once all groups connected?
+	    // outputTreeContents.v_groupTDC_g0.push_back(evt->digitizers[ib].TDC[0]);
+	    // outputTreeContents.v_groupTDC_g1.push_back(evt->digitizers[ib].TDC[1]);
+	    // outputTreeContents.v_groupTDC_g2.push_back(evt->digitizers[ib].TDC[2]);
+	    // outputTreeContents.v_groupTDC_g3.push_back(evt->digitizers[ib].TDC[3]);
+	    // outputTreeContents.v_groupTDC_g4.push_back(evt->digitizers[ib].TDC[4]);
+	    // outputTreeContents.v_groupTDC_g5.push_back(evt->digitizers[ib].TDC[5]);
+	    // outputTreeContents.v_groupTDC_g6.push_back(evt->digitizers[ib].TDC[6]);
+	    // outputTreeContents.v_groupTDC_g7.push_back(evt->digitizers[ib].TDC[7]);
+
+	    outputTreeContents.present.push_back(evt->digitizers[ib].DataPresent);
+	}
+	loadWavesMilliDAQ();
+    }
     else loadWavesDRS();
     //Loop over channels
     vector<vector<pair<float,float> > > allPulseBounds;
+    outputTreeContents.boardsMatched = true;
+    for(int idig=0; idig < nDigitizers; idig++){
+        if(evt->digitizers[idig].TDC[0] == 0) {
+            outputTreeContents.boardsMatched = false;
+            break;
+        }
+    }
     for(int ic=0;ic<numChan;ic++){
         //Pulse finding
         allPulseBounds.push_back(processChannel(ic));
@@ -1151,7 +1233,7 @@ void OfflineFactory::readWaveData(){
     int maxEvents = inTree->GetEntries();
     cout<<"Processing "<<maxEvents<<" events in this file"<<endl;
     cout<<"Starting event loop"<<endl;
-    bool showBar = true;
+    bool showBar = false;
 
     for(int i=0;i<maxEvents;i++){
 
@@ -1160,12 +1242,14 @@ void OfflineFactory::readWaveData(){
         vector<vector<pair<float,float> > > allPulseBounds;
 	outputTreeContents.event=i;	
         allPulseBounds = readWaveDataPerEvent(i);
-	outputTreeContents.tClockCount = tClockCount;
+	outputTreeContents.tClockCycles = tClockCycles;
 	outputTreeContents.tTime = tTime;
 	outputTreeContents.tStartTime = tStartTime;
-	outputTreeContents.tTriggerNumber = tTriggerNumber;
+	outputTreeContents.tTrigger = tTrigger;
 	outputTreeContents.tTimeDiff = tTimeDiff;
 	outputTreeContents.tMatchingTimeCut = tMatchingTimeCut;
+	outputTreeContents.tEvtNum = tEvtNum;
+	outputTreeContents.tRunNum = tRunNum;
         outTree->Fill();
 	//Totally necessary progress bar
 	float progress = 1.0*i/maxEvents; 
@@ -1201,7 +1285,7 @@ void OfflineFactory::prepareWave(int ic){
     //subtract calibrated mean
     for(int ibin = 1; ibin <= waves[ic]->GetNbinsX(); ibin++){
 	//waves[ic]->SetBinContent(ibin,waves[ic]->GetBinContent(ibin)-pedestals[ic]);
-        waves[ic]->SetBinContent(ibin,waves[ic]->GetBinContent(ibin));
+        waves[ic]->SetBinContent(ibin,waves[ic]->GetBinContent(ibin)-pedestals[ic]);
     }
     //Need to add sideband measurements and subtraction here
     pair<float,float> mean_rms = measureSideband(ic);
@@ -1323,7 +1407,7 @@ vector< pair<float,float> > OfflineFactory::processChannel(int ic){
 	outputTreeContents.v_time.push_back(pulseBounds[ipulse].first);
 	outputTreeContents.v_time_module_calibrated.push_back(pulseBounds[ipulse].first+timingCalibrations[ic]);
 	outputTreeContents.v_area.push_back(waves[ic]->Integral());
-	outputTreeContents.v_nPE.push_back((waves[ic]->Integral()/(speAreas[ic]))*(1.6/sampleRate));
+	outputTreeContents.v_nPE.push_back((waves[ic]->Integral()/(speAreas[ic]))*(0.4/sampleRate));
 	outputTreeContents.v_ipulse.push_back(ipulse);
 	outputTreeContents.v_npulses.push_back(npulses);
 	outputTreeContents.v_duration.push_back(pulseBounds[ipulse].second - pulseBounds[ipulse].first);

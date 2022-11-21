@@ -1,0 +1,57 @@
+BootStrap: docker
+From: centos:centos7
+
+%runscript
+    
+%test
+    python3 -c "import ROOT"
+
+%post
+
+    yum -y install epel-release
+    yum -y install which 
+
+    yum -y install emacs-nox
+    yum -y install git
+    yum -y install cmake3
+
+    yum -y install gcc
+    yum -y install kernel-devel 
+
+    yum -y install llvm llvm-devel llvm-static
+
+    PYTHON=36
+    yum -y install vim-X11 vim-common vim-enhanced vim-minimal
+    yum -y install python${PYTHON} python${PYTHON}-devel python${PYTHON}-pip python${PYTHON}-tkinter
+    yum -y install python2 python2-devel python2-pip
+
+    yum -y install openssl-devel
+    yum -y install openssh-server openssh-clients
+    yum -y install rsh rsh-server
+    yum -y install boost boost-devel
+
+    yum -y install xorg-x11-apps
+    yum install -y lapack-devel blas-devel
+
+    yum -y install root
+    yum -y install python3-root
+
+    yum -y install make
+    
+    python3 -m pip install pymongo
+    python3 -m pip install pymongo[srv]
+
+    git clone https://github.com/carriganm95/milliqanOffline.git    
+    git clone https://gitlab.cern.ch/MilliQan/MilliDAQ.git
+    cd MilliDAQ
+    make clean
+    make shared
+    echo "Compiled MilliDAQ shared library"
+    
+    cd ../milliqanOffline
+    git checkout -b singularity origin/singularity
+    cd ../
+
+    chmod -R a+rwx milliqanOffline
+    chmod -R a+rwx MilliDAQ
+

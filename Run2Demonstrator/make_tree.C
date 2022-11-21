@@ -41,8 +41,8 @@
 #include "TComplex.h"
 //#include "/net/cms26/cms26r0/milliqan/milliDAQ/interface/GlobalEvent.h"
 //#include "/net/cms26/cms26r0/milliqan/milliDAQ/interface/DemonstratorConfiguration.h"
-#include "/home/milliqan/MilliDAQ/interface/GlobalEvent.h"  // Path in local directory
-#include "/home/milliqan/MilliDAQ/interface/DemonstratorConfiguration.h" // Path in local directory
+#include "GlobalEvent.h"  // Path in local directory
+#include "DemonstratorConfiguration.h" // Path in local directory
 #include "pmt-calibration/photon_template_generator/SPEGen.h"
 
 #include <string>

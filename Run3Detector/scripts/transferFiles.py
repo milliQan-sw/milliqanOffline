@@ -7,6 +7,7 @@ import socket
 import sys
 from ROOT import TFile
 from mongoConnect import mongoConnect
+from bson.objectid import ObjectId
 
 
 def get_lock(process_name):
@@ -22,24 +23,45 @@ def get_lock(process_name):
         sys.exit()
 
 def FileIsGood(path):
-    f = TFile.Open(path, "READ")
-    if not f or f.IsZombie():
-        os.system("echo '{0} is not ready to be transferred' >> {1}".format(path, logFile))
+    try:
+        f = TFile(path, "READ")
+        if not f or f.IsZombie():
+            os.system("echo '{0} is not ready to be transferred' >> {1}".format(path, logFile))
+            return False
+        f.Close()
+        return True
+    except:
         return False
-    f.Close()
-    return True
 
-def checkMongoDB(db,_id):
+def checkMongoDB(db,allIds,allInputs,force):
     nX = 0
     #Check for existing entry 
-    for x in (db.milliQanRawDatasets.find({"_id" : _id})):
-        nX +=1
-    return nX
+    idsOut = []
+    inputsOut = []
+    indicesToSkip = []
+    entriesInDB = []
+    locationInDb = []
+    currentLocation = []
+    for x in (db.milliQanRawDatasets.find({"_id" :{"$in": allIds}})):
+        indexInDb = allIds.index(x["_id"])
+        indicesToSkip.append(indexInDb)
+    for index in range(len(allIds)):
+        if not force and index in indicesToSkip: continue
+        idsOut.append(allIds[index])
+        inputsOut.append(allInputs[index])
+        if index in indicesToSkip:
+            entriesInDB.append(1)
+            for x in (db.milliQanRawDatasets.find({"_id" : allIds[index]})):
+                currentLocation.append(x["location"])
+        else:
+            entriesInDB.append(0)
+            currentLocation.append("")
+    return idsOut,inputsOut,entriesInDB, currentLocation
 
 def checkFileAtDest(inputFile,destination):
     host = destination.split(":")[0]
     filePath = os.path.join(destination.split(":")[-1],inputFile.split("/")[-1])
-    fileAtDest = os.system('ssh -q {0} [[ -f {1} ]]'.format(host,filePath)) == 0
+    fileAtDest = os.system('ssh -q {0} [ -f {1} ]'.format(host,filePath)) == 0
     #To be implemented!
     return fileAtDest
 
@@ -51,45 +73,53 @@ def updateMongoDB(milliQanRawDataset,db,replace):
 
 def transferFiles(source,destinations,logFile,force=False):
     db = mongoConnect()
-    get_lock('transfer_files')
+    get_lock('transfer_files_TEMP')
 
     nTransferred = 0
     mbytesTransferred = 0
-    os.system("echo '" + time.strftime("%c") + " Attempting to transfer data files to cms2.physics.ucsb.edu...' >> " + logFile)
-
+    os.system("echo '" + time.strftime("%c") + " Attempting to transfer data files ...' >> " + logFile)
+    allIds = []
+    allInputs = []
     for inputFile in sorted(glob.glob(source + "*.root"), key=os.path.getmtime):
+        for site, destination in destinations.items():
+            #Details for database entry
+            runNumber = int(inputFile.split("/")[-1].split("Run")[-1].split(".")[0])
+            fileNumber = int(inputFile.split("/")[-1].split(".")[1].split("_")[0])    
+            dataType = inputFile.split("/")[-1].split("_")[0]
+            _id = "{}_{}_{}_{}".format(runNumber,fileNumber,dataType,site)
+            allIds.append(_id)
+            allInputs.append(inputFile)
+    idsOut,inputsOut,entriesInDB, currentLocations = checkMongoDB(db,allIds,allInputs,force)
+    for _id,inputFile,entryInMongo,currentLocation in zip(idsOut,inputsOut,entriesInDB, currentLocations):
+        nTransferred += 1
+        sizeInMB = os.path.getsize(inputFile) / 1024.0 / 1024.0
+        mbytesTransferred += sizeInMB
         if FileIsGood(inputFile):
-            nTransferred += 1
-            sizeInMB = os.path.getsize(inputFile) / 1024.0 / 1024.0
-            mbytesTransferred += sizeInMB
-            for site, destination in destinations.items():
-                #Details for database entry
-                runNumber = int(inputFile.split("/")[-1].split("Run")[-1].split(".")[0])
-                fileNumber = int(inputFile.split("/")[-1].split(".")[1].split("_")[0])    
-                dataType = inputFile.split("/")[-1].split("_")[0]
-                _id = "{}_{}_{}_{}".format(runNumber,fileNumber,dataType,site)
-                entryInMongo = checkMongoDB(db,_id)
-                fileAtDestAndDB = entryInMongo and checkFileAtDest(inputFile,destination)
-                #Don't transfer files that have already been sent (unless forced)
-                if fileAtDestAndDB and not force:
-                    print (("File {0} exists at destination and database (skipping)").format(inputFile))
-                    continue
-                command = "rsync --bwlimit=20000 -zh " + inputFile + " " + destination + " >> " + logFile
-                transfer = os.system(command)
-                if transfer != 0:
-                    os.system("echo 'Transfer of {0} failed' >> {1}".format(inputFile, logFile))
-                else:
-                    os.system("echo '\t{0}:\t {1:.2f} MB' >> {2}".format(inputFile, sizeInMB, logFile))
+            if currentLocation != "":
+                currentLocation = currentLocation.split(inputFile.split("/")[-1])[0]
+                if currentLocation != destination.split(":")[-1]: destination = destination.split(":")[0] + ":" + currentLocation
+            fileAtDestAndDB = checkFileAtDest(inputFile,destination)
+            #Don't transfer files that have already been sent (unless forced)
+            if fileAtDestAndDB and entryInMongo and not force:
+                print (("File {0} exists at destination and database (skipping)").format(inputFile))
+                continue
+            command = "rsync -zh " + inputFile + " " + destination + " >> " + logFile
+            transfer = os.system(command)
+            if transfer != 0:
+                os.system("echo 'Transfer of {0} failed' >> {1}".format(inputFile, logFile))
+            else:
+                os.system("echo '\t{0}:\t {1:.2f} MB' >> {2}".format(inputFile, sizeInMB, logFile))
 
-                    #Add entry to database
-                    milliQanRawDataset = {}
-                    milliQanRawDataset["_id"] = _id
-                    milliQanRawDataset["run"] = runNumber
-                    milliQanRawDataset["file"] = fileNumber
-                    milliQanRawDataset["site"] = site
-                    milliQanRawDataset["type"] = dataType
-                    milliQanRawDataset["location"] = os.path.join(destination.split(":")[-1],inputFile.split("/")[-1])
-                    updateMongoDB(milliQanRawDataset, db, replace = entryInMongo)
+                #Add entry to database
+                runNumber,fileNumber,dataType,site = _id.split("_")
+                milliQanRawDataset = {}
+                milliQanRawDataset["_id"] = _id
+                milliQanRawDataset["run"] = int(runNumber)
+                milliQanRawDataset["file"] = int(fileNumber)
+                milliQanRawDataset["type"] = dataType
+                milliQanRawDataset["site"] = site
+                milliQanRawDataset["location"] = os.path.join(destination.split(":")[-1],inputFile.split("/")[-1])
+                updateMongoDB(milliQanRawDataset, db, replace = entryInMongo)
 
     os.system("echo 'Transferred {0:.2f} MB in {1} file(s).' >> {2}".format(mbytesTransferred, nTransferred, logFile))
 
@@ -97,5 +127,5 @@ if __name__ == "__main__":
     source = "/home/milliqan/data/"
     logFile = "/home/milliqan/MilliDAQ_FileTransfers.log"
 
-    destinations = {"UCSB":"milliqan@cms26.physics.ucsb.edu:/net/cms26/cms26r0/milliqan/Run3/", "OSU":"milliqan@cms-t3.mps.ohio-state.edu:/data/users/milliqan/run3/"}
+    destinations = {"UCSB":"milliqan@cms3.physics.ucsb.edu:/net/cms26/cms26r0/milliqan/Run3/", "OSU":"milliqan@128.146.39.20:/data/users/milliqan/run3/"} #temporary change to OSU ip address
     transferFiles(source,destinations,logFile,force=False)

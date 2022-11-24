@@ -6,7 +6,7 @@ from subprocess import check_output
 import argparse
 import json, math
 import os
-exe_default = os.getenv("OFFLINEDIR")+"/exe/v25.exe"
+exe_default = os.getenv("OFFLINEDIR")+"/exe/v27.exe"
 site = os.getenv("OFFLINESITE")
 import calendar;
 import time;

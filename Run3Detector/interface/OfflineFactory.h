@@ -94,6 +94,8 @@ struct offline_tree_{
     vector<float> v_delay;
     vector<float> v_area;
     vector<float> v_nPE;
+    vector<int> v_riseSamples;
+    vector<int> v_fallSamples;
     vector<float> v_duration;
     vector<bool> v_quiet;
     vector<float> v_presample_mean;

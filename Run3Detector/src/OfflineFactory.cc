@@ -276,6 +276,8 @@ void OfflineFactory::prepareOutBranches(){
     outTree->Branch("height",&outputTreeContents.v_height);
     outTree->Branch("area",&outputTreeContents.v_area);
     outTree->Branch("nPE",&outputTreeContents.v_nPE);
+    outTree->Branch("riseSamples",&outputTreeContents.v_riseSamples);
+    outTree->Branch("fallSamples",&outputTreeContents.v_fallSamples);
     outTree->Branch("ipulse",&outputTreeContents.v_ipulse);
     outTree->Branch("npulses",&outputTreeContents.v_npulses);
     outTree->Branch("time",&outputTreeContents.v_time);
@@ -325,6 +327,8 @@ void OfflineFactory::resetOutBranches(){
     outputTreeContents.v_height.clear();
     outputTreeContents.v_area.clear();
     outputTreeContents.v_nPE.clear();
+    outputTreeContents.v_riseSamples.clear();
+    outputTreeContents.v_fallSamples.clear();
     outputTreeContents.v_ipulse.clear();
     outputTreeContents.v_npulses.clear();
     outputTreeContents.v_time.clear();
@@ -1399,7 +1403,33 @@ vector< pair<float,float> > OfflineFactory::processChannel(int ic){
 	outputTreeContents.v_chanWithinBoard.push_back(chanArray->GetAt(ic));
 	outputTreeContents.v_chan.push_back(ic);
 	outputTreeContents.v_board.push_back(boardArray->GetAt(ic));
-	outputTreeContents.v_height.push_back(waves[ic]->GetMaximum());
+	float height = waves[ic]->GetMaximum();
+	outputTreeContents.v_height.push_back(height);
+	int above20 = -2;
+	int above80 = -1;
+	for (int iStart = waves[ic]->FindBin(pulseBounds[ipulse].first); iStart <= waves[ic]->FindBin(pulseBounds[ipulse].second); iStart++){
+	    if (waves[ic]->GetBinContent(iStart) > height*0.2 && above20 < 0){
+		above20 = iStart;
+	    }
+	    if (waves[ic]->GetBinContent(iStart) > height*0.8 && above80 < 0){
+		above80 = iStart;
+	    }
+	    if (above80 >= 0) break;
+	}
+	outputTreeContents.v_riseSamples.push_back(above80-above20);
+	above20 = -2;
+	above80 = -1;
+
+	for (int iFall = waves[ic]->FindBin(pulseBounds[ipulse].second); iFall >= waves[ic]->FindBin(pulseBounds[ipulse].first); iFall--){
+	    if (waves[ic]->GetBinContent(iFall) > height*0.2 && above20 < 0){
+		above20 = iFall;
+	    }
+	    if (waves[ic]->GetBinContent(iFall) > height*0.8 && above80 < 0){
+		above80 = iFall;
+	    }
+	    if (above80 >= 0) break;
+	}
+	outputTreeContents.v_fallSamples.push_back(above20-above80);
 	outputTreeContents.v_time.push_back(pulseBounds[ipulse].first);
 	outputTreeContents.v_time_module_calibrated.push_back(pulseBounds[ipulse].first+timingCalibrations[ic]);
 	outputTreeContents.v_area.push_back(waves[ic]->Integral());

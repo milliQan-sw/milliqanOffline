@@ -93,6 +93,7 @@ struct offline_tree_{
     vector<float> v_time_module_calibrated;
     vector<float> v_delay;
     vector<float> v_area;
+    vector<bool> v_pickupFlag;
     vector<float> v_nPE;
     vector<int> v_riseSamples;
     vector<int> v_fallSamples;

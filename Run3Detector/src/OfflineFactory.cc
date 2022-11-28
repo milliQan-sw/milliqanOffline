@@ -275,6 +275,7 @@ void OfflineFactory::prepareOutBranches(){
     outTree->Branch("board",&outputTreeContents.v_board);
     outTree->Branch("height",&outputTreeContents.v_height);
     outTree->Branch("area",&outputTreeContents.v_area);
+    outTree->Branch("pickupFlag",&outputTreeContents.v_pickupFlag);
     outTree->Branch("nPE",&outputTreeContents.v_nPE);
     outTree->Branch("riseSamples",&outputTreeContents.v_riseSamples);
     outTree->Branch("fallSamples",&outputTreeContents.v_fallSamples);
@@ -326,6 +327,7 @@ void OfflineFactory::resetOutBranches(){
     outputTreeContents.v_board.clear();
     outputTreeContents.v_height.clear();
     outputTreeContents.v_area.clear();
+    outputTreeContents.v_pickupFlag.clear();
     outputTreeContents.v_nPE.clear();
     outputTreeContents.v_riseSamples.clear();
     outputTreeContents.v_fallSamples.clear();
@@ -1416,6 +1418,7 @@ vector< pair<float,float> > OfflineFactory::processChannel(int ic){
 	    }
 	    if (above80 >= 0) break;
 	}
+	int riseSamples = above80-above20;
 	outputTreeContents.v_riseSamples.push_back(above80-above20);
 	above20 = -2;
 	above80 = -1;
@@ -1429,16 +1432,28 @@ vector< pair<float,float> > OfflineFactory::processChannel(int ic){
 	    }
 	    if (above80 >= 0) break;
 	}
+	int fallSamples = above20-above80;
 	outputTreeContents.v_fallSamples.push_back(above20-above80);
 	outputTreeContents.v_time.push_back(pulseBounds[ipulse].first);
 	outputTreeContents.v_time_module_calibrated.push_back(pulseBounds[ipulse].first+timingCalibrations[ic]);
-	outputTreeContents.v_area.push_back(waves[ic]->Integral());
+	float area = waves[ic]->Integral();
+	outputTreeContents.v_area.push_back(area);
 	outputTreeContents.v_nPE.push_back((waves[ic]->Integral()/(speAreas[ic]))*(0.4/sampleRate));
 	outputTreeContents.v_ipulse.push_back(ipulse);
 	outputTreeContents.v_npulses.push_back(npulses);
-	outputTreeContents.v_duration.push_back(pulseBounds[ipulse].second - pulseBounds[ipulse].first);
+	float duration = pulseBounds[ipulse].second - pulseBounds[ipulse].first;
+	outputTreeContents.v_duration.push_back(duration);
 	if(ipulse>0) outputTreeContents.v_delay.push_back(pulseBounds[ipulse].first - pulseBounds[ipulse-1].second);
 	else outputTreeContents.v_delay.push_back(9999.);
+	bool qual = true;
+	if (fallSamples < 2) qual=false;
+	if (qual && riseSamples < 2) qual=false;
+	if (qual && (height > 17. && height<100.) && (0.001*area < 0.04*(height-17.))) qual=false;
+	if (qual && height < 25. && duration < 4.6*(height-12.)) qual=false;
+	if (qual && height >= 25. && duration < 60. && fallSamples < 6) qual=false;
+	if (qual && 0.001*area < 0.4 && duration < 150.*(0.001*area)) qual=false;
+	if (qual && 0.001*area >= 0.4 && duration < 60.) qual=false;
+	outputTreeContents.v_pickupFlag.push_back(!qual);
 
     }    
 

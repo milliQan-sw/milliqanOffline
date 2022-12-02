@@ -1243,7 +1243,7 @@ void OfflineFactory::readWaveData(){
 	resetOutBranches();	
         //Process each event
         vector<vector<pair<float,float> > > allPulseBounds;
-	outputTreeContents.event=i;	
+	outputTreeContents.event=i+1;	
         allPulseBounds = readWaveDataPerEvent(i);
 	outputTreeContents.tClockCycles = tClockCycles;
 	outputTreeContents.tTime = tTime;

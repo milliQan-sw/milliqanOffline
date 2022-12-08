@@ -282,6 +282,9 @@ void OfflineFactory::prepareOutBranches(){
     outTree->Branch("ipulse",&outputTreeContents.v_ipulse);
     outTree->Branch("npulses",&outputTreeContents.v_npulses);
     outTree->Branch("time",&outputTreeContents.v_time);
+    outTree->Branch("timeFit",&outputTreeContents.v_timeFit);
+    outTree->Branch("time_module_calibrated",&outputTreeContents.v_time_module_calibrated);
+    outTree->Branch("timeFit_module_calibrated",&outputTreeContents.v_timeFit_module_calibrated);
     outTree->Branch("duration",&outputTreeContents.v_duration);
     outTree->Branch("delay",&outputTreeContents.v_delay);
     outTree->Branch("max",&outputTreeContents.v_max);
@@ -334,6 +337,9 @@ void OfflineFactory::resetOutBranches(){
     outputTreeContents.v_ipulse.clear();
     outputTreeContents.v_npulses.clear();
     outputTreeContents.v_time.clear();
+    outputTreeContents.v_time_module_calibrated.clear();
+    outputTreeContents.v_timeFit.clear();
+    outputTreeContents.v_timeFit_module_calibrated.clear();
     outputTreeContents.v_duration.clear();
     outputTreeContents.v_delay.clear();
     outputTreeContents.v_max.clear();
@@ -1175,15 +1181,15 @@ vector<vector<pair<float,float>>> OfflineFactory::readWaveDataPerEvent(int i){
 	    //
 	    //event_t_string = evt->digitizers[0].DAQTimeStamp.AsString("s");
 	    //
-	    //Can probably uncomment this bit once all groups connected?
-	    // outputTreeContents.v_groupTDC_g0.push_back(evt->digitizers[ib].TDC[0]);
-	    // outputTreeContents.v_groupTDC_g1.push_back(evt->digitizers[ib].TDC[1]);
-	    // outputTreeContents.v_groupTDC_g2.push_back(evt->digitizers[ib].TDC[2]);
-	    // outputTreeContents.v_groupTDC_g3.push_back(evt->digitizers[ib].TDC[3]);
-	    // outputTreeContents.v_groupTDC_g4.push_back(evt->digitizers[ib].TDC[4]);
-	    // outputTreeContents.v_groupTDC_g5.push_back(evt->digitizers[ib].TDC[5]);
-	    // outputTreeContents.v_groupTDC_g6.push_back(evt->digitizers[ib].TDC[6]);
-	    // outputTreeContents.v_groupTDC_g7.push_back(evt->digitizers[ib].TDC[7]);
+	    // Can probably uncomment this bit once all groups connected?
+	    outputTreeContents.v_groupTDC_g0.push_back(evt->digitizers[ib].TDC[0]);
+	    outputTreeContents.v_groupTDC_g1.push_back(evt->digitizers[ib].TDC[1]);
+	    outputTreeContents.v_groupTDC_g2.push_back(evt->digitizers[ib].TDC[2]);
+	    outputTreeContents.v_groupTDC_g3.push_back(evt->digitizers[ib].TDC[3]);
+	    outputTreeContents.v_groupTDC_g4.push_back(evt->digitizers[ib].TDC[4]);
+	    outputTreeContents.v_groupTDC_g5.push_back(evt->digitizers[ib].TDC[5]);
+	    outputTreeContents.v_groupTDC_g6.push_back(evt->digitizers[ib].TDC[6]);
+	    outputTreeContents.v_groupTDC_g7.push_back(evt->digitizers[ib].TDC[7]);
 
 	    outputTreeContents.present.push_back(evt->digitizers[ib].DataPresent);
 	}
@@ -1409,9 +1415,15 @@ vector< pair<float,float> > OfflineFactory::processChannel(int ic){
 	outputTreeContents.v_height.push_back(height);
 	int above20 = -2;
 	int above80 = -1;
+	float meanX = 0;
+	float meanY = 0;
 	for (int iStart = waves[ic]->FindBin(pulseBounds[ipulse].first); iStart <= waves[ic]->FindBin(pulseBounds[ipulse].second); iStart++){
 	    if (waves[ic]->GetBinContent(iStart) > height*0.2 && above20 < 0){
 		above20 = iStart;
+	    }
+	    if (above20 >=0){
+		meanX += waves[ic]->GetBinLowEdge(iStart);
+		meanY += waves[ic]->GetBinContent(iStart);
 	    }
 	    if (waves[ic]->GetBinContent(iStart) > height*0.8 && above80 < 0){
 		above80 = iStart;
@@ -1419,9 +1431,24 @@ vector< pair<float,float> > OfflineFactory::processChannel(int ic){
 	    if (above80 >= 0) break;
 	}
 	int riseSamples = above80-above20;
+	float gradNum = 0;
+	float gradDenom = 0;
+	float timeFit = -1;
+	if (riseSamples > 0){
+	    meanX /= riseSamples+1;
+	    meanY /= riseSamples+1;
+	    for (int iStart = above20; iStart < above80; iStart++){
+		gradNum += (waves[ic]->GetBinLowEdge(iStart)-meanX)*(waves[ic]->GetBinContent(iStart)-meanY);
+		gradDenom += (waves[ic]->GetBinLowEdge(iStart)-meanX)*(waves[ic]->GetBinLowEdge(iStart)-meanX);
+	    }
+	    float grad = gradNum/gradDenom;
+	    float intercept = meanY-grad*meanX;
+	    timeFit = -intercept/grad;
+	}
 	outputTreeContents.v_riseSamples.push_back(above80-above20);
 	above20 = -2;
 	above80 = -1;
+	if (timeFit < 0) timeFit = pulseBounds[ipulse].first;
 
 	for (int iFall = waves[ic]->FindBin(pulseBounds[ipulse].second); iFall >= waves[ic]->FindBin(pulseBounds[ipulse].first); iFall--){
 	    if (waves[ic]->GetBinContent(iFall) > height*0.2 && above20 < 0){
@@ -1435,7 +1462,9 @@ vector< pair<float,float> > OfflineFactory::processChannel(int ic){
 	int fallSamples = above20-above80;
 	outputTreeContents.v_fallSamples.push_back(above20-above80);
 	outputTreeContents.v_time.push_back(pulseBounds[ipulse].first);
+	outputTreeContents.v_timeFit.push_back(timeFit);
 	outputTreeContents.v_time_module_calibrated.push_back(pulseBounds[ipulse].first+timingCalibrations[ic]);
+	outputTreeContents.v_timeFit_module_calibrated.push_back(timeFit+timingCalibrations[ic]);
 	float area = waves[ic]->Integral();
 	outputTreeContents.v_area.push_back(area);
 	outputTreeContents.v_nPE.push_back((waves[ic]->Integral()/(speAreas[ic]))*(0.4/sampleRate));

@@ -87,10 +87,12 @@ struct offline_tree_{
     vector<int> v_type;
     vector<float> v_height;
     vector<float> v_time;
+    vector<float> v_timeFit;
     vector<float> v_triggerCandidates;
     vector<float> v_triggerCandidatesEnd;
     vector<int> v_triggerCandidatesChannel;
     vector<float> v_time_module_calibrated;
+    vector<float> v_timeFit_module_calibrated;
     vector<float> v_delay;
     vector<float> v_area;
     vector<bool> v_pickupFlag;
@@ -131,7 +133,7 @@ struct offline_tree_{
     vector<int> v_triggerMajority;
     vector<float> v_min_afterFilter;
 
-    float tClockCycles;
+    ulong tClockCycles;
     float tTime;
     float tStartTime;
     float tTrigger;
@@ -225,7 +227,7 @@ class OfflineFactory {
 	vector<TColor *> palette;
 	vector<int> colors;
         //Trigger friend variables
-        float tClockCycles = -1.;
+        ulong tClockCycles = 0;
         float tTime = -1.;
         float tStartTime = -1.;
         float tTrigger = -1.;

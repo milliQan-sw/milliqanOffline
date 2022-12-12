@@ -12,7 +12,7 @@ printOffline=False
 # Issue the serverStatus command and print the resultsT
 if printRaw:
     print ("RAW dataset")
-    for dataset in db.milliQanRawDatasets.find({"site": "UCSB","run": 469}):
+    for dataset in db.milliQanRawDatasets.find({"site": "UCSB","run": 591,"file":2,"type":"MatchedEvents"}):
         pprint(dataset)
 if printOffline:
     print ("Offline dataset")

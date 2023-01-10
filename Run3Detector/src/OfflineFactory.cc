@@ -58,8 +58,9 @@ void OfflineFactory::addFriendTree(){
     inTree->SetBranchAddress("trigger", &tTrigger);
     inTree->SetBranchAddress("timeDiff", &tTimeDiff);
     inTree->SetBranchAddress("matchingTimeCut", &tMatchingTimeCut);
-    inTree->SetBranchAddress("evtNum", &tEvtNum);
+    inTree->SetBranchAddress("eventNum", &tEvtNum);
     inTree->SetBranchAddress("runNum", &tRunNum);
+    inTree->SetBranchAddress("tbEvent", &tTBEvent);
 }
 
 // OfflineFactory::~OfflineFactory() {
@@ -256,6 +257,9 @@ void OfflineFactory::prepareOutBranches(){
     outTree->Branch("event",&outputTreeContents.event);
     outTree->Branch("runNumber",&outputTreeContents.runNumber);
     outTree->Branch("fileNumber",&outputTreeContents.fileNumber);
+    outTree->Branch("boardsMatched", &outputTreeContents.boardsMatched);
+    outTree->Branch("DAQEventNumber", &outputTreeContents.DAQEventNumber);
+
     // May need to change for DRS input
     outTree->Branch("triggerThreshold",&outputTreeContents.v_triggerThresholds);
     outTree->Branch("triggerEnable",&outputTreeContents.v_triggerEnable);
@@ -273,13 +277,32 @@ void OfflineFactory::prepareOutBranches(){
     outTree->Branch("board",&outputTreeContents.v_board);
     outTree->Branch("height",&outputTreeContents.v_height);
     outTree->Branch("area",&outputTreeContents.v_area);
+    outTree->Branch("pickupFlag",&outputTreeContents.v_pickupFlag);
     outTree->Branch("nPE",&outputTreeContents.v_nPE);
+    outTree->Branch("riseSamples",&outputTreeContents.v_riseSamples);
+    outTree->Branch("fallSamples",&outputTreeContents.v_fallSamples);
     outTree->Branch("ipulse",&outputTreeContents.v_ipulse);
     outTree->Branch("npulses",&outputTreeContents.v_npulses);
     outTree->Branch("time",&outputTreeContents.v_time);
+    outTree->Branch("timeFit",&outputTreeContents.v_timeFit);
+    outTree->Branch("time_module_calibrated",&outputTreeContents.v_time_module_calibrated);
+    outTree->Branch("timeFit_module_calibrated",&outputTreeContents.v_timeFit_module_calibrated);
     outTree->Branch("duration",&outputTreeContents.v_duration);
     outTree->Branch("delay",&outputTreeContents.v_delay);
     outTree->Branch("max",&outputTreeContents.v_max);
+
+    outTree->Branch("present",&outputTreeContents.present);
+    outTree->Branch("event_trigger_time_tag",&outputTreeContents.event_trigger_time_tag);
+    outTree->Branch("event_time",&outputTreeContents.event_time);
+    outTree->Branch("event_time_fromTDC",&outputTreeContents.event_time_fromTDC);
+    outTree->Branch("v_groupTDC_g0",&outputTreeContents.v_groupTDC_g0);
+    outTree->Branch("v_groupTDC_g1",&outputTreeContents.v_groupTDC_g1);
+    outTree->Branch("v_groupTDC_g2",&outputTreeContents.v_groupTDC_g2);
+    outTree->Branch("v_groupTDC_g3",&outputTreeContents.v_groupTDC_g3);
+    outTree->Branch("v_groupTDC_g4",&outputTreeContents.v_groupTDC_g4);
+    outTree->Branch("v_groupTDC_g5",&outputTreeContents.v_groupTDC_g5);
+    outTree->Branch("v_groupTDC_g6",&outputTreeContents.v_groupTDC_g6);
+    outTree->Branch("v_groupTDC_g7",&outputTreeContents.v_groupTDC_g7);
 
     outTree->Branch("tClockCycles", &outputTreeContents.tClockCycles);
     outTree->Branch("tTime", &outputTreeContents.tTime);
@@ -289,6 +312,7 @@ void OfflineFactory::prepareOutBranches(){
     outTree->Branch("tMatchingTimeCut", &outputTreeContents.tMatchingTimeCut);
     outTree->Branch("tEvtNum", &outputTreeContents.tEvtNum);
     outTree->Branch("tRunNum", &outputTreeContents.tRunNum);
+    outTree->Branch("tTBEvent", &outputTreeContents.tTBEvent);
 }
 //Clear vectors and reset 
 void OfflineFactory::resetOutBranches(){
@@ -309,13 +333,30 @@ void OfflineFactory::resetOutBranches(){
     outputTreeContents.v_board.clear();
     outputTreeContents.v_height.clear();
     outputTreeContents.v_area.clear();
+    outputTreeContents.v_pickupFlag.clear();
     outputTreeContents.v_nPE.clear();
+    outputTreeContents.v_riseSamples.clear();
+    outputTreeContents.v_fallSamples.clear();
     outputTreeContents.v_ipulse.clear();
     outputTreeContents.v_npulses.clear();
     outputTreeContents.v_time.clear();
+    outputTreeContents.v_time_module_calibrated.clear();
+    outputTreeContents.v_timeFit.clear();
+    outputTreeContents.v_timeFit_module_calibrated.clear();
     outputTreeContents.v_duration.clear();
     outputTreeContents.v_delay.clear();
     outputTreeContents.v_max.clear();
+   outputTreeContents.present.clear();
+   outputTreeContents.event_trigger_time_tag.clear();
+   outputTreeContents.event_time.clear();
+   outputTreeContents.v_groupTDC_g0.clear();
+   outputTreeContents.v_groupTDC_g1.clear();
+   outputTreeContents.v_groupTDC_g2.clear();
+   outputTreeContents.v_groupTDC_g3.clear();
+   outputTreeContents.v_groupTDC_g4.clear();
+   outputTreeContents.v_groupTDC_g5.clear();
+   outputTreeContents.v_groupTDC_g6.clear();
+   outputTreeContents.v_groupTDC_g7.clear();
 }
 //Read meta data from configuration
 void OfflineFactory::readMetaData(){
@@ -328,7 +369,7 @@ void OfflineFactory::readMetaData(){
 
 	outputTreeContents.runNumber = runNumber;
 	outputTreeContents.fileNumber = fileNumber;
-	int numBoards = cfg->digitizers.size();
+	numBoards = cfg->digitizers.size();
 	numChan = numBoards*16;
 	chanArray = new TArrayI(numChan);
 	boardArray = new TArrayI(numChan);
@@ -1111,14 +1152,68 @@ void OfflineFactory::displaychannelEvent(int event, vector<vector<pair<float,flo
 
 vector<vector<pair<float,float>>> OfflineFactory::readWaveDataPerEvent(int i){
     inTree->GetEntry(i);
-    if (!isDRS) loadWavesMilliDAQ();
+    if (!isDRS) {
+	//Read timing information
+	if(initSecs<0){ //if timestamps for first event are uninitialized
+	    if(evt->digitizers[0].DataPresent){ //If this event exists
+		initSecs=evt->digitizers[0].DAQTimeStamp.GetSec();
+		initTDC=evt->digitizers[0].TDC[0];
+		prevTDC=initTDC;
+	    }
+	}
+	Long64_t thisTDC;
+	if(evt->digitizers[0].DataPresent) thisTDC = evt->digitizers[0].TDC[0];
+	else thisTDC=prevTDC;
+
+	//Check if rollover has happened since last event: if previous time is more than 10 minutes later than current time 
+	//NB events are not written strictly in chronological order
+	Long64_t diff = prevTDC - thisTDC;
+	if(diff > 1.2e+11) nRollOvers++;
+	//For each tDC rollover: add max value: pow(2,40)
+	outputTreeContents.event_time_fromTDC = 5.0e-9*(thisTDC+nRollOvers*pow(2,40)-initTDC)+initSecs;
+	// outputTreeContents.event_t_string = TTimeStamp(outputTreeContents.event_time_fromTDC).AsString("s");
+	//update previous TDC holder for next event
+	prevTDC = thisTDC;
+	for (int ib =0; ib < numBoards; ib++){
+
+	    int secs = evt->digitizers[ib].DAQTimeStamp.GetSec();
+	    //This defines the time in seconds in standard unix epoch since 1970
+	    outputTreeContents.event_time.push_back(secs);
+
+	    outputTreeContents.event_trigger_time_tag.push_back(evt->digitizers[ib].TriggerTimeTag);
+	    //
+	    //event_t_string = evt->digitizers[0].DAQTimeStamp.AsString("s");
+	    //
+	    // Can probably uncomment this bit once all groups connected?
+	    outputTreeContents.v_groupTDC_g0.push_back(evt->digitizers[ib].TDC[0]);
+	    outputTreeContents.v_groupTDC_g1.push_back(evt->digitizers[ib].TDC[1]);
+	    outputTreeContents.v_groupTDC_g2.push_back(evt->digitizers[ib].TDC[2]);
+	    outputTreeContents.v_groupTDC_g3.push_back(evt->digitizers[ib].TDC[3]);
+	    outputTreeContents.v_groupTDC_g4.push_back(evt->digitizers[ib].TDC[4]);
+	    outputTreeContents.v_groupTDC_g5.push_back(evt->digitizers[ib].TDC[5]);
+	    outputTreeContents.v_groupTDC_g6.push_back(evt->digitizers[ib].TDC[6]);
+	    outputTreeContents.v_groupTDC_g7.push_back(evt->digitizers[ib].TDC[7]);
+
+	    outputTreeContents.present.push_back(evt->digitizers[ib].DataPresent);
+	}
+	loadWavesMilliDAQ();
+    }
     else loadWavesDRS();
     //Loop over channels
     vector<vector<pair<float,float> > > allPulseBounds;
+    outputTreeContents.boardsMatched = true;
+    for(int idig=0; idig < nDigitizers; idig++){
+        if(evt->digitizers[idig].TDC[0] == 0) {
+            outputTreeContents.boardsMatched = false;
+            break;
+        }
+    }
     for(int ic=0;ic<numChan;ic++){
         //Pulse finding
         allPulseBounds.push_back(processChannel(ic));
     }   
+
+    outputTreeContents.DAQEventNumber = evt->DAQEventNumber;
     
     return allPulseBounds;
 }
@@ -1152,7 +1247,7 @@ void OfflineFactory::readWaveData(){
     int maxEvents = inTree->GetEntries();
     cout<<"Processing "<<maxEvents<<" events in this file"<<endl;
     cout<<"Starting event loop"<<endl;
-    bool showBar = true;
+    bool showBar = false;
 
     for(int i=0;i<maxEvents;i++){
 
@@ -1169,6 +1264,7 @@ void OfflineFactory::readWaveData(){
 	outputTreeContents.tMatchingTimeCut = tMatchingTimeCut;
 	outputTreeContents.tEvtNum = tEvtNum;
 	outputTreeContents.tRunNum = tRunNum;
+    outputTreeContents.tTBEvent = tTBEvent;
         outTree->Fill();
 	//Totally necessary progress bar
 	float progress = 1.0*i/maxEvents; 
@@ -1321,16 +1417,78 @@ vector< pair<float,float> > OfflineFactory::processChannel(int ic){
 	outputTreeContents.v_chanWithinBoard.push_back(chanArray->GetAt(ic));
 	outputTreeContents.v_chan.push_back(ic);
 	outputTreeContents.v_board.push_back(boardArray->GetAt(ic));
-	outputTreeContents.v_height.push_back(waves[ic]->GetMaximum());
+	float height = waves[ic]->GetMaximum();
+	outputTreeContents.v_height.push_back(height);
+	int above20 = -2;
+	int above80 = -1;
+	float meanX = 0;
+	float meanY = 0;
+	for (int iStart = waves[ic]->FindBin(pulseBounds[ipulse].first); iStart <= waves[ic]->FindBin(pulseBounds[ipulse].second); iStart++){
+	    if (waves[ic]->GetBinContent(iStart) > height*0.2 && above20 < 0){
+		above20 = iStart;
+	    }
+	    if (above20 >=0){
+		meanX += waves[ic]->GetBinLowEdge(iStart);
+		meanY += waves[ic]->GetBinContent(iStart);
+	    }
+	    if (waves[ic]->GetBinContent(iStart) > height*0.8 && above80 < 0){
+		above80 = iStart;
+	    }
+	    if (above80 >= 0) break;
+	}
+	int riseSamples = above80-above20;
+	float gradNum = 0;
+	float gradDenom = 0;
+	float timeFit = -1;
+	if (riseSamples > 0){
+	    meanX /= riseSamples+1;
+	    meanY /= riseSamples+1;
+	    for (int iStart = above20; iStart < above80; iStart++){
+		gradNum += (waves[ic]->GetBinLowEdge(iStart)-meanX)*(waves[ic]->GetBinContent(iStart)-meanY);
+		gradDenom += (waves[ic]->GetBinLowEdge(iStart)-meanX)*(waves[ic]->GetBinLowEdge(iStart)-meanX);
+	    }
+	    float grad = gradNum/gradDenom;
+	    float intercept = meanY-grad*meanX;
+	    timeFit = -intercept/grad;
+	}
+	outputTreeContents.v_riseSamples.push_back(above80-above20);
+	above20 = -2;
+	above80 = -1;
+	if (timeFit < 0) timeFit = pulseBounds[ipulse].first;
+
+	for (int iFall = waves[ic]->FindBin(pulseBounds[ipulse].second); iFall >= waves[ic]->FindBin(pulseBounds[ipulse].first); iFall--){
+	    if (waves[ic]->GetBinContent(iFall) > height*0.2 && above20 < 0){
+		above20 = iFall;
+	    }
+	    if (waves[ic]->GetBinContent(iFall) > height*0.8 && above80 < 0){
+		above80 = iFall;
+	    }
+	    if (above80 >= 0) break;
+	}
+	int fallSamples = above20-above80;
+	outputTreeContents.v_fallSamples.push_back(above20-above80);
 	outputTreeContents.v_time.push_back(pulseBounds[ipulse].first);
+	outputTreeContents.v_timeFit.push_back(timeFit);
 	outputTreeContents.v_time_module_calibrated.push_back(pulseBounds[ipulse].first+timingCalibrations[ic]);
-	outputTreeContents.v_area.push_back(waves[ic]->Integral());
-	outputTreeContents.v_nPE.push_back((waves[ic]->Integral()/(speAreas[ic]))*(1.6/sampleRate));
+	outputTreeContents.v_timeFit_module_calibrated.push_back(timeFit+timingCalibrations[ic]);
+	float area = waves[ic]->Integral();
+	outputTreeContents.v_area.push_back(area);
+	outputTreeContents.v_nPE.push_back((waves[ic]->Integral()/(speAreas[ic]))*(0.4/sampleRate));
 	outputTreeContents.v_ipulse.push_back(ipulse);
 	outputTreeContents.v_npulses.push_back(npulses);
-	outputTreeContents.v_duration.push_back(pulseBounds[ipulse].second - pulseBounds[ipulse].first);
+	float duration = pulseBounds[ipulse].second - pulseBounds[ipulse].first;
+	outputTreeContents.v_duration.push_back(duration);
 	if(ipulse>0) outputTreeContents.v_delay.push_back(pulseBounds[ipulse].first - pulseBounds[ipulse-1].second);
 	else outputTreeContents.v_delay.push_back(9999.);
+	bool qual = true;
+	if (fallSamples < 2) qual=false;
+	if (qual && riseSamples < 2) qual=false;
+	if (qual && (height > 17. && height<100.) && (0.001*area < 0.04*(height-17.))) qual=false;
+	if (qual && height < 25. && duration < 4.6*(height-12.)) qual=false;
+	if (qual && height >= 25. && duration < 60. && fallSamples < 6) qual=false;
+	if (qual && 0.001*area < 0.4 && duration < 150.*(0.001*area)) qual=false;
+	if (qual && 0.001*area >= 0.4 && duration < 60.) qual=false;
+	outputTreeContents.v_pickupFlag.push_back(!qual);
 
     }    
 

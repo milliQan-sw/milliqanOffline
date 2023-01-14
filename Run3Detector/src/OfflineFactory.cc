@@ -67,6 +67,7 @@ void OfflineFactory::addFriendTree(){
 //     if (outFile) outFile->Close();
 // }
 void OfflineFactory::loadJsonConfig(string configFileName){
+    std::cout << "HERE" << std::endl;
     
     std::string json;
     // configFileName = "{\"chanMap\":[[0,1,2,3],[4,5,6,7],[0,1,2,3],[4,5,6,7],[0,1,2,3],[4,5,6,7],[0,1,2,3],[4,5,6,7],[0,1,2,3],[4,5,6,7],[0,1,2,3],[4,5,6,7],[0,1,2,3],[4,5,6,7],[0,1,2,3],[4,5,6,7]]}";
@@ -357,6 +358,7 @@ void OfflineFactory::resetOutBranches(){
 }
 //Read meta data from configuration
 void OfflineFactory::readMetaData(){
+    std::cout << "361" << std::endl;
     //May need to change for DRS input
     TTree * metadata;
     metadata = (TTree*) inFile->Get("Metadata");
@@ -393,13 +395,15 @@ void OfflineFactory::readMetaData(){
     else{
 	//ADD SOMETHING TO DRS INPUT SUCH THAT THIS CAN BE EASILY READ!
 	//output_trees_test/CMS31.root
-	metadata->SetBranchAddress("boards", &boardsDRS);
-	metadata->SetBranchAddress("channels", &chansDRS);
+	metadata->SetBranchAddress("samplingRate", &sampleRate);
 	metadata->SetBranchAddress("numChan", &numChan);
+	metadata->SetBranchAddress("board_ids", &boardsDRS);
+	metadata->SetBranchAddress("channels", &chansDRS);
 	metadata->GetEntry(0);
 	chanArray = new TArrayI(numChan);
 	boardArray = new TArrayI(numChan);
 	for (int ic =0; ic < numChan; ic++){
+	    std::cout << numChan << " chansDRS[ic]" << std::endl;
 	    chanArray->AddAt(chansDRS[ic],ic);
 	    boardArray->AddAt(boardsDRS[ic],ic);
 	}

@@ -74,6 +74,7 @@ struct offline_tree_{
     bool beam;
     bool hardNoBeam;
     bool boardsMatched;
+    int DAQEventNumber;
 
     //pulse vectors
     vector<int> v_npulses;
@@ -141,6 +142,7 @@ struct offline_tree_{
     float tMatchingTimeCut;
     int tEvtNum;
     int tRunNum;
+    int tTBEvent;
     //Trigger tree members
 };
 //Offline factory class used to produce offline tree output
@@ -235,6 +237,7 @@ class OfflineFactory {
         float tMatchingTimeCut = -1.;
 	int tEvtNum = 0;
 	int tRunNum = 0;
+        int tTBEvent = 0;
     
 };
 #endif

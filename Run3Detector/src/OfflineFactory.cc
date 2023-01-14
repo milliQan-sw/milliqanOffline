@@ -58,8 +58,9 @@ void OfflineFactory::addFriendTree(){
     inTree->SetBranchAddress("trigger", &tTrigger);
     inTree->SetBranchAddress("timeDiff", &tTimeDiff);
     inTree->SetBranchAddress("matchingTimeCut", &tMatchingTimeCut);
-    inTree->SetBranchAddress("evtNum", &tEvtNum);
+    inTree->SetBranchAddress("eventNum", &tEvtNum);
     inTree->SetBranchAddress("runNum", &tRunNum);
+    inTree->SetBranchAddress("tbEvent", &tTBEvent);
 }
 
 // OfflineFactory::~OfflineFactory() {
@@ -258,6 +259,7 @@ void OfflineFactory::prepareOutBranches(){
     outTree->Branch("runNumber",&outputTreeContents.runNumber);
     outTree->Branch("fileNumber",&outputTreeContents.fileNumber);
     outTree->Branch("boardsMatched", &outputTreeContents.boardsMatched);
+    outTree->Branch("DAQEventNumber", &outputTreeContents.DAQEventNumber);
 
     // May need to change for DRS input
     outTree->Branch("triggerThreshold",&outputTreeContents.v_triggerThresholds);
@@ -311,6 +313,7 @@ void OfflineFactory::prepareOutBranches(){
     outTree->Branch("tMatchingTimeCut", &outputTreeContents.tMatchingTimeCut);
     outTree->Branch("tEvtNum", &outputTreeContents.tEvtNum);
     outTree->Branch("tRunNum", &outputTreeContents.tRunNum);
+    outTree->Branch("tTBEvent", &outputTreeContents.tTBEvent);
 }
 //Clear vectors and reset 
 void OfflineFactory::resetOutBranches(){
@@ -1213,6 +1216,8 @@ vector<vector<pair<float,float>>> OfflineFactory::readWaveDataPerEvent(int i){
         //Pulse finding
         allPulseBounds.push_back(processChannel(ic));
     }   
+
+    outputTreeContents.DAQEventNumber = evt->DAQEventNumber;
     
     return allPulseBounds;
 }
@@ -1263,6 +1268,7 @@ void OfflineFactory::readWaveData(){
 	outputTreeContents.tMatchingTimeCut = tMatchingTimeCut;
 	outputTreeContents.tEvtNum = tEvtNum;
 	outputTreeContents.tRunNum = tRunNum;
+    outputTreeContents.tTBEvent = tTBEvent;
         outTree->Fill();
 	//Totally necessary progress bar
 	float progress = 1.0*i/maxEvents; 

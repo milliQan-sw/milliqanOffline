@@ -211,7 +211,7 @@ class OfflineFactory {
 	TArrayI * boardArray;
 
 	//Declare global variables
-	double arrayVoltageDRS[1024];
+	double arrayVoltageDRS[100][1024];
 	int numChan;
 	int numBoards;
 	int boardsDRS[100];

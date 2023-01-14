@@ -68,8 +68,6 @@ void OfflineFactory::addFriendTree(){
 //     if (outFile) outFile->Close();
 // }
 void OfflineFactory::loadJsonConfig(string configFileName){
-    std::cout << "HERE" << std::endl;
-    
     std::string json;
     // configFileName = "{\"chanMap\":[[0,1,2,3],[4,5,6,7],[0,1,2,3],[4,5,6,7],[0,1,2,3],[4,5,6,7],[0,1,2,3],[4,5,6,7],[0,1,2,3],[4,5,6,7],[0,1,2,3],[4,5,6,7],[0,1,2,3],[4,5,6,7],[0,1,2,3],[4,5,6,7]]}";
     if (configFileName.find("{") != std::string::npos){
@@ -361,7 +359,6 @@ void OfflineFactory::resetOutBranches(){
 }
 //Read meta data from configuration
 void OfflineFactory::readMetaData(){
-    std::cout << "361" << std::endl;
     //May need to change for DRS input
     TTree * metadata;
     metadata = (TTree*) inFile->Get("Metadata");
@@ -399,6 +396,7 @@ void OfflineFactory::readMetaData(){
 	//ADD SOMETHING TO DRS INPUT SUCH THAT THIS CAN BE EASILY READ!
 	//output_trees_test/CMS31.root
 	metadata->SetBranchAddress("samplingRate", &sampleRate);
+	cout << "Overwriting sample rate from metadata: " << sampleRate <<" GHz" << endl; 
 	metadata->SetBranchAddress("numChan", &numChan);
 	metadata->SetBranchAddress("board_ids", &boardsDRS);
 	metadata->SetBranchAddress("channels", &chansDRS);
@@ -406,7 +404,6 @@ void OfflineFactory::readMetaData(){
 	chanArray = new TArrayI(numChan);
 	boardArray = new TArrayI(numChan);
 	for (int ic =0; ic < numChan; ic++){
-	    std::cout << numChan << " chansDRS[ic]" << std::endl;
 	    chanArray->AddAt(chansDRS[ic],ic);
 	    boardArray->AddAt(boardsDRS[ic],ic);
 	}
@@ -516,7 +513,6 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
         wavesShifted.push_back(waveShifted);
         boundsShifted.push_back(boundShifted);
     } //channel loop
-    //cout<<5<<endl;
 
     //Check the top 10 channels
     for(uint ic=0;ic<index.size()-1;ic++){
@@ -544,11 +540,9 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
 
     if (rangeMinX < 0) timeRange[0]*=1.1;
     else timeRange[0] = rangeMinX*0.9;
-    //cout<<"timeRange="<<timeRange[1]<<endl;
     
     if (rangeMaxX < 0) timeRange[1]= min(0.9*timeRange[1],1024./sampleRate);
     else timeRange[1] = max(1.1*timeRange[1],1024./sampleRate);
-    //cout<<"timeRange="<<timeRange[1]<<endl;
     
     float depth = 0.075*chanList.size();
     TLegend leg(0.45,0.9-depth,0.65,0.9);
@@ -597,7 +591,6 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
             }
         }
     } //channel loop close
-    //cout<<7<<endl;
      
     float boxw= 0.0438;
     float boxh=0.0438;
@@ -655,7 +648,6 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
     int pulseIndex=0; // Keep track of pulse index, since all pulses for all channels are actually stored in the same 1D vectors
     int maxPerChannel = 0;
     if (chanList.size() > 0) maxPerChannel = 10/chanList.size();
-    //cout<<8<<endl;
     
     for(uint i=0;i<chanList.size();i++){
         int ic = chanList[i];
@@ -799,7 +791,6 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
             currentYpos-=height*0.35;
         } //added
     } //channel loop closed
-    //cout<<9<<endl;
     
     //cout<<"Display directory is "<<displayDirectory<<endl;
     TString displayName;
@@ -811,7 +802,6 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
     for(uint i=0;i<chanList.size();i++){
         delete wavesShifted[i];
     }
-    //cout<<10<<endl;
     
 }
 
@@ -852,7 +842,6 @@ void OfflineFactory::displaychannelEvent(int event, vector<vector<pair<float,flo
         wavesShifted.push_back(waveShifted);
         boundsShifted.push_back(boundShifted);
     } //channel loop
-    //cout<<5<<endl;
 
     int maxheightbin = -1;
     maxheight*=1.1;
@@ -943,7 +932,6 @@ void OfflineFactory::displaychannelEvent(int event, vector<vector<pair<float,flo
         int pulseIndex=0; // Keep track of pulse index, since all pulses for all channels are actually stored in the same 1D vectors
         int maxPerChannel = 0;
         if (chanList.size() > 0) maxPerChannel = 10/chanList.size();
-        //cout<<8<<endl;
     
     
         float drawThresh=15;
@@ -1136,7 +1124,6 @@ void OfflineFactory::displaychannelEvent(int event, vector<vector<pair<float,flo
         currentYpos-=height*0.35;
         //added
         //channel loop closed
-        //cout<<9<<endl;
     
         //cout<<"Display directory is "<<displayDirectory<<endl;
         TString displayName;
@@ -1150,7 +1137,6 @@ void OfflineFactory::displaychannelEvent(int event, vector<vector<pair<float,flo
     for(uint i=0;i<chanList.size();i++){
         delete wavesShifted[i];
     }
-    //cout<<10<<endl;
     
 }
 
@@ -1500,13 +1486,18 @@ vector< pair<float,float> > OfflineFactory::processChannel(int ic){
 }
 
 void OfflineFactory::loadBranches(){
-    int lenDRS = sizeof(arrayVoltageDRS)/sizeof(arrayVoltageDRS[0]);
     if (!isDRS) {
 	inTree->SetBranchAddress("event", &evt);
 	for(int ic=0;ic<numChan;ic++) waves.push_back(new TH1D());
     }
     else{
-	for(int ic=0;ic<numChan;ic++) waves.push_back(new TH1D(TString(ic),"",lenDRS,0,lenDRS*1./sampleRate));
+	for(int ic=0;ic<numChan;ic++) {
+	    int chan =  chanArray->GetAt(ic);
+	    int board = boardArray->GetAt(ic);
+	    int lenDRS = sizeof(arrayVoltageDRS[ic])/sizeof(arrayVoltageDRS[ic][0]);
+	    inTree->SetBranchAddress(Form("voltages_%i_%i",board,chan),arrayVoltageDRS[ic]);
+	    waves.push_back(new TH1D(TString(ic),"",lenDRS,0,lenDRS*1./sampleRate));
+	}
     }
 }
 
@@ -1526,13 +1517,13 @@ void OfflineFactory::loadWavesMilliDAQ(){
 // Need to add a separate loop here in the case we have DRS data
 
 void OfflineFactory::loadWavesDRS(){
-    int lenDRS = sizeof(arrayVoltageDRS)/sizeof(arrayVoltageDRS[0]);
     for(int ic=0;ic<numChan;ic++){
 	int chan =  chanArray->GetAt(ic);
 	int board = boardArray->GetAt(ic);
-	inTree->SetBranchAddress(Form("voltages_%i_%i",board,chan),arrayVoltageDRS);
+	waves[ic]->Reset();
+	int lenDRS = sizeof(arrayVoltageDRS[ic])/sizeof(arrayVoltageDRS[ic][0]);
 	for(int it=0;it<lenDRS;it++){
-	    waves[ic]->SetBinContent(it,arrayVoltageDRS[it]);
+	    waves[ic]->SetBinContent(it,arrayVoltageDRS[ic][it]);
 	}
     }
 }

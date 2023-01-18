@@ -211,11 +211,11 @@ class OfflineFactory {
 	TArrayI * boardArray;
 
 	//Declare global variables
-	double arrayVoltageDRS[1024];
+	double arrayVoltageDRS[100][1024];
 	int numChan;
 	int numBoards;
-	int boardsDRS[50];
-	int chansDRS[50];
+	int boardsDRS[100];
+	int chansDRS[100];
 	Long64_t initTDC=-1;
 	Long64_t initSecs=-1;
 	Long64_t prevTDC=-1;

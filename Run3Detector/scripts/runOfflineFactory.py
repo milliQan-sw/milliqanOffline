@@ -92,8 +92,9 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
                     configurationsJSON[key] = configurationsJSONTemp[key]
         configurationsJSONString = json.dumps(configurationsJSON)
     argList = [exe,"-i "+inputFile,"-o "+outputFile,"-c "+"'"+configurationsJSONString+"'",
-            "-r "+str(runNumber),"-f "+str(fileNumber),"--offlineDir "+offlineDir,"-a",appendToTag,
-            "-m", mergedTriggerFile]
+            "-r "+str(runNumber),"-f "+str(fileNumber),"--offlineDir "+offlineDir,"-a",appendToTag]
+    if mergedTriggerFile != "":
+            argList.append("-m "+mergedTriggerFile)
     if drs:
         argList.append("--drs")
     if display:

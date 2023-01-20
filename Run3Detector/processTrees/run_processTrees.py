@@ -20,13 +20,14 @@ if __name__=="__main__":
     dataDir = '/store/user/milliqan/run3/'
     outDir = '/store/user/mcarrigan/trees/' + 'v' + swVersion + '/'
     logDir = d.strftime('/data/users/mcarrigan/log/trees/%m_%d_%H/')
+
     reprocessAllFiles = False
 
     if(not os.path.isdir(outDir)): os.mkdir(outDir)
     if(not os.path.isdir(logDir)): os.mkdir(logDir)
 
     alreadyProcessedFiles = []
-    '''
+
     for filename in os.listdir(outDir):
         if('.root' in filename and "MilliQan" in filename):
             index1 = filename.find("_")
@@ -35,15 +36,15 @@ if __name__=="__main__":
             numRun = int(filename[index1+4:index2])
             numFile = int(filename[index2+1:index3])
             alreadyProcessedFiles.append([numRun,numFile])
-    '''
+
     files = []
     for filename in os.listdir(dataDir):
         if('.root' in filename and "MilliQan" in filename):
+
             index1 = filename.find("_")
             index2 = filename.find(".")
             index3 = filename.find("_", index2+1)
             numRun = int(filename[index1+4:index2])
-            if numRun < 560: continue
             numFile = int(filename[index2+1:index3])
             if(not reprocessAllFiles):
                 if([numRun,numFile] in alreadyProcessedFiles): continue

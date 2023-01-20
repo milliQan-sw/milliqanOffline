@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-tar -xzvf milliqanOffline.tar.gz
+tar -xzvf milliqanOffline*.tar.gz milliqanOffline/
 tar -xzvf MilliDAQ.tar.gz
 
 cp tree_wrapper.py milliqanOffline/Run3Detector/
@@ -38,7 +38,7 @@ if [ ! -f "run.exe" ]; then
 fi
 
 echo Trying to run process number $1
-singularity exec -B ../../milliqanOffline/,../../MilliDAQ,/store/ ../../offline.sif python3 tree_wrapper.py $1 $2
+singularity exec -B ../../milliqanOffline/,../../MilliDAQ,/store/ ../../offline.sif python3 tree_wrapper.py $1 $2 $5
 
 filename="MilliQan_Run*.*.root"
 

@@ -2,6 +2,7 @@
 # 1/12/2023 Collin Zheng  Zheng.1947@buckeyemail.osu.edu
 # the code needs to be run with python2
 # this code is for v29 runs on T3 only
+#usage: python2 countingMap.py 593
 
 import argparse
 import ROOT as r

@@ -1,6 +1,6 @@
 #ver 1.0
 #1/12/2023 Collin Zheng  Zheng.1947@buckeyemail.osu.edu
-#the code needs to be run with python2
+# run the code in the following way with 3 run number at the end.  python3 countingMap.py 593
 #this code is for v29 runs on T3 only
 
 import math

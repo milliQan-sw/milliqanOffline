@@ -1,3 +1,22 @@
+### Output tree contents
+
+Each event of the tree contains several vectors storing details such as the channel, nPE, area and time of the pulses. The most important are summarised below:
+
+- chan: channel that recorded the pulse
+- layer: layer of channel 
+- area: area of the pulse in pVs
+- nPE: number of photons contained in pulse (determined through SPE calibration, approximate)
+- duration: pulse duration in ns
+- height: maximum amplitude in pulse in mV
+- time: uncalibrated time of pulse in ns
+- time_module_calibrated: calibrated time of pulse in ns (currently the same as time)
+- ipulse: pulse index
+
+In addition there are quantities that provide a single per channel measure of the noise and activity in each channel per event. These are vectors of length = number of channels (rather than number of pulses).
+
+- sidebandMean: the mean of the first 50ns of the waveform (this period is not used to find pulses)
+- sidebandRMS: the RMS of the first 50ns of the waveform
+
 ### Compiling the code:
 
 For the compilation to succeed, one must specify the path to the MilliDAQ shared object file (libMilliDAQ.so) and `ConfigurationReader.cc` in the compile script 
@@ -14,8 +33,6 @@ To compile the code, which produces an executable file (from the macro) that wil
 
 Keep track of the "target macro name" as this macro will be needed when making the offline trees.
 
-##To use common scripts, log onto milliqan username on SL6 machine (e.g. cms1, cms3, cms6, cms29)
-
 From the milliqanOffline directory you can run on a single file using the runMakeTree.py script.
 ### Making the Offline Trees
 The code is run by executing the `runOfflineFactory.py` script. You may execute the `runMakeTree.py` script using the following command:
@@ -31,7 +48,7 @@ NB. The jsons used to define the configurations are set by default within the sc
 At UCSB, use the processRuns.py script to run over larger quantities of data on the UCSB batch system. The input is determined by a mongoDB selection string and the command to run can be as follows:
 
 ```bash
-python3 scripts/processRuns.py -a <string to append to tag for output naming> -s <selection string> 
+python3 scripts/processRuns.py -a <string to append to tag for output naming> -s <selection string> -o <output directory>
 ```
  NB. Use the -h option to see more details
 

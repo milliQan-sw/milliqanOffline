@@ -2,7 +2,7 @@
 
 Each event of the tree contains several vectors storing details such as the channel, nPE, area and time of the pulses. The most important are summarised below:
 
-- chan: channel that recorded the pulse
+- chan: channel that recorded the pulse. See mapping [here](https://github.com/milliQan-sw/milliqanOffline/files/10484641/channelMapping.pdf)
 - layer: layer of channel 
 - area: area of the pulse in pVs
 - nPE: number of photons contained in pulse (determined through SPE calibration, approximate)
@@ -16,6 +16,8 @@ In addition there are quantities that provide a single per channel measure of th
 
 - sidebandMean: the mean of the first 50ns of the waveform (this period is not used to find pulses)
 - sidebandRMS: the RMS of the first 50ns of the waveform
+
+At UCSB per run offline trees are stored here: /homes/milliqan/milliqanOffline/Run3Detector/outputRun3/
 
 ### Compiling the code:
 

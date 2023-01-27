@@ -105,7 +105,7 @@ struct offline_tree_{
     vector<bool> v_quiet;
     vector<float> v_presample_mean;
     vector<float> v_presample_RMS;
-    vector<float> v_dynamic_pedestal;
+    vector<float> v_dynamicPedestal;
     vector<float> v_sideband_mean;
     vector<float> v_sideband_RMS;
     vector<float> v_sideband_mean_perFile;

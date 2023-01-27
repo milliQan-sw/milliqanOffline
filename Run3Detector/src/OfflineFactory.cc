@@ -264,7 +264,7 @@ void OfflineFactory::prepareOutBranches(){
     outTree->Branch("triggerEnable",&outputTreeContents.v_triggerEnable);
     outTree->Branch("triggerMajority",&outputTreeContents.v_triggerMajority);
     outTree->Branch("triggerLogic",&outputTreeContents.v_triggerLogic);
-    outTree->Branch("dynamic_pedestal",&outputTreeContents.v_dynamic_pedestal);
+    outTree->Branch("dynamicPedestal",&outputTreeContents.v_dynamicPedestal);
     outTree->Branch("sidebandMean",&outputTreeContents.v_sideband_mean);
     outTree->Branch("sidebandRMS",&outputTreeContents.v_sideband_RMS);
     outTree->Branch("maxThreeConsec",&outputTreeContents.v_max_threeConsec);
@@ -322,7 +322,7 @@ void OfflineFactory::resetOutBranches(){
     outputTreeContents.v_triggerEnable.clear();
     outputTreeContents.v_triggerMajority.clear();
     outputTreeContents.v_triggerLogic.clear();
-    outputTreeContents.v_dynamic_pedestal.clear();
+    outputTreeContents.v_dynamicPedestal.clear();
     outputTreeContents.v_sideband_mean.clear();
     outputTreeContents.v_sideband_RMS.clear();
     outputTreeContents.v_max_threeConsec.clear();
@@ -1337,7 +1337,7 @@ void OfflineFactory::prepareWave(int ic){
         
         pedestal_mV=-1250.00 + (max_ncount*0.5)+ 0.25;
     }
-    outputTreeContents.v_dynamic_pedestal.push_back(pedestal_mV);
+    outputTreeContents.v_dynamicPedestal.push_back(pedestal_mV);
     //Correct the waveform after applying the dynamic pedestal correction
     for(int ibin = 1; ibin <= waves[ic]->GetNbinsX(); ibin++){
 	waves[ic]->SetBinContent(ibin,waves[ic]->GetBinContent(ibin)-pedestal_mV);        

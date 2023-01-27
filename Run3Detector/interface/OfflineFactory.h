@@ -74,6 +74,7 @@ struct offline_tree_{
     bool beam;
     bool hardNoBeam;
     bool boardsMatched;
+    int DAQEventNumber;
 
     //pulse vectors
     vector<int> v_npulses;
@@ -87,17 +88,24 @@ struct offline_tree_{
     vector<int> v_type;
     vector<float> v_height;
     vector<float> v_time;
+    vector<float> v_timeFit;
     vector<float> v_triggerCandidates;
     vector<float> v_triggerCandidatesEnd;
     vector<int> v_triggerCandidatesChannel;
     vector<float> v_time_module_calibrated;
+    vector<float> v_timeFit_module_calibrated;
     vector<float> v_delay;
     vector<float> v_area;
+    vector<bool> v_pickupFlag;
+    vector<bool> v_pickupFlagTight;
     vector<float> v_nPE;
+    vector<int> v_riseSamples;
+    vector<int> v_fallSamples;
     vector<float> v_duration;
     vector<bool> v_quiet;
     vector<float> v_presample_mean;
     vector<float> v_presample_RMS;
+    vector<float> v_dynamic_pedestal;
     vector<float> v_sideband_mean;
     vector<float> v_sideband_RMS;
     vector<float> v_sideband_mean_perFile;
@@ -127,8 +135,8 @@ struct offline_tree_{
     vector<int> v_triggerLogic;
     vector<int> v_triggerMajority;
     vector<float> v_min_afterFilter;
-
-    float tClockCycles;
+    
+    ulong tClockCycles;
     float tTime;
     float tStartTime;
     float tTrigger;
@@ -136,6 +144,7 @@ struct offline_tree_{
     float tMatchingTimeCut;
     int tEvtNum;
     int tRunNum;
+    int tTBEvent;
     //Trigger tree members
 };
 //Offline factory class used to produce offline tree output
@@ -204,11 +213,11 @@ class OfflineFactory {
 	TArrayI * boardArray;
 
 	//Declare global variables
-	double arrayVoltageDRS[1024];
+	double arrayVoltageDRS[100][1024];
 	int numChan;
 	int numBoards;
-	int boardsDRS[50];
-	int chansDRS[50];
+	int boardsDRS[100];
+	int chansDRS[100];
 	Long64_t initTDC=-1;
 	Long64_t initSecs=-1;
 	Long64_t prevTDC=-1;
@@ -222,7 +231,7 @@ class OfflineFactory {
 	vector<TColor *> palette;
 	vector<int> colors;
         //Trigger friend variables
-        float tClockCycles = -1.;
+        ulong tClockCycles = 0;
         float tTime = -1.;
         float tStartTime = -1.;
         float tTrigger = -1.;
@@ -230,6 +239,7 @@ class OfflineFactory {
         float tMatchingTimeCut = -1.;
 	int tEvtNum = 0;
 	int tRunNum = 0;
+        int tTBEvent = 0;
     
 };
 #endif

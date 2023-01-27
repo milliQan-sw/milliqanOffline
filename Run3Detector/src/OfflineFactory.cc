@@ -58,8 +58,9 @@ void OfflineFactory::addFriendTree(){
     inTree->SetBranchAddress("trigger", &tTrigger);
     inTree->SetBranchAddress("timeDiff", &tTimeDiff);
     inTree->SetBranchAddress("matchingTimeCut", &tMatchingTimeCut);
-    inTree->SetBranchAddress("evtNum", &tEvtNum);
+    inTree->SetBranchAddress("eventNum", &tEvtNum);
     inTree->SetBranchAddress("runNum", &tRunNum);
+    inTree->SetBranchAddress("tbEvent", &tTBEvent);
 }
 
 // OfflineFactory::~OfflineFactory() {
@@ -67,7 +68,6 @@ void OfflineFactory::addFriendTree(){
 //     if (outFile) outFile->Close();
 // }
 void OfflineFactory::loadJsonConfig(string configFileName){
-    
     std::string json;
     // configFileName = "{\"chanMap\":[[0,1,2,3],[4,5,6,7],[0,1,2,3],[4,5,6,7],[0,1,2,3],[4,5,6,7],[0,1,2,3],[4,5,6,7],[0,1,2,3],[4,5,6,7],[0,1,2,3],[4,5,6,7],[0,1,2,3],[4,5,6,7],[0,1,2,3],[4,5,6,7]]}";
     if (configFileName.find("{") != std::string::npos){
@@ -257,12 +257,14 @@ void OfflineFactory::prepareOutBranches(){
     outTree->Branch("runNumber",&outputTreeContents.runNumber);
     outTree->Branch("fileNumber",&outputTreeContents.fileNumber);
     outTree->Branch("boardsMatched", &outputTreeContents.boardsMatched);
+    outTree->Branch("DAQEventNumber", &outputTreeContents.DAQEventNumber);
 
     // May need to change for DRS input
     outTree->Branch("triggerThreshold",&outputTreeContents.v_triggerThresholds);
     outTree->Branch("triggerEnable",&outputTreeContents.v_triggerEnable);
     outTree->Branch("triggerMajority",&outputTreeContents.v_triggerMajority);
     outTree->Branch("triggerLogic",&outputTreeContents.v_triggerLogic);
+    outTree->Branch("dynamic_pedestal",&outputTreeContents.v_dynamic_pedestal);
     outTree->Branch("sidebandMean",&outputTreeContents.v_sideband_mean);
     outTree->Branch("sidebandRMS",&outputTreeContents.v_sideband_RMS);
     outTree->Branch("maxThreeConsec",&outputTreeContents.v_max_threeConsec);
@@ -275,10 +277,17 @@ void OfflineFactory::prepareOutBranches(){
     outTree->Branch("board",&outputTreeContents.v_board);
     outTree->Branch("height",&outputTreeContents.v_height);
     outTree->Branch("area",&outputTreeContents.v_area);
+    outTree->Branch("pickupFlag",&outputTreeContents.v_pickupFlag);
+    outTree->Branch("pickupFlagTight",&outputTreeContents.v_pickupFlagTight);
     outTree->Branch("nPE",&outputTreeContents.v_nPE);
+    outTree->Branch("riseSamples",&outputTreeContents.v_riseSamples);
+    outTree->Branch("fallSamples",&outputTreeContents.v_fallSamples);
     outTree->Branch("ipulse",&outputTreeContents.v_ipulse);
     outTree->Branch("npulses",&outputTreeContents.v_npulses);
     outTree->Branch("time",&outputTreeContents.v_time);
+    outTree->Branch("timeFit",&outputTreeContents.v_timeFit);
+    outTree->Branch("time_module_calibrated",&outputTreeContents.v_time_module_calibrated);
+    outTree->Branch("timeFit_module_calibrated",&outputTreeContents.v_timeFit_module_calibrated);
     outTree->Branch("duration",&outputTreeContents.v_duration);
     outTree->Branch("delay",&outputTreeContents.v_delay);
     outTree->Branch("max",&outputTreeContents.v_max);
@@ -304,6 +313,7 @@ void OfflineFactory::prepareOutBranches(){
     outTree->Branch("tMatchingTimeCut", &outputTreeContents.tMatchingTimeCut);
     outTree->Branch("tEvtNum", &outputTreeContents.tEvtNum);
     outTree->Branch("tRunNum", &outputTreeContents.tRunNum);
+    outTree->Branch("tTBEvent", &outputTreeContents.tTBEvent);
 }
 //Clear vectors and reset 
 void OfflineFactory::resetOutBranches(){
@@ -312,6 +322,7 @@ void OfflineFactory::resetOutBranches(){
     outputTreeContents.v_triggerEnable.clear();
     outputTreeContents.v_triggerMajority.clear();
     outputTreeContents.v_triggerLogic.clear();
+    outputTreeContents.v_dynamic_pedestal.clear();
     outputTreeContents.v_sideband_mean.clear();
     outputTreeContents.v_sideband_RMS.clear();
     outputTreeContents.v_max_threeConsec.clear();
@@ -324,10 +335,17 @@ void OfflineFactory::resetOutBranches(){
     outputTreeContents.v_board.clear();
     outputTreeContents.v_height.clear();
     outputTreeContents.v_area.clear();
+    outputTreeContents.v_pickupFlag.clear();
+    outputTreeContents.v_pickupFlagTight.clear();
     outputTreeContents.v_nPE.clear();
+    outputTreeContents.v_riseSamples.clear();
+    outputTreeContents.v_fallSamples.clear();
     outputTreeContents.v_ipulse.clear();
     outputTreeContents.v_npulses.clear();
     outputTreeContents.v_time.clear();
+    outputTreeContents.v_time_module_calibrated.clear();
+    outputTreeContents.v_timeFit.clear();
+    outputTreeContents.v_timeFit_module_calibrated.clear();
     outputTreeContents.v_duration.clear();
     outputTreeContents.v_delay.clear();
     outputTreeContents.v_max.clear();
@@ -381,9 +399,11 @@ void OfflineFactory::readMetaData(){
     else{
 	//ADD SOMETHING TO DRS INPUT SUCH THAT THIS CAN BE EASILY READ!
 	//output_trees_test/CMS31.root
-	metadata->SetBranchAddress("boards", &boardsDRS);
-	metadata->SetBranchAddress("channels", &chansDRS);
+	metadata->SetBranchAddress("samplingRate", &sampleRate);
+	cout << "Overwriting sample rate from metadata: " << sampleRate <<" GHz" << endl; 
 	metadata->SetBranchAddress("numChan", &numChan);
+	metadata->SetBranchAddress("board_ids", &boardsDRS);
+	metadata->SetBranchAddress("channels", &chansDRS);
 	metadata->GetEntry(0);
 	chanArray = new TArrayI(numChan);
 	boardArray = new TArrayI(numChan);
@@ -497,7 +517,6 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
         wavesShifted.push_back(waveShifted);
         boundsShifted.push_back(boundShifted);
     } //channel loop
-    //cout<<5<<endl;
 
     //Check the top 10 channels
     for(uint ic=0;ic<index.size()-1;ic++){
@@ -525,11 +544,9 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
 
     if (rangeMinX < 0) timeRange[0]*=1.1;
     else timeRange[0] = rangeMinX*0.9;
-    //cout<<"timeRange="<<timeRange[1]<<endl;
     
     if (rangeMaxX < 0) timeRange[1]= min(0.9*timeRange[1],1024./sampleRate);
     else timeRange[1] = max(1.1*timeRange[1],1024./sampleRate);
-    //cout<<"timeRange="<<timeRange[1]<<endl;
     
     float depth = 0.075*chanList.size();
     TLegend leg(0.45,0.9-depth,0.65,0.9);
@@ -554,7 +571,6 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
         if(i==0) wavesShifted[ic]->Draw("hist");
         else wavesShifted[ic]->Draw("hist same");
         
-
         TLatex tlabelpeak;
         if(wavesShifted[ic]->GetMaximum()>50){
             tlabelpeak.SetTextSize(0.05);
@@ -579,7 +595,6 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
             }
         }
     } //channel loop close
-    //cout<<7<<endl;
      
     float boxw= 0.0438;
     float boxh=0.0438;
@@ -637,7 +652,7 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
     int pulseIndex=0; // Keep track of pulse index, since all pulses for all channels are actually stored in the same 1D vectors
     int maxPerChannel = 0;
     if (chanList.size() > 0) maxPerChannel = 10/chanList.size();
-    //cout<<8<<endl;
+    
     for(uint i=0;i<chanList.size();i++){
         int ic = chanList[i];
         int chan = chanArray->GetAt(ic);
@@ -780,20 +795,17 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
             currentYpos-=height*0.35;
         } //added
     } //channel loop closed
-    //cout<<9<<endl;
     
     //cout<<"Display directory is "<<displayDirectory<<endl;
-    
     TString displayName;
     displayName=Form(displayDirectory+"Run%i_File%i_Event%i_Version_%s.pdf",runNumber,fileNumber,event,"shorttagplaceholder"); 
     c.SaveAs(displayName);
     displayName=Form(displayDirectory+"Run%i_File%i_Event%i_Version_%s.png",runNumber,fileNumber,event,"shorttagplaceholder"); 
     c.SaveAs(displayName);
-    
+
     for(uint i=0;i<chanList.size();i++){
         delete wavesShifted[i];
     }
-    //cout<<10<<endl;
     
 }
 
@@ -834,7 +846,6 @@ void OfflineFactory::displaychannelEvent(int event, vector<vector<pair<float,flo
         wavesShifted.push_back(waveShifted);
         boundsShifted.push_back(boundShifted);
     } //channel loop
-    //cout<<5<<endl;
 
     int maxheightbin = -1;
     maxheight*=1.1;
@@ -925,10 +936,9 @@ void OfflineFactory::displaychannelEvent(int event, vector<vector<pair<float,flo
         int pulseIndex=0; // Keep track of pulse index, since all pulses for all channels are actually stored in the same 1D vectors
         int maxPerChannel = 0;
         if (chanList.size() > 0) maxPerChannel = 10/chanList.size();
-        //cout<<8<<endl;
     
     
-        float drawThresh=10;
+        float drawThresh=15;
         int ic = chanList[i];
         int chan = chanArray->GetAt(ic);
         //cout<<ic<<" ic,chan "<<chan<<endl;
@@ -1118,7 +1128,6 @@ void OfflineFactory::displaychannelEvent(int event, vector<vector<pair<float,flo
         currentYpos-=height*0.35;
         //added
         //channel loop closed
-        //cout<<9<<endl;
     
         //cout<<"Display directory is "<<displayDirectory<<endl;
         TString displayName;
@@ -1132,7 +1141,6 @@ void OfflineFactory::displaychannelEvent(int event, vector<vector<pair<float,flo
     for(uint i=0;i<chanList.size();i++){
         delete wavesShifted[i];
     }
-    //cout<<10<<endl;
     
 }
 
@@ -1170,15 +1178,15 @@ vector<vector<pair<float,float>>> OfflineFactory::readWaveDataPerEvent(int i){
 	    //
 	    //event_t_string = evt->digitizers[0].DAQTimeStamp.AsString("s");
 	    //
-	    //Can probably uncomment this bit once all groups connected?
-	    // outputTreeContents.v_groupTDC_g0.push_back(evt->digitizers[ib].TDC[0]);
-	    // outputTreeContents.v_groupTDC_g1.push_back(evt->digitizers[ib].TDC[1]);
-	    // outputTreeContents.v_groupTDC_g2.push_back(evt->digitizers[ib].TDC[2]);
-	    // outputTreeContents.v_groupTDC_g3.push_back(evt->digitizers[ib].TDC[3]);
-	    // outputTreeContents.v_groupTDC_g4.push_back(evt->digitizers[ib].TDC[4]);
-	    // outputTreeContents.v_groupTDC_g5.push_back(evt->digitizers[ib].TDC[5]);
-	    // outputTreeContents.v_groupTDC_g6.push_back(evt->digitizers[ib].TDC[6]);
-	    // outputTreeContents.v_groupTDC_g7.push_back(evt->digitizers[ib].TDC[7]);
+	    // Can probably uncomment this bit once all groups connected?
+	    outputTreeContents.v_groupTDC_g0.push_back(evt->digitizers[ib].TDC[0]);
+	    outputTreeContents.v_groupTDC_g1.push_back(evt->digitizers[ib].TDC[1]);
+	    outputTreeContents.v_groupTDC_g2.push_back(evt->digitizers[ib].TDC[2]);
+	    outputTreeContents.v_groupTDC_g3.push_back(evt->digitizers[ib].TDC[3]);
+	    outputTreeContents.v_groupTDC_g4.push_back(evt->digitizers[ib].TDC[4]);
+	    outputTreeContents.v_groupTDC_g5.push_back(evt->digitizers[ib].TDC[5]);
+	    outputTreeContents.v_groupTDC_g6.push_back(evt->digitizers[ib].TDC[6]);
+	    outputTreeContents.v_groupTDC_g7.push_back(evt->digitizers[ib].TDC[7]);
 
 	    outputTreeContents.present.push_back(evt->digitizers[ib].DataPresent);
 	}
@@ -1198,6 +1206,8 @@ vector<vector<pair<float,float>>> OfflineFactory::readWaveDataPerEvent(int i){
         //Pulse finding
         allPulseBounds.push_back(processChannel(ic));
     }   
+
+    outputTreeContents.DAQEventNumber = evt->DAQEventNumber;
     
     return allPulseBounds;
 }
@@ -1212,14 +1222,12 @@ void OfflineFactory::displayEvents(std::vector<int> & eventsToDisplay,TString di
     gSystem->mkdir(displayDirectoryForRun,true);
     TString displayDirectoryForRun1 = displayDirectory+"/Run"+to_string(runNumber)+"allchannels100events/";
     gSystem->mkdir(displayDirectoryForRun1,true);
-
-    //Get list of events
     for(auto iEvent: eventsToDisplay){
 	resetOutBranches();	
         vector<vector<pair<float,float> > > allPulseBounds;
         allPulseBounds = readWaveDataPerEvent(iEvent);
-	//displayEvent(iEvent,allPulseBounds,displayDirectoryForRun);
-        displaychannelEvent(iEvent,allPulseBounds,displayDirectoryForRun1);
+	displayEvent(iEvent,allPulseBounds,displayDirectoryForRun);
+        //displaychannelEvent(iEvent,allPulseBounds,displayDirectoryForRun1);
     }
     inFile->Close();
 }
@@ -1236,7 +1244,8 @@ void OfflineFactory::readWaveData(){
     bool showBar = false;
 
     for(int i=0;i<maxEvents;i++){
-
+    //for(int i=825;i<826;i++){
+        //cout<<"------------- Event="<<i<<"  -----------------"<<endl;
 	resetOutBranches();	
         //Process each event
         vector<vector<pair<float,float> > > allPulseBounds;
@@ -1250,6 +1259,7 @@ void OfflineFactory::readWaveData(){
 	outputTreeContents.tMatchingTimeCut = tMatchingTimeCut;
 	outputTreeContents.tEvtNum = tEvtNum;
 	outputTreeContents.tRunNum = tRunNum;
+    outputTreeContents.tTBEvent = tTBEvent;
         outTree->Fill();
 	//Totally necessary progress bar
 	float progress = 1.0*i/maxEvents; 
@@ -1284,9 +1294,55 @@ void OfflineFactory::prepareWave(int ic){
     // waves[ic]->ResetStats();
     //subtract calibrated mean
     for(int ibin = 1; ibin <= waves[ic]->GetNbinsX(); ibin++){
-	//waves[ic]->SetBinContent(ibin,waves[ic]->GetBinContent(ibin)-pedestals[ic]);
-        waves[ic]->SetBinContent(ibin,waves[ic]->GetBinContent(ibin)-pedestals[ic]);
+	waves[ic]->SetBinContent(ibin,waves[ic]->GetBinContent(ibin)-pedestals[ic]);        
     }
+
+    //Get dynamical pedestal per channel in a particular event
+    vector<double> baseline;
+    double pedestal_mV = 0.0; //Final pedestal correction to be applied
+    baseline.clear();
+    //Iteratively check if the variation in amplitude is less than 4 mV within 16 consecutive samples. Use only first 1000ns (400 samples) to avoid trigger.
+    for(int ibin = 1; ibin <= 400; ibin+=16){
+        double checkheightvariation=0, rms_variation=0.0;
+        for( int jbin=ibin;jbin<ibin+16;jbin++){
+            checkheightvariation+=waves[ic]->GetBinContent(jbin);
+        }
+        for( int jbin=ibin;jbin<ibin+16;jbin++){
+            rms_variation+=pow(waves[ic]->GetBinContent(jbin)- (checkheightvariation/16.0),2.0);
+        }
+        
+        rms_variation=fabs(sqrt(rms_variation/16.0));
+        if( (fabs(checkheightvariation/16.0)<150.0) && rms_variation < 4.0){
+            baseline.push_back(checkheightvariation/16.0);            
+        }
+    }
+    
+    //Calculate most probable value of the pedestal correction
+    if(baseline.size()>0){
+        int ncount[5000];
+        for(int count=0;count<5000;count++) ncount[count]=0;
+        for(int base=0;base<baseline.size();base++){
+            int value = (baseline.at(base) + (1250.0))*2.0;
+            ncount[value]++;
+        }
+        int max_ncount = 0, baseline_count=0;
+        for(int count=2500; count<5000;count++){
+            if(ncount[count]>baseline_count){
+                max_ncount=count; baseline_count=ncount[count];}
+        }
+        for(int count=2500; count>=0;count--){
+            if(ncount[count]>baseline_count){
+                max_ncount=count; baseline_count=ncount[count];}
+        }
+        
+        pedestal_mV=-1250.00 + (max_ncount*0.5)+ 0.25;
+    }
+    outputTreeContents.v_dynamic_pedestal.push_back(pedestal_mV);
+    //Correct the waveform after applying the dynamic pedestal correction
+    for(int ibin = 1; ibin <= waves[ic]->GetNbinsX(); ibin++){
+	waves[ic]->SetBinContent(ibin,waves[ic]->GetBinContent(ibin)-pedestal_mV);        
+    }
+
     //Need to add sideband measurements and subtraction here
     pair<float,float> mean_rms = measureSideband(ic);
     outputTreeContents.v_sideband_mean.push_back(mean_rms.first);
@@ -1383,8 +1439,8 @@ vector< pair<float,float> > OfflineFactory::processChannel(int ic){
     //FIXME Need to add low pass filter option back
     outputTreeContents.v_max_afterFilter.push_back(waves[ic]->GetMaximum());
     outputTreeContents.v_min_afterFilter.push_back(waves[ic]->GetMinimum());
-
-    for(int ipulse = 0; ipulse<npulses; ipulse++){
+    
+     for(int ipulse = 0; ipulse<npulses; ipulse++){
 	waves[ic]->SetAxisRange(pulseBounds[ipulse].first,pulseBounds[ipulse].second);
 	if (chanMap.size() > 0 and ic < chanMap.size()){
 	    outputTreeContents.v_column.push_back(chanMap[ic][0]);
@@ -1397,36 +1453,106 @@ vector< pair<float,float> > OfflineFactory::processChannel(int ic){
 	    outputTreeContents.v_row.push_back(0);
 	    outputTreeContents.v_layer.push_back(0);
 	    outputTreeContents.v_type.push_back(0);
-	}
+        }
 
 	//FIXME need to add calibrations (when available)
 	outputTreeContents.v_chanWithinBoard.push_back(chanArray->GetAt(ic));
 	outputTreeContents.v_chan.push_back(ic);
 	outputTreeContents.v_board.push_back(boardArray->GetAt(ic));
-	outputTreeContents.v_height.push_back(waves[ic]->GetMaximum());
+	float height = waves[ic]->GetMaximum();
+        outputTreeContents.v_height.push_back(height);
+	int above20 = -2;
+	int above80 = -1;
+	float meanX = 0;
+	float meanY = 0;
+	for (int iStart = waves[ic]->FindBin(pulseBounds[ipulse].first); iStart <= waves[ic]->FindBin(pulseBounds[ipulse].second); iStart++){
+	    if (waves[ic]->GetBinContent(iStart) > height*0.2 && above20 < 0){
+		above20 = iStart;
+	    }
+	    if (above20 >=0){
+		meanX += waves[ic]->GetBinLowEdge(iStart);
+		meanY += waves[ic]->GetBinContent(iStart);
+	    }
+	    if (waves[ic]->GetBinContent(iStart) > height*0.8 && above80 < 0){
+		above80 = iStart;
+	    }
+	    if (above80 >= 0) break;
+	}
+	int riseSamples = above80-above20;
+	float gradNum = 0;
+	float gradDenom = 0;
+	float timeFit = -1;
+	if (riseSamples > 0){
+	    meanX /= riseSamples+1;
+	    meanY /= riseSamples+1;
+	    for (int iStart = above20; iStart < above80; iStart++){
+		gradNum += (waves[ic]->GetBinLowEdge(iStart)-meanX)*(waves[ic]->GetBinContent(iStart)-meanY);
+		gradDenom += (waves[ic]->GetBinLowEdge(iStart)-meanX)*(waves[ic]->GetBinLowEdge(iStart)-meanX);
+	    }
+	    float grad = gradNum/gradDenom;
+	    float intercept = meanY-grad*meanX;
+	    timeFit = -intercept/grad;
+	}
+	outputTreeContents.v_riseSamples.push_back(above80-above20);
+	above20 = -2;
+	above80 = -1;
+	if (timeFit < 0) timeFit = pulseBounds[ipulse].first;
+
+	for (int iFall = waves[ic]->FindBin(pulseBounds[ipulse].second); iFall >= waves[ic]->FindBin(pulseBounds[ipulse].first); iFall--){
+	    if (waves[ic]->GetBinContent(iFall) > height*0.2 && above20 < 0){
+		above20 = iFall;
+	    }
+	    if (waves[ic]->GetBinContent(iFall) > height*0.8 && above80 < 0){
+		above80 = iFall;
+	    }
+	    if (above80 >= 0) break;
+	}
+	int fallSamples = above20-above80;
+	outputTreeContents.v_fallSamples.push_back(above20-above80);
 	outputTreeContents.v_time.push_back(pulseBounds[ipulse].first);
+	outputTreeContents.v_timeFit.push_back(timeFit);
 	outputTreeContents.v_time_module_calibrated.push_back(pulseBounds[ipulse].first+timingCalibrations[ic]);
-	outputTreeContents.v_area.push_back(waves[ic]->Integral());
+	outputTreeContents.v_timeFit_module_calibrated.push_back(timeFit+timingCalibrations[ic]);
+	float area = waves[ic]->Integral();
+	outputTreeContents.v_area.push_back(area);
 	outputTreeContents.v_nPE.push_back((waves[ic]->Integral()/(speAreas[ic]))*(0.4/sampleRate));
 	outputTreeContents.v_ipulse.push_back(ipulse);
 	outputTreeContents.v_npulses.push_back(npulses);
-	outputTreeContents.v_duration.push_back(pulseBounds[ipulse].second - pulseBounds[ipulse].first);
+	float duration = pulseBounds[ipulse].second - pulseBounds[ipulse].first;
+	outputTreeContents.v_duration.push_back(duration);
 	if(ipulse>0) outputTreeContents.v_delay.push_back(pulseBounds[ipulse].first - pulseBounds[ipulse-1].second);
 	else outputTreeContents.v_delay.push_back(9999.);
-
-    }    
+	bool qual = true;
+	if (fallSamples < 2) qual=false;
+	if (qual && riseSamples < 2) qual=false;
+	if (qual && (height > 17. && height<100.) && (0.001*area < 0.04*(height-17.))) qual=false;
+	if (qual && height < 25. && duration < 4.6*(height-12.)) qual=false;
+	if (qual && height >= 25. && duration < 60. && fallSamples < 6) qual=false;
+	if (qual && 0.001*area < 0.4 && duration < 150.*(0.001*area)) qual=false;
+	if (qual && 0.001*area >= 0.4 && duration < 60.) qual=false;
+        //Tight pickup flag criteria
+        bool qual_tight = false;
+        if(!qual && riseSamples >= fallSamples && pulseBounds[ipulse].first>70.0 && pulseBounds[ipulse].first<2400.0 && npulses<3 && duration < 100.0) qual_tight = true;
+        outputTreeContents.v_pickupFlag.push_back(!qual);
+        outputTreeContents.v_pickupFlagTight.push_back(qual_tight);
+    }
 
     return pulseBounds;
 }
 
 void OfflineFactory::loadBranches(){
-    int lenDRS = sizeof(arrayVoltageDRS)/sizeof(arrayVoltageDRS[0]);
     if (!isDRS) {
 	inTree->SetBranchAddress("event", &evt);
 	for(int ic=0;ic<numChan;ic++) waves.push_back(new TH1D());
     }
     else{
-	for(int ic=0;ic<numChan;ic++) waves.push_back(new TH1D(TString(ic),"",lenDRS,0,lenDRS*1./sampleRate));
+	for(int ic=0;ic<numChan;ic++) {
+	    int chan =  chanArray->GetAt(ic);
+	    int board = boardArray->GetAt(ic);
+	    int lenDRS = sizeof(arrayVoltageDRS[ic])/sizeof(arrayVoltageDRS[ic][0]);
+	    inTree->SetBranchAddress(Form("voltages_%i_%i",board,chan),arrayVoltageDRS[ic]);
+	    waves.push_back(new TH1D(TString(ic),"",lenDRS,0,lenDRS*1./sampleRate));
+	}
     }
 }
 
@@ -1446,13 +1572,13 @@ void OfflineFactory::loadWavesMilliDAQ(){
 // Need to add a separate loop here in the case we have DRS data
 
 void OfflineFactory::loadWavesDRS(){
-    int lenDRS = sizeof(arrayVoltageDRS)/sizeof(arrayVoltageDRS[0]);
     for(int ic=0;ic<numChan;ic++){
 	int chan =  chanArray->GetAt(ic);
 	int board = boardArray->GetAt(ic);
-	inTree->SetBranchAddress(Form("voltages_%i_%i",board,chan),arrayVoltageDRS);
+	waves[ic]->Reset();
+	int lenDRS = sizeof(arrayVoltageDRS[ic])/sizeof(arrayVoltageDRS[ic][0]);
 	for(int it=0;it<lenDRS;it++){
-	    waves[ic]->SetBinContent(it,arrayVoltageDRS[it]);
+	    waves[ic]->SetBinContent(it,arrayVoltageDRS[ic][it]);
 	}
     }
 }

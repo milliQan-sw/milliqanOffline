@@ -1,7 +1,8 @@
  #########################################################################################################################################################
  # Original Author: Ryan De Los Santos                                                                                                                   #
  # Use: Use to handle the data files and apply any necessary cuts for your analysis. When using this function make sure that you instantiate DataHandler #
- # then input what cuts you would like to use in applyCuts(). Call DataHandler.applyCuts() to apply all of your cuts.                                    #
+ # then input what cuts you would like to use in applyCuts(). Call DataHandler.applyCuts() to apply all of your cuts.
+ # Edit the  timingCut() by Collin                                   #
  #########################################################################################################################################################
 
 import ROOT as r
@@ -61,8 +62,21 @@ class DataHandler():
     #
     def timingCut(self, event):
         time = event.time_module_calibrated
+        '''
         if abs(min(time)-max(time)) > 15:
             return
+        '''
+        sorted_time = sorted (enumerate(time),key=lambda x: x[1])   #return (index,time)
+        time = []
+        index_list = []
+        for index,t in sorted_time:
+            time.append(t)
+            index_list.append(index)
+
+        ajacent_time = [y - x for x, y in zip(time[:], time[1:])]
+        for time1 in ajacent_time:
+            if time1 > 15: # check if the particle passing through ajecent layer is 15 ns
+                return 
 
         if self.debug:
             print(time)

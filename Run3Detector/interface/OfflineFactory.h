@@ -135,7 +135,7 @@ struct offline_tree_{
     vector<int> v_triggerLogic;
     vector<int> v_triggerMajority;
     vector<float> v_min_afterFilter;
-    
+
     ulong tClockCycles;
     float tTime;
     float tStartTime;

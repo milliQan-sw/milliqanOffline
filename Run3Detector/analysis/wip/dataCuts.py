@@ -74,10 +74,10 @@ class DataHandler():
             index_list.append(index)
 
         ajacent_time = [y - x for x, y in zip(time[:], time[1:])]
-        for time1 in ajacent_time:
-            if time1 > 15: # check if the particle passing through ajecent layer is 15 ns
-                return 
 
+        if any(time < 15 for time in ajacent_time): # check if the particle passing through ajecent layer is 15 ns
+            return
+        
         if self.debug:
             print(time)
 

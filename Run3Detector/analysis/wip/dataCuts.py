@@ -74,9 +74,12 @@ class DataHandler():
             index_list.append(index)
 
         ajacent_time = [y - x for x, y in zip(time[:], time[1:])]
-
-        if any(time < 15 for time in ajacent_time): # check if the particle passing through ajecent layer is 15 ns
+        # check if the particle passing through ajecent layer is 15 ns
+        # if the minimun value of time passing through ajcent layers is bigger than 15ns, 
+        # then it is different from the expected data. 
+        if min(ajacent_time) > 15: 
             return
+        
         
         if self.debug:
             print(time)

@@ -2,6 +2,11 @@
  # Original Author: Ryan De Los Santos                                                                                                                   #
  # Use: Use to handle the data files and apply any necessary cuts for your analysis. When using this function make sure that you instantiate DataHandler #
  # then input what cuts you would like to use in applyCuts(). Call DataHandler.applyCuts() to apply all of your cuts.
+ # Example:
+ # data = DataHandler("datapath")          # Replace datapath with where your data is stored
+ # data.applyCuts([data.npeCut, data.timingCut])       # Any of the functions within the class containing cut in the name can be used
+ #
+ #   # The code should return a few events that pass all of the cuts we expect small numbers for printed to screen for the number of events
  # Edit the  timingCut() by Collin                                   #
  #########################################################################################################################################################
 
@@ -91,11 +96,13 @@ class DataHandler():
 
     def applyCuts(self, cuts):
         cutData = []
+        # Run over all events
         for event in self.data:
+            # Run over all cuts in list given to applyCuts
             for cut in cuts:
-                event = cut(event)
+                event = cut(event) # Apply given cut
 
-                if event is not None:
+                if event is not None: # If there are no events that pass all of the cuts, skip
                     cutData.append(event)
                     if self.debug:
                         print("Event after cut \n ", event)

@@ -65,27 +65,41 @@ class DataHandler():
 
     # Removes events that don't pass the timing cut of -15ns < delta t < 15ns between each pulse
     # FIXME ValueError: min() arg is an empty sequence for one of the events
-
+    #'''
     def timingCut(self, event):
         time = event.time_module_calibrated
-        '''
-        if abs(min(time)-max(time)) > 15:
-            return
-        '''
-        sorted_time = sorted (enumerate(time),key=lambda x: x[1])   #return (index,time)
-        time = []
-        index_list = []
-        for index,t in sorted_time:
-            time.append(t)
-            index_list.append(index)
 
-        ajacent_time = [y - x for x, y in zip(time[:], time[1:])]
+        '''#original code
+        def timingCut(self, event):
+        time = event.time_module_calibrated
+    
+        if abs(min(time)-max(time)) > 15:
+           return
+        '''
+
+        if len(time) >= 2:
+            #print("len(time):"+str(len(time))) #debug
+            sorted_time = sorted (enumerate(time),key=lambda x: x[1])   #return (index,time)
+            #print("sorted_time"+str(sorted_time)) #debug
+            time = []
+            index_list = []
+            for index,t in sorted_time:
+                time.append(t)
+                index_list.append(index)
+
+            ajacent_time = [y - x for x, y in zip(time[:], time[1:])]
+            #print("ajacent_time"+str(ajacent_time)) # debug
+        else:  # it requires at least two hit to find the time passing two layers.
+            return 
+        
+        if self.debug:
+            print("Adjacent Time", ajacent_time)
+
         # check if the particle passing through ajecent layer is 15 ns
         # if the minimun value of time passing through ajcent layers is bigger than 15ns, 
         # then it is different from the expected data.
-        if self.debug:
-            print("Adjacent Time", ajacent_time)
         if min(ajacent_time) > 15: 
+            #print("ajacent time is not satified") #debug
             return
         
         
@@ -93,7 +107,7 @@ class DataHandler():
             print(time)
 
         return event
-
+    
     def applyCuts(self, cuts):
         cutData = []
         # Run over all events

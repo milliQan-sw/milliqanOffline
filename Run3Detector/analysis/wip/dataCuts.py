@@ -59,7 +59,8 @@ class DataHandler():
         return event
 
     # Removes events that don't pass the timing cut of -15ns < delta t < 15ns between each pulse
-    #
+    # FIXME ValueError: min() arg is an empty sequence for one of the events
+
     def timingCut(self, event):
         time = event.time_module_calibrated
         '''
@@ -76,7 +77,9 @@ class DataHandler():
         ajacent_time = [y - x for x, y in zip(time[:], time[1:])]
         # check if the particle passing through ajecent layer is 15 ns
         # if the minimun value of time passing through ajcent layers is bigger than 15ns, 
-        # then it is different from the expected data. 
+        # then it is different from the expected data.
+        if self.debug:
+            print("Adjacent Time", ajacent_time)
         if min(ajacent_time) > 15: 
             return
         
@@ -90,13 +93,17 @@ class DataHandler():
         cutData = []
         for event in self.data:
             for cut in cuts:
-                #FIXME Ensure that if None is returned that the loop does not continue
                 event = cut(event)
-            if event is not None:
-                cutData.append(event)
+
+                if event is not None:
+                    cutData.append(event)
+                    if self.debug:
+                        print("Event after cut \n ", event)
+                else:
+                    break
         return cutData
 
 if __name__ == "__main__":
     data = DataHandler('/store/user/mcarrigan/trees/v29/MilliQan_Run591.*_v29_firstPedestals.root')
-    cutData = data.applyCuts([data.npeCut, data.timingCut])
+    cutData = data.applyCuts([data.timingCut])
     print(len(cutData))

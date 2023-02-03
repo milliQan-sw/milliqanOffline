@@ -265,6 +265,8 @@ void OfflineFactory::prepareOutBranches(){
     outTree->Branch("triggerMajority",&outputTreeContents.v_triggerMajority);
     outTree->Branch("triggerLogic",&outputTreeContents.v_triggerLogic);
     outTree->Branch("dynamicPedestal",&outputTreeContents.v_dynamicPedestal);
+    outTree->Branch("dynamicPedestal_end",&outputTreeContents.v_dynamicPedestal_end);
+    outTree->Branch("nonPulse_RMS",&outputTreeContents.v_nonPulse_RMS);
     outTree->Branch("sidebandMean",&outputTreeContents.v_sideband_mean);
     outTree->Branch("sidebandRMS",&outputTreeContents.v_sideband_RMS);
     outTree->Branch("maxThreeConsec",&outputTreeContents.v_max_threeConsec);
@@ -323,6 +325,8 @@ void OfflineFactory::resetOutBranches(){
     outputTreeContents.v_triggerMajority.clear();
     outputTreeContents.v_triggerLogic.clear();
     outputTreeContents.v_dynamicPedestal.clear();
+    outputTreeContents.v_dynamicPedestal_end.clear();
+    outputTreeContents.v_nonPulse_RMS.clear();
     outputTreeContents.v_sideband_mean.clear();
     outputTreeContents.v_sideband_RMS.clear();
     outputTreeContents.v_max_threeConsec.clear();
@@ -802,7 +806,11 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
     c.SaveAs(displayName);
     displayName=Form(displayDirectory+"Run%i_File%i_Event%i_Version_%s.png",runNumber,fileNumber,event,"shorttagplaceholder"); 
     c.SaveAs(displayName);
-
+    displayName=Form(displayDirectory+"Run%i_File%i_Event%i_Version_%s.gif",runNumber,fileNumber,event,"shorttagplaceholder"); 
+    c.SaveAs(displayName);
+    displayName=Form(displayDirectory+"Run%i_File%i_Event%i_Version_%s.jpg",runNumber,fileNumber,event,"shorttagplaceholder"); 
+    c.SaveAs(displayName);
+    
     for(uint i=0;i<chanList.size();i++){
         delete wavesShifted[i];
     }
@@ -1288,15 +1296,9 @@ void OfflineFactory::writeOutputTree(){
     outFile->Close();
     if (inFile) inFile->Close();
 }
-void OfflineFactory::prepareWave(int ic){
-    TAxis * a = waves[ic]->GetXaxis();
-    // a->Set( a->GetNbins(), a->GetXmin()/sampleRate, a->GetXmax()/sampleRate);
-    // waves[ic]->ResetStats();
-    //subtract calibrated mean
-    for(int ibin = 1; ibin <= waves[ic]->GetNbinsX(); ibin++){
-	waves[ic]->SetBinContent(ibin,waves[ic]->GetBinContent(ibin)-pedestals[ic]);        
-    }
 
+vector<float> OfflineFactory::dynamicPedestalcalculation(int ic){
+    vector<float> pedestals;
     //Get dynamical pedestal per channel in a particular event
     vector<double> baseline;
     double pedestal_mV = 0.0; //Final pedestal correction to be applied
@@ -1337,10 +1339,114 @@ void OfflineFactory::prepareWave(int ic){
         
         pedestal_mV=-1250.00 + (max_ncount*0.5)+ 0.25;
     }
-    outputTreeContents.v_dynamicPedestal.push_back(pedestal_mV);
+    pedestals.push_back(pedestal_mV);
+
+    //Obtain pedestal using the last 1000 ns of the event
+    //Get dynamical pedestal per channel in a particular event
+    vector<double> baselineend;
+    double pedestal_mVend = 0.0; //Final pedestal correction to be applied
+    baselineend.clear();
+    //Iteratively check if the variation in amplitude is less than 4 mV within 16 consecutive samples. Use only first 1000ns (400 samples) to avoid trigger.
+    for(int ibin = 625; ibin <= 1024; ibin+=16){
+        double checkheightvariation=0, rms_variation=0.0;
+        for( int jbin=ibin;jbin<ibin+16;jbin++){
+            checkheightvariation+=waves[ic]->GetBinContent(jbin);
+        }
+        for( int jbin=ibin;jbin<ibin+16;jbin++){
+            rms_variation+=pow(waves[ic]->GetBinContent(jbin)- (checkheightvariation/16.0),2.0);
+        }
+        
+        rms_variation=fabs(sqrt(rms_variation/16.0));
+        if( (fabs(checkheightvariation/16.0)<150.0) && rms_variation < 4.0){
+            baselineend.push_back(checkheightvariation/16.0);            
+        }
+    }
+    
+    //Calculate most probable value of the pedestal correction
+    if(baselineend.size()>0){
+        int ncount[5000];
+        for(int count=0;count<5000;count++) ncount[count]=0;
+        for(int base=0;base<baselineend.size();base++){
+            int value = (baselineend.at(base) + (1250.0))*2.0;
+            ncount[value]++;
+        }
+        int max_ncount = 0, baselineend_count=0;
+        for(int count=2500; count<5000;count++){
+            if(ncount[count]>baselineend_count){
+                max_ncount=count; baselineend_count=ncount[count];}
+        }
+        for(int count=2500; count>=0;count--){
+            if(ncount[count]>baselineend_count){
+                max_ncount=count; baselineend_count=ncount[count];}
+        }
+        
+        pedestal_mVend=-1250.00 + (max_ncount*0.5)+ 0.25;
+    }
+    pedestals.push_back(pedestal_mVend);
+
+    return pedestals;
+}
+
+
+void OfflineFactory::prepareWave(int ic){
+    TAxis * a = waves[ic]->GetXaxis();
+    // a->Set( a->GetNbins(), a->GetXmin()/sampleRate, a->GetXmax()/sampleRate);
+    // waves[ic]->ResetStats();
+    //subtract calibrated mean
+    for(int ibin = 1; ibin <= waves[ic]->GetNbinsX(); ibin++){
+	waves[ic]->SetBinContent(ibin,waves[ic]->GetBinContent(ibin)-pedestals[ic]);        
+    }
+
+    vector<float> pedestals=dynamicPedestalcalculation(ic);
+    //Get dynamical pedestal per channel in a particular event
+    /*
+    vector<double> baseline;
+    double pedestal_mV = 0.0; //Final pedestal correction to be applied
+    baseline.clear();
+    //Iteratively check if the variation in amplitude is less than 4 mV within 16 consecutive samples. Use only first 1000ns (400 samples) to avoid trigger.
+    for(int ibin = 1; ibin <= 400; ibin+=16){
+        double checkheightvariation=0, rms_variation=0.0;
+        for( int jbin=ibin;jbin<ibin+16;jbin++){
+            checkheightvariation+=waves[ic]->GetBinContent(jbin);
+        }
+        for( int jbin=ibin;jbin<ibin+16;jbin++){
+            rms_variation+=pow(waves[ic]->GetBinContent(jbin)- (checkheightvariation/16.0),2.0);
+        }
+        
+        rms_variation=fabs(sqrt(rms_variation/16.0));
+        if( (fabs(checkheightvariation/16.0)<150.0) && rms_variation < 4.0){
+            baseline.push_back(checkheightvariation/16.0);            
+        }
+    }
+    
+    //Calculate most probable value of the pedestal correction
+    if(baseline.size()>0){
+        int ncount[5000];
+        for(int count=0;count<5000;count++) ncount[count]=0;
+        for(int base=0;base<baseline.size();base++){
+            int value = (baseline.at(base) + (1250.0))*2.0;
+            ncount[value]++;
+        }
+        int max_ncount = 0, baseline_count=0;
+        for(int count=2500; count<5000;count++){
+            if(ncount[count]>baseline_count){
+                max_ncount=count; baseline_count=ncount[count];}
+        }
+        for(int count=2500; count>=0;count--){
+            if(ncount[count]>baseline_count){
+                max_ncount=count; baseline_count=ncount[count];}
+        }
+        
+        pedestal_mV=-1250.00 + (max_ncount*0.5)+ 0.25;
+    }
+    
+    */
+    outputTreeContents.v_dynamicPedestal.push_back(pedestals.at(0));
+    outputTreeContents.v_dynamicPedestal_end.push_back(pedestals.at(1));
+    
     //Correct the waveform after applying the dynamic pedestal correction
     for(int ibin = 1; ibin <= waves[ic]->GetNbinsX(); ibin++){
-	waves[ic]->SetBinContent(ibin,waves[ic]->GetBinContent(ibin)-pedestal_mV);        
+	waves[ic]->SetBinContent(ibin,waves[ic]->GetBinContent(ibin)-pedestals.at(0));        
     }
 
     //Need to add sideband measurements and subtraction here

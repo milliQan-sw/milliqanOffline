@@ -106,6 +106,8 @@ struct offline_tree_{
     vector<float> v_presample_mean;
     vector<float> v_presample_RMS;
     vector<float> v_dynamicPedestal;
+    vector<float> v_dynamicPedestal_end;
+    vector<float> v_nonPulse_RMS;    
     vector<float> v_sideband_mean;
     vector<float> v_sideband_RMS;
     vector<float> v_sideband_mean_perFile;
@@ -178,6 +180,7 @@ class OfflineFactory {
 	void prepareOutBranches();
 	void resetOutBranches();
 	void prepareWave(int);
+        vector<float> dynamicPedestalcalculation(int);
 	pair<float,float> measureSideband(int);
 	vector<pair<float,float>> findPulses(int);
 	vector<pair<float,float>> processChannel(int);

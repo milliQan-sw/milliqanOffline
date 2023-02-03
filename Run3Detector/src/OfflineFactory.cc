@@ -71,84 +71,84 @@ void OfflineFactory::loadJsonConfig(string configFileName){
     std::string json;
     // configFileName = "{\"chanMap\":[[0,1,2,3],[4,5,6,7],[0,1,2,3],[4,5,6,7],[0,1,2,3],[4,5,6,7],[0,1,2,3],[4,5,6,7],[0,1,2,3],[4,5,6,7],[0,1,2,3],[4,5,6,7],[0,1,2,3],[4,5,6,7],[0,1,2,3],[4,5,6,7]]}";
     if (configFileName.find("{") != std::string::npos){
-	json = configFileName;
+        json = configFileName;
     }
     else{
-    std::ifstream t(configFileName);
-    std::stringstream buffer;
-    buffer << t.rdbuf();
-    json = buffer.str();
+        std::ifstream t(configFileName);
+        std::stringstream buffer;
+        buffer << t.rdbuf();
+        json = buffer.str();
     }
 
     Json::Reader reader;
     Json::Value jsonRoot;
     bool parseSuccess = reader.parse(json, jsonRoot, false);
     if (parseSuccess)
-    {
-	if (json.find("chanMap") != std::string::npos){
-	    const Json::Value chan0 = jsonRoot["chanMap"];
-	    for ( int index = 0; index < chan0.size(); ++index ){
-		std::vector<int> chanMapPerChan;
-		for ( int index2 = 0; index2 < chan0[index].size(); ++index2 ){
-		    chanMapPerChan.push_back(chan0[index][index2].asInt());
-		}
-		chanMap.push_back(chanMapPerChan);
-	    }
-	    std::cout << "Loaded channel map" << std::endl;
-	}
-	if (json.find("pulseParams") != std::string::npos){
-	    nConsecSamples.clear();
-	    nConsecSamplesEnd.clear();
-	    lowThresh.clear();
-	    highThresh.clear();
-	    const Json::Value pulseParams = jsonRoot["pulseParams"];
-	    const Json::Value nConsecSamplesJson = pulseParams["nConsecSamples"];
-	    const Json::Value nConsecSamplesEndJson = pulseParams["nConsecSamplesEnd"];
-	    const Json::Value highThreshJson = pulseParams["highThresh"];
-	    const Json::Value lowThreshJson = pulseParams["lowThresh"];
-	    for (int index = 0; index < nConsecSamplesJson.size(); index ++){
-		nConsecSamples.push_back(nConsecSamplesJson[index].asInt());
-	    }
-	    for (int index = 0; index < nConsecSamplesEndJson.size(); index ++){
-		nConsecSamplesEnd.push_back(nConsecSamplesEndJson[index].asInt());
-	    }
-	    for (int index = 0; index < highThreshJson.size(); index ++){
-		highThresh.push_back(highThreshJson[index].asFloat());
-	    }
-	    for (int index = 0; index < lowThreshJson.size(); index ++){
-		lowThresh.push_back(lowThreshJson[index].asFloat());
-	    }
-	    std::cout << "Loaded pulse finding params" << std::endl;
-	}
-	if (json.find("timingCalibrations") != std::string::npos){
-	    const Json::Value timingCalibrationsJson = jsonRoot["timingCalibrations"];
-	    for (int index = 0; index < timingCalibrationsJson.size(); index ++){
-		timingCalibrations.push_back(timingCalibrationsJson[index].asFloat());
-	    }
-	    std::cout << "Loaded timing calibrations" << std::endl;
-	}
-	if (json.find("speAreas") != std::string::npos){
-	    const Json::Value speAreasJson = jsonRoot["speAreas"];
-	    for (int index = 0; index < speAreasJson.size(); index ++){
-		speAreas.push_back(speAreasJson[index].asFloat());
-	    }
-	    std::cout << "Loaded spe areas" << std::endl;
-	}
-	if (json.find("pedestals") != std::string::npos){
-	    const Json::Value pedestalsJson = jsonRoot["pedestals"];
-	    for (int index = 0; index < pedestalsJson.size(); index ++){
-		pedestals.push_back(pedestalsJson[index].asFloat());
-	    }
-	    std::cout << "Loaded pedestal corrections" << std::endl;
-	}
-	if (json.find("sampleRate") != std::string::npos){
-	    sampleRate = jsonRoot["sampleRate"].asFloat();
-	    std::cout << "Loaded sample rate: " << sampleRate << " GHz" << std::endl;
-	    std::cout << "This will be overwritten by metadata if available" << std::endl;
-	}
-    }
+        {
+            if (json.find("chanMap") != std::string::npos){
+                const Json::Value chan0 = jsonRoot["chanMap"];
+                for ( int index = 0; index < chan0.size(); ++index ){
+                    std::vector<int> chanMapPerChan;
+                    for ( int index2 = 0; index2 < chan0[index].size(); ++index2 ){
+                        chanMapPerChan.push_back(chan0[index][index2].asInt());
+                    }
+                    chanMap.push_back(chanMapPerChan);
+                }
+                std::cout << "Loaded channel map" << std::endl;
+            }
+            if (json.find("pulseParams") != std::string::npos){
+                nConsecSamples.clear();
+                nConsecSamplesEnd.clear();
+                lowThresh.clear();
+                highThresh.clear();
+                const Json::Value pulseParams = jsonRoot["pulseParams"];
+                const Json::Value nConsecSamplesJson = pulseParams["nConsecSamples"];
+                const Json::Value nConsecSamplesEndJson = pulseParams["nConsecSamplesEnd"];
+                const Json::Value highThreshJson = pulseParams["highThresh"];
+                const Json::Value lowThreshJson = pulseParams["lowThresh"];
+                for (int index = 0; index < nConsecSamplesJson.size(); index ++){
+                    nConsecSamples.push_back(nConsecSamplesJson[index].asInt());
+                }
+                for (int index = 0; index < nConsecSamplesEndJson.size(); index ++){
+                    nConsecSamplesEnd.push_back(nConsecSamplesEndJson[index].asInt());
+                }
+                for (int index = 0; index < highThreshJson.size(); index ++){
+                    highThresh.push_back(highThreshJson[index].asFloat());
+                }
+                for (int index = 0; index < lowThreshJson.size(); index ++){
+                    lowThresh.push_back(lowThreshJson[index].asFloat());
+                }
+                std::cout << "Loaded pulse finding params" << std::endl;
+            }
+            if (json.find("timingCalibrations") != std::string::npos){
+                const Json::Value timingCalibrationsJson = jsonRoot["timingCalibrations"];
+                for (int index = 0; index < timingCalibrationsJson.size(); index ++){
+                    timingCalibrations.push_back(timingCalibrationsJson[index].asFloat());
+                }
+                std::cout << "Loaded timing calibrations" << std::endl;
+            }
+            if (json.find("speAreas") != std::string::npos){
+                const Json::Value speAreasJson = jsonRoot["speAreas"];
+                for (int index = 0; index < speAreasJson.size(); index ++){
+                    speAreas.push_back(speAreasJson[index].asFloat());
+                }
+                std::cout << "Loaded spe areas" << std::endl;
+            }
+            if (json.find("pedestals") != std::string::npos){
+                const Json::Value pedestalsJson = jsonRoot["pedestals"];
+                for (int index = 0; index < pedestalsJson.size(); index ++){
+                    pedestals.push_back(pedestalsJson[index].asFloat());
+                }
+                std::cout << "Loaded pedestal corrections" << std::endl;
+            }
+            if (json.find("sampleRate") != std::string::npos){
+                sampleRate = jsonRoot["sampleRate"].asFloat();
+                std::cout << "Loaded sample rate: " << sampleRate << " GHz" << std::endl;
+                std::cout << "This will be overwritten by metadata if available" << std::endl;
+            }
+        }
     else{
-	throw invalid_argument(configFileName);
+        throw invalid_argument(configFileName);
     }
 }
 //Validate json input
@@ -156,51 +156,52 @@ void OfflineFactory::validateInput(){
     //HACKY check if tag has been added
     if(versionShort.Contains("placeholder")) throw runtime_error("This macro was compiled incorrectly. Please compile this macro using compile.sh");
     if (chanMap.size()) 
-    {
-	if (chanMap.size() != numChan) throw length_error("Number of channels ("+std::to_string(numChan)+") does not match channel map length: "+std::to_string(chanMap.size()));
-    }
+        {
+            if (chanMap.size() != numChan) throw length_error("Number of channels ("+std::to_string(numChan)+") does not match channel map length: "+std::to_string(chanMap.size()));
+        }
     if (nConsecSamples.size() > 1){
-	if (nConsecSamples.size() != numChan) throw length_error("nConsecSamples should be length "+std::to_string(numChan) + "or 1");
+        if (nConsecSamples.size() != numChan) throw length_error("nConsecSamples should be length "+std::to_string(numChan) + "or 1");
     }
     else{ 
-	for (int ic = 0; ic < numChan-1; ic++) nConsecSamples.push_back(nConsecSamples.at(0));
+        for (int ic = 0; ic < numChan-1; ic++) nConsecSamples.push_back(nConsecSamples.at(0));
     }
     if (nConsecSamplesEnd.size() > 1){
-	if (nConsecSamplesEnd.size() != numChan) throw length_error("nConsecSamplesEnd should be length "+std::to_string(numChan) + "or 1");
+        if (nConsecSamplesEnd.size() != numChan) throw length_error("nConsecSamplesEnd should be length "+std::to_string(numChan) + "or 1");
     }
     else{ 
-	for (int ic = 0; ic < numChan-1; ic++) nConsecSamplesEnd.push_back(nConsecSamplesEnd.at(0));
+        for (int ic = 0; ic < numChan-1; ic++) nConsecSamplesEnd.push_back(nConsecSamplesEnd.at(0));
     }
     if (lowThresh.size() > 1){
-	if (lowThresh.size() != numChan) throw length_error("lowThresh should be length "+std::to_string(numChan) + "or 1");
+        if (lowThresh.size() != numChan) throw length_error("lowThresh should be length "+std::to_string(numChan) + "or 1");
     }
     else{ 
-	for (int ic = 0; ic < numChan-1; ic++) lowThresh.push_back(lowThresh.at(0));
+        for (int ic = 0; ic < numChan-1; ic++) lowThresh.push_back(lowThresh.at(0));
     }
     if (highThresh.size() > 1){
-	if (highThresh.size() != numChan) throw length_error("highThresh should be length "+std::to_string(numChan) + "or 1");
+        if (highThresh.size() != numChan) throw length_error("highThresh should be length "+std::to_string(numChan) + "or 1");
     }
     else{ 
-	for (int ic = 0; ic < numChan-1; ic++) highThresh.push_back(highThresh.at(0));
+        for (int ic = 0; ic < numChan-1; ic++) highThresh.push_back(highThresh.at(0));
     }
-////Calibrations
+    ////Calibrations
     if (timingCalibrations.size() > 0){
-	if (timingCalibrations.size() != numChan) throw length_error("timingCalibrations should be length "+std::to_string(numChan));
+        if (timingCalibrations.size() != numChan) throw length_error("timingCalibrations should be length "+std::to_string(numChan));
     }
     else{ 
-	for (int ic = 0; ic < numChan; ic++) timingCalibrations.push_back(0);
+        for (int ic = 0; ic < numChan; ic++) timingCalibrations.push_back(0);
     }
     if (pedestals.size() > 0){
-	if (pedestals.size() != numChan) throw length_error("pedestals should be length "+std::to_string(numChan));
+        if (pedestals.size() != numChan) throw length_error("pedestals should be length "+std::to_string(numChan));
+        for (int ic = 0; ic < numChan; ic++) pedestals[ic] = round(pedestals[ic]/heightGranularity)*heightGranularity;
     }
     else{ 
-	for (int ic = 0; ic < numChan; ic++) pedestals.push_back(0);
+        for (int ic = 0; ic < numChan; ic++) pedestals.push_back(0);
     }
     if (speAreas.size() > 0){
-	if (speAreas.size() != numChan) throw length_error("speAreas should be length "+std::to_string(numChan));
+        if (speAreas.size() != numChan) throw length_error("speAreas should be length "+std::to_string(numChan));
     }
     else{ 
-	for (int ic = 0; ic < numChan; ic++) speAreas.push_back(1);
+        for (int ic = 0; ic < numChan; ic++) speAreas.push_back(1);
     }
 }
 //Convenience function to produce offline tree output
@@ -264,6 +265,7 @@ void OfflineFactory::prepareOutBranches(){
     outTree->Branch("triggerEnable",&outputTreeContents.v_triggerEnable);
     outTree->Branch("triggerMajority",&outputTreeContents.v_triggerMajority);
     outTree->Branch("triggerLogic",&outputTreeContents.v_triggerLogic);
+    outTree->Branch("dynamicPedestal",&outputTreeContents.v_dynamicPedestal);
     outTree->Branch("sidebandMean",&outputTreeContents.v_sideband_mean);
     outTree->Branch("sidebandRMS",&outputTreeContents.v_sideband_RMS);
     outTree->Branch("maxThreeConsec",&outputTreeContents.v_max_threeConsec);
@@ -277,6 +279,7 @@ void OfflineFactory::prepareOutBranches(){
     outTree->Branch("height",&outputTreeContents.v_height);
     outTree->Branch("area",&outputTreeContents.v_area);
     outTree->Branch("pickupFlag",&outputTreeContents.v_pickupFlag);
+    outTree->Branch("pickupFlagTight",&outputTreeContents.v_pickupFlagTight);
     outTree->Branch("nPE",&outputTreeContents.v_nPE);
     outTree->Branch("riseSamples",&outputTreeContents.v_riseSamples);
     outTree->Branch("fallSamples",&outputTreeContents.v_fallSamples);
@@ -320,6 +323,7 @@ void OfflineFactory::resetOutBranches(){
     outputTreeContents.v_triggerEnable.clear();
     outputTreeContents.v_triggerMajority.clear();
     outputTreeContents.v_triggerLogic.clear();
+    outputTreeContents.v_dynamicPedestal.clear();
     outputTreeContents.v_sideband_mean.clear();
     outputTreeContents.v_sideband_RMS.clear();
     outputTreeContents.v_max_threeConsec.clear();
@@ -333,6 +337,7 @@ void OfflineFactory::resetOutBranches(){
     outputTreeContents.v_height.clear();
     outputTreeContents.v_area.clear();
     outputTreeContents.v_pickupFlag.clear();
+    outputTreeContents.v_pickupFlagTight.clear();
     outputTreeContents.v_nPE.clear();
     outputTreeContents.v_riseSamples.clear();
     outputTreeContents.v_fallSamples.clear();
@@ -345,17 +350,17 @@ void OfflineFactory::resetOutBranches(){
     outputTreeContents.v_duration.clear();
     outputTreeContents.v_delay.clear();
     outputTreeContents.v_max.clear();
-   outputTreeContents.present.clear();
-   outputTreeContents.event_trigger_time_tag.clear();
-   outputTreeContents.event_time.clear();
-   outputTreeContents.v_groupTDC_g0.clear();
-   outputTreeContents.v_groupTDC_g1.clear();
-   outputTreeContents.v_groupTDC_g2.clear();
-   outputTreeContents.v_groupTDC_g3.clear();
-   outputTreeContents.v_groupTDC_g4.clear();
-   outputTreeContents.v_groupTDC_g5.clear();
-   outputTreeContents.v_groupTDC_g6.clear();
-   outputTreeContents.v_groupTDC_g7.clear();
+    outputTreeContents.present.clear();
+    outputTreeContents.event_trigger_time_tag.clear();
+    outputTreeContents.event_time.clear();
+    outputTreeContents.v_groupTDC_g0.clear();
+    outputTreeContents.v_groupTDC_g1.clear();
+    outputTreeContents.v_groupTDC_g2.clear();
+    outputTreeContents.v_groupTDC_g3.clear();
+    outputTreeContents.v_groupTDC_g4.clear();
+    outputTreeContents.v_groupTDC_g5.clear();
+    outputTreeContents.v_groupTDC_g6.clear();
+    outputTreeContents.v_groupTDC_g7.clear();
 }
 //Read meta data from configuration
 void OfflineFactory::readMetaData(){
@@ -363,50 +368,50 @@ void OfflineFactory::readMetaData(){
     TTree * metadata;
     metadata = (TTree*) inFile->Get("Metadata");
     if (!isDRS){
-	metadata->SetBranchAddress("configuration", &cfg);
-	metadata->GetEntry(0);
+        metadata->SetBranchAddress("configuration", &cfg);
+        metadata->GetEntry(0);
 
-	outputTreeContents.runNumber = runNumber;
-	outputTreeContents.fileNumber = fileNumber;
-	numBoards = cfg->digitizers.size();
-	numChan = numBoards*16;
-	chanArray = new TArrayI(numChan);
-	boardArray = new TArrayI(numChan);
+        outputTreeContents.runNumber = runNumber;
+        outputTreeContents.fileNumber = fileNumber;
+        numBoards = cfg->digitizers.size();
+        numChan = numBoards*16;
+        chanArray = new TArrayI(numChan);
+        boardArray = new TArrayI(numChan);
         //Read sampling rate from the metadata
         double secondsPerSample = cfg->digitizers[0].secondsPerSample;
         sampleRate = 1.0/(secondsPerSample*1e+09);
-	cout << "Overwriting sample rate from metadata: " << sampleRate <<" GHz" << endl; 
+        cout << "Overwriting sample rate from metadata: " << sampleRate <<" GHz" << endl; 
         //cout<<"secondspersample = "<<secondsPerSample<<" samplingrate="<<1.0/(secondsPerSample*1e+09)<< "GHz"<<endl;
             
         //Read trigger info and set channel array
-	for (int ic =0; ic < numChan; ic++){
-	    chanArray->SetAt(ic % 16,ic);
-	    boardArray->SetAt(ic/16,ic);
-	    float triggerThresh = cfg->digitizers[ic/16].channels[ic % 16].triggerThreshold;
-	    bool triggerEnable = cfg->digitizers[ic/16].channels[ic % 16].triggerEnable;
-	    int triggerMajority = cfg->digitizers[ic/16].GroupTriggerMajorityLevel;
-	    int triggerLogic = cfg->digitizers[ic/16].GroupTriggerLogic;
+        for (int ic =0; ic < numChan; ic++){
+            chanArray->SetAt(ic % 16,ic);
+            boardArray->SetAt(ic/16,ic);
+            float triggerThresh = cfg->digitizers[ic/16].channels[ic % 16].triggerThreshold;
+            bool triggerEnable = cfg->digitizers[ic/16].channels[ic % 16].triggerEnable;
+            int triggerMajority = cfg->digitizers[ic/16].GroupTriggerMajorityLevel;
+            int triggerLogic = cfg->digitizers[ic/16].GroupTriggerLogic;
             outputTreeContents.v_triggerThresholds.push_back(triggerThresh);
-	    outputTreeContents.v_triggerEnable.push_back(triggerEnable);
-	    outputTreeContents.v_triggerMajority.push_back(triggerMajority);
-	    outputTreeContents.v_triggerLogic.push_back(triggerLogic);
-	}
+            outputTreeContents.v_triggerEnable.push_back(triggerEnable);
+            outputTreeContents.v_triggerMajority.push_back(triggerMajority);
+            outputTreeContents.v_triggerLogic.push_back(triggerLogic);
+        }
     }
     else{
-	//ADD SOMETHING TO DRS INPUT SUCH THAT THIS CAN BE EASILY READ!
-	//output_trees_test/CMS31.root
-	metadata->SetBranchAddress("samplingRate", &sampleRate);
-	cout << "Overwriting sample rate from metadata: " << sampleRate <<" GHz" << endl; 
-	metadata->SetBranchAddress("numChan", &numChan);
-	metadata->SetBranchAddress("board_ids", &boardsDRS);
-	metadata->SetBranchAddress("channels", &chansDRS);
-	metadata->GetEntry(0);
-	chanArray = new TArrayI(numChan);
-	boardArray = new TArrayI(numChan);
-	for (int ic =0; ic < numChan; ic++){
-	    chanArray->AddAt(chansDRS[ic],ic);
-	    boardArray->AddAt(boardsDRS[ic],ic);
-	}
+        //ADD SOMETHING TO DRS INPUT SUCH THAT THIS CAN BE EASILY READ!
+        //output_trees_test/CMS31.root
+        metadata->SetBranchAddress("samplingRate", &sampleRate);
+        cout << "Overwriting sample rate from metadata: " << sampleRate <<" GHz" << endl; 
+        metadata->SetBranchAddress("numChan", &numChan);
+        metadata->SetBranchAddress("board_ids", &boardsDRS);
+        metadata->SetBranchAddress("channels", &chansDRS);
+        metadata->GetEntry(0);
+        chanArray = new TArrayI(numChan);
+        boardArray = new TArrayI(numChan);
+        for (int ic =0; ic < numChan; ic++){
+            chanArray->AddAt(chansDRS[ic],ic);
+            boardArray->AddAt(boardsDRS[ic],ic);
+        }
     }
 }
 
@@ -777,7 +782,7 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
             currentYpos=currentYpos-(height*0.6);
             //currentYpos-=height;
             tla.SetTextSize(0.04);
-        
+            /*
             for(int ip=0;ip<boundsShifted[ic].size();ip++){
                 TString row;
                 row = Form("Channel number = %d",ip);
@@ -787,7 +792,7 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
                     currentYpos-=height*1.0;
                 }
             }
-        
+            */
             currentYpos-=height*0.35;
         } //added
     } //channel loop closed
@@ -1143,50 +1148,50 @@ void OfflineFactory::displaychannelEvent(int event, vector<vector<pair<float,flo
 vector<vector<pair<float,float>>> OfflineFactory::readWaveDataPerEvent(int i){
     inTree->GetEntry(i);
     if (!isDRS) {
-	//Read timing information
-	if(initSecs<0){ //if timestamps for first event are uninitialized
-	    if(evt->digitizers[0].DataPresent){ //If this event exists
-		initSecs=evt->digitizers[0].DAQTimeStamp.GetSec();
-		initTDC=evt->digitizers[0].TDC[0];
-		prevTDC=initTDC;
-	    }
-	}
-	Long64_t thisTDC;
-	if(evt->digitizers[0].DataPresent) thisTDC = evt->digitizers[0].TDC[0];
-	else thisTDC=prevTDC;
+        //Read timing information
+        if(initSecs<0){ //if timestamps for first event are uninitialized
+            if(evt->digitizers[0].DataPresent){ //If this event exists
+                initSecs=evt->digitizers[0].DAQTimeStamp.GetSec();
+                initTDC=evt->digitizers[0].TDC[0];
+                prevTDC=initTDC;
+            }
+        }
+        Long64_t thisTDC;
+        if(evt->digitizers[0].DataPresent) thisTDC = evt->digitizers[0].TDC[0];
+        else thisTDC=prevTDC;
 
-	//Check if rollover has happened since last event: if previous time is more than 10 minutes later than current time 
-	//NB events are not written strictly in chronological order
-	Long64_t diff = prevTDC - thisTDC;
-	if(diff > 1.2e+11) nRollOvers++;
-	//For each tDC rollover: add max value: pow(2,40)
-	outputTreeContents.event_time_fromTDC = 5.0e-9*(thisTDC+nRollOvers*pow(2,40)-initTDC)+initSecs;
-	// outputTreeContents.event_t_string = TTimeStamp(outputTreeContents.event_time_fromTDC).AsString("s");
-	//update previous TDC holder for next event
-	prevTDC = thisTDC;
-	for (int ib =0; ib < numBoards; ib++){
+        //Check if rollover has happened since last event: if previous time is more than 10 minutes later than current time 
+        //NB events are not written strictly in chronological order
+        Long64_t diff = prevTDC - thisTDC;
+        if(diff > 1.2e+11) nRollOvers++;
+        //For each tDC rollover: add max value: pow(2,40)
+        outputTreeContents.event_time_fromTDC = 5.0e-9*(thisTDC+nRollOvers*pow(2,40)-initTDC)+initSecs;
+        // outputTreeContents.event_t_string = TTimeStamp(outputTreeContents.event_time_fromTDC).AsString("s");
+        //update previous TDC holder for next event
+        prevTDC = thisTDC;
+        for (int ib =0; ib < numBoards; ib++){
 
-	    int secs = evt->digitizers[ib].DAQTimeStamp.GetSec();
-	    //This defines the time in seconds in standard unix epoch since 1970
-	    outputTreeContents.event_time.push_back(secs);
+            int secs = evt->digitizers[ib].DAQTimeStamp.GetSec();
+            //This defines the time in seconds in standard unix epoch since 1970
+            outputTreeContents.event_time.push_back(secs);
 
-	    outputTreeContents.event_trigger_time_tag.push_back(evt->digitizers[ib].TriggerTimeTag);
-	    //
-	    //event_t_string = evt->digitizers[0].DAQTimeStamp.AsString("s");
-	    //
-	    // Can probably uncomment this bit once all groups connected?
-	    outputTreeContents.v_groupTDC_g0.push_back(evt->digitizers[ib].TDC[0]);
-	    outputTreeContents.v_groupTDC_g1.push_back(evt->digitizers[ib].TDC[1]);
-	    outputTreeContents.v_groupTDC_g2.push_back(evt->digitizers[ib].TDC[2]);
-	    outputTreeContents.v_groupTDC_g3.push_back(evt->digitizers[ib].TDC[3]);
-	    outputTreeContents.v_groupTDC_g4.push_back(evt->digitizers[ib].TDC[4]);
-	    outputTreeContents.v_groupTDC_g5.push_back(evt->digitizers[ib].TDC[5]);
-	    outputTreeContents.v_groupTDC_g6.push_back(evt->digitizers[ib].TDC[6]);
-	    outputTreeContents.v_groupTDC_g7.push_back(evt->digitizers[ib].TDC[7]);
+            outputTreeContents.event_trigger_time_tag.push_back(evt->digitizers[ib].TriggerTimeTag);
+            //
+            //event_t_string = evt->digitizers[0].DAQTimeStamp.AsString("s");
+            //
+            // Can probably uncomment this bit once all groups connected?
+            outputTreeContents.v_groupTDC_g0.push_back(evt->digitizers[ib].TDC[0]);
+            outputTreeContents.v_groupTDC_g1.push_back(evt->digitizers[ib].TDC[1]);
+            outputTreeContents.v_groupTDC_g2.push_back(evt->digitizers[ib].TDC[2]);
+            outputTreeContents.v_groupTDC_g3.push_back(evt->digitizers[ib].TDC[3]);
+            outputTreeContents.v_groupTDC_g4.push_back(evt->digitizers[ib].TDC[4]);
+            outputTreeContents.v_groupTDC_g5.push_back(evt->digitizers[ib].TDC[5]);
+            outputTreeContents.v_groupTDC_g6.push_back(evt->digitizers[ib].TDC[6]);
+            outputTreeContents.v_groupTDC_g7.push_back(evt->digitizers[ib].TDC[7]);
 
-	    outputTreeContents.present.push_back(evt->digitizers[ib].DataPresent);
-	}
-	loadWavesMilliDAQ();
+            outputTreeContents.present.push_back(evt->digitizers[ib].DataPresent);
+        }
+        loadWavesMilliDAQ();
     }
     else loadWavesDRS();
     //Loop over channels
@@ -1219,10 +1224,10 @@ void OfflineFactory::displayEvents(std::vector<int> & eventsToDisplay,TString di
     TString displayDirectoryForRun1 = displayDirectory+"/Run"+to_string(runNumber)+"allchannels100events/";
     gSystem->mkdir(displayDirectoryForRun1,true);
     for(auto iEvent: eventsToDisplay){
-	resetOutBranches();	
+        resetOutBranches();
         vector<vector<pair<float,float> > > allPulseBounds;
         allPulseBounds = readWaveDataPerEvent(iEvent);
-	displayEvent(iEvent,allPulseBounds,displayDirectoryForRun);
+        displayEvent(iEvent,allPulseBounds,displayDirectoryForRun);
         //displaychannelEvent(iEvent,allPulseBounds,displayDirectoryForRun1);
     }
     inFile->Close();
@@ -1240,36 +1245,37 @@ void OfflineFactory::readWaveData(){
     bool showBar = false;
 
     for(int i=0;i<maxEvents;i++){
-
-	resetOutBranches();	
+        //for(int i=825;i<826;i++){
+        //cout<<"------------- Event="<<i<<"  -----------------"<<endl;
+        resetOutBranches();
         //Process each event
         vector<vector<pair<float,float> > > allPulseBounds;
-	outputTreeContents.event=i;	
+        outputTreeContents.event=i;
         allPulseBounds = readWaveDataPerEvent(i);
-	outputTreeContents.tClockCycles = tClockCycles;
-	outputTreeContents.tTime = tTime;
-	outputTreeContents.tStartTime = tStartTime;
-	outputTreeContents.tTrigger = tTrigger;
-	outputTreeContents.tTimeDiff = tTimeDiff;
-	outputTreeContents.tMatchingTimeCut = tMatchingTimeCut;
-	outputTreeContents.tEvtNum = tEvtNum;
-	outputTreeContents.tRunNum = tRunNum;
-    outputTreeContents.tTBEvent = tTBEvent;
+        outputTreeContents.tClockCycles = tClockCycles;
+        outputTreeContents.tTime = tTime;
+        outputTreeContents.tStartTime = tStartTime;
+        outputTreeContents.tTrigger = tTrigger;
+        outputTreeContents.tTimeDiff = tTimeDiff;
+        outputTreeContents.tMatchingTimeCut = tMatchingTimeCut;
+        outputTreeContents.tEvtNum = tEvtNum;
+        outputTreeContents.tRunNum = tRunNum;
+        outputTreeContents.tTBEvent = tTBEvent;
         outTree->Fill();
-	//Totally necessary progress bar
-	float progress = 1.0*i/maxEvents; 
-	if (showBar){
-	    int barWidth = 70;
-	    std::cout << "[";
-	    int pos = barWidth * progress;
-	    for (int i = 0; i < barWidth; ++i) {
-		if (i < pos) std::cout << "=";
-		else if (i == pos) std::cout << ">";
-		else std::cout << " ";
-	    }
-	    std::cout << "] " << round(progress * 100.0) << " %\r";
-	    std::cout.flush();
-	}
+        //Totally necessary progress bar
+        float progress = 1.0*i/maxEvents; 
+        if (showBar){
+            int barWidth = 70;
+            std::cout << "[";
+            int pos = barWidth * progress;
+            for (int i = 0; i < barWidth; ++i) {
+                if (i < pos) std::cout << "=";
+                else if (i == pos) std::cout << ">";
+                else std::cout << " ";
+            }
+            std::cout << "] " << round(progress * 100.0) << " %\r";
+            std::cout.flush();
+        }
         
     }
     std::cout << std::endl;
@@ -1289,8 +1295,39 @@ void OfflineFactory::prepareWave(int ic){
     // waves[ic]->ResetStats();
     //subtract calibrated mean
     for(int ibin = 1; ibin <= waves[ic]->GetNbinsX(); ibin++){
-	waves[ic]->SetBinContent(ibin,waves[ic]->GetBinContent(ibin)-pedestals[ic]);
+        waves[ic]->SetBinContent(ibin,waves[ic]->GetBinContent(ibin)-pedestals[ic]);        
     }
+
+    //Get dynamical pedestal per channel in a particular event
+    double pedestal_mV = 0.0; //Final pedestal correction to be applied
+    float rms_variation_max = 4.0;
+    float pedestal_variation_max = 150.0;
+    TH1D * histTemp = new TH1D("temp","temp",1+int(pedestal_variation_max/heightGranularity+1E-3)*2,-pedestal_variation_max-heightGranularity/2,pedestal_variation_max+heightGranularity/2);
+    //Iteratively check if the variation in amplitude is less than 4 mV within 16 consecutive samples. Use only first 1000ns (400 samples) to avoid trigger.
+    for(int ibin = 1; ibin <= dynamicPedestalTotalSamples; ibin+=dynamicPedestalConsecutiveSamples){
+        double checkheightvariation=0, rms_variation=0.0;
+        for( int jbin=ibin;jbin<ibin+dynamicPedestalConsecutiveSamples;jbin++){
+            checkheightvariation+=waves[ic]->GetBinContent(jbin);
+        }
+        for( int jbin=ibin;jbin<ibin+dynamicPedestalConsecutiveSamples;jbin++){
+            rms_variation+=pow(waves[ic]->GetBinContent(jbin)- (checkheightvariation/dynamicPedestalConsecutiveSamples),2.0);
+        }
+        
+        rms_variation=fabs(sqrt(rms_variation/dynamicPedestalConsecutiveSamples));
+        if( (fabs(checkheightvariation/dynamicPedestalConsecutiveSamples)<pedestal_variation_max) && rms_variation <  rms_variation_max){
+            float baselineRound = round((checkheightvariation/dynamicPedestalConsecutiveSamples)/heightGranularity)*heightGranularity;
+            histTemp->Fill(baselineRound);
+        }
+    }
+    //Calculate most probable value of the pedestal correction
+    if (histTemp->GetEntries()) pedestal_mV = histTemp->GetBinCenter(histTemp->GetMaximumBin());
+    delete histTemp;
+    
+    //Correct the waveform after applying the dynamic pedestal correction
+    for(int ibin = 1; ibin <= waves[ic]->GetNbinsX(); ibin++){
+        waves[ic]->SetBinContent(ibin,waves[ic]->GetBinContent(ibin)-pedestal_mV);        
+    }
+
     //Need to add sideband measurements and subtraction here
     pair<float,float> mean_rms = measureSideband(ic);
     outputTreeContents.v_sideband_mean.push_back(mean_rms.first);
@@ -1305,9 +1342,9 @@ pair<float,float> OfflineFactory::measureSideband(int ic){
     int endbin = waves[ic]->FindBin(sideband_range[1]);
     int n_sb = 0;
     for(int ibin=startbin; ibin <= endbin; ibin++){
-	sum_sb = sum_sb + waves[ic]->GetBinContent(ibin);
-	sum2_sb = sum2_sb + pow(waves[ic]->GetBinContent(ibin),2);
-	n_sb++;
+        sum_sb = sum_sb + waves[ic]->GetBinContent(ibin);
+        sum2_sb = sum2_sb + pow(waves[ic]->GetBinContent(ibin),2);
+        n_sb++;
     }
     if(n_sb == 0) n_sb = 1.;
     float mean = sum_sb/n_sb;
@@ -1332,38 +1369,38 @@ vector< pair<float,float> > OfflineFactory::findPulses(int ic){
 
 
     for (int i=istart; i<i_stop_searching || (inpulse && i<i_stop_final_pulse); i++) {
-	float v = waves[ic]->GetBinContent(i);
-	if (!inpulse) {
-	    if (v<lowThresh[ic]) {   
-		nover = 0;     // If v dips below the low threshold, store the value of the sample index as i_begin
-		i_begin = i;
-	    }
-	    else if (v>=highThresh[ic]){
-		nover++;       // If v is above the threshold, start counting the number of sample indices
-	    }
-	    else{
-		i_begin = i;
-	    }
-	    if (nover>=nConsecSamples[ic]){   // If v is above threshold for long enough, we now have a pulse!
-		inpulse = true;    // Also reset the value of nunder
-		nunder = 0;
-	    }
-	}
-	else {  // Called if we have a pulse
-	    if (v<highThresh[ic]) nunder++;   // If the pulse dips below the threshold, sum the number of sample indices for which this is true
-	    else if (v >= highThresh[ic]){
-		nunder = 0;           // If the pulse stays above threshold, set nunder back to zero
-	    }
-	    // If the nunder is above or equal to 12 (or we reach the end of the file) store the values of the pulse bounds
-	    if (nunder>=nConsecSamplesEnd[ic] || i==(i_stop_final_pulse-1)) { 
-		bounds.push_back({(float)waves[ic]->GetBinLowEdge(i_begin), (float)waves[ic]->GetBinLowEdge(i+1)-0.01});
-		// cout<<"i_begin, i: "<<i_begin<<" "<<i<<endl;       // i_begin is the 
-		inpulse = false;
-		nover = 0;
-		nunder = 0;
-		i_begin = i;
-	    }
-	}
+        float v = waves[ic]->GetBinContent(i);
+        if (!inpulse) {
+            if (v<lowThresh[ic]) {   
+                nover = 0;     // If v dips below the low threshold, store the value of the sample index as i_begin
+                i_begin = i;
+            }
+            else if (v>=highThresh[ic]){
+                nover++;       // If v is above the threshold, start counting the number of sample indices
+            }
+            else{
+                i_begin = i;
+            }
+            if (nover>=nConsecSamples[ic]){   // If v is above threshold for long enough, we now have a pulse!
+                inpulse = true;    // Also reset the value of nunder
+                nunder = 0;
+            }
+        }
+        else {  // Called if we have a pulse
+            if (v<highThresh[ic]) nunder++;   // If the pulse dips below the threshold, sum the number of sample indices for which this is true
+            else if (v >= highThresh[ic]){
+                nunder = 0;           // If the pulse stays above threshold, set nunder back to zero
+            }
+            // If the nunder is above or equal to 12 (or we reach the end of the file) store the values of the pulse bounds
+            if (nunder>=nConsecSamplesEnd[ic] || i==(i_stop_final_pulse-1)) { 
+                bounds.push_back({(float)waves[ic]->GetBinLowEdge(i_begin), (float)waves[ic]->GetBinLowEdge(i+1)-0.01});
+                // cout<<"i_begin, i: "<<i_begin<<" "<<i<<endl;       // i_begin is the 
+                inpulse = false;
+                nover = 0;
+                nunder = 0;
+                i_begin = i;
+            }
+        }
     }
     return bounds;
 }
@@ -1377,9 +1414,9 @@ vector< pair<float,float> > OfflineFactory::processChannel(int ic){
     //Useful variable for defining pulses
     float maxThreeConsec = -100;
     for (int iBin = 1; iBin < waves[ic]->GetNbinsX(); iBin++){
-	float maxList[] = {waves[ic]->GetBinContent(iBin),waves[ic]->GetBinContent(iBin+1),waves[ic]->GetBinContent(iBin+2)};
-	float tempMax = *std::min_element(maxList,maxList+3);
-	if (maxThreeConsec < tempMax) maxThreeConsec = tempMax;
+        float maxList[] = {waves[ic]->GetBinContent(iBin),waves[ic]->GetBinContent(iBin+1),waves[ic]->GetBinContent(iBin+2)};
+        float tempMax = *std::min_element(maxList,maxList+3);
+        if (maxThreeConsec < tempMax) maxThreeConsec = tempMax;
 
     }
     outputTreeContents.v_max.push_back(waves[ic]->GetMaximum());
@@ -1387,117 +1424,120 @@ vector< pair<float,float> > OfflineFactory::processChannel(int ic){
     //FIXME Need to add low pass filter option back
     outputTreeContents.v_max_afterFilter.push_back(waves[ic]->GetMaximum());
     outputTreeContents.v_min_afterFilter.push_back(waves[ic]->GetMinimum());
-
+    
     for(int ipulse = 0; ipulse<npulses; ipulse++){
-	waves[ic]->SetAxisRange(pulseBounds[ipulse].first,pulseBounds[ipulse].second);
-	if (chanMap.size() > 0 and ic < chanMap.size()){
-	    outputTreeContents.v_column.push_back(chanMap[ic][0]);
-	    outputTreeContents.v_row.push_back(chanMap[ic][1]);
-	    outputTreeContents.v_layer.push_back(chanMap[ic][2]);
-	    outputTreeContents.v_type.push_back(chanMap[ic][3]);
-	}
-	else{
-	    outputTreeContents.v_column.push_back(0);
-	    outputTreeContents.v_row.push_back(0);
-	    outputTreeContents.v_layer.push_back(0);
-	    outputTreeContents.v_type.push_back(0);
-	}
+        waves[ic]->SetAxisRange(pulseBounds[ipulse].first,pulseBounds[ipulse].second);
+        if (chanMap.size() > 0 and ic < chanMap.size()){
+            outputTreeContents.v_column.push_back(chanMap[ic][0]);
+            outputTreeContents.v_row.push_back(chanMap[ic][1]);
+            outputTreeContents.v_layer.push_back(chanMap[ic][2]);
+            outputTreeContents.v_type.push_back(chanMap[ic][3]);
+        }
+        else{
+            outputTreeContents.v_column.push_back(0);
+            outputTreeContents.v_row.push_back(0);
+            outputTreeContents.v_layer.push_back(0);
+            outputTreeContents.v_type.push_back(0);
+        }
 
-	//FIXME need to add calibrations (when available)
-	outputTreeContents.v_chanWithinBoard.push_back(chanArray->GetAt(ic));
-	outputTreeContents.v_chan.push_back(ic);
-	outputTreeContents.v_board.push_back(boardArray->GetAt(ic));
-	float height = waves[ic]->GetMaximum();
-	outputTreeContents.v_height.push_back(height);
-	int above20 = -2;
-	int above80 = -1;
-	float meanX = 0;
-	float meanY = 0;
-	for (int iStart = waves[ic]->FindBin(pulseBounds[ipulse].first); iStart <= waves[ic]->FindBin(pulseBounds[ipulse].second); iStart++){
-	    if (waves[ic]->GetBinContent(iStart) > height*0.2 && above20 < 0){
-		above20 = iStart;
-	    }
-	    if (above20 >=0){
-		meanX += waves[ic]->GetBinLowEdge(iStart);
-		meanY += waves[ic]->GetBinContent(iStart);
-	    }
-	    if (waves[ic]->GetBinContent(iStart) > height*0.8 && above80 < 0){
-		above80 = iStart;
-	    }
-	    if (above80 >= 0) break;
-	}
-	int riseSamples = above80-above20;
-	float gradNum = 0;
-	float gradDenom = 0;
-	float timeFit = -1;
-	if (riseSamples > 0){
-	    meanX /= riseSamples+1;
-	    meanY /= riseSamples+1;
-	    for (int iStart = above20; iStart < above80; iStart++){
-		gradNum += (waves[ic]->GetBinLowEdge(iStart)-meanX)*(waves[ic]->GetBinContent(iStart)-meanY);
-		gradDenom += (waves[ic]->GetBinLowEdge(iStart)-meanX)*(waves[ic]->GetBinLowEdge(iStart)-meanX);
-	    }
-	    float grad = gradNum/gradDenom;
-	    float intercept = meanY-grad*meanX;
-	    timeFit = -intercept/grad;
-	}
-	outputTreeContents.v_riseSamples.push_back(above80-above20);
-	above20 = -2;
-	above80 = -1;
-	if (timeFit < 0) timeFit = pulseBounds[ipulse].first;
+        //FIXME need to add calibrations (when available)
+        outputTreeContents.v_chanWithinBoard.push_back(chanArray->GetAt(ic));
+        outputTreeContents.v_chan.push_back(ic);
+        outputTreeContents.v_board.push_back(boardArray->GetAt(ic));
+        float height = waves[ic]->GetMaximum();
+        outputTreeContents.v_height.push_back(height);
+        int above20 = -2;
+        int above80 = -1;
+        float meanX = 0;
+        float meanY = 0;
+        for (int iStart = waves[ic]->FindBin(pulseBounds[ipulse].first); iStart <= waves[ic]->FindBin(pulseBounds[ipulse].second); iStart++){
+            if (waves[ic]->GetBinContent(iStart) > height*0.2 && above20 < 0){
+                above20 = iStart;
+            }
+            if (above20 >=0){
+                meanX += waves[ic]->GetBinLowEdge(iStart);
+                meanY += waves[ic]->GetBinContent(iStart);
+            }
+            if (waves[ic]->GetBinContent(iStart) > height*0.8 && above80 < 0){
+                above80 = iStart;
+            }
+            if (above80 >= 0) break;
+        }
+        int riseSamples = above80-above20;
+        float gradNum = 0;
+        float gradDenom = 0;
+        float timeFit = -1;
+        if (riseSamples > 0){
+            meanX /= riseSamples+1;
+            meanY /= riseSamples+1;
+            for (int iStart = above20; iStart < above80; iStart++){
+                gradNum += (waves[ic]->GetBinLowEdge(iStart)-meanX)*(waves[ic]->GetBinContent(iStart)-meanY);
+                gradDenom += (waves[ic]->GetBinLowEdge(iStart)-meanX)*(waves[ic]->GetBinLowEdge(iStart)-meanX);
+            }
+            float grad = gradNum/gradDenom;
+            float intercept = meanY-grad*meanX;
+            timeFit = -intercept/grad;
+        }
+        outputTreeContents.v_riseSamples.push_back(above80-above20);
+        above20 = -2;
+        above80 = -1;
+        if (timeFit < 0) timeFit = pulseBounds[ipulse].first;
 
-	for (int iFall = waves[ic]->FindBin(pulseBounds[ipulse].second); iFall >= waves[ic]->FindBin(pulseBounds[ipulse].first); iFall--){
-	    if (waves[ic]->GetBinContent(iFall) > height*0.2 && above20 < 0){
-		above20 = iFall;
-	    }
-	    if (waves[ic]->GetBinContent(iFall) > height*0.8 && above80 < 0){
-		above80 = iFall;
-	    }
-	    if (above80 >= 0) break;
-	}
-	int fallSamples = above20-above80;
-	outputTreeContents.v_fallSamples.push_back(above20-above80);
-	outputTreeContents.v_time.push_back(pulseBounds[ipulse].first);
-	outputTreeContents.v_timeFit.push_back(timeFit);
-	outputTreeContents.v_time_module_calibrated.push_back(pulseBounds[ipulse].first+timingCalibrations[ic]);
-	outputTreeContents.v_timeFit_module_calibrated.push_back(timeFit+timingCalibrations[ic]);
-	float area = waves[ic]->Integral();
-	outputTreeContents.v_area.push_back(area);
-	outputTreeContents.v_nPE.push_back((waves[ic]->Integral()/(speAreas[ic]))*(0.4/sampleRate));
-	outputTreeContents.v_ipulse.push_back(ipulse);
-	outputTreeContents.v_npulses.push_back(npulses);
-	float duration = pulseBounds[ipulse].second - pulseBounds[ipulse].first;
-	outputTreeContents.v_duration.push_back(duration);
-	if(ipulse>0) outputTreeContents.v_delay.push_back(pulseBounds[ipulse].first - pulseBounds[ipulse-1].second);
-	else outputTreeContents.v_delay.push_back(9999.);
-	bool qual = true;
-	if (fallSamples < 2) qual=false;
-	if (qual && riseSamples < 2) qual=false;
-	if (qual && (height > 17. && height<100.) && (0.001*area < 0.04*(height-17.))) qual=false;
-	if (qual && height < 25. && duration < 4.6*(height-12.)) qual=false;
-	if (qual && height >= 25. && duration < 60. && fallSamples < 6) qual=false;
-	if (qual && 0.001*area < 0.4 && duration < 150.*(0.001*area)) qual=false;
-	if (qual && 0.001*area >= 0.4 && duration < 60.) qual=false;
-	outputTreeContents.v_pickupFlag.push_back(!qual);
-
-    }    
+        for (int iFall = waves[ic]->FindBin(pulseBounds[ipulse].second); iFall >= waves[ic]->FindBin(pulseBounds[ipulse].first); iFall--){
+            if (waves[ic]->GetBinContent(iFall) > height*0.2 && above20 < 0){
+                above20 = iFall;
+            }
+            if (waves[ic]->GetBinContent(iFall) > height*0.8 && above80 < 0){
+                above80 = iFall;
+            }
+            if (above80 >= 0) break;
+        }
+        int fallSamples = above20-above80;
+        outputTreeContents.v_fallSamples.push_back(above20-above80);
+        outputTreeContents.v_time.push_back(pulseBounds[ipulse].first);
+        outputTreeContents.v_timeFit.push_back(timeFit);
+        outputTreeContents.v_time_module_calibrated.push_back(pulseBounds[ipulse].first+timingCalibrations[ic]);
+        outputTreeContents.v_timeFit_module_calibrated.push_back(timeFit+timingCalibrations[ic]);
+        float area = waves[ic]->Integral();
+        outputTreeContents.v_area.push_back(area);
+        outputTreeContents.v_nPE.push_back((waves[ic]->Integral()/(speAreas[ic]))*(0.4/sampleRate));
+        outputTreeContents.v_ipulse.push_back(ipulse);
+        outputTreeContents.v_npulses.push_back(npulses);
+        float duration = pulseBounds[ipulse].second - pulseBounds[ipulse].first;
+        outputTreeContents.v_duration.push_back(duration);
+        if(ipulse>0) outputTreeContents.v_delay.push_back(pulseBounds[ipulse].first - pulseBounds[ipulse-1].second);
+        else outputTreeContents.v_delay.push_back(9999.);
+        bool qual = true;
+        if (fallSamples < 2) qual=false;
+        if (qual && riseSamples < 2) qual=false;
+        if (qual && (height > 17. && height<100.) && (0.001*area < 0.04*(height-17.))) qual=false;
+        if (qual && height < 25. && duration < 4.6*(height-12.)) qual=false;
+        if (qual && height >= 25. && duration < 60. && fallSamples < 6) qual=false;
+        if (qual && 0.001*area < 0.4 && duration < 150.*(0.001*area)) qual=false;
+        if (qual && 0.001*area >= 0.4 && duration < 60.) qual=false;
+        //Tight pickup flag criteria
+        bool qual_tight = false;
+        if(!qual && riseSamples >= fallSamples && pulseBounds[ipulse].first>70.0 && pulseBounds[ipulse].first<2400.0 && npulses<3 && duration < 100.0) qual_tight = true;
+        outputTreeContents.v_pickupFlag.push_back(!qual);
+        outputTreeContents.v_pickupFlagTight.push_back(qual_tight);
+    }
 
     return pulseBounds;
 }
 
 void OfflineFactory::loadBranches(){
     if (!isDRS) {
-	inTree->SetBranchAddress("event", &evt);
-	for(int ic=0;ic<numChan;ic++) waves.push_back(new TH1D());
+        inTree->SetBranchAddress("event", &evt);
+        for(int ic=0;ic<numChan;ic++) waves.push_back(new TH1D());
     }
     else{
-	for(int ic=0;ic<numChan;ic++) {
-	    int chan =  chanArray->GetAt(ic);
-	    int board = boardArray->GetAt(ic);
-	    int lenDRS = sizeof(arrayVoltageDRS[ic])/sizeof(arrayVoltageDRS[ic][0]);
-	    inTree->SetBranchAddress(Form("voltages_%i_%i",board,chan),arrayVoltageDRS[ic]);
-	    waves.push_back(new TH1D(TString(ic),"",lenDRS,0,lenDRS*1./sampleRate));
-	}
+        for(int ic=0;ic<numChan;ic++) {
+            int chan =  chanArray->GetAt(ic);
+            int board = boardArray->GetAt(ic);
+            int lenDRS = sizeof(arrayVoltageDRS[ic])/sizeof(arrayVoltageDRS[ic][0]);
+            inTree->SetBranchAddress(Form("voltages_%i_%i",board,chan),arrayVoltageDRS[ic]);
+            waves.push_back(new TH1D(TString(ic),"",lenDRS,0,lenDRS*1./sampleRate));
+        }
     }
 }
 
@@ -1506,11 +1546,11 @@ void OfflineFactory::loadWavesMilliDAQ(){
     int board,chan;
     //FIXME does this work if > 1 board?
     for(int ic=0;ic<numChan;ic++){
-	if(waves[ic]) delete waves[ic];
-	//board = ic<=15 ? 0 : 1;
-	board = boardArray->GetAt(ic);
-	chan = chanArray->GetAt(ic);
-	waves[ic] = (TH1D*)evt->GetWaveform(board, chan, Form("digitizers[%i].waveform[%i]",board,ic));  
+        if(waves[ic]) delete waves[ic];
+        //board = ic<=15 ? 0 : 1;
+        board = boardArray->GetAt(ic);
+        chan = chanArray->GetAt(ic);
+        waves[ic] = (TH1D*)evt->GetWaveform(board, chan, Form("digitizers[%i].waveform[%i]",board,ic));  
     }
 
 }    
@@ -1518,13 +1558,13 @@ void OfflineFactory::loadWavesMilliDAQ(){
 
 void OfflineFactory::loadWavesDRS(){
     for(int ic=0;ic<numChan;ic++){
-	int chan =  chanArray->GetAt(ic);
-	int board = boardArray->GetAt(ic);
-	waves[ic]->Reset();
-	int lenDRS = sizeof(arrayVoltageDRS[ic])/sizeof(arrayVoltageDRS[ic][0]);
-	for(int it=0;it<lenDRS;it++){
-	    waves[ic]->SetBinContent(it,arrayVoltageDRS[ic][it]);
-	}
+        int chan =  chanArray->GetAt(ic);
+        int board = boardArray->GetAt(ic);
+        waves[ic]->Reset();
+        int lenDRS = sizeof(arrayVoltageDRS[ic])/sizeof(arrayVoltageDRS[ic][0]);
+        for(int it=0;it<lenDRS;it++){
+            waves[ic]->SetBinContent(it,arrayVoltageDRS[ic][it]);
+        }
     }
 }
 void OfflineFactory::writeVersion(){

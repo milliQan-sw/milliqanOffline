@@ -69,14 +69,12 @@ def processRuns(selectionString="{}",outputDir="/net/cms26/cms26r0/milliqan/Run3
     if exe == None:
         exe = exe_default
     
-    # version = <get version>
     version = check_output([exe, "-v"]).strip().decode("utf-8")
+    version = version.split("-")[0]
     if appendToTag:
-        version = version.split("-")[0]+"_"+appendToTag
-        outputDirFull = outputDir + "/"+version.split("-")[0]+"_"+appendToTag+"/"
-    else:
-        version = version.split("-")[0]
-        outputDirFull = outputDir + "/"+version.split("-")[0]+"/"
+        version += "_"+appendToTag
+
+    outputDirFull = outputDir + "/"+version.split("-")[0]+"/"
     selectionDict = json.loads(selectionString)
     selectionDict["site"] = site
     selectionDict["type"] = "MilliQan"

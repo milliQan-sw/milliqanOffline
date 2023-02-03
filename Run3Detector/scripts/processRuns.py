@@ -6,7 +6,7 @@ from subprocess import check_output
 import argparse
 import json, math
 import os
-exe_default = os.getenv("OFFLINEDIR")+"/exe/v25.exe"
+exe_default = os.getenv("OFFLINEDIR")+"/exe/v29.exe"
 site = os.getenv("OFFLINESITE")
 import calendar;
 import time;
@@ -73,8 +73,10 @@ def processRuns(selectionString="{}",outputDir="/net/cms26/cms26r0/milliqan/Run3
     version = check_output([exe, "-v"]).strip().decode("utf-8")
     if appendToTag:
         version = version.split("-")[0]+"_"+appendToTag
+        outputDirFull = outputDir + "/"+version.split("-")[0]+"_"+appendToTag+"/"
     else:
         version = version.split("-")[0]
+        outputDirFull = outputDir + "/"+version.split("-")[0]+"/"
     selectionDict = json.loads(selectionString)
     selectionDict["site"] = site
     selectionDict["type"] = "MilliQan"
@@ -83,9 +85,12 @@ def processRuns(selectionString="{}",outputDir="/net/cms26/cms26r0/milliqan/Run3
     selectionDictMatch = selectionDict.copy()
     selectionDictMatch["type"] = "MatchedEvents"
     matchedSamplesToRun = inputDatabase.milliQanRawDatasets.find(selectionDictMatch)
+    matchedLocationDict = {}
+    for xM in matchedSamplesToRun:
+        matchedLocationDict[xM["_id"]] = xM["location"]
     submissions = []
-    if not os.path.exists(outputDir):
-        os.mkdir(outputDir)
+    if not os.path.exists(outputDirFull):
+        os.makedirs(outputDirFull)
     #making output samples
     runs = []
     totalSamples = inputDatabase.milliQanRawDatasets.count_documents(selectionDict)
@@ -96,9 +101,8 @@ def processRuns(selectionString="{}",outputDir="/net/cms26/cms26r0/milliqan/Run3
         idMatched[2] = "MatchedEvents"
         idMatched = "_".join(idMatched)
         matchedLocation = None
-        for xM in matchedSamplesToRun:
-            if xM["_id"] == idMatched:
-                matchedLocation = xM["location"]
+        if idMatched in matchedLocationDict:
+            matchedLocation = matchedLocationDict[idMatched]
         inputName = x["location"]
         allSampleIds.append(sampleId)
         allInputs.append(inputName)
@@ -110,12 +114,13 @@ def processRuns(selectionString="{}",outputDir="/net/cms26/cms26r0/milliqan/Run3
 
     for sampleId,inputName,matchedLocation,offlineEntryExists,location,iFile,run in zip(allSampleIds,allInputs,allMatchedLocations,allOfflineEntryExists,allLocations,allIFiles,allRuns):
         if not offlineEntryExists or force or (recovery and "DUMMY" in location):
-            outputName = outputDir+inputName.split("/")[-1]
+            outputName = outputDirFull+inputName.split("/")[-1]
             outputName = outputName.replace(".root","_"+version+".root")
             if outputName in locationsRunningJobs:
                 continue
             submitCommand = "python3 {}/scripts/runOfflineFactory.py -i {} -o {} -e {} -f".format(os.getenv("OFFLINEDIR"),inputName,outputName,exe)
-            if matchedLocation != None:
+            matched = matchedLocation != None
+            if matched:
                 submitCommand += " -m {}".format(matchedLocation)
             if appendToTag != None:
                 submitCommand += " -a {}".format(appendToTag)
@@ -123,7 +128,7 @@ def processRuns(selectionString="{}",outputDir="/net/cms26/cms26r0/milliqan/Run3
             #Add dummy entries to database to avoid resubmission
             runs.append(run)
             if not offlineEntryExists:
-                publishDataset({},"DUMMY","DUMMY",iFile,run,version,site,"MilliQan",False,inputDatabase,quiet=True)
+                publishDataset({},"DUMMY","DUMMY",iFile,run,version,site,"MilliQan",matched,False,inputDatabase,quiet=True)
     filesPerJob=15.
     if len(runs) > 0:
         print ("Submiting runs:",sorted(list(set(runs))))

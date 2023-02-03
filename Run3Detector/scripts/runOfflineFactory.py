@@ -92,8 +92,9 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
                     configurationsJSON[key] = configurationsJSONTemp[key]
         configurationsJSONString = json.dumps(configurationsJSON)
     argList = [exe,"-i "+inputFile,"-o "+outputFile,"-c "+"'"+configurationsJSONString+"'",
-            "-r "+str(runNumber),"-f "+str(fileNumber),"--offlineDir "+offlineDir,"-a",appendToTag,
-            "-m", mergedTriggerFile]
+            "-r "+str(runNumber),"-f "+str(fileNumber),"--offlineDir "+offlineDir,"-a",appendToTag]
+    if mergedTriggerFile != "":
+            argList.append("-m "+mergedTriggerFile)
     if drs:
         argList.append("--drs")
     if display:
@@ -136,13 +137,14 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
                 inputType = "DRS"
             else:
                 inputType = "MilliQan"
-            publishDataset(configurationsJSON,inputFile,outputFile,fileNumber,runNumber,tag,site=site,inputType=inputType,force_publish=force_publish,db=db)
+            matched = mergedTriggerFile!="" 
+            publishDataset(configurationsJSON,inputFile,outputFile,fileNumber,runNumber,tag,site=site,inputType=inputType,matched=matched,force_publish=force_publish,db=db)
         return tag != None
 def getId(runNumber,fileNumber,tag,inputType,site):
     _id = "{}_{}_{}_{}_{}".format(runNumber,fileNumber,tag,inputType,site)
     return _id
 
-def publishDataset(configurationsJSON,inputFile,outputFile,fileNumber,runNumber,tag,site=site,inputType="MilliQan",force_publish=False,db=None,quiet=False):
+def publishDataset(configurationsJSON,inputFile,outputFile,fileNumber,runNumber,tag,site=site,inputType="MilliQan",matched=False,force_publish=False,db=None,quiet=False):
     _id = getId(runNumber,fileNumber,tag,inputType,site)
     milliQanOfflineDataset = configurationsJSON
     milliQanOfflineDataset["_id"] = "{}_{}_{}_{}_{}".format(runNumber,fileNumber,tag,inputType,site)
@@ -152,6 +154,7 @@ def publishDataset(configurationsJSON,inputFile,outputFile,fileNumber,runNumber,
     milliQanOfflineDataset["location"] = os.path.abspath(outputFile)
     milliQanOfflineDataset["type"] = inputType
     milliQanOfflineDataset["site"] = site
+    milliQanOfflineDataset["matched"] = matched
 
     nX = 0
     #Check for existing entry

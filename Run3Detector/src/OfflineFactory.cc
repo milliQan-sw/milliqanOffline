@@ -192,7 +192,7 @@ void OfflineFactory::validateInput(){
     }
     if (pedestals.size() > 0){
         if (pedestals.size() != numChan) throw length_error("pedestals should be length "+std::to_string(numChan));
-        for (int ic = 0; ic < numChan; ic++) pedestals[ic] = round(pedestals[ic]/heightGranularity)*heightGranularity;
+        for (int ic = 0; ic < numChan; ic++) pedestals[ic] = round(pedestals[ic]);
     }
     else{ 
         for (int ic = 0; ic < numChan; ic++) pedestals.push_back(0);
@@ -1302,7 +1302,7 @@ void OfflineFactory::prepareWave(int ic){
     double pedestal_mV = 0.0; //Final pedestal correction to be applied
     float rms_variation_max = 4.0;
     float pedestal_variation_max = 150.0;
-    TH1D * histTemp = new TH1D("temp","temp",1+int(pedestal_variation_max/heightGranularity+1E-3)*2,-pedestal_variation_max-heightGranularity/2,pedestal_variation_max+heightGranularity/2);
+    TH1D * histTemp = new TH1D("temp","temp",1+int(pedestal_variation_max/dynamicPedestalGranularity+1E-3)*2,-pedestal_variation_max-dynamicPedestalGranularity/2,pedestal_variation_max+dynamicPedestalGranularity/2);
     //Iteratively check if the variation in amplitude is less than 4 mV within 16 consecutive samples. Use only first 1000ns (400 samples) to avoid trigger.
     for(int ibin = 1; ibin <= dynamicPedestalTotalSamples; ibin+=dynamicPedestalConsecutiveSamples){
         double checkheightvariation=0, rms_variation=0.0;
@@ -1315,7 +1315,7 @@ void OfflineFactory::prepareWave(int ic){
         
         rms_variation=fabs(sqrt(rms_variation/dynamicPedestalConsecutiveSamples));
         if( (fabs(checkheightvariation/dynamicPedestalConsecutiveSamples)<pedestal_variation_max) && rms_variation <  rms_variation_max){
-            float baselineRound = round((checkheightvariation/dynamicPedestalConsecutiveSamples)/heightGranularity)*heightGranularity;
+            float baselineRound = round((checkheightvariation/dynamicPedestalConsecutiveSamples)/dynamicPedestalGranularity)*dynamicPedestalGranularity;
             histTemp->Fill(baselineRound);
         }
     }

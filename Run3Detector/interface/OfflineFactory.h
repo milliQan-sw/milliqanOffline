@@ -211,6 +211,9 @@ class OfflineFactory {
 	vector<float> speAreas;
 	TArrayI * chanArray;
 	TArrayI * boardArray;
+	int dynamicPedestalTotalSamples = 400;
+	int dynamicPedestalConsecutiveSamples = 16;
+	float heightGranularity = 0.25;
 
 	//Declare global variables
 	double arrayVoltageDRS[100][1024];

@@ -17,10 +17,10 @@ if __name__=="__main__":
 
     milliqanOffline = 'milliqanOffline_v' + swVersion + '.tar.gz'
 
-    dataDir = '/store/user/milliqan/run3/'
+    dataDir = '/store/user/milliqan/run3/500/'
     outDir = '/store/user/mcarrigan/trees/' + 'v' + swVersion + '/'
     logDir = d.strftime('/data/users/mcarrigan/log/trees/%m_%d_%H/')
-    reprocessAllFiles = False
+    reprocessAllFiles = True
 
     if(not os.path.isdir(outDir)): os.mkdir(outDir)
     if(not os.path.isdir(logDir)): os.mkdir(logDir)
@@ -56,8 +56,8 @@ if __name__=="__main__":
     Universe = vanilla
     +IsLocalJob = true
     Rank = TARGET.IsLocalSlot
-    request_disk = 250MB
-    request_memory = 500MB
+    request_disk = 4000MB
+    request_memory = 250MB
     request_cpus = 1
     executable              = wrapper.sh
     arguments               = $(PROCESS) {1} {2} {3} {6}

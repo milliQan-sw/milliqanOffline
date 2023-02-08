@@ -42,10 +42,11 @@ singularity exec -B ../../milliqanOffline/,../../MilliDAQ,/store/ ../../offline.
 
 filename="MilliQan_Run*.*.root"
 
-if compgen -G $filename > /dev/null; then
-    mv $filename $4
+outputFiles=$(ls $filename)
+
+if [ ! -z $outputFiles -a $outputFiles != " " ]; then
+    echo "Changing location of file $outputFiles to $4 in mongoDB"
+    mv $outputFiles $4
+    singularity exec -B ../../milliqanOffline/,../../MilliDAQ,/store/ ../../offline.sif python3 $PWD/scripts/utilities.py -i "$outputFiles" -l "$4" -s "OSU"
 fi
 
-#if [ -f "filelist.txt" ]; then
-#    rm "filelist.txt"
-#fi

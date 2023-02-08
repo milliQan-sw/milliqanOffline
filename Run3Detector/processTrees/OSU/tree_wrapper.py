@@ -24,6 +24,10 @@ inFile = sys.argv[2] + 'MilliQan_Run{0}.{1}_default.root'.format(runNum,fileNum)
 outFile = 'MilliQan_Run{0}.{1}_{2}.root'.format(runNum,fileNum, subName)
 triggerFile = sys.argv[2] + "MatchedEvents_Run{0}.{1}.root".format(runNum, fileNum)
 
-print("In tree wrapper calling subprocess")
-subprocess.call('source $PWD/setup.sh && python3 $PWD/scripts/runOfflineFactory.py --inputFile {0} --outputFile {1} -m {2} --exe ./run.exe'.format(inFile, outFile, triggerFile), shell=True)
+if os.path.exists(triggerFile):
+	print("In tree wrapper calling subprocess, with matched trigger file")
+	subprocess.call('source $PWD/setup.sh && python3 $PWD/scripts/runOfflineFactory.py --inputFile {0} --outputFile {1} -m {2} --exe ./run.exe --publish'.format(inFile, outFile, triggerFile), shell=True)
+else:
+	print("In tree wrapper calling subprocess, no matched trigger file")
+	subprocess.call('source $PWD/setup.sh && python3 $PWD/scripts/runOfflineFactory.py --inputFile {0} --outputFile {1} --exe ./run.exe --publish'.format(inFile, outFile), shell=True)
 

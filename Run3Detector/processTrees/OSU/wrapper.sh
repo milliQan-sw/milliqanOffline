@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-tar -xzvf milliqanOffline.tar.gz
+tar -xzvf milliqanOffline*.tar.gz milliqanOffline/
 tar -xzvf MilliDAQ.tar.gz
 
 cp tree_wrapper.py milliqanOffline/Run3Detector/
@@ -38,14 +38,15 @@ if [ ! -f "run.exe" ]; then
 fi
 
 echo Trying to run process number $1
-singularity exec -B ../../milliqanOffline/,../../MilliDAQ,/store/ ../../offline.sif python3 tree_wrapper.py $1 $2
+singularity exec -B ../../milliqanOffline/,../../MilliDAQ,/store/ ../../offline.sif python3 tree_wrapper.py $1 $2 $5
 
 filename="MilliQan_Run*.*.root"
 
-if compgen -G $filename > /dev/null; then
-    mv $filename $4
+outputFiles=$(ls $filename)
+
+if [ ! -z $outputFiles -a $outputFiles != " " ]; then
+    echo "Changing location of file $outputFiles to $4 in mongoDB"
+    mv $outputFiles $4
+    singularity exec -B ../../milliqanOffline/,../../MilliDAQ,/store/ ../../offline.sif python3 $PWD/scripts/utilities.py -i "$outputFiles" -l "$4" -s "OSU"
 fi
 
-#if [ -f "filelist.txt" ]; then
-#    rm "filelist.txt"
-#fi

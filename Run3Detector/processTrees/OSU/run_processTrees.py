@@ -6,15 +6,21 @@ from decimal import Decimal
 import glob
 import subprocess
 import numpy as np
+import datetime
 
 if __name__=="__main__":
 
-    dataDir = '/store/user/milliqan/run3/'
-    #dataDir = '/store/user/mcarrigan/milliqan/test/'
-    #outDir = '/store/user/mcarrigan/milliqan/run3/trees/'
-    outDir = '/store/user/mcarrigan/trees/'
-    logDir = '/data/users/mcarrigan/log/trees/'
-    reprocessAllFiles = False
+    d = datetime.datetime.now()
+
+    swVersion = '29'
+    subName = 'v' + swVersion + '_firstPedestals'    
+
+    milliqanOffline = 'milliqanOffline_v' + swVersion + '.tar.gz'
+
+    dataDir = '/store/user/milliqan/run3/500/'
+    outDir = '/store/user/mcarrigan/trees/' + 'v' + swVersion + '/'
+    logDir = d.strftime('/data/users/mcarrigan/log/trees/%m_%d_%H/')
+    reprocessAllFiles = True
 
     if(not os.path.isdir(outDir)): os.mkdir(outDir)
     if(not os.path.isdir(logDir)): os.mkdir(logDir)
@@ -31,7 +37,6 @@ if __name__=="__main__":
     files = []
     for filename in os.listdir(dataDir):
         if('.root' in filename and "MilliQan" in filename):
-            #if "Run592" not in filename: continue
             index1 = filename.find("_")
             index2 = filename.find(".")
             index3 = filename.find("_", index2+1)
@@ -48,20 +53,20 @@ if __name__=="__main__":
     Universe = vanilla
     +IsLocalJob = true
     Rank = TARGET.IsLocalSlot
-    request_disk = 500MB
-    request_memory = 1024MB
+    request_disk = 4000MB
+    request_memory = 250MB
     request_cpus = 1
     executable              = wrapper.sh
-    arguments               = $(PROCESS) {1} {2} {3}
+    arguments               = $(PROCESS) {1} {2} {3} {6}
     log                     = {4}log_$(PROCESS).log
     output                  = {4}out_$(PROCESS).txt
     error                   = {4}error_$(PROCESS).txt
     should_transfer_files   = Yes
     when_to_transfer_output = ON_EXIT
-    transfer_input_files = {2}, wrapper.sh, tree_wrapper.py, MilliDAQ.tar.gz, milliqanOffline.tar.gz, offline.sif, compile.sh
+    transfer_input_files = {2}, wrapper.sh, tree_wrapper.py, MilliDAQ.tar.gz, {5}, offline.sif, compile.sh
     getenv = true
     queue {0}
-    """.format(len(files),dataDir,filelist,outDir,logDir)
+    """.format(len(files),dataDir,filelist,outDir,logDir,milliqanOffline, subName)
 
     f.write(submitLines)
     f.close()

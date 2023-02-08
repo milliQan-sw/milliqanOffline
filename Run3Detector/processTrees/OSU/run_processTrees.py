@@ -26,6 +26,7 @@ if __name__=="__main__":
     if(not os.path.isdir(logDir)): os.mkdir(logDir)
 
     alreadyProcessedFiles = []
+
     for filename in os.listdir(outDir):
         if('.root' in filename and "MilliQan" in filename):
             index1 = filename.find("_")
@@ -34,6 +35,7 @@ if __name__=="__main__":
             numRun = int(filename[index1+4:index2])
             numFile = int(filename[index2+1:index3])
             alreadyProcessedFiles.append([numRun,numFile])
+
     files = []
     for filename in os.listdir(dataDir):
         if('.root' in filename and "MilliQan" in filename):

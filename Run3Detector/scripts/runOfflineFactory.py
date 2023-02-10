@@ -32,7 +32,7 @@ def parse_args():
     parser.add_argument("--display",help="Display events",type=int,nargs="+")
     args = parser.parse_args()
     return args
-def validateOutput(outputFile):
+def validateOutput(outputFile,runNumber=-1,fileNumber=-1):
     foundBad = False
     try:
         f1 = r.TFile(outputFile,"READ")
@@ -42,7 +42,10 @@ def validateOutput(outputFile):
         # if int(expectednevts) > 0 and int(t.GetEntries()) != int(expectednevts):
         #     print "[RSR] nevents mismatch"
         #     foundBad = True
-        tag = f1.Get("tag").GetTitle();
+        tagObj = f1.Get("tag")
+        if not tagObj:
+            tagObj = f1.Get("tag_{}_{}".format(runNumber,fileNumber))
+        tag = tagObj.GetTitle();
     except Exception as ex:
         msg = traceback.format_exc()
         if "EDProductGetter" not in msg:
@@ -123,7 +126,7 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
     if display:
         return True
     else:
-        tag = validateOutput(outputFile).split("-")[0]
+        tag = validateOutput(outputFile,runNumber,fileNumber).split("-")[0]
         #Only use short version of tag
     if publish:
         if database:

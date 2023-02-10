@@ -1571,7 +1571,7 @@ void OfflineFactory::writeVersion(){
     //This is very hacky but it works
     cout<<"Git tag is "<<"longtagplaceholder"<<endl;
     TNamed v;
-    v = TNamed("tag","longtagplaceholder");
+    v = TNamed("tag_"+to_string(runNumber)+"_"+to_string(fileNumber),"longtagplaceholder");
     v.Write();
 }
 TString OfflineFactory::getVersion(){

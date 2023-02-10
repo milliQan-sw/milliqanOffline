@@ -54,7 +54,6 @@
 #include <fstream>
 #include <iostream>
 using namespace std;
-
 //Use struct to organise tree contents
 struct offline_tree_{
     int event ;

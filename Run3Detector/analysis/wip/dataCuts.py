@@ -7,7 +7,10 @@
  # data.applyCuts([data.npeCut, data.timingCut])       # Any of the functions within the class containing cut in the name can be used
  #
  #   # The code should return a few events that pass all of the cuts we expect small numbers for printed to screen for the number of events
- # Edit the  timingCut() by Collin                                   #
+ # Edit the  timingCut() by Collin
+ # Add muonSelection() Based on NeHa's idea by Collin 2/10/23                               
+ # NeHa's idea see https://indico.cern.ch/event/1216209/contributions/5115893/attachments/2537208/4366944/Milliqan_cosmics_eventdisplay_Run469-1.pdf
+ # Add threeinaline() cut by Collin 2/12/23  
  #########################################################################################################################################################
 
 import ROOT as r
@@ -66,6 +69,128 @@ class DataHandler():
     # Removes events that don't pass the timing cut of -15ns < delta t < 15ns between each pulse
     # FIXME ValueError: min() arg is an empty sequence for one of the events
     #'''
+    
+
+    #MuonSelection is base on NeHa's idea
+    #this will not work in run 591 because there is not much hit in the end pannels
+    def muonSelection(self,event):
+        
+        height_list = event.height
+        chan_list = event.chan
+        height_threshold = 1000 #height is in the unit mV 
+        
+        # if there is no hit on the end pannels, then we can't claims that this 
+        # event is muon event
+        if 71 not in chan_list:
+            return
+        elif 75 not in chan_list:
+            return
+        frontPannelHeight = []
+        backPannelHeight = []
+        #She claim if both end pannals has a big hit(>1.1V), then it is muon event
+        for chan, height in zip(chan_list,height_list):
+
+            if chan == 71:  
+                frontPannelHeight.append(height)
+            elif chan == 75:
+                backPannelHeight.append(height)
+            
+            if any(x >= height_threshold for x in frontPannelHeight) and any(x >= height_threshold for x in backPannelHeight):
+                return event
+            else:
+                return
+            
+    #this method is used with ThreeInLine()
+    def layerCheck(self,lists):
+        i = 0 
+        for list in lists:
+            if len(set(list)) >= 3: #return true if it contain 3 unique layers(3 in a line)
+                i += 1
+        return i
+
+
+    
+    def ThreeInLine(self,event):
+        row_list = event.row
+        column_list = event.column
+        layer_list = event.layer
+
+        # four in a line is very rare impossible to find in run 591
+        # use three in a line instead!
+        if len(set(layer_list)) >= 3:  #three in a line
+            pass
+        else:
+            return
+
+        
+        # the list at below save the information about the pulse passing through difference layers
+        # For example, List0 is used for saving the infomation pulse passing through the position of
+        # row is three and column is one. "0" correspond to the position of the 0th channal, whose location
+        # is at the third row and first column.
+
+        #numbers at below are index number. So 3rd(index) row mean the 4th row in my notation
+        list0 = [] # correspond to 3rd row, 0st column
+        list1 = [] # correspond to 3rd row, 1st column
+        list2 = [] # correspond to 2rd row, 0th column
+        list3 = [] # correspond to 2rd row, 1st column
+        list4 = [] #list 4-7 should not contain any hit in run 591 due to the last Super model is yet to install
+        list5 = []
+        list6 = [] 
+        list7 = [] 
+        list8 = []
+        list9 = []
+        list10 = []
+        list11 = []
+        list12 = []
+        list13 = []
+        list14 = []
+        list15 = []
+
+        for row, column, layer in zip(row_list,column_list,layer_list):
+            if row == 3 and column == 0:
+                list0.append(layer)
+            elif row == 3 and column == 1:
+                list1.append(layer)
+            elif row == 2 and column == 0:
+                list2.append(layer)
+            elif row == 2 and column == 1:
+                list3.append(layer)
+            elif row == 3 and column == 2:
+                list4.append(layer)
+            elif row == 3 and column == 3:
+                list5.append(layer)
+            elif row == 2 and column == 2:
+                list6.append(layer)
+            elif row == 2 and column == 3:
+                list7.append(layer)
+            elif row == 1 and column == 0:
+                list8.append(layer)
+            elif row == 1 and column == 1:
+                list9.append(layer)
+            elif row == 0 and column == 0:
+                list10.append(layer)
+            elif row == 0 and column == 1:
+                list11.append(layer)
+            elif row == 1 and column == 2:
+                list12.append(layer)
+            elif row == 1 and column == 3:
+                list13.append(layer)
+            elif row == 0 and column == 2:
+                list14.append(layer)
+            elif row == 0 and column == 3:
+                list15.append(layer)
+        
+        # check where does the 4 in a row locate
+        lists=[list0,list1,list2,list3,list4,list5,list6,list7,list8,list9,list10,list11,list12,list13,list14,list15]
+        #print("lists:"+str(lists)) #for debugs
+        i = self.layerCheck(lists) #i is the number list in lists are 3 in a row
+        if i >= 1:
+            return event
+        
+        else:
+            return
+        
+
     def timingCut(self, event):
         time = event.time_module_calibrated
 
@@ -109,7 +234,9 @@ class DataHandler():
         return event
     
     def applyCuts(self, cuts):
-        cutData = []
+        cutData = [] 
+        entries = [] #use for getentry() in another file to extract info after doing the cut
+        entry = 0
         # Run over all events
         for event in self.data:
             # Run over all cuts in list given to applyCuts
@@ -118,13 +245,17 @@ class DataHandler():
 
                 if event is not None: # If there are no events that pass all of the cuts, skip
                     cutData.append(event)
+                    entries.append(entry)
                     if self.debug:
                         print("Event after cut \n ", event)
                 else:
                     break
-        return cutData
+            entry += 1
+        return cutData, entries
 
 if __name__ == "__main__":
     data = DataHandler('/store/user/mcarrigan/trees/v29/MilliQan_Run591.*_v29_firstPedestals.root')
-    cutData = data.applyCuts([data.timingCut])
+    cutData = data.applyCuts([data.timingCut])   
     print(len(cutData))
+    print(entries)
+    

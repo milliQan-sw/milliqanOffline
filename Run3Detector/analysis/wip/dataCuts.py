@@ -190,6 +190,13 @@ class DataHandler():
         else:
             return
         
+    def noPickup(self, event):
+        height_list = event.height
+        if any(height >= 500 for height in height_list):
+            return event
+        else:
+            return
+        
 
     def timingCut(self, event):
         time = event.time_module_calibrated

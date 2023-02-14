@@ -1,0 +1,18 @@
+
+    Universe = vanilla
+    +IsLocalJob = true
+    Rank = TARGET.IsLocalSlot
+    request_disk = 500MB
+    request_memory = 2048MB
+    request_cpus = 1
+    executable              = skim_wrapper.sh
+    arguments               = $(PROCESS) filelist.json /store/user/mcarrigan/skim/muon/v29/
+    log                     = /data/users/mcarrigan/log/skim/muon/v29/log_$(PROCESS).log
+    output                  = /data/users/mcarrigan/log/skim/muon/v29/out_$(PROCESS).txt
+    error                   = /data/users/mcarrigan/log/skim/muon/v29/error_$(PROCESS).txt
+    should_transfer_files   = Yes
+    when_to_transfer_output = ON_EXIT
+    transfer_input_files = filelist.json, skim_wrapper.sh, muonSkim.py
+    getenv = true
+    queue 1971
+    

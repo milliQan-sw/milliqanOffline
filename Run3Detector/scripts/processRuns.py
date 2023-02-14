@@ -6,7 +6,7 @@ from subprocess import check_output
 import argparse
 import json, math
 import os
-exe_default = os.getenv("OFFLINEDIR")+"/exe/v29.exe"
+exe_default = os.getenv("OFFLINEDIR")+"/exe/v30.exe"
 site = os.getenv("OFFLINESITE")
 import calendar;
 import time;
@@ -36,7 +36,10 @@ def checkMongoDB(db,allIds):
     for index in range(len(allIds)):
         if index in indicesInDb:
             allLocations.append(locationsInDb[indicesInDb.index(index)])
-            allOfflineEntriesExist.append(True)
+            if (os.path.exists(locationsInDb[indicesInDb.index(index)])):
+                allOfflineEntriesExist.append(True)
+            else:
+                allOfflineEntriesExist.append(False)
         else:
             allLocations.append(None)
             allOfflineEntriesExist.append(False)
@@ -126,7 +129,7 @@ def processRuns(selectionString="{}",outputDir="/net/cms26/cms26r0/milliqan/Run3
             #Add dummy entries to database to avoid resubmission
             runs.append(run)
             if not offlineEntryExists:
-                publishDataset({},"DUMMY","DUMMY",iFile,run,version,site,"MilliQan",matched,False,inputDatabase,quiet=True)
+                publishDataset({},"DUMMY","DUMMY",iFile,run,version,site,"MilliQan",matched,True,inputDatabase,quiet=True)
     filesPerJob=15.
     if len(runs) > 0:
         print ("Submiting runs:",sorted(list(set(runs))))

@@ -1227,8 +1227,8 @@ void OfflineFactory::displayEvents(std::vector<int> & eventsToDisplay,TString di
         resetOutBranches();
         vector<vector<pair<float,float> > > allPulseBounds;
         allPulseBounds = readWaveDataPerEvent(iEvent);
-        displayEvent(iEvent,allPulseBounds,displayDirectoryForRun);
-        //displaychannelEvent(iEvent,allPulseBounds,displayDirectoryForRun1);
+        //displayEvent(iEvent,allPulseBounds,displayDirectoryForRun);
+        displaychannelEvent(iEvent,allPulseBounds,displayDirectoryForRun1);
     }
     inFile->Close();
 }
@@ -1330,6 +1330,7 @@ void OfflineFactory::prepareWave(int ic){
 
     //Need to add sideband measurements and subtraction here
     pair<float,float> mean_rms = measureSideband(ic);
+    outputTreeContents.v_dynamicPedestal.push_back(pedestal_mV);
     outputTreeContents.v_sideband_mean.push_back(mean_rms.first);
     outputTreeContents.v_sideband_RMS.push_back(mean_rms.second);
 }

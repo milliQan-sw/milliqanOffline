@@ -99,7 +99,17 @@ class DataHandler():
                 return event
             else:
                 return
-            
+
+    def npeCheck(self,event):
+        nPE_list = event.nPE
+        DAQNum = event.DAQEventNumber
+        if min(nPE_list) >= 60:
+            #print(DAQNum)
+            return event
+        else:
+            return None
+
+
     #this method is used with ThreeInLine()
     def layerCheck(self,lists):
         i = 0 
@@ -241,28 +251,35 @@ class DataHandler():
         return event
     
     def applyCuts(self, cuts):
+        lc=len(cuts)
         cutData = [] 
-        entries = [] #use for getentry() in another file to extract info after doing the cut
-        entry = 0
+
         # Run over all events
         for event in self.data:
             # Run over all cuts in list given to applyCuts
+            None_check = []
             for cut in cuts:
-                event = cut(event) # Apply given cut
 
-                if event is not None: # If there are no events that pass all of the cuts, skip
-                    cutData.append(event)
-                    entries.append(entry)
-                    if self.debug:
-                        print("Event after cut \n ", event)
-                else:
+                event= cut(event) # Apply given cut
+                if event is None: 
                     break
-            entry += 1
-        return cutData, entries
+                None_check.append(event.DAQEventNumber)
+
+
+            if None in None_check:
+                break
+            if len(None_check) == lc: # if there are two cuts then len(None_check) should be 2
+                cutData.append(None_check[0])
+                
+            
+        return cutData
 
 if __name__ == "__main__":
-    data = DataHandler('/store/user/mcarrigan/trees/v29/MilliQan_Run591.*_v29_firstPedestals.root')
-    cutData = data.applyCuts([data.timingCut])   
+    data = DataHandler('/store/user/mcarrigan/skim/muon/v29/MilliQan_Run588.*_MuonSkim_v29.root')
+    #cutData = data.applyCuts([data.ThreeInLine]) 
+    #cutData = data.applyCuts([data.npeCheck]) 
+    cutData = data.applyCuts([data.ThreeInLine,data.npeCheck])  #use mutiple cuts
     print(len(cutData))
-    print(entries)
+    print(cutData) #use DaqEventNumber to identify the event
+    
     

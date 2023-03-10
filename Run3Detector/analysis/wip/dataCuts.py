@@ -100,7 +100,8 @@ class DataHandler():
     def npeCheck(self,event):
         nPE_list = event.nPE
         DAQNum = event.DAQEventNumber
-        if min(nPE_list) >= 60:
+        #nPEthreashold is define in DetectorGeometry.py
+        if min(nPE_list) >= nPEthreashold:
             #print(DAQNum)
             return event
         else:
@@ -230,7 +231,9 @@ class DataHandler():
         # check if the particle passing through ajecent layer is 15 ns
         # if the minimun value of time passing through ajcent layers is bigger than 15ns, 
         # then it is different from the expected data.
-        if min(ajacent_time) > 15: 
+
+        #timebL: timebl:time it take for particle pass through layer. Defined in DetectorGeometry.py
+        if min(ajacent_time) > timebL: 
             #print("ajacent time is not satified") #debug
             return
         

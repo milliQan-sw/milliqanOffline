@@ -14,6 +14,7 @@
  #########################################################################################################################################################
 
 import ROOT as r
+from DetectorGeometry import *
 
 # Create Data Class
 class DataHandler():
@@ -29,15 +30,16 @@ class DataHandler():
 
 
     # Print out certain datafile statistics
+    # FIXME: Implement way to viewData or get rid of function
     def viewData(self):
         return
 
     # For a millicharged particle it is expected that the ratio between the maximum and minimum nPE is less than 10
     # This function removes events that don't satisfy this cut
-    def npeCut(self, event):
+    def npeCut(self, event, cut_ratio):
         # FIXME: How do we reconcile the issue where some values are negative
         nPEratio = max(event.nPE)/min(event.nPE)
-        if nPEratio > 10:
+        if nPEratio > cut_ratio:
             return
         if self.debug:
             print(event.nPE)
@@ -46,10 +48,10 @@ class DataHandler():
 
     # Removes events that have a hit in the cosmic veto panels labeled by channel 68, 69, 70, 72, 73, 74.
     def cosmicPanelVeto(self, event):
-        panels = [68, 69, 70, 72, 73, 74] # The channel numbers for the cosmic veto panels
         # Getting list of channels for each event
         channels = event.chan
-        if any(veto in channels for veto in panels):
+        # vetoPanels is defined in DetectorGeometry.py
+        if any(veto in channels for veto in vetoPanels):
             return
         if self.debug:
             print(channels)
@@ -66,19 +68,14 @@ class DataHandler():
             print(layers)
         return event
 
-    # Removes events that don't pass the timing cut of -15ns < delta t < 15ns between each pulse
-    # FIXME ValueError: min() arg is an empty sequence for one of the events
-    #'''
-    
 
     #MuonSelection is base on NeHa's idea
     #this will not work in run 591 because there is not much hit in the end pannels
-    def muonSelection(self,event):
+    def muonSelection(self,event, height_threshold):
         
         height_list = event.height
         chan_list = event.chan
-        height_threshold = 1000 #height is in the unit mV 
-        
+
         # if there is no hit on the end pannels, then we can't claims that this 
         # event is muon event
         if 71 not in chan_list:
@@ -211,13 +208,6 @@ class DataHandler():
     def timingCut(self, event):
         time = event.time_module_calibrated
 
-        '''#original code
-        def timingCut(self, event):
-        time = event.time_module_calibrated
-    
-        if abs(min(time)-max(time)) > 15:
-           return
-        '''
 
         if len(time) >= 2:
             #print("len(time):"+str(len(time))) #debug

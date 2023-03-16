@@ -1330,6 +1330,7 @@ void OfflineFactory::prepareWave(int ic){
 
     //Need to add sideband measurements and subtraction here
     pair<float,float> mean_rms = measureSideband(ic);
+    outputTreeContents.v_dynamicPedestal.push_back(pedestal_mV);
     outputTreeContents.v_sideband_mean.push_back(mean_rms.first);
     outputTreeContents.v_sideband_RMS.push_back(mean_rms.second);
 }

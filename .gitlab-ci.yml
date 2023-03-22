@@ -1,0 +1,5 @@
+test job:
+    image: carriganm95/milliqan_offline:latest
+    script:
+        python --version
+        echo $Testing

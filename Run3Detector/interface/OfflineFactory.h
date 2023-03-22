@@ -54,7 +54,6 @@
 #include <fstream>
 #include <iostream>
 using namespace std;
-
 //Use struct to organise tree contents
 struct offline_tree_{
     int event ;
@@ -97,6 +96,7 @@ struct offline_tree_{
     vector<float> v_delay;
     vector<float> v_area;
     vector<bool> v_pickupFlag;
+    vector<bool> v_pickupFlagTight;
     vector<float> v_nPE;
     vector<int> v_riseSamples;
     vector<int> v_fallSamples;
@@ -104,6 +104,7 @@ struct offline_tree_{
     vector<bool> v_quiet;
     vector<float> v_presample_mean;
     vector<float> v_presample_RMS;
+    vector<float> v_dynamicPedestal;
     vector<float> v_sideband_mean;
     vector<float> v_sideband_RMS;
     vector<float> v_sideband_mean_perFile;
@@ -147,97 +148,100 @@ struct offline_tree_{
 };
 //Offline factory class used to produce offline tree output
 class OfflineFactory {
-    public:
-	OfflineFactory(TString,TString,TString,bool);
-	OfflineFactory(TString,TString,TString, bool, int, int);
-	// virtual ~OfflineFactory();
-	void makeOutputTree();
-	void loadJsonConfig(string);
-        void readMetaData();
-        vector<vector<pair<float,float> > > readWaveDataPerEvent(int);
+public:
+    OfflineFactory(TString,TString,TString,bool);
+    OfflineFactory(TString,TString,TString, bool, int, int);
+    // virtual ~OfflineFactory();
+    void makeOutputTree();
+    void loadJsonConfig(string);
+    void readMetaData();
+    vector<vector<pair<float,float> > > readWaveDataPerEvent(int);
     //        void defineColors(vector<int>, vector<TColor*>, vector<float>, vector<float>, vector<float>);
     //vector<int>colors, vector<TColor*> palette, vector<float> reds, vector<float> greens, vector<float> blues
-        void h1cosmetic(TH1D*,int,vector<int> &);
-        void displayEvent(int,vector<vector<pair<float,float> > >&,TString);
-        void displaychannelEvent(int,vector<vector<pair<float,float> > >&,TString);
-        void displayEvents(vector<int> &,TString);
-        void readWaveData();
-        void addFriendTree();
-        void setFriendFile(TString);
-	void writeOutputTree();
-    	void process();
-	void process(TString,TString);
-	void process(TString,TString,int, int);
-    	void processDisplays(vector<int>&,TString);
-	void processDisplays(vector<int>&,TString,TString);
-	void processDisplays(vector<int>&,TString,TString,int, int);
-        TString getVersion();
-    private:
-	void prepareOutBranches();
-	void resetOutBranches();
-	void prepareWave(int);
-	pair<float,float> measureSideband(int);
-	vector<pair<float,float>> findPulses(int);
-	vector<pair<float,float>> processChannel(int);
-	void loadBranches();
-	void loadWavesMilliDAQ();
-	void loadWavesDRS();
-	void validateInput();
-        void writeVersion();
+    void h1cosmetic(TH1D*,int,vector<int> &);
+    void displayEvent(int,vector<vector<pair<float,float> > >&,TString);
+    void displaychannelEvent(int,vector<vector<pair<float,float> > >&,TString);
+    void displayEvents(vector<int> &,TString);
+    void readWaveData();
+    void addFriendTree();
+    void setFriendFile(TString);
+    void writeOutputTree();
+    void process();
+    void process(TString,TString);
+    void process(TString,TString,int, int);
+    void processDisplays(vector<int>&,TString);
+    void processDisplays(vector<int>&,TString,TString);
+    void processDisplays(vector<int>&,TString,TString,int, int);
+    TString getVersion();
+private:
+    void prepareOutBranches();
+    void resetOutBranches();
+    void prepareWave(int);
+    pair<float,float> measureSideband(int);
+    vector<pair<float,float>> findPulses(int);
+    vector<pair<float,float>> processChannel(int);
+    void loadBranches();
+    void loadWavesMilliDAQ();
+    void loadWavesDRS();
+    void validateInput();
+    void writeVersion();
 
-	float sideband_range[2] = {0,50};
-        TString versionShort;
-        TString versionLong = "asddsf";
-        float sampleRate = 1.6; //Dummy value here, actual value read in from MetaData
-	bool applyLPFilter = false;
-	TString inFileName;
-	TString outFileName;
-        TString friendFileName = "";
-        TString appendToTag;
-        int runNumber;
-        int fileNumber;
-	bool isDRS;
-	mdaq::GlobalEvent * evt = new mdaq::GlobalEvent();
-	mdaq::DemonstratorConfiguration * cfg = new mdaq::DemonstratorConfiguration();
-	vector<float> highThresh = {15.};
-	vector<float> lowThresh = {5.};
-	vector<int> nConsecSamples = {3};
-	vector<int> nConsecSamplesEnd = {1};
-	vector< vector<int> > chanMap;
-	vector<float> timingCalibrations;
-	vector<float> pedestals;
-	vector<float> speAreas;
-	TArrayI * chanArray;
-	TArrayI * boardArray;
+    float sideband_range[2] = {0,50};
+    TString versionShort;
+    TString versionLong = "asddsf";
+    float sampleRate = 1.6; //Dummy value here, actual value read in from MetaData
+    bool applyLPFilter = false;
+    TString inFileName;
+    TString outFileName;
+    TString friendFileName = "";
+    TString appendToTag;
+    int runNumber;
+    int fileNumber;
+    bool isDRS;
+    mdaq::GlobalEvent * evt = new mdaq::GlobalEvent();
+    mdaq::DemonstratorConfiguration * cfg = new mdaq::DemonstratorConfiguration();
+    vector<float> highThresh = {15.};
+    vector<float> lowThresh = {5.};
+    vector<int> nConsecSamples = {3};
+    vector<int> nConsecSamplesEnd = {1};
+    vector< vector<int> > chanMap;
+    vector<float> timingCalibrations;
+    vector<float> pedestals;
+    vector<float> speAreas;
+    TArrayI * chanArray;
+    TArrayI * boardArray;
+    int dynamicPedestalTotalSamples = 400;
+    int dynamicPedestalConsecutiveSamples = 16;
+    float dynamicPedestalGranularity = 0.25;
 
-	//Declare global variables
-	double arrayVoltageDRS[1024];
-	int numChan;
-	int numBoards;
-	int boardsDRS[50];
-	int chansDRS[50];
-	Long64_t initTDC=-1;
-	Long64_t initSecs=-1;
-	Long64_t prevTDC=-1;
-	int nRollOvers=0;
-	vector<TH1D*> waves;
-	TTree * inTree;
-	TFile * inFile;
-	TFile * outFile;
-	TTree * outTree;
-	offline_tree_ outputTreeContents;
-	vector<TColor *> palette;
-	vector<int> colors;
-        //Trigger friend variables
-        ulong tClockCycles = 0;
-        float tTime = -1.;
-        float tStartTime = -1.;
-        float tTrigger = -1.;
-        float tTimeDiff = -1.;
-        float tMatchingTimeCut = -1.;
-	int tEvtNum = 0;
-	int tRunNum = 0;
-        int tTBEvent = 0;
+    //Declare global variables
+    double arrayVoltageDRS[100][1024];
+    int numChan;
+    int numBoards;
+    int boardsDRS[100];
+    int chansDRS[100];
+    Long64_t initTDC=-1;
+    Long64_t initSecs=-1;
+    Long64_t prevTDC=-1;
+    int nRollOvers=0;
+    vector<TH1D*> waves;
+    TTree * inTree;
+    TFile * inFile;
+    TFile * outFile;
+    TTree * outTree;
+    offline_tree_ outputTreeContents;
+    vector<TColor *> palette;
+    vector<int> colors;
+    //Trigger friend variables
+    ulong tClockCycles = 0;
+    float tTime = -1.;
+    float tStartTime = -1.;
+    float tTrigger = -1.;
+    float tTimeDiff = -1.;
+    float tMatchingTimeCut = -1.;
+    int tEvtNum = 0;
+    int tRunNum = 0;
+    int tTBEvent = 0;
     
 };
 #endif

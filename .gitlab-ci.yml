@@ -3,3 +3,5 @@ test job:
     script:
         python --version
         echo $Testing
+        yum -y install epel-release
+        

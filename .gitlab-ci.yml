@@ -8,8 +8,9 @@ test job:
 build image:
     image: docker
     services:
-        - docker:dind
-        - command: ["--tls=false"]
+        - name: docker:dind 
+        entrypoint: ["dockerd-entrypoint.sh", "--tls=false"]
+
     rules:
         - if: $CI_PIPELINE_SOURCE == "schedule"
     script:

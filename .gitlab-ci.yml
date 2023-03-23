@@ -10,10 +10,6 @@ build image:
     services:
         - name: docker:20-dind
           command: ["--tls=false"]
-
-
-    rules:
-        - if: $CI_PIPELINE_SOURCE == "schedule"
     script:
         - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER $CI_REGISTRY --password-stdin
         - docker build -t $CI_REGISTRY_IMAGE .

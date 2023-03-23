@@ -1,5 +1,5 @@
 test job:
-    image: carriganm95/milliqan_offline:latest
+    image: centos:centos7
     script:
         python --version
         echo $Testing

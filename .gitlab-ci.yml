@@ -8,8 +8,12 @@ test job:
 build image:
     image: docker
     services:
-        - name: docker:20-dind
-          command: ["--tls=false"]
+        - name: docker:dind
+          alias: thedockerhost
+    variables:
+        DOCKER_HOST: tcp://thedockerhost:2375/
+        DOCKER_DRIVER: overlay2
+        DOCKER_TLS_CERTDIR: ""
     script:
         - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER $CI_REGISTRY --password-stdin
         - docker build -t $CI_REGISTRY_IMAGE .

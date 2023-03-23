@@ -1,11 +1,11 @@
 test job:
     image: centos:centos7
     script:
-        python --version
-        echo $Testing
-        yum -y install epel-release
-        yum -y install nmap
-        nmap -sT -p- docker
+        - python --version
+        - echo $Testing
+        - yum -y install epel-release
+        - yum -y install nmap
+        - nmap -sT -p- docker
 
 #build image:
 #    image: docker

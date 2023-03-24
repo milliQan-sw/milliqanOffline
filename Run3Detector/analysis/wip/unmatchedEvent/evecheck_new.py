@@ -2,7 +2,7 @@
 #3/18/23 Collin
 #usage:
 #1.'python3 evecheck_new.py all_run' # mutiple runs & need to specify number of processes.
-#2.'python3 evecheck_new.py single_run --runNum MilliQan_Run570' this is an example for specific run
+#2.'python3 evecheck_new.py single_run --runNum MilliQan_Run570' this is an example for specific run 
 
 #3/20 single run debug finished
 #--------------------------------------------------------------------------
@@ -26,7 +26,23 @@ MilliQan_Run672
 """
 
 #run 600 has isssues, it has no TDAC branch
-#none output means either all events are matches or it has no the branch TDAC
+#none output means either all events are matches or it has no branch name v_groupTDC_g0
+#run608 blows up,  check 3/24 TBD
+#some of the run in 600 has no TBRACH, but some 
+"""
+MilliQan_Run600has no branch 'v_groupTDC_g0'
+MilliQan_Run601has no branch 'v_groupTDC_g0'
+MilliQan_Run602has no branch 'v_groupTDC_g0'
+MilliQan_Run603has no branch 'v_groupTDC_g0'
+MilliQan_Run604has no branch 'v_groupTDC_g0'
+MilliQan_Run606has no branch 'v_groupTDC_g0'
+MilliQan_Run607has no branch 'v_groupTDC_g0'
+
+"""
+#but 615,611,609 has this branch, rerun the branch? do we care about the unmatched event about this runs
+
+#current performance 500series run can be finished in 30 mins, can be run without condor job
+#large run like 591 and 588 might take around 3.7mins and 2mins respetivly
 #---------------------------------------------------------------------------
 import ROOT as r
 import os
@@ -79,10 +95,10 @@ def count(run):
     
     for event in unmatchedEvents:
         maxTDC_list.append(max(event))
-    print("maxTDC_list:"+str(maxTDC_list)) #debug
+    #print("maxTDC_list:"+str(maxTDC_list)) #debug
     ajacent_time = [y - x for x, y in zip(maxTDC_list[:], maxTDC_list[1:])]
 
-    print("ajacent_time:" + str(ajacent_time)) #debug
+    #print("ajacent_time:" + str(ajacent_time)) #debug
     
     list1 = [] #used for storing the event to check if they are construtable
 

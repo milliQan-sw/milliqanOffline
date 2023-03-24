@@ -7,8 +7,26 @@
 #3/20 single run debug finished
 #--------------------------------------------------------------------------
 #3/23 remove multiprocessing
-#
+#code crash after run 599 
+#empty runMilliQan_Run547
+"""
+MilliQan_Run563
+MilliQan_Run564
+MilliQan_Run565
+MilliQan_Run566
+MilliQan_Run605
+MilliQan_Run625
+MilliQan_Run626
+MilliQan_Run627
+MilliQan_Run630
+MilliQan_Run643
+MilliQan_Run644
+MilliQan_Run672
 
+"""
+
+#run 600 has isssues, it has no TDAC branch
+#none output means either all events are matches or it has no the branch TDAC
 #---------------------------------------------------------------------------
 import ROOT as r
 import os
@@ -39,6 +57,11 @@ def count(run):
 
     unmatchedEvents = []
     trees = initializeTree(run)
+    if trees.GetBranch("v_groupTDC_g0"):
+        pass
+    else:
+        print(str(run)+"has no branch 'v_groupTDC_g0'")
+        return None
     #make list of unmatched events
     for ievent, event in enumerate(trees):
         if 0 in event.v_groupTDC_g0: 
@@ -50,7 +73,7 @@ def count(run):
     
     unmatchedEvents.sort(key=lambda x: max(x))  #sort the unmatchedEvents based on its max TDC
     
-    print("unmatchedEvents:"+str(unmatchedEvents)) #debug
+    #print("unmatchedEvents:"+str(unmatchedEvents)) #debug
 
     maxTDC_list = []
     
@@ -74,12 +97,12 @@ def count(run):
         if num <= maxDiff & j > 0:
             
             list1.append(unmatchedEvents[index+1])
-            print("list1 debug"+str(list1))
+            #print("list1 debug"+str(list1))
             
         #elif num > maxDiff:
         else:
             Construtable_info=check_constutabl(list1,unmatchedEvents)
-            print("Construtable_info:" + str(Construtable_info))
+            #print("Construtable_info:" + str(Construtable_info))
             if Construtable_info is not None:
                 info.append(Construtable_info)
                 Num_C += 1
@@ -99,6 +122,7 @@ def count(run):
     
     #variables.append((ratio1,ratio2,Num_C,info)) #debug
     variables.append((run,ratio1,ratio2))
+    print((run,ratio1,ratio2))
 
 
 def check_constutabl(list1,unmatchedEvents):
@@ -107,16 +131,16 @@ def check_constutabl(list1,unmatchedEvents):
     else:
         
         T = [0,0,0,0,0]
-        print("list debug:" + str(list1)) #debug
+        #print("list debug:" + str(list1)) #debug
         for event in list1:
-            print("event debug:" + str(event)) #debug
+            #print("event debug:" + str(event)) #debug
             for index,tdcTime in enumerate(event):
                 if tdcTime != 0:
                     T[index]=1
                 else:
                     continue
         if 0 not in T:
-            print("construtable found!")
+            #print("construtable found!")
             return list1 #list of construtable event
         else:
             return None
@@ -131,8 +155,10 @@ def mutiple_run(run):
 
     count(run)
 
+emptyList=[]
 
 def Main():
+    startTime = time.time()
     parser = argparse.ArgumentParser()
     subparser = parser.add_subparsers(dest='command')
     single_run_arg = subparser.add_parser('single_run')
@@ -156,22 +182,34 @@ def Main():
         b = [s.split(".")[0] for s in A]
         unique_run = sorted(list(set(b))) 
         print("mutiple run start") 
+        
+        #unique_run_check=unique_run[-3:-1] #debug
+
         for run in unique_run:
+        #for run in unique_run_check:
             #check empty run
-            NOE=run.GetEntries()
+            Chain = r.TChain("t")
+            Chain.Add('/store/user/mcarrigan/trees/v29/' + run + '.*_v29_firstPedestals.root')
+            NOE=Chain.GetEntries()
             if NOE == 0:
+                emptyList.append(run)
+                #print(run)#debug
                 continue #throw away the empty run
             else:
-                mutiple_run(run)
+                mutiple_run(run)#can be optimize just put in tree
         
-        print(run) #debug
+        #print(run) #debug
+        
         with open('my_file.csv', 'w', newline='') as csvfile:
             writer = csv.writer(csvfile)
-            writer.writerows(my_list)
+            writer.writerows(emptyList)
 
-        tot_run=len(unique_run)
-        mutiple_run(unique_run)
+
         
+    EndTime = time.time()
+    timet = EndTime-startTime
+    print(emptyList)
+    print("total time:"+str(timet))
 
 if __name__ == "__main__":
     Main()

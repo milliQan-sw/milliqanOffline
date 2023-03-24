@@ -1,12 +1,13 @@
 #V3.0
 #3/18/23 Collin
 #usage:
-#1.'python3 evecheck_new.py all_run --NumOfProcesses NOP' # mutiple runs & need to specify number of processes.
+#1.'python3 evecheck_new.py all_run' # mutiple runs & need to specify number of processes.
 #2.'python3 evecheck_new.py single_run --runNum MilliQan_Run570' this is an example for specific run
 
 #3/20 single run debug finished
-
-
+#--------------------------------------------------------------------------
+#3/23 remove multiprocessing
+#
 
 #---------------------------------------------------------------------------
 import ROOT as r
@@ -15,9 +16,9 @@ import sys
 import numpy as np
 
 from array import array
-from multiprocessing import Process, Manager
 import argparse
 import time
+import csv
 
 
 def initializeTree(run):
@@ -27,11 +28,9 @@ def initializeTree(run):
     return treeChain
 
 
+variables=[] #used to save the open. Is this a better alternative.
 
-
-
-
-def count(run, variables):
+def count(run):
     info=[]#used to store the construtable events
     Num_C=0 #use to count the contrutable event
     
@@ -65,7 +64,7 @@ def count(run, variables):
     list1 = [] #used for storing the event to check if they are construtable
 
 
-    #check the following code it has bug
+
     j = 0
     for index,num in enumerate(ajacent_time):
         if  j == 0 & num <= maxDiff:
@@ -91,7 +90,7 @@ def count(run, variables):
             
     #after loop over all events
     Num_u=len(unmatchedEvents) 
-    #info  #just in case we are interest in which event are construtable 
+    #info  #just in case we are interest in which event are construtable
     #Num_C=len(info)#
     T_event =trees.GetEntries()        
     #+ variable.append() section
@@ -99,7 +98,7 @@ def count(run, variables):
     ratio2 = Num_C/T_event  #constructable events/ total events
     
     #variables.append((ratio1,ratio2,Num_C,info)) #debug
-    variables.append((run,ratio1,ratio2)) 
+    variables.append((run,ratio1,ratio2))
 
 
 def check_constutabl(list1,unmatchedEvents):
@@ -123,46 +122,14 @@ def check_constutabl(list1,unmatchedEvents):
             return None
 
 def single_run(run):
-    manager = Manager()
-    variables = manager.list() #created shared variable
-    processes = []
-
-    p = Process(target = count, args=(run,variables))
-    processes.append(p)
-    p.start()
-    p.join()
-
-    #print("the construtable events are" + str(list1))
-    print("variabls"+str(variables)) #debug
-    #TBDadd more print
+    count(run)
+    print(variables)
 
 
 
-def mutiple_run(unique_run,NOP):
-    num_processes = NOP  #add parser
-    manager = multiprocessing.Manager()
-    variables = manager.list()
-    processes = []
-    for i in range(10):
-        p = multiprocessing.Process(target=count, args=(run, variables))
-        processes.append(p)
-        if len(processes) == num_processes:
-            for p in processes:
-                p.start()
-            for p in processes:
-                p.join()
-            processes = []
-    
-    # do the remaining process
-    if processes:
-        for p in processes:
-            p.start()
-        for p in processes:
-            p.join()
-    #plot1(variables) # number of constructible unmatched event / number of unique unmatched event(based on TDCtime)
-    #plot2(variables) # number of repeated event / number of unique event
+def mutiple_run(run):
 
-
+    count(run)
 
 
 def Main():
@@ -173,7 +140,7 @@ def Main():
     
 
     single_run_arg.add_argument('--runNum',type = str, required = True)
-    all_run.add_argument('--NumOfProcesses',type = str, required = True)
+
     
     args = parser.parse_args()
     
@@ -181,19 +148,30 @@ def Main():
         print(args.runNum)
         runNum = args.runNum
         single_run(args.runNum)
-        #run with python eventcheck1_1V29.py single_run --runNum 'MilliQan_Run570'
+
     if args.command == 'all_run':
-        NOP = args.NumOfProcesses
-        
-        
+
         A=os.listdir('/store/user/mcarrigan/trees/v29/')
         #extract the run number
         b = [s.split(".")[0] for s in A]
-        # keep the unique elements in array with 'set()' and sort them base on run number.
-        unique_run = sorted(list(set(b)))
+        unique_run = sorted(list(set(b))) 
+        print("mutiple run start") 
+        for run in unique_run:
+            #check empty run
+            NOE=run.GetEntries()
+            if NOE == 0:
+                continue #throw away the empty run
+            else:
+                mutiple_run(run)
+        
+        print(run) #debug
+        with open('my_file.csv', 'w', newline='') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerows(my_list)
+
         tot_run=len(unique_run)
-        mutiple_run(unique_run,NOP)
-        #print("mutiple run start") #test
+        mutiple_run(unique_run)
+        
 
 if __name__ == "__main__":
     Main()

@@ -135,6 +135,7 @@ def processRuns(selectionString="{}",outputDir="/net/cms26/cms26r0/milliqan/Run3
             submissions.append(submitCommand)
             #Add dummy entries to database to avoid resubmission
             runs.append(run)
+            print(offlineEntryExists)
             if not offlineEntryExists:
                 publishDataset({},"DUMMY","DUMMY",iFile,run,version,site,"MilliQan",matched,True,inputDatabase,quiet=True)
     filesPerJob=15.

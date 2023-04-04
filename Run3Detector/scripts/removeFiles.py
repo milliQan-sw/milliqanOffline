@@ -5,6 +5,7 @@ import glob
 import socket
 import numpy as np
 from pymongo import MongoClient
+from datetime import datetime, timedelta
 
 #Function taken from https://github.com/milliQan-sw/milliqanOffline/blob/master/Run3Detector/scripts/mongoConnect.py
 def mongoConnect(serverName="mongodb+srv://mcitron:milliqan@testcluster.ffkkz.mongodb.net/?retryWrites=true&w=majority"):
@@ -125,6 +126,10 @@ class fileRemover:
         counter = 0
         filesToDelete = self.nameFromID()
         for filename in filesToDelete:
+            file_mTime =  datetime.fromtimestamp(os.path.getmtime(self.path + filename))
+            if datetime.now() < (file_mTime + timedelta(hours=24)): 
+                print('skipping file {}, created within last 24 hours'.format(filename))
+                continue
             #if counter > 10: break
             if os.path.exists(self.path + filename):
                 print('Deleting file {}'.format(filename))
@@ -137,7 +142,7 @@ class fileRemover:
 if __name__ == "__main__":
 
     path = '/home/milliqan/data/'
-    usageLim = 90
+    usageLim = 85
     sites = {"UCSB":"milliqan@cms3.physics.ucsb.edu:/net/cms26/cms26r0/milliqan/Run3/", "OSU":"milliqan@128.146.39.20:/data/users/milliqan/run3/"}
     copies = 2
 
@@ -145,10 +150,10 @@ if __name__ == "__main__":
     get_lock('check_disk')
 
     myRemover = fileRemover(path, usageLim, sites, copies, db, dryRun=False)
-    print(myRemover.dryRun)
     if myRemover.checkDiskSpace():
         print("Disk space usage is above threshold {0}, going to try removing files".format(myRemover.usageLim))
         myRemover.deleteFiles()
     else:
         print("Disk usage is below threshold {0}".format(myRemover.usageLim))
+
 

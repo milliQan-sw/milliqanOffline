@@ -27,15 +27,19 @@ def checkMongoDB(db,allIds):
     #Check for existing entry 
     locationsInDb = []
     indicesInDb = []
+    matchedInDb = []
     for x in (db.milliQanOfflineDatasets.find({"_id" :{"$in": allIds}})):
         indexInDb = allIds.index(x["_id"])
         indicesInDb.append(indexInDb)
         locationsInDb.append(x["location"])
+        matchedInDb.append(x["matched"])
     allLocations = []
     allOfflineEntriesExist = []
+    offlineMatched = []
     for index in range(len(allIds)):
         if index in indicesInDb:
             allLocations.append(locationsInDb[indicesInDb.index(index)])
+            offlineMatched.append(matchedInDb[indicesInDb.index(index)])
             if (os.path.exists(locationsInDb[indicesInDb.index(index)])):
                 allOfflineEntriesExist.append(True)
             else:
@@ -43,7 +47,8 @@ def checkMongoDB(db,allIds):
         else:
             allLocations.append(None)
             allOfflineEntriesExist.append(False)
-    return allOfflineEntriesExist,allLocations
+            offlineMatched.append(False)
+    return allOfflineEntriesExist,allLocations,offlineMatched
 
 def checkQueueStatus():
     readyFile = "/net/cms2/cms2r0/milliqan/jobs/ready.list"
@@ -111,10 +116,12 @@ def processRuns(selectionString="{}",outputDir="/net/cms26/cms26r0/milliqan/Run3
         allIFiles.append(x["file"])
         allRuns.append(x["run"])
     #Check if output already made
-    allOfflineEntryExists,allLocations = checkMongoDB(inputDatabase,allSampleIds)
+    allOfflineEntryExists,allLocations,offlineMatched = checkMongoDB(inputDatabase,allSampleIds)
 
-    for sampleId,inputName,matchedLocation,offlineEntryExists,location,iFile,run in zip(allSampleIds,allInputs,allMatchedLocations,allOfflineEntryExists,allLocations,allIFiles,allRuns):
-        if not offlineEntryExists or force or (recovery and "DUMMY" in location):
+    for sampleId,inputName,matchedLocation,offlineEntryExists,location,iFile,run,matchedInDb in zip(allSampleIds,allInputs,allMatchedLocations,allOfflineEntryExists,allLocations,allIFiles,allRuns,offlineMatched):
+        # print  (sampleId,run,offlineEntryExists,matchedLocation,matchedInDb)
+        # continue
+        if not offlineEntryExists or force or (recovery and "DUMMY" in location) or (matchedLocation != None and matchedInDb == False):
             outputName = outputDirFull+inputName.split("/")[-1]
             outputName = outputName.replace(".root","_"+version+".root")
             if outputName in locationsRunningJobs:
@@ -128,6 +135,7 @@ def processRuns(selectionString="{}",outputDir="/net/cms26/cms26r0/milliqan/Run3
             submissions.append(submitCommand)
             #Add dummy entries to database to avoid resubmission
             runs.append(run)
+            print(offlineEntryExists)
             if not offlineEntryExists:
                 publishDataset({},"DUMMY","DUMMY",iFile,run,version,site,"MilliQan",matched,True,inputDatabase,quiet=True)
     filesPerJob=15.

@@ -2,6 +2,7 @@
 import os, sys, re
 import json
 import ROOT as r
+r.gROOT.SetBatch()
 import glob
 import math
 from subprocess import call

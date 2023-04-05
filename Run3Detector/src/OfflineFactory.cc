@@ -1578,9 +1578,9 @@ void OfflineFactory::writeVersion(){
     TNamed v;
     v = TNamed("tag_"+to_string(runNumber)+"_"+to_string(fileNumber),"longtagplaceholder");
     v.Write();
-    TString triggerString = "false";
+    string triggerString = "false";
     if (triggerFileMatched) triggerString = "true";
-    v2 = TNamed("triggerMatched_"+triggerString);
+    TNamed v2("triggerMatched_"+triggerString,"triggerMatched_"+triggerString);
     v2.Write();
 }
 TString OfflineFactory::getVersion(){

@@ -1236,7 +1236,11 @@ void OfflineFactory::displayEvents(std::vector<int> & eventsToDisplay,TString di
 void OfflineFactory::readWaveData(){
     validateInput();
     inTree = (TTree*)inFile->Get("Events"); 
-    if (friendFileName != "") addFriendTree();
+    triggerFileMatched = false;
+    if (friendFileName != "") {
+	addFriendTree();
+	triggerFileMatched = true;
+    }
     loadBranches();
     // int maxEvents = 1;
     int maxEvents = inTree->GetEntries();
@@ -1574,6 +1578,10 @@ void OfflineFactory::writeVersion(){
     TNamed v;
     v = TNamed("tag_"+to_string(runNumber)+"_"+to_string(fileNumber),"longtagplaceholder");
     v.Write();
+    TString triggerString = "false";
+    if (triggerFileMatched) triggerString = "true";
+    v2 = TNamed("triggerMatched_"+triggerString);
+    v2.Write();
 }
 TString OfflineFactory::getVersion(){
     return versionLong;

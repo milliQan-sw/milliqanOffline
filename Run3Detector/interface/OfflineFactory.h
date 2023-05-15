@@ -230,6 +230,7 @@ private:
     TFile * outFile;
     TTree * outTree;
     offline_tree_ outputTreeContents;
+    bool triggerFileMatched;
     vector<TColor *> palette;
     vector<int> colors;
     //Trigger friend variables

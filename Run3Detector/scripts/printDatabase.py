@@ -17,7 +17,7 @@ if printRaw:
 if printOffline:
     print ("Offline dataset")
     for dataset in db.milliQanOfflineDatasets.find({"version": "v29"}):
-        dataset["location"] = dataset["location"].replace("v29M","v29/M")
+       # dataset["location"] = dataset["location"].replace("v29M","v29/M")
         pprint(dataset["location"])
         # print(dataset["version"],dataset["_id"],dataset["location"])
 

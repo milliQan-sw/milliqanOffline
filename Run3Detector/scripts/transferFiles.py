@@ -80,7 +80,7 @@ def transferFiles(source,destinations,logFile,force=False):
     os.system("echo '" + time.strftime("%c") + " Attempting to transfer data files ...' >> " + logFile)
     allIds = []
     allInputs = []
-    for inputFile in sorted(glob.glob(source + "*.root"), key=os.path.getmtime):
+    for inputFile in sorted(glob.glob(source + "*.root"), key=os.path.getmtime, reverse=True):
         for site, destination in destinations.items():
             #Details for database entry
             runNumber = int(inputFile.split("/")[-1].split("Run")[-1].split(".")[0])

@@ -178,14 +178,18 @@ def get_template(avg):
     template /= np.sum(template)
     return template
 
+# NOTE Don't worry about make_event_display or anywhere it's used. This should just plot
+# unrelated things to the template
 def make_event_display(avg, vs, draw_smoothed=False, saveAs=None):
     template = get_template(avg)
     print(vs)
     print(template[::-1])
+    # NOTE Don't know why the template is reversed or why i_peak is defined the way it is, check here for errors
     smoothed = np.convolve(template[::-1], vs, mode='valid')
     offset = np.argmax(template)
     i_peak = offset + np.argmax(smoothed)
 
+    #NOTE The time is divide by the area of the waveform plot???
     fitted = template * np.trapz(vs[i_peak-offset:i_peak-offset+template.size], t_baseline[:template.size]) / np.trapz(template, t_baseline[:template.size])
     mults = np.linspace(0.5,2.0,101)
     sses = []
@@ -240,8 +244,14 @@ avg_spe_tcorr /= nent
 if pmt=="r878":
     # weird noise issue in 878 after averaging... smooth out here
     ones = np.ones(21)
+
+    # Moving sum of width 21
     avg_spe_tcorr = np.convolve(ones, avg_spe_tcorr, mode='same')
+
+    # How many averages you took
     counts = np.convolve(ones, np.ones(avg_spe_tcorr.size), mode='same')
+
+
     avg_spe_tcorr /= counts
 
 # plot histogram of peak time
@@ -273,13 +283,20 @@ for i in range(10):
     vs = waveforms[i] - avg_control
     make_event_display(avg_spe_tcorr, vs, draw_smoothed=False, saveAs="events_tcorr/event{0:03d}".format(i))
 
+
+
+
+
+############# Important Part of the Code ####################################
 template = get_template(avg_spe_tcorr)
 offset = np.argmax(template)
 # redefine t=0 to be the maximum of the template
 t_template = t_baseline[:template.size] - t_baseline[offset]
 
+
 print("Generating templates at frequencies", output_freqs, "GHz")
 hs = {}
+
 for freq in output_freqs:
     dt = 1.0 / freq
     np_left = int(abs(t_template[0]) / dt)+1
@@ -291,7 +308,7 @@ for freq in output_freqs:
         )
 
     out = np.interp(ts, t_template, template, left=0.0, right=0.0) # This gets the time
-    out /= np.trapz(out, ts) # Take the area underneath the graph, I do not know why this is done
+    out /= np.trapz(out, ts) # Take the area underneath the graph
     hs[freq] = r.TH1D("h"+str(freq), ";time[ns]", out.size, 0, out.size*dt)
     for i in range(out.size):
         hs[freq].SetBinContent(i+1, out[i])

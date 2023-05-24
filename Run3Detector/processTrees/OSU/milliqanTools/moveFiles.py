@@ -53,18 +53,8 @@ if __name__ == "__main__":
         print("Moving file {0} to directory {1}".format(filename, outputDir))
 
         shutil.move(dataDir+filename, outputDir+filename) 
+        if fileType != 'MilliQan': continue
         cmd = 'python3 /share/scratch0/milliqan/processTrees/run_processTrees.py -S {0}.{1} -r {2} -s {3}'.format(runNumber, fileNumber, subdir1, subdir2)
-        #cmd = 'echo in subprocess'
         wd = os.getcwd()
-        #p = subprocess.run(['python3', cmd], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, cwd='/share/scratch0/milliqan/processTrees/')
         p = subprocess.run([cmd], shell=True, cwd='/share/scratch0/milliqan/processTrees/')
-
-        #(output, err) = p.communicate()  
-        #print(output)
-
-        #This makes the wait possible
-        #p_status = p.wait()
-        #os.chdir('/share/scratch0/milliqan/processTrees/')
-        #subprocess.call(['python3', cmd])
-        #os.chdir(wd)
-        
+                

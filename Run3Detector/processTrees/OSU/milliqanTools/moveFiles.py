@@ -1,8 +1,11 @@
 import os
 import sys
 import shutil
+import subprocess
 
 sys.path.append('/share/scratch0/milliqan/milliqanOffline/Run3Detector/scripts/')
+sys.path.append('/share/scratch0/milliqan/processTrees/')
+
 from mongoConnect import mongoConnect
 from changeLocation import getFileDetails
 
@@ -17,6 +20,7 @@ if __name__ == "__main__":
     site = 'OSU'
 
     db = mongoConnect()
+
 
     if db.milliQanRawDatasets.count_documents({"site" : site}, limit=1)==0:
         print("Site: {0} is not a valid site".format(site))
@@ -50,7 +54,17 @@ if __name__ == "__main__":
 
         shutil.move(dataDir+filename, outputDir+filename) 
         cmd = 'python3 /share/scratch0/milliqan/processTrees/run_processTrees.py -S {0}.{1} -r {2} -s {3}'.format(runNumber, fileNumber, subdir1, subdir2)
-        print(cmd)
-        os.chdir('/share/scratch0/milliqan/processTrees/')
-        os.system(cmd)
+        #cmd = 'echo in subprocess'
+        wd = os.getcwd()
+        #p = subprocess.run(['python3', cmd], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, cwd='/share/scratch0/milliqan/processTrees/')
+        p = subprocess.run([cmd], shell=True, cwd='/share/scratch0/milliqan/processTrees/')
+
+        #(output, err) = p.communicate()  
+        #print(output)
+
+        #This makes the wait possible
+        #p_status = p.wait()
+        #os.chdir('/share/scratch0/milliqan/processTrees/')
+        #subprocess.call(['python3', cmd])
+        #os.chdir(wd)
         

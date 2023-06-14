@@ -11,7 +11,7 @@ def main(chain,run,nevents,tag,cuts):
     chain.SetEstimate(nevents) # limit how many events are read to memory
     #use Draw to generate table and store in memory
     # goff = graphics off
-    chain.Draw("runNumber:fileNumber:event",cuts,"goff")
+    chain.Draw("runNumber:fileNumber:event","Sum$("+cuts+")","goff")
     selected = chain.GetSelectedRows() #get how many events were found(can be larger than nevents)
 
     nsel = min(nevents,selected)

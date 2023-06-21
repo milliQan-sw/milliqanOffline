@@ -7,17 +7,16 @@ from pprint import pprint
 
 client = MongoClient("mongodb+srv://mcitron:milliqan@testcluster.ffkkz.mongodb.net/?retryWrites=true&w=majority")
 db=client.milliQanData
-printRaw=False
-printOffline=True
+printRaw=True
+printOffline=False
 # Issue the serverStatus command and print the resultsT
 if printRaw:
     print ("RAW dataset")
-    for dataset in db.milliQanRawDatasets.find({"site": "UCSB","run": 591}):
+    for dataset in db.milliQanRawDatasets.find({"site": "UCSB","run": 710}):
         pprint(dataset)
 if printOffline:
     print ("Offline dataset")
-    for dataset in db.milliQanOfflineDatasets.find({"version": "v29"}):
-        dataset["location"] = dataset["location"].replace("v29M","v29/M")
-        pprint(dataset["location"])
+    for dataset in db.milliQanOfflineDatasets.find({"version": "v30","run":696}):
+        pprint(dataset)
         # print(dataset["version"],dataset["_id"],dataset["location"])
 

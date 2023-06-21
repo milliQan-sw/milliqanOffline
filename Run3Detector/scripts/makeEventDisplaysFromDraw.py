@@ -7,7 +7,7 @@ import json, math
 import ROOT as r
 import findEvents
 import os
-exe="./exe/v31.exe"
+exe="./exe/v32.exe"
 
 def parse_args():
     parser=argparse.ArgumentParser()
@@ -15,7 +15,7 @@ def parse_args():
     parser.add_argument("-t","--tag",help="tag for display",type=str,default="")
     parser.add_argument("-r","--run",help="run number",type=int,required=True)
     parser.add_argument("-m","--maxEvents",help="max events to display",type=int,default=10)
-    parser.add_argument("-v","--version",help="version number",type=int,default=31)
+    parser.add_argument("-v","--version",help="version number",type=int,default=32)
     args = parser.parse_args()
     return args
 

@@ -6,7 +6,7 @@ from subprocess import check_output
 import argparse
 import json, math
 import os
-exe_default = os.getenv("OFFLINEDIR")+"/exe/v31.exe"
+exe_default = os.getenv("OFFLINEDIR")+"/exe/v32.exe"
 site = os.getenv("OFFLINESITE")
 import calendar;
 import time;
@@ -135,7 +135,6 @@ def processRuns(selectionString="{}",outputDir="/net/cms26/cms26r0/milliqan/Run3
             submissions.append(submitCommand)
             #Add dummy entries to database to avoid resubmission
             runs.append(run)
-            print(offlineEntryExists)
             if not offlineEntryExists:
                 publishDataset({},"DUMMY","DUMMY",iFile,run,version,site,"MilliQan",matched,True,inputDatabase,quiet=True)
     filesPerJob=15.

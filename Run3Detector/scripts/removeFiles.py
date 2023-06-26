@@ -167,7 +167,8 @@ if __name__ == "__main__":
     myRemover = fileRemover(path, usageLim, sites, copies, db, dryRun=False)
     myRemover.offlinePath = offlinePath
     myRemover.offlineStorageTime = offlineStorageTime
-    myRemover.deleteOfflineFiles()
+    if not offlinePath = "" and os.path.exists(offlinePath):
+        myRemover.deleteOfflineFiles()
     if myRemover.checkDiskSpace():
         print("Disk space usage is above threshold {0}, going to try removing files".format(myRemover.usageLim))
         myRemover.deleteFiles()

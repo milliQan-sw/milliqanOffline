@@ -3,6 +3,7 @@ import sys
 import shutil
 import glob
 import socket
+import time
 import numpy as np
 from pymongo import MongoClient
 from datetime import datetime, timedelta
@@ -41,6 +42,8 @@ class fileRemover:
         self.copies = copies             #Required copies in mongoDB before deletion
         self.db = db                     #MongoDB
         self.dryRun = dryRun             #Bool for testing w/o removal
+        self.offlinePath = ''            #Path for offline files
+        self.offlineStorageTime = 7      #Amount of time to store offline files before deleting (days)
 
     #Function checks the disk space remaining
     def checkDiskSpace(self):
@@ -114,7 +117,6 @@ class fileRemover:
         filenames = []
         for _id in IDs:
             _id = _id.split('_')
-            if int(_id[0]) > 680: continue #temporary to make sure we don't delete new data
             filename = _id[2] + '_Run' + _id[0] + '.' + _id[1]
             if _id[2] == 'MilliQan': filename += '_default.root'
             else: filename += '.root'
@@ -139,17 +141,33 @@ class fileRemover:
             else:
                 print('Error, file {} does not exist'.format(filename))
 
+    def deleteOfflineFiles(self):
+        print("In deleteOfflineFiles function", self.offlinePath)
+        for filename in os.listdir(self.offlinePath):
+            if not filename.endswith('.root'): continue
+            m_time = os.path.getmtime(self.offlinePath+filename)
+            if((time.time() - m_time) > 86400*self.offlineStorageTime):
+                print("Deleting file {0}{1}".format(self.offlinePath, filename))
+                os.remove(self.offlinePath+filename)
+
+
+
 if __name__ == "__main__":
 
-    path = '/home/milliqan/data/'
+    path = '/home/milliqan/run3Data/'
+    offlinePath = '/home/milliqan/offlineFiles/'
     usageLim = 85
     sites = {"UCSB":"milliqan@cms3.physics.ucsb.edu:/net/cms26/cms26r0/milliqan/Run3/", "OSU":"milliqan@128.146.39.20:/data/users/milliqan/run3/"}
     copies = 2
+    offlineStorageTime = 7 #days
 
     db = mongoConnect()
     get_lock('check_disk')
 
     myRemover = fileRemover(path, usageLim, sites, copies, db, dryRun=False)
+    myRemover.offlinePath = offlinePath
+    myRemover.offlineStorageTime = offlineStorageTime
+    myRemover.deleteOfflineFiles()
     if myRemover.checkDiskSpace():
         print("Disk space usage is above threshold {0}, going to try removing files".format(myRemover.usageLim))
         myRemover.deleteFiles()

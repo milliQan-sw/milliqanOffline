@@ -241,7 +241,7 @@ class DataHandler():
 
             if len(new_list_layer) >= 3:
                 return event
-        
+        print("dq:"+ str(dq) + "events doesn't satisfy four layers")
         return
             
 
@@ -289,6 +289,7 @@ class DataHandler():
         
 
     def ThreeInRow(self,event):
+        dq = event.DAQEventNumber
         row_list = self.listConvertion(event.row)
         time_list = self.listConvertion(event.timeFit)
         height_list = self.listConvertion(event.height)
@@ -330,7 +331,7 @@ class DataHandler():
             if rowCount3>=3 or rowCount2>= 3 or rowCount1 >= 3 or rowCount0 >= 3:
                 return event
 
-                
+        print("dq:"+ str(dq) + "events doesn't satisfy four layers")
         return
 
             
@@ -531,7 +532,7 @@ if __name__ == "__main__":
     data = DataHandler('/store/user/milliqan/trees/v31/MilliQan_Run1046.*_v31_firstPedestals.root')
     #cutData = data.applyCuts([data.ThreeInLine]) 
     #cutData = data.applyCuts([data.npeCheck]) 
-    cutData = data.applyCuts([data.ThreeInRow])  #use mutiple cuts
+    cutData = data.applyCuts([data.btThreeLayer])  #use mutiple cuts
     print(len(cutData))
     #print(cutData) #use DaqEventNumber to identify the event
     

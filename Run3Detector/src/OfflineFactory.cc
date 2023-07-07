@@ -799,9 +799,9 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
     
     //cout<<"Display directory is "<<displayDirectory<<endl;
     TString displayName;
-    displayName=Form(displayDirectory+"Run%i_File%i_Event%i_Version_%s.pdf",runNumber,fileNumber,event,"shorttagplaceholder"); 
+    displayName=TString(Form(displayDirectory+"Run%i_File%i_Event%i_Version_",runNumber,fileNumber,event))+TString("shorttagplaceholder_")+appendToTag+".pdf"; 
     c.SaveAs(displayName);
-    displayName=Form(displayDirectory+"Run%i_File%i_Event%i_Version_%s.png",runNumber,fileNumber,event,"shorttagplaceholder"); 
+    displayName=TString(Form(displayDirectory+"Run%i_File%i_Event%i_Version_",runNumber,fileNumber,event))+TString("shorttagplaceholder_")+appendToTag+".png"; 
     c.SaveAs(displayName);
 
     for(uint i=0;i<chanList.size();i++){

@@ -185,6 +185,65 @@ class DataHandler():
         else:
             return None
 
+    def twoSepLayers(self,event):
+        layer_list = self.listConvertion(event.layer)
+        time_list = self.listConvertion(event.timeFit)
+        height_list = self.listConvertion(event.height)
+        sorted_time_list = sorted(enumerate(time_list), key=lambda x: x[1]) #reutnr [(original index before sortting, value)]
+        
+        layer_rmE_lst = list() #remove the layer whose corresponding energy is less than the ETthreashold
+        new_time_list = list() #after sortting the time, remove the time whose corresponding energy is less than the ETthreashold
+        for index, time in sorted_time_list:
+            if height_list[index] > ETthreashold:
+                layer_rmE_lst.append(layer_list[index])
+                new_time_list.append(time)
+        
+        for index1,time1 in enumerate(new_time_list):
+            t1 = time1 + 160 # in unit ns
+            new_list_layer = list() #used to store the data of layer within 160ns trigger time
+            new_list_layer.append(layer_rmE_lst[index1])
+
+            for index2,time2 in enumerate(new_time_list):
+                if time2 <= t1 and time2 > time1 :
+                    new_list_layer.append(layer_rmE_lst[index2])
+            
+            new_list_layer=set(new_list_layer)
+            diff = max(new_list_layer) - min(new_list_layer)
+            if len(new_list_layer) == 2 and diff > 1:
+                return event
+        
+        return
+    
+    def twoAdjacentLayers(self,event):
+        layer_list = self.listConvertion(event.layer)
+        time_list = self.listConvertion(event.timeFit)
+        height_list = self.listConvertion(event.height)
+        sorted_time_list = sorted(enumerate(time_list), key=lambda x: x[1]) #reutnr [(original index before sortting, value)]
+        
+        layer_rmE_lst = list() #remove the layer whose corresponding energy is less than the ETthreashold
+        new_time_list = list() #after sortting the time, remove the time whose corresponding energy is less than the ETthreashold
+        for index, time in sorted_time_list:
+            if height_list[index] > ETthreashold:
+                layer_rmE_lst.append(layer_list[index])
+                new_time_list.append(time)
+        
+        for index1,time1 in enumerate(new_time_list):
+            t1 = time1 + 160 # in unit ns
+            new_list_layer = list() #used to store the data of layer within 160ns trigger time
+            new_list_layer.append(layer_rmE_lst[index1])
+
+            for index2,time2 in enumerate(new_time_list):
+                if time2 <= t1 and time2 > time1 :
+                    new_list_layer.append(layer_rmE_lst[index2])
+            
+            new_list_layer=set(new_list_layer)
+            diff = max(new_list_layer) - min(new_list_layer)
+            if len(new_list_layer) == 2 and diff == 1:
+                return event
+        
+        return
+
+
 
     #this method is used with ThreeInLine()
     def layerCheck(self,lists):
@@ -196,19 +255,36 @@ class DataHandler():
 
     #bigger than two hits
     def btTwohits(self,event):
+        
+        layer_list = self.listConvertion(event.layer)
         time_list = self.listConvertion(event.timeFit)
         height_list = self.listConvertion(event.height)
-        rmList=self.listManipulation(height_list,time_list)
-       
+        sorted_time_list = sorted(enumerate(time_list), key=lambda x: x[1]) #reutnr [(original index before sortting, value)]
+        #print(layer_list)
+        layer_rmE_lst = list() #remove the layer whose corresponding energy is less than the ETthreashold
+        new_time_list = list() #after sortting the time, remove the time whose corresponding energy is less than the ETthreashold
+        if len(sorted_time_list) > 1:
+            
+            for index, time in sorted_time_list:
+                if height_list[index] > ETthreashold:
+                    layer_rmE_lst.append(layer_list[index])
+                    new_time_list.append(time)
+            
+            if len(new_time_list)> 0:
 
-        if rmList == None:
-            return
-        diff = len(height_list) - len(rmList)
+                for index1,time1 in enumerate(new_time_list):
+                    t1 = time1 + 160 # in unit ns
+                    new_list_layer = list() #used to store the data of layer within 160ns trigger time
+                    new_list_layer.append(layer_rmE_lst[index1])
 
-        if diff > 2 :
-            return event
-        else:
-            return
+                    for index2,time2 in enumerate(new_time_list):
+                        if time2 <= t1 and time2 > time1 :
+                            new_list_layer.append(layer_rmE_lst[index2])
+                
+                if len(new_list_layer) > 2:
+                    return event
+        
+        return
 
     #bigger than or equal to 3 layers    
     def btThreeLayer(self,event):
@@ -529,10 +605,10 @@ class DataHandler():
 
 if __name__ == "__main__":
     #data = DataHandler('/store/user/milliqan/trees/v31/MilliQan_Run1000.*_v31_firstPedestals.root')
-    data = DataHandler('/store/user/milliqan/trees/v31/MilliQan_Run1046.*_v31_firstPedestals.root')
+    data = DataHandler('/store/user/milliqan/trees/v31/MilliQan_Run1050.*_v31_firstPedestals.root')
     #cutData = data.applyCuts([data.ThreeInLine]) 
     #cutData = data.applyCuts([data.npeCheck]) 
-    cutData = data.applyCuts([data.btThreeLayer])  #use mutiple cuts
+    cutData = data.applyCuts([data.btTwohits])  #use mutiple cuts
     print(len(cutData))
     #print(cutData) #use DaqEventNumber to identify the event
     

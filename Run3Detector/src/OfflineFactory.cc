@@ -1227,8 +1227,8 @@ void OfflineFactory::displayEvents(std::vector<int> & eventsToDisplay,TString di
         resetOutBranches();
         vector<vector<pair<float,float> > > allPulseBounds;
         allPulseBounds = readWaveDataPerEvent(iEvent);
-        //displayEvent(iEvent,allPulseBounds,displayDirectoryForRun);
-        displaychannelEvent(iEvent,allPulseBounds,displayDirectoryForRun1);
+        displayEvent(iEvent,allPulseBounds,displayDirectoryForRun);
+        //        displaychannelEvent(iEvent,allPulseBounds,displayDirectoryForRun1);
     }
     inFile->Close();
 }

@@ -39,7 +39,6 @@ def validateOutput(outputFile,runNumber=-1,fileNumber=-1):
         f1 = r.TFile(outputFile,"READ")
         t = f1.Get("t")
         nevts = t.GetEntries()
-        print("EVents", nevts)
         # print "[RSR] ntuple has %i events and expected %i" % (t.GetEntries(), expectednevts)
         # if int(expectednevts) > 0 and int(t.GetEntries()) != int(expectednevts):
         #     print "[RSR] nevents mismatch"
@@ -82,7 +81,8 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
         if drs:
             configurations = [offlineDir+"/configuration/pulseFinding/pulseFindingDRS.json"]
         else:
-            configurations = [offlineDir+"/configuration/chanMaps/fullSlabDetectorMap.json",offlineDir+"/configuration/pulseFinding/pulseFindingTest.json",offlineDir+"/configuration/calibrations/firstSlabCalibration.json"]
+            configurations = [offlineDir+"/configuration/chanMaps/fullSuperModuleMapMove2425.json",offlineDir+"/configuration/pulseFinding/pulseFindingTest.json",offlineDir+"/configuration/calibrations/firstSupermodulesCalibration.json"]
+
 
     if "{" in configurations and "}" in configurations:
         configurationsJSONString = configurations

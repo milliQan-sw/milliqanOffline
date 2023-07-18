@@ -118,8 +118,9 @@ class fileRemover:
         for _id in IDs:
             _id = _id.split('_')
             filename = _id[2] + '_Run' + _id[0] + '.' + _id[1]
-            if _id[2] == 'MilliQan': filename += '_default.root'
-            else: filename += '.root'
+            if _id[2] == 'MilliQan': filename += '_default.root' #bar names
+            elif _id[2] == 'MilliQanSlab': filename += '_default.root' #slab names
+            else: filename += '.root' #matched file names
             filenames.append(filename)
         return filenames
 
@@ -167,7 +168,7 @@ if __name__ == "__main__":
     myRemover = fileRemover(path, usageLim, sites, copies, db, dryRun=False)
     myRemover.offlinePath = offlinePath
     myRemover.offlineStorageTime = offlineStorageTime
-    if not offlinePath = "" and os.path.exists(offlinePath):
+    if not offlinePath == "" and os.path.exists(offlinePath):
         myRemover.deleteOfflineFiles()
     if myRemover.checkDiskSpace():
         print("Disk space usage is above threshold {0}, going to try removing files".format(myRemover.usageLim))

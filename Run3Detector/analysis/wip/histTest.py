@@ -2,7 +2,7 @@ import ROOT
 
 def PlotScatter(offlineTrigs,onlineTrigs):
     # Create a 1D histogram with 2 bins ranging from 0 to 2
-    hist = ROOT.TH1F("offlineTrigs", "offlineTrigs",13, 0, 13)
+    hist = ROOT.TH1F("trigger test", "trigger test",13, 0, 13)
 
     # Create the first histogram for the first half-bin with the first contribution (e.g., 3)
     hist1 = ROOT.TH1F("offlineTrigs", "offlineTrigs", 39, 0, 13)

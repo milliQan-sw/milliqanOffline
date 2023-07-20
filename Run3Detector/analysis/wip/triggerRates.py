@@ -7,6 +7,7 @@ import time
 import uproot 
 from functools import partial
 from triggerConstants import *
+from histTest import *
 
 class triggerChecker():
 
@@ -14,6 +15,7 @@ class triggerChecker():
 		self.defineFunctions()
 
 	#check for nHits pulses in window
+	#Q: what does (x.unique() < 64) do?
 	def checkNPulses(self, x, nHits=4):
 		if len((x.unique()<64)) >= nHits: return True
 		return False
@@ -76,7 +78,7 @@ class triggerChecker():
 		self.fileNum = int(dataIn.split('.')[1].split('_')[0])
 		fin = uproot.open(dataIn)
 		tree = fin['t']
-		self.myarray = tree.arrays(uprootInputs, library='pd')
+		self.myarray = tree.arrays(uprootInputs, library='pd') 
 		self.setTimes()
 		self.defineTrigCols()
 
@@ -154,6 +156,10 @@ class triggerChecker():
 		print("{0:<30} {1:>8} {2:>15}".format('Trigger 13: ZeroBias', onlineTrigs[12], offlineTrigs[12]))
 		print("---------------------------------------------------------------")
 
+		#making the bar chart
+		#making the scatter plot
+		PlotScatter(offlineTrigs,onlineTrigs)
+
 		c1.cd()
 		h_offline.SetLineColor(2)
 		h_offline.Draw("hist text")
@@ -168,12 +174,13 @@ class triggerChecker():
 		h_triggers.Write()
 
 
+
 if __name__ == "__main__":
 
 	r.gROOT.SetBatch(1)
 
-	filename = '~/scratch0/milliQan/MilliQan_Run1114.1_test.root'
-
+	#filename = '~/scratch0/milliQan/MilliQan_Run1114.1_test.root'
+	filename = '/store/user/milliqan/trees/v31/MilliQan_Run1031.1_v31_firstPedestals.root'
 	mychecker = triggerChecker()
 	mychecker.openFile(filename)
 	mychecker.findTriggersOffline()

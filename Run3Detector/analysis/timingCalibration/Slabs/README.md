@@ -8,4 +8,6 @@ A Beam muon registers a traversal time of (t_2 + l_2)-(t_2+l_1) and a Cosmic muo
 To this end we must search for the following key quantities: 
 
 1) Slab pulse height saturation, 1250 mv usually for this digitizer
-2) Slab pulse area distribution which should have a peak at high values reflecting the large $N_PE$ of high energy muons
+2) Slab pulse area distribution which should have a peak at high values reflecting the large $N_{PE}$ of high energy muons
+
+We expect the time difference between peaks to be ~2L/c for L being the length of the detector.

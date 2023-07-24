@@ -11,3 +11,6 @@ To this end we must search for the following key quantities:
 2) Slab pulse area distribution which should have a peak at high values reflecting the large $N_{PE}$ of high energy muons
 
 We expect the time difference between peaks to be ~2L/c for L being the length of the detector.
+
+
+The typical chain of analysis would be 

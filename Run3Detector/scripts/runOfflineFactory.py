@@ -40,7 +40,6 @@ def validateOutput(outputFile,runNumber=-1,fileNumber=-1):
         f1 = r.TFile(outputFile,"READ")
         t = f1.Get("t")
         nevts = t.GetEntries()
-        print("EVents", nevts)
         # print "[RSR] ntuple has %i events and expected %i" % (t.GetEntries(), expectednevts)
         # if int(expectednevts) > 0 and int(t.GetEntries()) != int(expectednevts):
         #     print "[RSR] nevents mismatch"

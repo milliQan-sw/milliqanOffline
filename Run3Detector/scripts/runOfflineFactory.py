@@ -31,6 +31,7 @@ def parse_args():
     parser.add_argument("-c","--configurations",help="JSON Configuration files or string",type=str,nargs="+")
     parser.add_argument("--drs",help="DRS input",action="store_true",default=False)
     parser.add_argument("--display",help="Display events",type=int,nargs="+")
+    parser.add_argument("--slab", help="Forces slab detector configuration", action="store_true", default=False)
     args = parser.parse_args()
     return args
 def validateOutput(outputFile,runNumber=-1,fileNumber=-1):
@@ -56,7 +57,7 @@ def validateOutput(outputFile,runNumber=-1,fileNumber=-1):
         print ("removing output file because it does not deserve to live (result will not be published)")
         os.system("rm "+outputFile)
     return tag 
-def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publish,database,appendToTag,mergedTriggerFile,drs,display,runNumber=None,fileNumber=None):
+def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publish,database,appendToTag,mergedTriggerFile,drs,display, slab,runNumber=None,fileNumber=None):
     if force_publish:
         publish = True
     if runNumber == None:
@@ -81,8 +82,10 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
         offlineDir = os.getenv("OFFLINEDIR")
         if drs:
             configurations = [offlineDir+"/configuration/pulseFinding/pulseFindingDRS.json"]
-        else:
+        if slab:
             configurations = [offlineDir+"/configuration/chanMaps/fullSlabDetectorMap.json",offlineDir+"/configuration/pulseFinding/pulseFindingTest.json",offlineDir+"/configuration/calibrations/firstSlabCalibration.json"]
+        else:
+            configurations = [offlineDir+"/configuration/chanMaps/fullSuperModuleMapMove2425.json",offlineDir+"/configuration/pulseFinding/pulseFindingTest.json",offlineDir+"/configuration/calibrations/firstSupermodulesCalibration.json"]
 
     if "{" in configurations and "}" in configurations:
         configurationsJSONString = configurations
@@ -104,6 +107,8 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
         argList.append("--drs")
     if display:
         argList.append("--display "+",".join([str(x) for x in display]))
+    if slab:
+        argList.append("--slab")
     args = " ".join(argList)
 
     # from subprocess import Popen, PIPE, CalledProcessError

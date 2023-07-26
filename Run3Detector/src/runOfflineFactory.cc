@@ -26,7 +26,7 @@ int main(int argc, char **argv){
     //Read input and output files (necessary arguments)
     bool versionMode = cmdOptionExists(argv, argv + argc, "-v");
     if (versionMode){
-        OfflineFactory offlineFactory = OfflineFactory("","","",false,-1,-1);
+        OfflineFactory offlineFactory = OfflineFactory("","","",false,false,-1,-1);
         std::cout << offlineFactory.getVersion() << std::endl;
         return 0;
     }
@@ -37,6 +37,8 @@ int main(int argc, char **argv){
     char * mergedTriggerFile = getCmdOption(argv, argv + argc, "-m");
     bool isDRSdata = cmdOptionExists(argv, argv + argc, "--drs");
     if (isDRSdata) std::cout << "Assuming DRS input" << std::endl;
+    bool isSlab = cmdOptionExists(argv, argv + argc, "--slab");
+    if (isSlab) std::cout << "Running with slab configuration" << std::endl;
     //char * DRS_num = getCmdOption(argv, argv + argc, "-DRS_num");
     //char * numChanDRS = getCmdOption(argv, argv + argc, "-nDRSchan");
     int runNumber = -1;
@@ -62,7 +64,7 @@ int main(int argc, char **argv){
     }
 
     std::cout << "Running in standard mode with:\nInput file: " << inputFilenameChar << "\nOutput file: " << outputFilenameChar << std::endl;
-    OfflineFactory offlineFactory = OfflineFactory(inputFilenameChar,outputFilenameChar,appendToTag,isDRSdata,runNumber,fileNumber);
+    OfflineFactory offlineFactory = OfflineFactory(inputFilenameChar,outputFilenameChar,appendToTag,isDRSdata,isSlab,runNumber,fileNumber);
 
     //Read configuration files
     char * configChar = getCmdOption(argv, argv + argc, "-c");
@@ -89,6 +91,9 @@ int main(int argc, char **argv){
 	if (isDRSdata){
 	    offlineFactory.processDisplays(eventsToDisplay,TString(offlineDir)+"/displaysDRS/");
 	}
+    else if (isSlab){
+        std::cout << "Cannot currently make displays of slab detector" << std::endl;
+    }
 	else{
 	    offlineFactory.processDisplays(eventsToDisplay,TString(offlineDir)+"/displays/");
 	}

@@ -4,14 +4,15 @@ import sys
 import numpy as np
 import os
 
-sys.path.insert(0 , '/home/rsantos/milliqanOffline/Run3Detector/analysis/')
-from pmt_calibration.python.TemplateTools import averageOfLists, movingAverage
+sys.path.insert(0 , '/home/ryan/Documents/Research/MilliQan/milliqanOffline/Run3Detector/analysis/pmt_calibration/python/')
+from templateTools import averageOfLists, movingAverage
 
 reuseValues = True
-NANOSECONDS_PER_SAMPLE = 2.
+NANOSECONDS_PER_SAMPLE = 2.5
 
 # Load in data file
-dataDir = "/home/rsantos/Data/PostProcessData/"
+dataDir = "/home/ryan/Documents/Research/MilliQan/DataFiles/"
+
 peakTemplateFile = r.TFile(dataDir + sys.argv[1])
 tree = peakTemplateFile.Get("Events")
 
@@ -21,17 +22,20 @@ nEntries = len(tree.voltages)
 
 # Should save numpy arrays and load if possible because it takes ~40 minutes to produce.
 if reuseValues:
-    voltageArray = np.load("savedArrays/voltages847.npy")
+    voltageArray = np.load("savedArrays/voltages732.npy")
 else:
     voltageArray = np.empty([nEvents, nEntries])
     for i, event in enumerate(tree):
+        if i > 8000:
+            break
         voltageArray[i] = event.voltages
 
         if i % 100 == 0:
             print(i)
-    np.save('savedArrays/voltages847.npy', voltageArray)
+    np.save('savedArrays/voltages732.npy', voltageArray)
 
 timesArray = np.arange(0, NANOSECONDS_PER_SAMPLE * len(voltageArray), 2.5)
+print(len(voltageArray), len(timesArray))
 assert len(voltageArray) == len(timesArray)
 
 # Define area to store plots
@@ -41,7 +45,7 @@ else:
     plotDir = "."
 
 voltageAverage = np.mean(voltageArray, axis=0)
-outputFile = r.TFile.Open("template847.root", "RECREATE")
+outputFile = r.TFile.Open("template732.root", "RECREATE")
 print("About to graph")
 
 canvas = r.TCanvas("c", "c")
@@ -53,7 +57,7 @@ graph.Draw("AC")
 # To do this find the maximum value inside the numpy array and then place
 # arbitrary cutoffs at points that visually look like they are outside the signal region
 # Looks like 1900, 1160 would be good
-timeCutoffBand = 150 # May need to change this value
+timeCutoffBand = 50 # May need to change this value
 sampleBand = 50 # How many values before/after the signal region you want to use to calculate baseline
 maximumIndex = np.argmax(voltageAverage)
 
@@ -66,7 +70,6 @@ signalCutoffLineLower = r.TLine(timesArray[lowerSignalCutoff], 0, timesArray[low
 signalCutoffLineLower.SetLineColor(2)
 signalCutoffLineUpper.Draw()
 signalCutoffLineLower.Draw()
-
 interpolatedTimes = timesArray[lowerSignalCutoff:upperSignalCutoff+1] # +1 to include end point
 # Loop over each individual waveform
 integratedChargeHistogram = r.TH1D('Area', 'Area', 5000, -1000, 4000 )
@@ -75,13 +78,14 @@ for i, waveform in enumerate(voltageArray):
     # To form baseline take results from before signal and after signal and average them together
     # Each sample is taken every 2.5 ns so taking 10 voltage entries gives 25ns
     movingAverageBuffer = 5 # When taking moving average, the number of items in list you take average of at a time
-    lowerMovingAverage = np.array(movingAverage(waveform[lowerSignalCutoff - sampleBand: lowerSignalCutoff], n = movingAverageBuffer), dtype=float)
-    upperMovingAverage = np.array(movingAverage(waveform[upperSignalCutoff + 1 : upperSignalCutoff + sampleBand+1], n=movingAverageBuffer), dtype = float)
+    lowerMovingAverage = np.array(movingAverage(waveform[lowerSignalCutoff - sampleBand: lowerSignalCutoff], movingAverageBuffer), dtype=float)
+    upperMovingAverage = np.array(movingAverage(waveform[upperSignalCutoff + 1 : upperSignalCutoff + sampleBand+1], movingAverageBuffer), dtype = float)
     interpolation = np.interp(interpolatedTimes,
                               np.concatenate((timesArray[lowerSignalCutoff-sampleBand: lowerSignalCutoff-(movingAverageBuffer -1)], timesArray[upperSignalCutoff : upperSignalCutoff + (sampleBand +1 - movingAverageBuffer)]), axis=None),
                               np.concatenate((lowerMovingAverage, upperMovingAverage), axis=None))
     #print(interpolation)
     baseline = np.concatenate((lowerMovingAverage, interpolation, upperMovingAverage), axis = None)
+
     # Plot everything together for an example plot
     baselineSubtractedWaveform = np.subtract(waveform[lowerSignalCutoff-50:upperSignalCutoff+43], baseline)
     integratedChargeHistogram.Fill(np.trapz(baselineSubtractedWaveform))

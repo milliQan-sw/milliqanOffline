@@ -95,7 +95,6 @@ class fileRemover:
         for _id, count in idCount.items():
             #print('ID: {0} is stored at {1} sites'.format(_id, count))
             if count >= self.copies: deleteFiles.append(_id)
-
         return deleteFiles
     
     #Get fileIDs for list of filenames
@@ -119,6 +118,7 @@ class fileRemover:
             _id = _id.split('_')
             filename = _id[2] + '_Run' + _id[0] + '.' + _id[1]
             if _id[2] == 'MilliQan': filename += '_default.root'
+            elif _id[2] == 'MilliQanSlab': filename += '_default.root'
             else: filename += '.root'
             filenames.append(filename)
         return filenames
@@ -154,7 +154,7 @@ class fileRemover:
 
 if __name__ == "__main__":
 
-    path = '/home/milliqan/run3Data/'
+    path = '/home/milliqan/data/'
     offlinePath = '/home/milliqan/offlineFiles/'
     usageLim = 85
     sites = {"UCSB":"milliqan@cms3.physics.ucsb.edu:/net/cms26/cms26r0/milliqan/Run3/", "OSU":"milliqan@128.146.39.20:/data/users/milliqan/run3/"}
@@ -167,7 +167,7 @@ if __name__ == "__main__":
     myRemover = fileRemover(path, usageLim, sites, copies, db, dryRun=False)
     myRemover.offlinePath = offlinePath
     myRemover.offlineStorageTime = offlineStorageTime
-    if not offlinePath = "" and os.path.exists(offlinePath):
+    if not offlinePath == "" and os.path.exists(offlinePath):
         myRemover.deleteOfflineFiles()
     if myRemover.checkDiskSpace():
         print("Disk space usage is above threshold {0}, going to try removing files".format(myRemover.usageLim))

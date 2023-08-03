@@ -7,6 +7,23 @@ import time
 import uproot 
 from functools import partial
 from triggerConstants import *
+from pandas.api.indexers import BaseIndexer
+
+class CustomIndexer(BaseIndexer):
+    
+    def get_window_bounds(self, num_values, min_periods, center, closed):
+        
+        start = np.arange(num_values, dtype='int64')
+        end = np.arange(num_values, dtype='int64')
+        endTimes = self.time + self.duration
+
+        for i in range(num_values):
+            for j in range(i+1, num_values):
+                if self.event[i] != self.event[j]: break
+                if (self.time[j] - endTimes[i]) > self.threshold: break
+                else: end[i] = j+1
+
+        return start, end 
 
 class triggerChecker():
 
@@ -23,6 +40,7 @@ class triggerChecker():
 		if len(x) < nLayers: return False
 		unique = x.unique()
 		layers = np.where((unique >= 0) & (unique < 4))
+		#print(layers)
 		return layers[0].size >= nLayers
 
 	#return value of column (for debugging)
@@ -70,13 +88,16 @@ class triggerChecker():
 		self.myarray['frontBack'] = self.myarray['panelsCleaned']
 
 	#function to open the input root file
-	def openFile(self, dataIn):
+	def openFile(self, dataIn, evtNum=-1):
 		self.input_file = dataIn
 		self.runNum = int(dataIn.split('Run')[-1].split('.')[0])
 		self.fileNum = int(dataIn.split('.')[1].split('_')[0])
 		fin = uproot.open(dataIn)
 		tree = fin['t']
-		self.myarray = tree.arrays(uprootInputs, library='pd')
+		if evtNum!=-1:
+			self.myarray = tree.arrays(uprootInputs, library='pd', entry_start=evtNum, entry_stop=evtNum+1)
+		else:
+                        self.myarray = tree.arrays(uprootInputs, library='pd')
 		self.setTimes()
 		self.defineTrigCols()
 
@@ -93,9 +114,16 @@ class triggerChecker():
 		self.this4Layers = partial(self.checkNLayers, nLayers=4)
 
 	#find the triggers in offline data
-	def findTriggersOffline(self):
+	def findTriggersOffline(self, trigWindow = 160, debug=False):
+		time = self.myarray['time'].to_numpy()
+		duration = self.myarray['duration'].to_numpy()
+		event = self.myarray['event'].to_numpy()
+		indexer = CustomIndexer(time=self.myarray['time'].to_numpy(), duration=self.myarray['duration'].to_numpy(), event=self.myarray['event'].to_numpy(), threshold=trigWindow)
 		#use a rolling window to find the triggers that should pass
-		self.myarray[offlineTrigNames] = self.myarray.rolling(window='{}s'.format(trigWindow), on="fake_time", axis=0).agg({"fourLayers": self.this4Layers, "threeInRow": self.checkThreeInRow, "separateLayers": self.checkSeparate, "adjacentLayers": self.checkAdjacent, 'nLayers': self.thisNLayers, 'nHits': self.thisNPulses, 'topPanels': self.checkTopPanels, 'topBotPanels': self.topBotPanels, 'frontBack': self.checkThroughGoing})
+		if debug:
+			self.myarray[offlineTrigNames] = self.myarray.loc[self.myarray['event'] == 0].rolling(window='{}s'.format(trigWindow), on="fake_time", axis=0).agg({"fourLayers": self.this4Layers, "threeInRow": self.checkThreeInRow, "separateLayers": self.checkSeparate, "adjacentLayers": self.checkAdjacent, 'nLayers': self.thisNLayers, 'nHits': self.thisNPulses, 'topPanels': self.checkTopPanels, 'topBotPanels': self.topBotPanels, 'frontBack': self.checkThroughGoing})
+		else:
+			self.myarray[offlineTrigNames] = self.myarray.rolling(indexer, axis=0).agg({"fourLayers": self.this4Layers, "threeInRow": self.checkThreeInRow, "separateLayers": self.checkSeparate, "adjacentLayers": self.checkAdjacent, 'nLayers': self.thisNLayers, 'nHits': self.thisNPulses, 'topPanels': self.checkTopPanels, 'topBotPanels': self.topBotPanels, 'frontBack': self.checkThroughGoing})
 
 	#convert all triggers to binary
 	def convertTriggers(self, df):
@@ -125,17 +153,32 @@ class triggerChecker():
 		h_offline = r.TH1F("h_offline", "Offline Triggers Found", 13, 0, 13)
 		c1 = r.TCanvas("c1", "c1", 800, 800)
 
+		checkTrigger = 0
+		onlineCheck = []
+		offlineCheck = []
+		onlyOnline = []
+		onlyOffline = []
+
 		onlineTrigs = []
 		for i in range(13):
 			events = np.unique(self.myarray['event'].loc[self.myarray['trig{}'.format(i)] == True].to_numpy())
 			onlineTrigs.append(len(events))
 			h_triggers.Fill(i, len(events))
+			onlineCheck.append(events)
 
 		offlineTrigs = np.zeros(13)
 		for itrig, trig in enumerate(offlineTrigArray):
 			events = np.unique(self.myarray['event'].loc[self.myarray[trig[0]] == True].to_numpy())
 			offlineTrigs[trig[1]] = len(events)
 			h_offline.Fill(trig[1], len(events))
+			offlineCheck.append(events)
+
+			onlyOnline.append([x for x in onlineCheck[itrig] if x not in offlineCheck[itrig]])
+			onlyOffline.append([x for x in offlineCheck[itrig] if x not in onlineCheck[itrig]])
+
+			print("Trigger {} non matching events".format(trig[0]))
+			print("\tOnline only: ", ''.join(str(onlyOnline[itrig])))
+			print("\tOffline only: ", ''.join(str(onlyOffline[itrig])))
 
 		print("-----------------------Trigger Counts-------------------------")
 		print("{0:<30} {1:>8} {2:>15}".format("Trigger", "Online Triggers", "Offline Triggers"))
@@ -175,8 +218,8 @@ if __name__ == "__main__":
 	filename = '~/scratch0/milliQan/MilliQan_Run1114.1_test.root'
 
 	mychecker = triggerChecker()
-	mychecker.openFile(filename)
-	mychecker.findTriggersOffline()
+	mychecker.openFile(filename, evtNum=-1)
+	mychecker.findTriggersOffline(trigWindow=160, debug=False)
 	mychecker.getOnlineTriggers()
 	mychecker.plotTriggers()
 

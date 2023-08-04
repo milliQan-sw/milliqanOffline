@@ -11,7 +11,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 tstart = 230
-tend   = 330
+tend = 330
 
 # determine the pulse time/width and store in tree
 # (fairly time-consuming)
@@ -41,8 +41,8 @@ t.SetBranchStatus("times", 1)
 t.SetBranchStatus("voltages", 1)
 nt = t.CloneTree()
 
-nt.SetBranchAddress("times",times)
-nt.SetBranchAddress("voltages",voltages)
+nt.SetBranchAddress("times", times)
+nt.SetBranchAddress("voltages", voltages)
 b_area = nt.Branch("area", area, "area/D")
 b_offset = nt.Branch("offset", offset, "offset/D")
 b_noise = nt.Branch("noise", noise, "noise/D")
@@ -53,29 +53,42 @@ b_fwhm = nt.Branch("fwhm", fwhm, "fwhm/D")
 
 Nevt = nt.GetEntries()
 for ievt in range(Nevt):
-    if ievt > 100:
+    if ievt > 0:
         break
-# for ievt in range(10000):
+    # for ievt in range(10000):
     nt.GetEntry(ievt)
-    if ievt%10000==0:
-        print ("iEvt:", ievt)
+    if ievt % 10000 == 0:
+        print("iEvt:", ievt)
 
     print("Setting voltages")
-    vs = list(nt.voltages)[:1023]
+    vs = list(nt.voltages)
     times = list(nt.times)
-    print("Set Voltages")
+    # print("Voltages: ", vs)
+    # print("Times: ", times)
 
     # for j in range(1,vs.size):
     #     if abs(vs[j] - vs[j-1]) > 10:
     #         vs[j] = vs[j-1]
 
-    istart = np.argmax([time>tstart+times[0] for time in times])
-    iend = np.argmax([time>tend+times[0] for time in times])
-    print("After istart iend")
+    # Finds the indices where time is between tstart and tend
+    istart = np.argmax([time > tstart + times[0] for time in times])
+    iend = np.argmax([time > tend + times[0] for time in times])
+    print("istart: ", istart)
+    print("iend: ", iend)
     # offset[0] = np.median(vs)
-    offset[0] = np.mean(vs[30:int(istart*3/4)])
-    #print(vs)
-    noise[0] = 0.5*(np.percentile(vs[:int(istart*3/4)],95) - np.percentile(vs[:int(istart*3/4)],5))
+    offset[0] = np.mean(vs[30 : int(istart * 3 / 4)])
+    print("Length: ", len(vs[30 : int(istart * 3 / 4)]))
+    print("vs_size", vs[30 : int(istart * 3 / 4)])
+    print("offset: ", offset)
+    # print(vs)
+    noise[0] = 0.5 * (
+        np.percentile(vs[: int(istart * 3 / 4)], 95)
+        - np.percentile(vs[: int(istart * 3 / 4)], 5)
+    )
+    print("Length Noise: ", len(vs[: int(istart * 3 / 4)]))
+    print("95 Percentile", np.percentile(vs[: int(istart * 3 / 4)], 95))
+    print("5 Percentile", np.percentile(vs[: int(istart * 3 / 4)], 5))
+    print("noise: ", noise)
 
     vs -= offset[0]
 
@@ -86,27 +99,31 @@ for ievt in range(Nevt):
         tmax[0] = -999
         thalfmax[0] = -999
     else:
-        convolved = np.convolve(vs, template[::-1], mode='valid')
+        convolved = np.convolve(vs, template[::-1], mode="valid")
         imax = np.argmax(template)
-        convolved_time = times[imax:imax+convolved.size]
-        icstart = np.argmax(convolved_time>tstart + times[0])
-        icend = np.argmax(convolved_time>tend + times[0])
+        convolved_time = times[imax : imax + convolved.size]
+        icstart = np.argmax(convolved_time > tstart + times[0])
+        icend = np.argmax(convolved_time > tend + times[0])
         icmax = np.argmax(convolved[icstart:icend]) + icstart
         cmax = convolved[icmax]
         ihm = icmax
-        while ihm > icstart and convolved[ihm] > cmax/2:
+        while ihm > icstart and convolved[ihm] > cmax / 2:
             ihm -= 1
-        if cmax < 0.5 or convolved[ihm] > cmax/2:
+        if cmax < 0.5 or convolved[ihm] > cmax / 2:
             thalfmax[0] = -999
         else:
-            thalfmax[0] = convolved_time[ihm] + (convolved_time[ihm+1]-convolved_time[ihm])/(convolved[ihm+1]-convolved[ihm]) * (cmax/2 - convolved[ihm])
+            thalfmax[0] = convolved_time[ihm] + (
+                convolved_time[ihm + 1] - convolved_time[ihm]
+            ) / (convolved[ihm + 1] - convolved[ihm]) * (cmax / 2 - convolved[ihm])
         ihm = icmax
-        while ihm <icend and convolved[ihm] > cmax/2:
+        while ihm < icend and convolved[ihm] > cmax / 2:
             ihm += 1
-        if cmax < 0.5 or convolved[ihm] > cmax/2 or thalfmax[0]<0:
+        if cmax < 0.5 or convolved[ihm] > cmax / 2 or thalfmax[0] < 0:
             fwhm[0] = -999
         else:
-            fwhm[0] = convolved_time[ihm] + (convolved_time[ihm-1]-convolved_time[ihm])/(convolved[ihm-1]-convolved[ihm]) * (cmax/2 - convolved[ihm])
+            fwhm[0] = convolved_time[ihm] + (
+                convolved_time[ihm - 1] - convolved_time[ihm]
+            ) / (convolved[ihm - 1] - convolved[ihm]) * (cmax / 2 - convolved[ihm])
             fwhm[0] -= thalfmax
 
         smoothed_max[0] = cmax
@@ -120,5 +137,5 @@ for ievt in range(Nevt):
     b_thalfmax.Fill()
     b_fwhm.Fill()
 
-nt.Write("Events",r.TObject.kWriteDelete)
+nt.Write("Events", r.TObject.kWriteDelete)
 f.Close()

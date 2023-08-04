@@ -10,12 +10,14 @@
  #########################################################################################################################################################
 
 import ROOT as r
-from DetectorGeometry import *
+#from DetectorGeometry import *
+import DetectorGeometry as dg
 # Create Data Class
 class DataHandler():
     def __init__(self, dataPath, debug=False):
         self.data = self.initializeData(dataPath)
         self.debug = debug
+        #print('created datahandler object')
     # Create TChain with all data you will need for your analysis
     # wildcards can be used in datapath
     def initializeData(self, datapath):
@@ -28,6 +30,22 @@ class DataHandler():
     # FIXME: Implement way to viewData or get rid of function
     def viewData(self):
         return
+
+    def beamMuonCut(self, event, runPeriod='EraA'):
+        ##add some cuts here
+        #require hits in both endcaps
+        #Cut out events where we don't have a pulse in both endcaps
+        heightList = []
+        for i, channel in enumerate(event.chan):
+            if channel in dg.endCaps[runPeriod]:
+                heightList.append(event.height[i])
+        #print('height list is {0}'.format(len(heightList)))
+        if not len(heightList)==2: 
+            return
+        if not all(height > dg.muon_height_thr for height in heightList):
+            return
+        
+        return event
 
     # For a millicharged particle it is expected that the ratio between the maximum and minimum nPE is less than 10
     # This function removes events that don't satisfy this cut
@@ -178,14 +196,16 @@ class DataHandler():
     def applyCuts(self, cuts):
         lc=len(cuts)
         cutData = []
+        #print('cuts are {0}'.format(cuts))
 
         # Run over all events
         for event in self.data:
             # Run over all cuts in list given to applyCuts
             None_check = []
             for cut in cuts:
-
+                #print('current cut is {0}'.format(cut))
                 event= cut(event) # Apply given cut
+                #print('running over event {0}'.format(event))
                 if event is None: 
                     break
                 None_check.append(event.DAQEventNumber)
@@ -200,8 +220,9 @@ class DataHandler():
         return cutData
 
 if __name__ == "__main__":
-    data = DataHandler('/home/rsantos/Data/RunData/MilliQan_Run588.*_v29.root')
-    cutData = data.applyCuts([data.muonSelection])
+    data = DataHandler('/store/user/milliqan/trees/v31/MilliQan_Run1006.9*_v31_firstPedestals.root')
+    print('opening file now')
+    cutData = data.applyCuts([data.beamMuonCut])
     #cutData = data.applyCuts([data.npeCheck]) 
     #cutData = data.applyCuts([data.ThreeInLine,data.npeCheck])  #use mutiple cuts
     print(len(cutData))

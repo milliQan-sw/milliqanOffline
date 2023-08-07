@@ -27,7 +27,7 @@ int postProcess() {
   int t_end = 1550;
   std::cout << "Test" << std::endl;
   TFile *input_file = new TFile("/home/ryan/Documents/Research/MilliQan/"
-                                "DataFiles/Run811preProcessed.root",
+                                "Data/MilliQan_Run805_noLED.root",
                                 "UPDATE");
   if (!(input_file->IsZombie())) {
     TTree *event_tree = (TTree *)input_file->Get("Events");
@@ -94,9 +94,9 @@ int postProcess() {
       noise[0] = 0.5 * (yq[0] - yq[1]);
       std::cout << "Noise " << noise[0] << std::endl;
       std::cout << "Offset " << offset[0] << std::endl;
-      for (auto &voltage : *voltages) {
-        voltage -= offset[0];
-      }
+      // for (auto &voltage : *voltages) {
+      //   voltage -= offset[0];
+      // }
       // NOTE: trapezoid rule works!
       area[0] = trapezoid_rule_area(*times, *voltages);
       area_branch->Fill();

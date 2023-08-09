@@ -27,7 +27,7 @@ int postProcess() {
   int t_end = 1550;
   std::cout << "Test" << std::endl;
   TFile *input_file = new TFile("/home/ryan/Documents/Research/MilliQan/"
-                                "Data/MilliQan_Run805_noLED.root",
+                                "Data/Run805preProcessed.root",
                                 "UPDATE");
   if (!(input_file->IsZombie())) {
     TTree *event_tree = (TTree *)input_file->Get("Events");

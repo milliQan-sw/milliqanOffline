@@ -26,9 +26,10 @@ int postProcess() {
   int t_start = 1220;
   int t_end = 1550;
   std::cout << "Test" << std::endl;
-  TFile *input_file = new TFile("/home/ryan/Documents/Research/MilliQan/"
-                                "Data/Run805preProcessed.root",
-                                "UPDATE");
+  TFile *input_file =
+      new TFile("/home/ryan/Documents/Research/MilliQan/"
+                "DataFiles/PreProcessed/Run805preProcessed.root",
+                "UPDATE");
   if (!(input_file->IsZombie())) {
     TTree *event_tree = (TTree *)input_file->Get("Events");
     std::cout << "After getting Event branch" << std::endl;
@@ -98,7 +99,14 @@ int postProcess() {
       //   voltage -= offset[0];
       // }
       // NOTE: trapezoid rule works!
-      area[0] = trapezoid_rule_area(*times, *voltages);
+
+      // We should only be putting in times and voltages that are within the
+      // signal region
+      std::vector<double> signal_region_voltage =
+          slice_vector(*voltages, start_index, end_index - 1);
+      std::vector<double> signal_region_times =
+          slice_vector(*times, start_index, end_index - 1);
+      area[0] = trapezoid_rule_area(signal_region_times, signal_region_voltage);
       area_branch->Fill();
       offset_branch->Fill();
       noise_branch->Fill();

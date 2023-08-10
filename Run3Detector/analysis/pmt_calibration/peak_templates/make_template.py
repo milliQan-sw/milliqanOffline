@@ -20,20 +20,20 @@ r.gROOT.SetBatch(1)
 r.gErrorIgnoreLevel = r.kWarning
 
 fin = r.TFile(
-    "/home/rsantos/Data/PostProcessData/MilliQan_Run848_default_peak_template.root"
+    "/home/ryan/Documents/Research/MilliQan/DataFiles/Run805preProcessed.root"
 )
 tree = fin.Get("Events")
 
 pmt = "r878"
-plotdir = "/home/rsantos/Data/Plots/Testing/"
+plotdir = "/home/ryan/Data/Plots"
 os.system("mkdir -p " + plotdir)
 # Previously it looks like pV was used as the measurement for voltage, at OSU milliDAQ used mV. The time is also in seconds when at OSU it is nanoseconds
 vrange = (-100, 100)
 
 # These times should surround your peak, not too closely though
 # since you want to be able to capture photoelectrons on non-optimal paths
-tstart = 1200
-tend = 1750
+tstart = 1220
+tend = 1550
 
 # FIXME: This value is probably wrong
 
@@ -92,7 +92,7 @@ c.SaveAs(os.path.join(plotdir, "pulse_area.pdf"))
 print("Loop over tree to get average 0-PE control waveform")
 
 # Draw values inside the area branch that are between values in control range
-tree.Draw(">>entrylist", "area>{0} && area<{1}".format(*control_range), "goff")
+tree.Draw(">>entrylist", "area>{0} && area<{1}".format(*control_range))
 el = r.gDirectory.Get("entrylist")
 nent = el.GetN()
 

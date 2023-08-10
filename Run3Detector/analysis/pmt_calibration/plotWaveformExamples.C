@@ -17,7 +17,7 @@ int plotWaveformExamples(int number) {
   // The waveforms look like they were saved by event and when reading the files
   // they come in order.
   TFile *waveform_file = TFile::Open("/home/ryan/Documents/Research/MilliQan/"
-                                     "Data/outputWaveforms_805_noLED.root",
+                                     "DataFiles/outputWaveforms_805_noLED.root",
                                      "READ");
 
   std::ostringstream hist_name;
@@ -27,8 +27,9 @@ int plotWaveformExamples(int number) {
   std::cout << hist_name.str() << std::endl;
   // waveform_file->Close();
 
-  TFile *extra_file = TFile::Open(
-      "/home/ryan/Documents/Research/MilliQan/Data/Run805preProcessed.root");
+  TFile *extra_file =
+      TFile::Open("/home/ryan/Documents/Research/MilliQan/"
+                  "DataFiles/PreProcessed/Run805preProcessed.root");
 
   // Setup TTree and Branches
   TTree *tree = dynamic_cast<TTree *>(extra_file->Get("Events"));
@@ -57,15 +58,21 @@ int plotWaveformExamples(int number) {
 
   TBox *highlightBox = new TBox(hist->GetXaxis()->GetXmin(), yMin,
                                 hist->GetXaxis()->GetXmax(), yMax);
-  highlightBox->SetFillColorAlpha(kRed, 0.2);
+  highlightBox->SetFillColorAlpha(kRed, 0.1);
 
   TLine *offset_line = new TLine(hist->GetXaxis()->GetXmin(), offset,
                                  hist->GetXaxis()->GetXmax(), offset);
   offset_line->SetLineStyle(2);
   offset_line->SetLineColor(kRed);
 
+  TLine *lower_signal_range = new TLine(1220, 0, 1220, hist->GetMaximum());
+  TLine *uppser_signal_range = new TLine(1550, 0, 1550, hist->GetMaximum());
+
   hist->Draw();
+
   offset_line->Draw();
+  lower_signal_range->Draw("SAME");
+  uppser_signal_range->Draw("SAME");
   highlightBox->Draw("SAME");
   canvas->SaveAs("Histogram.png");
   canvas->WaitPrimitive();

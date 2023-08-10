@@ -253,12 +253,6 @@ class DataHandler():
 
     def applyCuts(self):
 
-        #empty list
-        #h_list = []
-        #a_list = []
-        #c_list = []
-        #t_list = []
-        
 
         num_lists = 12
         #h_list_of_lists = []
@@ -322,21 +316,9 @@ if __name__ == "__main__":
     #1032(long run) 
     #1026 (nisarg's old run)
     #1039 (beam & magnetic off) 2 minish finish -pure cosmic is at around 3-4 channel
-
-    #height_cut = 100
+    
     a_list_of_lists,nun_chan_E_lists,t_list_of_lists = data.applyCuts()
-    #for area in a_list_of_lists:
-    #    print(area)
-    #print(a_list)
-    #print(nun_chan_E_lists)
-    #print(t_list_of_lists)
-    #print(len(nun_chan_E_lists))
-    #print(len(t_list_of_lists))
-    #a_bins_max = max(a_list)
-    #a_bins_min = min(a_list)
-    #t_list_min = min(t_list)
-    #t_list_max = max(t_list)
-    #"""
+  
     def height_histogram(height,xtitle,data,nBins, xMin, xMax):
         HistogramTitle = f"{xtitle} with {height}kev cut "
         #hisarea = r.TH1D(f"{height}kev", "My Histogram", nBins, xMin, xMax)
@@ -345,7 +327,7 @@ if __name__ == "__main__":
         hist.GetXaxis().SetTitle(xtitle)
         for d in data:
             hist.Fill(d)
-        hist.Scale(1.0 / hist.GetEntries()) # not working
+        #hist.Scale(1.0 / hist.GetEntries()) 
         canvas = r.TCanvas("canvas", "Canvas Title", 800, 600)
         hist.Draw()
         hist.Write()
@@ -370,12 +352,5 @@ if __name__ == "__main__":
         height_histogram(height,"puse time",time_data,100, 0, 2500)
 
     output_file.Close()
-    #"""
 
-
-
-
-
-
-    #create histogram
 

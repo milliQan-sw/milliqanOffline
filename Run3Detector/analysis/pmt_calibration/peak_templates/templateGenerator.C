@@ -13,7 +13,7 @@
 
 // Setup regions for the control and signal region these values can/should be
 // changed
-const double control_region_area[2] = {-5, 3};
+const double control_region_area[2] = {-5000, 5000};
 const double signal_region_area[2] = {3, 10};
 
 // Times that will contain your signal
@@ -48,6 +48,12 @@ int main() {
   // Baseline of times that will be used later for interpolation
   std::vector<double> t_baseline = arange(0, 2000, 0.2);
 
+  TFile *outputFile = new TFile("histPlot.root", "RECREATE");
+  TH1D *h = new TH1D("h", ";pulse area [pVs]; Events", 125, 5000, 5000);
+  event_tree->Draw("area>>h", "");
+  h->Write();
+  outputFile->Close();
+
   // Get list of events where the area is within control_region_area
   event_tree->Draw(">>myentrylist",
                    Form("area>%f && area<%f", control_region_area[0],
@@ -70,7 +76,8 @@ int main() {
   if (myentrylist) {
     std::cout << "Loop over tree to get average 0-PE control waveform"
               << std::endl;
-
+    std::cout << "Number of events in background region: "
+              << myentrylist->GetN() << std::endl;
     // Loop through events where area is within signal range
     // Get average waveform
     std::vector<double> interpolated_voltage;
@@ -101,7 +108,7 @@ int main() {
   std::vector<std::vector<double>> waveforms;
   std::vector<double> spe_average_waveform(t_baseline.size(), 0);
   std::vector<double> spe_average_subtract_control(t_baseline.size(), 0);
-
+  std::cout << "Number of events in signal region " << nEvents << std::endl;
   if (entrylist) {
     for (int i = 0; i < nEvents; i++) {
       event_tree->GetEntry(entrylist->GetEntry(i));
@@ -131,6 +138,8 @@ int main() {
     zeroPEGraph->SetTitle("0-PE Average Voltage");
     zeroPEGraph->GetXaxis()->SetTitle("Time (ns)");
     zeroPEGraph->GetYaxis()->SetTitle("Average Voltage (mV)");
+    zeroPEGraph->SetLineColor(kBlack);
+    zeroPEGraph->SetLineWidth(2);
 
     // Create Plots of the average SPE
     TGraph *averageSPE =
@@ -139,14 +148,21 @@ int main() {
     averageSPE->SetTitle("Average SPE Waveform");
     averageSPE->GetXaxis()->SetTitle("Time (ns)");
     averageSPE->GetYaxis()->SetTitle("Average Voltage (mV)");
+    averageSPE->SetLineColor(kRed);
+    averageSPE->SetLineWidth(2);
 
     // Create Lines that will display tstart and tend
+    // TODO: Replace GetUymax and GetUymin with actual maximums and minimums
     TLine *tstartLine =
         new TLine(tstart, gPad->GetUymin(), tstart, gPad->GetUymax());
     tstartLine->SetLineStyle(2);
+    tstartLine->SetLineColor(kBlue);
+    tstartLine->SetLineWidth(2);
 
     TLine *tendLine = new TLine(tend, gPad->GetUymin(), tend, gPad->GetUymax());
     tendLine->SetLineStyle(2);
+    tendLine->SetLineColor(kBlue);
+    tendLine->SetLineWidth(2);
 
     canvas->cd();
     zeroPEGraph->Draw();
@@ -205,6 +221,7 @@ std::vector<double> interpolateList(std::vector<double> x_values,
                                     std::vector<double> y_values,
                                     std::vector<double> interpolation_points) {
 
+  std::cout << "About to interpolate" << std::endl;
   double x_array[x_values.size()];
   double y_array[y_values.size()];
   for (int i = 0; i < x_values.size(); i++) {
@@ -217,7 +234,6 @@ std::vector<double> interpolateList(std::vector<double> x_values,
 
   for (int i = 0; i < interpolation_points.size(); i++) {
     interpolated_values[i] = graph.Eval(interpolation_points[i]);
-    std::cout << interpolated_values[i] << std::endl;
   }
   return interpolated_values;
 }

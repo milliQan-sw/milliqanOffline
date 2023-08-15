@@ -799,9 +799,9 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
     
     //cout<<"Display directory is "<<displayDirectory<<endl;
     TString displayName;
-    displayName=Form(displayDirectory+"Run%i_File%i_Event%i_Version_%s.pdf",runNumber,fileNumber,event,"shorttagplaceholder"); 
+    displayName=TString(Form(displayDirectory+"Run%i_File%i_Event%i_Version_",runNumber,fileNumber,event))+TString("shorttagplaceholder_")+appendToTag+".pdf"; 
     c.SaveAs(displayName);
-    displayName=Form(displayDirectory+"Run%i_File%i_Event%i_Version_%s.png",runNumber,fileNumber,event,"shorttagplaceholder"); 
+    displayName=TString(Form(displayDirectory+"Run%i_File%i_Event%i_Version_",runNumber,fileNumber,event))+TString("shorttagplaceholder_")+appendToTag+".png"; 
     c.SaveAs(displayName);
 
     for(uint i=0;i<chanList.size();i++){
@@ -1236,7 +1236,11 @@ void OfflineFactory::displayEvents(std::vector<int> & eventsToDisplay,TString di
 void OfflineFactory::readWaveData(){
     validateInput();
     inTree = (TTree*)inFile->Get("Events"); 
-    if (friendFileName != "") addFriendTree();
+    triggerFileMatched = false;
+    if (friendFileName != "") {
+	addFriendTree();
+	triggerFileMatched = true;
+    }
     loadBranches();
     // int maxEvents = 1;
     int maxEvents = inTree->GetEntries();
@@ -1367,7 +1371,7 @@ vector< pair<float,float> > OfflineFactory::findPulses(int ic){
     //int i_begin = 0;
     int i_stop_searching = waves[ic]->GetNbinsX()-nConsecSamples[ic];
     int i_stop_final_pulse = waves[ic]->GetNbinsX();
-
+    //std::cout << "start: " << i_begin << ", stop: " << i_stop_searching << std::endl;
 
     for (int i=istart; i<i_stop_searching || (inpulse && i<i_stop_final_pulse); i++) {
         float v = waves[ic]->GetBinContent(i);
@@ -1574,6 +1578,10 @@ void OfflineFactory::writeVersion(){
     TNamed v;
     v = TNamed("tag_"+to_string(runNumber)+"_"+to_string(fileNumber),"longtagplaceholder");
     v.Write();
+    string triggerString = "false";
+    if (triggerFileMatched) triggerString = "true";
+    TNamed v2("triggerMatched_"+triggerString,"triggerMatched_"+triggerString);
+    v2.Write();
 }
 TString OfflineFactory::getVersion(){
     return versionLong;

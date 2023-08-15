@@ -40,18 +40,16 @@ From: centos:centos7
     
     python3 -m pip install pymongo
     python3 -m pip install pymongo[srv]
+    python3 -m pip install numpy
 
-    git clone https://github.com/carriganm95/milliqanOffline.git    
+    git clone https://github.com/milliQan-sw/milliqanOffline.git
     git clone https://gitlab.cern.ch/MilliQan/MilliDAQ.git
     cd MilliDAQ
     make clean
     make shared
     echo "Compiled MilliDAQ shared library"
-    
-    cd ../milliqanOffline
-    git checkout -b singularity origin/singularity
     cd ../
-
+    
     chmod -R a+rwx milliqanOffline
     chmod -R a+rwx MilliDAQ
 

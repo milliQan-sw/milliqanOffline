@@ -1,6 +1,11 @@
 #!/usr/bin/bash
 
-tar -xzvf milliqanOffline*.tar.gz milliqanOffline/
+hostname=$(cat /proc/sys/kernel/hostname)
+
+echo "working on compute node $hostname"
+
+tar -xzvf milliqanOffline*.tar.gz
+mv milliqanOfflineTar/ milliqanOffline/
 tar -xzvf MilliDAQ.tar.gz
 
 cp tree_wrapper.py milliqanOffline/Run3Detector/

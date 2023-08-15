@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 - name: Mirror to GitLab and run GitLab CI
   uses: SvanBoxel/gitlab-mirror-and-ci-action@0.2
   
@@ -46,4 +47,3 @@ build image:
         - docker build -t $CI_REGISTRY_IMAGE .
         - docker push $CI_REGISTRY_IMAGE
         
-

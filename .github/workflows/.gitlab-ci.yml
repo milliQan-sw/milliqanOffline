@@ -12,7 +12,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Mirror + trigger CI
-        uses: SvanBoxel/gitlab-mirror-and-ci-action@v0.2  # Use the correct version tag
+        uses: SvanBoxel/gitlab-mirror-and-ci-action  # Use the correct version tag
         with:
           args: "https://gitlab.com/<namespace>/<repository>"
         env:

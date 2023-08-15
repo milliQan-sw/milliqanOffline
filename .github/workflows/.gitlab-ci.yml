@@ -2,7 +2,7 @@ name: Mirror to GitLab and run GitLab CI
 on:
   push:
     branches:
-      - main  # Adjust the branch name as needed
+      - master  # Adjust the branch name as needed
 
 jobs:
   build:

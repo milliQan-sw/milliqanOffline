@@ -1,49 +1,22 @@
-- name: Mirror to GitLab and run GitLab CI
-  uses: SvanBoxel/gitlab-mirror-and-ci-action@0.2
+name: Mirror to GitLab and run GitLab CI
+uses: SvanBoxel/gitlab-mirror-and-ci-action@0.2
   
-run tests:
-    image: $CI_REGISTRY_IMAGE
-    rules:
-        - if: $CI_PIPELINE_SOURCE != "schedule"
-    variables:
-        GIT_SUBMODULE_STRATEGY: recursive
-    script:
-        - echo $Starting tests
-        - which root
+on: [push]
 
-        - git submodule add ../MilliDAQ.git
-        - cd MilliDAQ/
-        - make clean && make shared
-        - cd ../
-        #- export MILLIDAQDIR=$PWD/MilliDAQ/
-        #- export ROOT_INCLUDE_PATH=$MILLIDAQDIR/interface/
-        #- export OFFLINESITE="GitLab"
-        - cd Run3Detector
-        #- export OFFLINEDIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-        - sed -i '/thisroot.sh/d' setup.sh
-        - sed -i "s|/homes/milliqan/MilliDAQ|$PWD/../MilliDAQ|g" setup.sh
-        - sed -i "s|UCSB|GitLab|g" setup.sh
-        - . setup.sh
-        - curl -o input.root https://cernbox.cern.ch/s/4b3s7iRaaP2cVnj/download
-        - ./compile.sh test.exe
-        - python3 scripts/runOfflineFactory.py --inputFile input.root --outputFile output.root --exe ./test.exe
-
-
-build image:
-    image: docker:stable
-    tags:
-        - docker-privileged
-    services:
-        - name: docker:stable-dind
-    rules:
-        - if: $CI_PIPELINE_SOURCE == "schedule"
-    variables:
-        DOCKER_HOST: tcp://docker:2375/
-        DOCKER_DRIVER: overlay2
-        DOCKER_TLS_CERTDIR: ""
-    script:
-        - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER $CI_REGISTRY --password-stdin
-        - docker build -t $CI_REGISTRY_IMAGE .
-        - docker push $CI_REGISTRY_IMAGE
-        
-
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Mirror + trigger CI
+      uses: SvanBoxel/gitlab-mirror-and-ci-action@master
+      with:
+        args: "https://gitlab.com/<namespace>/<repository>"
+      env:
+        FOLLOW_TAGS: "false"
+        FORCE_PUSH: "false"
+        GITLAB_HOSTNAME: "gitlab.cern.ch"
+        GITLAB_USERNAME: "micarrig"
+        GITLAB_PASSWORD: ${{ secrets.GITLAB }} // Generate here: https://gitlab.com/profile/personal_access_tokens
+        GITLAB_PROJECT_ID: "156137" //https://gitlab.cern.ch/MilliQan/milliqanOffline
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} // https://docs.github.com/en/actions/reference/authentication-in-a-workflow#about-the-github_token-secret

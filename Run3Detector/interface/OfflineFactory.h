@@ -54,7 +54,6 @@
 #include <fstream>
 #include <iostream>
 using namespace std;
-
 //Use struct to organise tree contents
 struct offline_tree_{
     int event ;
@@ -213,7 +212,7 @@ private:
     TArrayI * boardArray;
     int dynamicPedestalTotalSamples = 400;
     int dynamicPedestalConsecutiveSamples = 16;
-    float heightGranularity = 0.25;
+    float dynamicPedestalGranularity = 0.25;
 
     //Declare global variables
     double arrayVoltageDRS[100][1024];
@@ -231,6 +230,7 @@ private:
     TFile * outFile;
     TTree * outTree;
     offline_tree_ outputTreeContents;
+    bool triggerFileMatched;
     vector<TColor *> palette;
     vector<int> colors;
     //Trigger friend variables

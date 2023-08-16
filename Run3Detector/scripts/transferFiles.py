@@ -80,7 +80,7 @@ def transferFiles(source,destinations,logFile,force=False):
     os.system("echo '" + time.strftime("%c") + " Attempting to transfer data files ...' >> " + logFile)
     allIds = []
     allInputs = []
-    for inputFile in sorted(glob.glob(source + "*.root"), key=os.path.getmtime):
+    for inputFile in sorted(glob.glob(source + "*.root"), key=os.path.getmtime, reverse=True):
         for site, destination in destinations.items():
             #Details for database entry
             runNumber = int(inputFile.split("/")[-1].split("Run")[-1].split(".")[0])
@@ -91,6 +91,9 @@ def transferFiles(source,destinations,logFile,force=False):
             allInputs.append(inputFile)
     idsOut,inputsOut,entriesInDB, currentLocations = checkMongoDB(db,allIds,allInputs,force)
     for _id,inputFile,entryInMongo,currentLocation in zip(idsOut,inputsOut,entriesInDB, currentLocations):
+        site = _id.split('_')[-1]
+        destination = destinations[site]
+        print(_id, site ,destination)
         nTransferred += 1
         sizeInMB = os.path.getsize(inputFile) / 1024.0 / 1024.0
         mbytesTransferred += sizeInMB
@@ -127,5 +130,5 @@ if __name__ == "__main__":
     source = "/home/milliqan/data/"
     logFile = "/home/milliqan/MilliDAQ_FileTransfers.log"
 
-    destinations = {"UCSB":"milliqan@cms3.physics.ucsb.edu:/net/cms26/cms26r0/milliqan/Run3/", "OSU":"milliqan@128.146.39.20:/data/users/milliqan/run3/"} #temporary change to OSU ip address
+    destinations = {"UCSB":"milliqan@cms3.physics.ucsb.edu:/net/cms26/cms26r0/milliqan/Run3/", "OSU":"milliqan@128.146.39.20:/store/user/milliqan/run3/"} #temporary change to OSU ip address
     transferFiles(source,destinations,logFile,force=False)

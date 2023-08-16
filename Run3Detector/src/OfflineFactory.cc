@@ -1228,7 +1228,11 @@ void OfflineFactory::displayEvents(std::vector<int> & eventsToDisplay,TString di
         vector<vector<pair<float,float> > > allPulseBounds;
         allPulseBounds = readWaveDataPerEvent(iEvent);
         displayEvent(iEvent,allPulseBounds,displayDirectoryForRun);
+<<<<<<< HEAD
         //        displaychannelEvent(iEvent,allPulseBounds,displayDirectoryForRun1);
+=======
+        //displaychannelEvent(iEvent,allPulseBounds,displayDirectoryForRun1);
+>>>>>>> 8ac7dbb74f5cde4f9ead3c5d9dc33b09525608f4
     }
     inFile->Close();
 }

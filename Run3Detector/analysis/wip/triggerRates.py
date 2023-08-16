@@ -29,6 +29,7 @@ class triggerChecker():
 
 	def __init__(self):
 		self.defineFunctions()
+		self.pedestalCorrections = np.array(pedestalCorrections)
 
 	#check for nHits pulses in window
 	def checkNPulses(self, x, nHits=4):
@@ -75,20 +76,24 @@ class triggerChecker():
 		return passed
 
 	#define columns replaced by trigger finding
-	def defineTrigCols(self):
-		self.myarray['fourLayers'] = self.myarray['layer']
+	def defineTrigCols(self, pedestalCorrection=False):
+		if pedestalCorrection: 
+			self.myarray = self.myarray.assign(pedestalCorrection=lambda x: self.pedestalCorrections[x.chan])
+			self.myarray['correctedHeight'] = np.where((self.myarray['height'] - self.myarray['pedestalCorrection'] >= 15), True, False)
+			self.myarray = self.myarray.loc[self.myarray['correctedHeight'] == True]
+		self.myarray['fourLayers'] = np.where((self.myarray['type'] == 0), self.myarray['layer'], -1)
 		self.myarray['threeInRow'] = self.myarray['chan']
-		self.myarray['separateLayers'] = self.myarray['layer']
-		self.myarray['adjacentLayers'] = self.myarray['layer']
-		self.myarray['nLayers'] = self.myarray['layer']
-		self.myarray['nHits'] = self.myarray['layer']
+		self.myarray['separateLayers'] = np.where((self.myarray['type'] == 0), self.myarray['layer'], -1)
+		self.myarray['adjacentLayers'] = np.where((self.myarray['type'] == 0), self.myarray['layer'], -1)
+		self.myarray['nLayers'] = np.where((self.myarray['type'] == 0), self.myarray['layer'], -1)
+		self.myarray['nHits'] = np.where((self.myarray['type'] == 0), self.myarray['layer'], -1)
 		self.myarray['topPanels'] = self.myarray['chan']
 		self.myarray['topBotPanels'] = self.myarray['chan']
 		self.myarray['panelsCleaned'] = np.where((self.myarray['height'] >= panelThreshold), self.myarray['chan'], False)
 		self.myarray['frontBack'] = self.myarray['panelsCleaned']
 
 	#function to open the input root file
-	def openFile(self, dataIn, evtNum=-1):
+	def openFile(self, dataIn, evtNum=-1, pedestalCorrection=False):
 		self.input_file = dataIn
 		self.runNum = int(dataIn.split('Run')[-1].split('.')[0])
 		self.fileNum = int(dataIn.split('.')[1].split('_')[0])
@@ -99,7 +104,7 @@ class triggerChecker():
 		else:
                         self.myarray = tree.arrays(uprootInputs, library='pd')
 		self.setTimes()
-		self.defineTrigCols()
+		self.defineTrigCols(pedestalCorrection)
 
 	#use datetime to create times of hits to be used in rolling window
 	def setTimes(self):
@@ -215,10 +220,10 @@ if __name__ == "__main__":
 
 	r.gROOT.SetBatch(1)
 
-	filename = '~/scratch0/milliQan/MilliQan_Run1114.1_test.root'
+	filename = '/home/milliqan/scratch0/processTrees/milliqanOffline/Run3Detector/MilliQan_Run1116.1_matched.root'
 
 	mychecker = triggerChecker()
-	mychecker.openFile(filename, evtNum=-1)
+	mychecker.openFile(filename, evtNum=-1, pedestalCorrection=True)
 	mychecker.findTriggersOffline(trigWindow=160, debug=False)
 	mychecker.getOnlineTriggers()
 	mychecker.plotTriggers()

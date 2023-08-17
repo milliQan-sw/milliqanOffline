@@ -149,8 +149,8 @@ struct offline_tree_{
 //Offline factory class used to produce offline tree output
 class OfflineFactory {
 public:
-    OfflineFactory(TString,TString,TString,bool);
-    OfflineFactory(TString,TString,TString, bool, int, int);
+    OfflineFactory(TString,TString,TString,bool,bool);
+    OfflineFactory(TString,TString,TString, bool, bool, int, int);
     // virtual ~OfflineFactory();
     void makeOutputTree();
     void loadJsonConfig(string);
@@ -198,6 +198,7 @@ private:
     int runNumber;
     int fileNumber;
     bool isDRS;
+    bool isSlab;
     mdaq::GlobalEvent * evt = new mdaq::GlobalEvent();
     mdaq::DemonstratorConfiguration * cfg = new mdaq::DemonstratorConfiguration();
     vector<float> highThresh = {15.};

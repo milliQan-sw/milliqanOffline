@@ -1,10 +1,11 @@
 #include "./interface/OfflineFactory.h"
 
-OfflineFactory::OfflineFactory(TString inFileName, TString outFileName, TString appendToTag, bool isDRS, int runNumber, int fileNumber) : 
+OfflineFactory::OfflineFactory(TString inFileName, TString outFileName, TString appendToTag, bool isDRS, bool isSlab, int runNumber, int fileNumber) : 
     inFileName(inFileName),
     outFileName(outFileName),
     appendToTag(appendToTag),
     isDRS(isDRS),
+    isSlab(isSlab),
     runNumber(runNumber),
     fileNumber(fileNumber)
 {
@@ -44,8 +45,8 @@ OfflineFactory::OfflineFactory(TString inFileName, TString outFileName, TString 
     colors.push_back(860-9); colors.push_back(400-5); colors.push_back(416-8); colors.push_back(880-8); 
 };
 
-OfflineFactory::OfflineFactory(TString inFileName, TString outFileName, TString appendToTag, bool isDRS) {
-    OfflineFactory(inFileName,outFileName,appendToTag,isDRS,-1,-1);
+OfflineFactory::OfflineFactory(TString inFileName, TString outFileName, TString appendToTag, bool isDRS, bool isSlab) {
+    OfflineFactory(inFileName,outFileName,appendToTag,isDRS,isSlab,-1,-1);
 };
 void OfflineFactory::setFriendFile(TString friendFileNameIn){
     friendFileName = friendFileNameIn;

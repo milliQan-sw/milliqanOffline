@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - master  # Adjust the branch name as needed 1
+      - addAction
 
 jobs:
   build:

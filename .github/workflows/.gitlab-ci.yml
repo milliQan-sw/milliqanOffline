@@ -15,7 +15,7 @@ jobs:
       - name: Mirror + trigger CI
         uses: SvanBoxel/gitlab-mirror-and-ci-action@master  # Use the correct version tag
         with:
-          args: "https://gitlab.cern.ch/micarrig/milliqanOffline"
+          args: "https://gitlab.cern.ch/MilliQan/milliqanOffline"
         env:
           FOLLOW_TAGS: "false"
           FORCE_PUSH: "false"

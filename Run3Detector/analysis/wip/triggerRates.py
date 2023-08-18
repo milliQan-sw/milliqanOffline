@@ -77,8 +77,15 @@ class triggerChecker():
 		
 	#check for 3 in row trigger in window
 	def checkThreeInRow(self, x):
-		passed = np.array([np.count_nonzero([np.in1d(path, x) for path in line]) >= 3 for line in straightPaths]).any()
-		return passed
+		#passed = np.array([np.count_nonzero([np.in1d(path, x) for path in line]) >= 3 for line in straightPaths]).any()
+		for line in straightPaths:
+			hits = []
+			for i, path in enumerate(line):
+				if np.in1d(path,x).any():
+					hits.append(i)
+			if len(np.unique(np.array(hits))) >=3: 
+				return True
+		return False
 
 	#define columns replaced by trigger finding
 	def defineTrigCols(self, pedestalCorrection=False):

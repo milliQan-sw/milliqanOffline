@@ -29,7 +29,12 @@ class triggerChecker():
 
 	def __init__(self):
 		self.defineFunctions()
-		self.pedestalCorrections = np.array(pedestalCorrections)
+		#self.pedestalCorrections = np.array(pedestalCorrections) #deals with static pedestal corrections from config (not used?)
+
+	def setDynamicPedestals(self):
+		self.pedestals = self.tree.arrays(['event', 'chan', 'dynamicPedestal'], library='ak')
+		self.corrections = [x.dynamicPedestal[x.chan].to_list() for x in self.pedestals]
+		self.corrections = [item for sublist in self.corrections for item in sublist]
 
 	#check for nHits pulses in window
 	def checkNPulses(self, x, nHits=4):
@@ -38,7 +43,7 @@ class triggerChecker():
 	
 	#check for NLayers hits in window
 	def checkNLayers(self, x, nLayers=4):
-		if len(x) < nLayers: return False
+		#if len(x) < nLayers: return False
 		unique = x.unique()
 		layers = np.where((unique >= 0) & (unique < 4))
 		#print(layers)
@@ -78,8 +83,10 @@ class triggerChecker():
 	#define columns replaced by trigger finding
 	def defineTrigCols(self, pedestalCorrection=False):
 		if pedestalCorrection: 
-			self.myarray = self.myarray.assign(pedestalCorrection=lambda x: self.pedestalCorrections[x.chan])
-			self.myarray['correctedHeight'] = np.where((self.myarray['height'] - self.myarray['pedestalCorrection'] >= 15), True, False)
+			self.setDynamicPedestals()
+			self.myarray = self.myarray.assign(pedestalCorrection=lambda x: self.corrections)
+			#self.myarray = self.myarray.assign(pedestalCorrection=lambda x: self.pedestalCorrections[x.chan]) #this adds static pedestal correction from config files (not used?)
+			self.myarray['correctedHeight'] = np.where((self.myarray['height'] + self.myarray['pedestalCorrection'] >= 15), True, False)
 			self.myarray = self.myarray.loc[self.myarray['correctedHeight'] == True]
 		self.myarray['fourLayers'] = np.where((self.myarray['type'] == 0), self.myarray['layer'], -1)
 		self.myarray['threeInRow'] = self.myarray['chan']
@@ -97,14 +104,14 @@ class triggerChecker():
 		self.input_file = dataIn
 		self.runNum = int(dataIn.split('Run')[-1].split('.')[0])
 		self.fileNum = int(dataIn.split('.')[1].split('_')[0])
-		fin = uproot.open(dataIn)
-		tree = fin['t']
+		self.fin = uproot.open(dataIn)
+		self.tree = self.fin['t']
 		if evtNum!=-1:
-			self.myarray = tree.arrays(uprootInputs, library='pd', entry_start=evtNum, entry_stop=evtNum+1)
+			self.myarray = self.tree.arrays(uprootInputs, library='pd', entry_start=evtNum, entry_stop=evtNum+1)
 		else:
-                        self.myarray = tree.arrays(uprootInputs, library='pd')
-		self.setTimes()
+                        self.myarray = self.tree.arrays(uprootInputs, library='pd')
 		self.defineTrigCols(pedestalCorrection)
+		self.setTimes()
 
 	#use datetime to create times of hits to be used in rolling window
 	def setTimes(self):
@@ -220,7 +227,9 @@ if __name__ == "__main__":
 
 	r.gROOT.SetBatch(1)
 
-	filename = '/home/milliqan/scratch0/processTrees/milliqanOffline/Run3Detector/MilliQan_Run1116.1_matched.root'
+	#filename = '/home/milliqan/scratch0/processTrees/milliqanOffline/Run3Detector/MilliQan_Run1116.1_matched.root'
+	filename = '~/dump/MilliQan_Run1116.1_default_v32.root'
+
 
 	mychecker = triggerChecker()
 	mychecker.openFile(filename, evtNum=-1, pedestalCorrection=True)

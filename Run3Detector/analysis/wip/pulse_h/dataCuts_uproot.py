@@ -2,7 +2,10 @@
 rewrite dataCuts.py into uproot version based on triggerRates.py
 remove the display method from triggerRates.py
 
+to-do
 merge data with Tchain and then load the data with uproot
+switch to DaqNum to pick the specific event, ask Matt why does the DaqNum can't be seens in offline data
+
 """
 
 
@@ -23,8 +26,6 @@ class triggerChecker():
 	def __init__(self):
 		self.defineFunctions()
 
-	#check for nHits pulses in window
-	#Q: what does (x.unique() < 64) do?
 	def checkNPulses(self, x, nHits=4):
 		if len((x.unique()<64)) >= nHits: return True
 		return False
@@ -136,6 +137,8 @@ class triggerChecker():
 	#dataCu:data used for cut
 	#dataCo:data that I need to collect. 
 	#outputList:output the corresponded list
+	#pulse-based cut
+	
 
 
 	def cut1(self,dataCu,cutValue,dataCo):
@@ -150,13 +153,23 @@ class triggerChecker():
 			outputList.append(specificData)
 		return outputList
 
-
+	#event-based cut
+	#use pulse cut(event-based) to get pulse based data? what?
+	
+	def pulseCount(self,dataCo,heightCut = 0):
+		outputList = []
+		#grab the number of event in a file
+		eventList=set(data["event"])
+		Num_event = len(eventList)
+		for specific_event in eventList:
+			pulse_count = data[data["height"] > heightCut]["event"]==specific_event
+			num = pulse_count.sum() #the number of pulse that pass height cut
 
 if __name__ == "__main__":
 
 	r.gROOT.SetBatch(1)
 
-	Run_num = 1031
+	Run_num = 1026
 	filename = f'/store/user/milliqan/trees/v31/MilliQan_Run{Run_num}.1_v31_firstPedestals.root'
 	mychecker = triggerChecker()
 	mychecker.openFile(filename)
@@ -168,7 +181,7 @@ if __name__ == "__main__":
 	# Export the DataFrame to a text file
 	#mychecker.myarray.to_csv(txt_file_path, index=False, sep='\t') 
 	#dataList = ["time","height","area","type","duration"] #feed into cut1/2 dataCo
-	dataList = ["time","area","type","duration"]
+	dataList = ["time","area","type","duration","column","layer"] #what is board sidebandMean sidebandRMS
 	timeList = []
 	#heightList = []
 	areaList = []
@@ -190,13 +203,10 @@ if __name__ == "__main__":
 			ExtractedData = mychecker.cut1("height",height_threshold,CollectData)
 			OutputLIST.append(ExtractedData)
 	
-	#debug
-	print("len(OutputLIST)" + str(len(outputdataList[0])))
 	
 	#plot the data with T hisogram
 	def height_histogram(height,xtitle,data,nBins, xMin, xMax):
 		HistogramTitle = f"{xtitle} with {height}kev cut "
-		#hisarea = r.TH1D(f"{height}kev", "My Histogram", nBins, xMin, xMax)
 		hist = r.TH1D(f"{height}kev data:{xtitle}", "My Histogram", nBins, xMin, xMax)
 		hist.SetTitle(HistogramTitle)
 		hist.GetXaxis().SetTitle(xtitle)
@@ -210,8 +220,7 @@ if __name__ == "__main__":
 	fileName = f"run{Run_num}_heightcut.root"
 	output_file = r.TFile(fileName, "RECREATE")
 
-	#subList
-	#subData: is float, it has bug
+
 	for index1,subList in enumerate(outputdataList):
 		print("index1" + str(type(index1))) #debug
 		for index2,subData in enumerate(subList):

@@ -13,6 +13,10 @@ To this end we must search for the following key quantities:
 We expect the time difference between peaks to be ~2L/c for L being the length of the detector.
 
 
-The typical chain of analysis would be to run the Pulse_height_slabs.py (coming soon) to observe the point of pulse saturation and use this to define a cut applied to the Pulse_area_Slabs_study.py which further allows one to define an area cut. This new information is then passed to muon_analysis_slabs.py for the final time difference calculations and a stylized/fit plot is created in the Fitting_histo_slabs.py. 
+The typical chain of analysis would be to obtain pulse height cuts for the slabs, likely from the ROOT terminal e.g. 
 
-*Note: Refinements will be in the works as timing calibration progresses. Scripts will eventually be made to handle panel swaps and output pulse and area cuts into a txt file to be read in and used in the muon_analysis_slabs.py script. Any other suggestions are welcome!
+t->Draw("height[chan==71]") or t->Draw("height[chan==75]")
+
+to observe the point of pulse saturation and use this to define a cut applied to the Pulse_area_Slabs_study.py which further allows one to define an area cut. This new information is then passed to muon_analysis_slabs.py for the final time difference calculations and a stylized/fit plot is created in the Fitting_histo_slabs.py. 
+
+*Note:Refinements need to made to handle channel swaps and export the channel cuts.

@@ -3,8 +3,7 @@ rewrite dataCuts.py into uproot version based on triggerRates.py
 remove the display method from triggerRates.py
 
 to-do
-merge data with Tchain and then load the data with uproot
-switch to DaqNum to pick the specific event, ask Matt why does the DaqNum can't be seens in offline data
+merge multiple panda table from same run
 
 """
 
@@ -181,14 +180,23 @@ if __name__ == "__main__":
 	# Export the DataFrame to a text file
 	#mychecker.myarray.to_csv(txt_file_path, index=False, sep='\t') 
 	#dataList = ["time","height","area","type","duration"] #feed into cut1/2 dataCo
-	dataList = ["time","area","type","duration","column","layer"] #what is board sidebandMean sidebandRMS
+	dataList = ["time","area","type","duration","column","layer","board","pickupFlag","npulses"] #column name that I selected for data collection
 	timeList = []
-	#heightList = []
 	areaList = []
 	typeList = []
-	duration = []
+	durationList = []
+	columnList = []
+	layerList = []
+	heightList = []
+	pickupFlagList = []
+	boardList = []
+	pulseList = []
+	#ignore sideband's data and max so far
+
 	#outputdataList=[timeList,heightList,areaList,typeList,duration]
-	outputdataList=[timeList,areaList,typeList,duration]
+	outputdataList=[timeList,areaList,typeList,durationList,columnList,layerList,boardList,pickupFlagList,pulseList] #output data for height cut
+
+
 	#test for extracting the data
 	"""
 	areaList1 = []
@@ -226,16 +234,73 @@ if __name__ == "__main__":
 		for index2,subData in enumerate(subList):
 			if subData == None: continue
 			height = 100 + index2 * 100
-			print(min(subData))
-			print(max(subData))
+			#print(min(subData))
+			#print(max(subData))
 			height_histogram(height,dataList[index1],subData,100, min(subData), max(subData))
-	
+
+
+	#start the pulse(branch) cut (0-20 with increment value 2)
+	#clear the data
+	timeList = []
+	areaList = []
+	typeList = []
+	durationList = []
+	columnList = []
+	layerList = []
+	heightList = []
+	pickupFlagList = []
+	boardList = []
+	pulseList = []
+	dataList = ["time","area","type","duration","column","layer","board","pickupFlag","height"]
+	outputdataList=[timeList,areaList,typeList,durationList,columnList,layerList,boardList,pickupFlagList,heightList]
+
+	for CollectData,OutputLIST in zip(dataList,outputdataList):
+		for i in range(11):
+			pulse_threshold = 0 + i * 2
+			#print("CollectData:"+CollectData)
+			ExtractedData = mychecker.cut1("npulses",pulse_threshold,CollectData)
+			OutputLIST.append(ExtractedData)
 
 	
+	def pulse_histogram(pulse_value,xtitle,data,nBins, xMin, xMax):
+		HistogramTitle = f"{xtitle} with {pulse_value} pulses cut "
+		hist = r.TH1D(f"{pulse_value}pulses data:{xtitle}", "My Histogram", nBins, xMin, xMax)
+		hist.SetTitle(HistogramTitle)
+		hist.GetXaxis().SetTitle(xtitle)
+		for d in data:
+			hist.Fill(d)
+		#hist.Scale(1.0 / hist.GetEntries()) 
+		canvas = r.TCanvas("canvas", "Canvas Title", 800, 600)
+		hist.Draw()
+		hist.Write()
+	
+	for index1,subList in enumerate(outputdataList):
+		print("index1" + str(type(index1))) #debug
+		for index2,subData in enumerate(subList):
+			if subData == None: continue
+			pulse_threshold = 0 + index2 * 2
+			pulse_histogram(pulse_threshold,dataList[index1],subData,100, min(subData), max(subData))
+
+	
+	output_file.Close()
 
 
-
+	#cut N pulse(not branch) above height->count the number of events
 	# clean up the outputdataList
+	timeList = []
+	areaList = []
+	typeList = []
+	durationList = []
+	columnList = []
+	layerList = []
+	heightList = []
+	pickupFlagList = []
+	boardList = []
+	pulseList = []
+
+	dataList = ["time","area","type","duration","column","layer","board","pickupFlag","height"]
+	outputdataList=[timeList,areaList,typeList,durationList,columnList,layerList,boardList,pickupFlagList,heightList]
+
 
 	
 

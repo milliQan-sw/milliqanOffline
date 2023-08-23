@@ -16,7 +16,7 @@ def singleJob():
     print("Running single file")
     inFile = args.inputDir + 'MilliQan_Run{0}_default.root'.format(args.singleRun)
     outFile = 'MilliQan_Run{0}_{1}.root'.format(args.singleRun, args.version)
-    triggerFile = args.inputDir + 'MatchedEvents_Run{0}.root'.format(args.singleRun)
+    triggerFile = args.inputDir + 'MatchedEvents_Run{0}_rematch.root'.format(args.singleRun)
 
     print("Input file is {0}\nTrigger File is {1}\nOutput File is {2}".format(inFile, triggerFile, outFile))
 

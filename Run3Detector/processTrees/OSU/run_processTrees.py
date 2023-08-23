@@ -16,7 +16,9 @@ def parse_args():
     parser.add_argument('-a', '--all', action='store_true', help='Find all non processed files and create offline trees')
     parser.add_argument('-f', '--reprocess', action='store_true', help='Reprocess all files')
     parser.add_argument('-v', '--version', type=str, default='31', help='Set the version of offline trees')
-    parser.add_argument('-S', '--single', type=str, default='-1', help='Single run to be submitted')
+    parser.add_argument('-S', '--single', type=str, default='-1', help='Single file to be submitted')
+    parser.add_argument('-R', '--run', type=str, help='Single run to be submitted')
+    parser.add_argument('-o', '--outputDir', type=str, help='Output directory for files')
     args = parser.parse_args()
     return args
 
@@ -28,7 +30,10 @@ def singleRun():
     milliqanOffline = 'milliqanOffline_v' + args.version + '.tar.gz'
 
     dataDir = '/store/user/milliqan/run3/{0}/{1}/'.format(args.runDir, args.subDir)
-    outDir = '/store/user/milliqan/trees/' + 'v' + args.version + '/'
+    if args.outputDir:
+        outDir = args.outputDir
+    else:
+        outDir = '/store/user/milliqan/trees/' + 'v' + args.version + '/'
     logDir = '/data/users/milliqan/log/trees/v31/logs_v{0}_{1}_{2}-{3}/'.format(args.version, args.runDir, args.subDir, now.strftime("%m-%d"))
 
     if(not os.path.isdir(outDir)): os.mkdir(outDir)
@@ -92,7 +97,10 @@ def main(runNum, subRun, swVersion, reprocessAllFiles=False):
     milliqanOffline = 'milliqanOffline_v' + swVersion + '.tar.gz'
 
     dataDir = '/store/user/milliqan/run3/{0}/{1}/'.format(runNum, subRun)
-    outDir = '/store/user/milliqan/trees/' + 'v' + swVersion + '/'
+    if args.outputDir:
+        outDir = args.outputDir
+    else:
+        outDir = '/store/user/milliqan/trees/' + 'v' + swVersion + '/'
     logDir = '/data/users/milliqan/log/trees/v31/logs_v{0}_{1}_{2}-{3}/'.format(swVersion, runNum, subRun, now.strftime("%m-%d-%H-%M-%S"))
 
     if(not os.path.isdir(outDir)): os.mkdir(outDir)
@@ -106,6 +114,7 @@ def main(runNum, subRun, swVersion, reprocessAllFiles=False):
             index3 = filename.find("_", index2+1)
             numRun = int(filename[index1+4:index2])
             numFile = int(filename[index2+1:index3])
+            if args.run and numRun != int(args.run): continue
             alreadyProcessedFiles.append([numRun,numFile])
 
     files = []
@@ -116,6 +125,7 @@ def main(runNum, subRun, swVersion, reprocessAllFiles=False):
             index3 = filename.find("_", index2+1)
             numRun = int(filename[index1+4:index2])
             numFile = int(filename[index2+1:index3])
+            if args.run and numRun != int(args.run): continue
             if(not reprocessAllFiles):
                 if([numRun,numFile] in alreadyProcessedFiles): 
                     continue
@@ -125,7 +135,7 @@ def main(runNum, subRun, swVersion, reprocessAllFiles=False):
     filelist = 'filelist_{0}_{1}.txt'.format(runNum, subRun)
     np.savetxt(filelist,files)
 
-    f = open('run.sub', 'w')
+    f = open('run_trees.sub', 'w')
     submitLines = """
     Universe = vanilla
     +IsLocalJob = true
@@ -149,7 +159,7 @@ def main(runNum, subRun, swVersion, reprocessAllFiles=False):
     f.write(submitLines)
     f.close()
 
-    #os.system('condor_submit run.sub')
+    os.system('condor_submit run_trees.sub')
 
 if __name__=="__main__":
 

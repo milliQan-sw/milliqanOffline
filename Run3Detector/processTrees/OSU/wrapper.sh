@@ -4,12 +4,12 @@ hostname=$(cat /proc/sys/kernel/hostname)
 
 echo "working on compute node $hostname"
 
+#mv milliqanOffline*.tar.gz milliqanOffline.tar.gz
 tar -xzvf milliqanOffline*.tar.gz
-mv milliqanOfflineTar/ milliqanOffline/
 tar -xzvf MilliDAQ.tar.gz
 
 cp tree_wrapper.py milliqanOffline/Run3Detector/
-cp filelist.txt milliqanOffline/Run3Detector/
+cp filelist*.txt milliqanOffline/Run3Detector/filelist.txt
 
 for ARG in "$@"; do
     if [ $ARG == "-m" ]; then
@@ -42,8 +42,14 @@ if [ ! -f "run.exe" ]; then
     singularity exec -B ../../milliqanOffline/,../../MilliDAQ ../../offline.sif bash compile.sh run.exe
 fi
 
-echo Trying to run process number $1
-singularity exec -B ../../milliqanOffline/,../../MilliDAQ,/store/ ../../offline.sif python3 tree_wrapper.py $1 $2 $5
+if [ $# -gt 5 ]; then
+    #Running single job
+    echo Running single job
+    singularity exec -B ../../milliqanOffline/,../../MilliDAQ,/store/ ../../offline.sif python3 tree_wrapper.py -s $6 -i $2 -v $5
+else
+    echo Trying to run process number $1
+    singularity exec -B ../../milliqanOffline/,../../MilliDAQ,/store/ ../../offline.sif python3 tree_wrapper.py -p $1 -i $2 -v $5
+fi
 
 filename="MilliQan_Run*.*.root"
 

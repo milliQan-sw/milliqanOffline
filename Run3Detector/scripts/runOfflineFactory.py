@@ -84,7 +84,9 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
         if slab:
             configurations = [offlineDir+"/configuration/chanMaps/fullSlabDetectorMap.json",offlineDir+"/configuration/pulseFinding/pulseFindingTest.json",offlineDir+"/configuration/calibrations/firstSlabCalibration.json"]
         else:
-            configurations = [offlineDir+"/configuration/chanMaps/fullSuperModuleMapMove2425.json",offlineDir+"/configuration/pulseFinding/pulseFindingTest.json",offlineDir+"/configuration/calibrations/firstSupermodulesCalibration.json"]
+            chanMap = offlineDir + "/configuration/chanMaps/" + getConfigs(runNumber, offlineDir) + '.json'
+            print("Using the chan map", chanMap)
+            configurations = [chanMap,offlineDir+"/configuration/pulseFinding/pulseFindingTest.json",offlineDir+"/configuration/calibrations/firstSupermodulesCalibration.json"]
 
     if "{" in configurations and "}" in configurations:
         configurationsJSONString = configurations
@@ -182,6 +184,19 @@ def publishDataset(configurationsJSON,inputFile,outputFile,fileNumber,runNumber,
         if not quiet:
             print ("Added new entry in database")
     return True
+
+def getConfigs(runNum, offlineDir):
+    fin = open(offlineDir+"/configuration/runInfo.json")
+    runs = json.load(fin)
+    fin.close()
+    for key, value in runs.items():
+        if len(value) > 1:
+            if runNum in range(value[0], value[1]): return key
+        else:
+            if runNum >= value[0]: return key
+    print("Did not find the correct channel map")
+    sys.exit(1)
+
 
 if __name__ == "__main__":
     valid = runOfflineFactory(**vars(parse_args()))

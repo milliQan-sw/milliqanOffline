@@ -135,13 +135,13 @@ void OfflineFactory::loadJsonConfig(string configFileName){
                 }
                 std::cout << "Loaded spe areas" << std::endl;
             }
-            if (json.find("pedestals") != std::string::npos){
+            /*if (json.find("pedestals") != std::string::npos){
                 const Json::Value pedestalsJson = jsonRoot["pedestals"];
                 for (int index = 0; index < pedestalsJson.size(); index ++){
                     pedestals.push_back(pedestalsJson[index].asFloat());
                 }
                 std::cout << "Loaded pedestal corrections" << std::endl;
-            }
+            }*/
             if (json.find("sampleRate") != std::string::npos){
                 sampleRate = jsonRoot["sampleRate"].asFloat();
                 std::cout << "Loaded sample rate: " << sampleRate << " GHz" << std::endl;
@@ -191,13 +191,13 @@ void OfflineFactory::validateInput(){
     else{ 
         for (int ic = 0; ic < numChan; ic++) timingCalibrations.push_back(0);
     }
-    if (pedestals.size() > 0){
+    /*if (pedestals.size() > 0){
         if (pedestals.size() != numChan) throw length_error("pedestals should be length "+std::to_string(numChan));
         for (int ic = 0; ic < numChan; ic++) pedestals[ic] = round(pedestals[ic]);
     }
     else{ 
         for (int ic = 0; ic < numChan; ic++) pedestals.push_back(0);
-    }
+    }*/
     if (speAreas.size() > 0){
         if (speAreas.size() != numChan) throw length_error("speAreas should be length "+std::to_string(numChan));
     }
@@ -1237,6 +1237,9 @@ void OfflineFactory::displayEvents(std::vector<int> & eventsToDisplay,TString di
 void OfflineFactory::readWaveData(){
     validateInput();
     inTree = (TTree*)inFile->Get("Events"); 
+    if (inTree->GetEntries() == 0){
+        throw runtime_error("There are no entries in this tree... exiting");
+    }
     triggerFileMatched = false;
     if (friendFileName != "") {
 	addFriendTree();
@@ -1412,7 +1415,7 @@ vector< pair<float,float> > OfflineFactory::findPulses(int ic){
 }
 //Pulse finding and per channel processing
 vector< pair<float,float> > OfflineFactory::processChannel(int ic){
-    prepareWave(ic);
+    //prepareWave(ic); remove static pedestal correction now that we have dynamic correction
     //Pulse finding
     vector<pair<float,float>> pulseBounds = findPulses(ic);
     int npulses = pulseBounds.size();

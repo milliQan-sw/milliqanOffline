@@ -82,11 +82,13 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
         if drs:
             configurations = [offlineDir+"/configuration/pulseFinding/pulseFindingDRS.json"]
         if slab:
-            configurations = [offlineDir+"/configuration/chanMaps/fullSlabDetectorMap.json",offlineDir+"/configuration/pulseFinding/pulseFindingTest.json",offlineDir+"/configuration/calibrations/firstSlabCalibration.json"]
+            chanConfig = offlineDir + "/configuration/slabConfigs/" + getConfigs(runNumber, offlineDir+'/configuration/slabConfigs') + '.json'
+            print("Using the chan config", chanConfig)
+            configurations = [chanConfig, offlineDir+"/configuration/pulseFinding/pulseFindingTest.json"]
         else:
-            chanMap = offlineDir + "/configuration/chanMaps/" + getConfigs(runNumber, offlineDir) + '.json'
-            print("Using the chan map", chanMap)
-            configurations = [chanMap,offlineDir+"/configuration/pulseFinding/pulseFindingTest.json",offlineDir+"/configuration/calibrations/firstSupermodulesCalibration.json"]
+            chanConfig = offlineDir + "/configuration/barConfigs/" + getConfigs(runNumber, offlineDir+'/configuration/barConfigs') + '.json'
+            print("Using the chan config", chanConfig)
+            configurations = [chanConfig,offlineDir+"/configuration/pulseFinding/pulseFindingTest.json"]
 
     if "{" in configurations and "}" in configurations:
         configurationsJSONString = configurations
@@ -186,8 +188,9 @@ def publishDataset(configurationsJSON,inputFile,outputFile,fileNumber,runNumber,
     return True
 
 def getConfigs(runNum, offlineDir):
-    if runNum == -1: return 'fullSuperModuleMapMoveJun29'
-    fin = open(offlineDir+"/configuration/runInfo.json")
+    if runNum == -1 and 'barConfigs' in offlineDir: return 'configRun1097_present'
+    elif runNum == -1 and 'slabConfigs' in offlineDir: return 'configRun0_present'
+    fin = open(offlineDir+"/runInfo.json")
     runs = json.load(fin)
     fin.close()
     for key, value in runs.items():

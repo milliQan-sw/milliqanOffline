@@ -186,6 +186,7 @@ def publishDataset(configurationsJSON,inputFile,outputFile,fileNumber,runNumber,
     return True
 
 def getConfigs(runNum, offlineDir):
+    if runNum == -1: return 'fullSuperModuleMapMoveJun29'
     fin = open(offlineDir+"/configuration/runInfo.json")
     runs = json.load(fin)
     fin.close()
@@ -193,6 +194,7 @@ def getConfigs(runNum, offlineDir):
         if len(value) > 1:
             if runNum in range(value[0], value[1]): return key
         else:
+            print(runNum)
             if runNum >= value[0]: return key
     print("Did not find the correct channel map")
     sys.exit(1)

@@ -1,0 +1,4 @@
+config files for bar detector
+
+files are marked with their start/stop run usage
+directories chanMaps and configuration are kept as references to old methods of using config files

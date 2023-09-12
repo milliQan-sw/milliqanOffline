@@ -135,13 +135,13 @@ void OfflineFactory::loadJsonConfig(string configFileName){
                 }
                 std::cout << "Loaded spe areas" << std::endl;
             }
-            /*if (json.find("pedestals") != std::string::npos){
+            if (json.find("pedestals") != std::string::npos){
                 const Json::Value pedestalsJson = jsonRoot["pedestals"];
                 for (int index = 0; index < pedestalsJson.size(); index ++){
                     pedestals.push_back(pedestalsJson[index].asFloat());
                 }
                 std::cout << "Loaded pedestal corrections" << std::endl;
-            }*/
+            }
             if (json.find("sampleRate") != std::string::npos){
                 sampleRate = jsonRoot["sampleRate"].asFloat();
                 std::cout << "Loaded sample rate: " << sampleRate << " GHz" << std::endl;
@@ -191,13 +191,13 @@ void OfflineFactory::validateInput(){
     else{ 
         for (int ic = 0; ic < numChan; ic++) timingCalibrations.push_back(0);
     }
-    /*if (pedestals.size() > 0){
+    if (pedestals.size() > 0){
         if (pedestals.size() != numChan) throw length_error("pedestals should be length "+std::to_string(numChan));
-        for (int ic = 0; ic < numChan; ic++) pedestals[ic] = round(pedestals[ic]);
+        for (int ic = 0; ic < numChan; ic++) pedestals[ic] = 0;
     }
     else{ 
         for (int ic = 0; ic < numChan; ic++) pedestals.push_back(0);
-    }*/
+    }
     if (speAreas.size() > 0){
         if (speAreas.size() != numChan) throw length_error("speAreas should be length "+std::to_string(numChan));
     }
@@ -500,7 +500,7 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
             chanList.push_back(ic);
             //FIX here: Check for the run for beam state. By default set to on for now
             TString beamState = "on";
-            waveShifted->SetTitle(Form("Run %i, File %i, Event %i;Uncalibrated Time [ns];Amplitude [mV];",runNumber,fileNumber,event));
+            waveShifted->SetTitle(Form("Run %i, File %i, Event %i;Calibrated Time [ns];Amplitude [mV];",runNumber,fileNumber,event));
             waveShifted->SetAxisRange(0,1024.*1.1/sampleRate);
             //Keep track of max amplitude
             if(waveShifted->GetMaximum()>maxheight) maxheight=waveShifted->GetMaximum();
@@ -557,8 +557,8 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
         int chan = chanArray->GetAt(ic);
         originalMaxHeights[ic] = wavesShifted[ic]->GetMaximum();
         if (rangeMinY > -999) wavesShifted[ic]->SetMinimum(rangeMinY);
-        wavesShifted[ic]->SetMaximum(maxheight);
-        wavesShifted[ic]->SetAxisRange(timeRange[0],timeRange[1],"X");
+	wavesShifted[ic]->SetMaximum(maxheight);
+	wavesShifted[ic]->SetAxisRange(timeRange[0],timeRange[1],"X");
         
         int column= chanMap[ic][0];
         int row= chanMap[ic][1];
@@ -571,7 +571,7 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
         if(type==1) wavesShifted[ic]->SetLineStyle(3);
         if(type==2) wavesShifted[ic]->SetLineStyle(7);
         if(i==0) wavesShifted[ic]->Draw("hist");
-        else wavesShifted[ic]->Draw("hist same");
+	else wavesShifted[ic]->Draw("hist same");
         
         TLatex tlabelpeak;
         if(wavesShifted[ic]->GetMaximum()>50){
@@ -834,9 +834,9 @@ void OfflineFactory::displaychannelEvent(int event, vector<vector<pair<float,flo
             chanList.push_back(ic);
             //FIX here: Check for the run for beam state. By default set to on for now
             TString beamState = "on";
-            waveShifted->SetTitle(Form("Run %i, File %i, Event %i, Channel %i;Uncalibrated Time [ns];Amplitude [mV];",runNumber,fileNumber,event,ic));
-            waveShifted->SetAxisRange(0,1024.*1.1/sampleRate);
-            //Keep track of max amplitude
+            waveShifted->SetTitle(Form("Run %i, File %i, Event %i, Channel %i;Calibrated Time [ns];Amplitude [mV];",runNumber,fileNumber,event,ic));
+	    waveShifted->SetAxisRange(0,1024.*1.1/sampleRate);
+	    //Keep track of max amplitude
             if(waveShifted->GetMaximum()>maxheight) maxheight=waveShifted->GetMaximum();
             if(waveShifted->GetMinimum()<minheight) minheight=waveShifted->GetMinimum();
             
@@ -1339,6 +1339,7 @@ void OfflineFactory::prepareWave(int ic){
     //Need to add sideband measurements and subtraction here
     pair<float,float> mean_rms = measureSideband(ic);
     outputTreeContents.v_dynamicPedestal.push_back(pedestal_mV);
+    //    cout<<"pedestal_mV = "<<pedestal_mV<<endl;
     outputTreeContents.v_sideband_mean.push_back(mean_rms.first);
     outputTreeContents.v_sideband_RMS.push_back(mean_rms.second);
 }
@@ -1415,7 +1416,7 @@ vector< pair<float,float> > OfflineFactory::findPulses(int ic){
 }
 //Pulse finding and per channel processing
 vector< pair<float,float> > OfflineFactory::processChannel(int ic){
-    //prepareWave(ic); remove static pedestal correction now that we have dynamic correction
+  prepareWave(ic); 
     //Pulse finding
     vector<pair<float,float>> pulseBounds = findPulses(ic);
     int npulses = pulseBounds.size();

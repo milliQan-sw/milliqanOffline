@@ -19,8 +19,9 @@ def moveFiles(db, site, source, dest):
     for filename in os.listdir(source):
 
         if not filename.endswith(".root"): continue
+        moveFile(db, site, source+filename, dest)
 
-        runNumber, fileNumber, fileType = getFileDetails(filename)
+        '''runNumber, fileNumber, fileType = getFileDetails(filename)
 
         newLocation = str(dest + '/' + filename)
 
@@ -29,18 +30,35 @@ def moveFiles(db, site, source, dest):
         db.milliQanRawDatasets.update_one({ "run" : runNumber, "file" : fileNumber, "site" : site, "type" : fileType}, 
                                           { '$set': {"location" : newLocation}})
 
-        print("Moved file {0} and updated entry in MongoDB".format(filename))
+        print("Moved file {0} and updated entry in MongoDB".format(filename))'''
 
 
-def main():
+def moveFile(db, site, source, dest):
+    filename = source.split('/')[-1]
+
+    runNumber, fileNumber, fileType = getFileDetails(filename)
+
+    if dest.endswith('.root'): newLocation = dest
+    else:
+        newLocation = str(dest + '/' + filename)
+
+    shutil.move(source, newLocation)
+
+    db.milliQanRawDatasets.update_one({ "run" : runNumber, "file" : fileNumber, "site" : site, "type" : fileType},
+                                      { '$set': {"location" : newLocation}})
+
+    print("Moved file {0} and updated entry in MongoDB".format(filename))
+
+def main(site='', source='', dest=''):
     
-    if len(sys.argv) < 4:
-        print("Please provide site, source, and destination directories")
-        return
-    
-    site = sys.argv[1]
-    source = sys.argv[2]
-    dest = sys.argv[3]
+    if len(sys.argv) >= 4:
+        site = sys.argv[1]
+        source = sys.argv[2]
+        dest = sys.argv[3]
+    else:
+        if site == '' or source == '' or dest == '':
+             print("Please provide site, source and destination directories")
+             return
 
     if not os.path.exists(source):
         print("Path: {0} does not exist".format(source))
@@ -55,7 +73,10 @@ def main():
         print("Site: {0} is not a valid site".format(site))
         return
 
-    moveFiles(db, site, source, dest)
+    if source.endswith('.root'):
+        moveFile(db, site, source, dest)
+    else:
+        moveFiles(db, site, source, dest)
 
 
 

@@ -71,7 +71,7 @@ def updateMongoDB(milliQanRawDataset,db,replace):
     else:
         db.milliQanRawDatasets.insert_one(milliQanRawDataset)
 
-def transferFiles(source,destinations,logFile,force=False):
+def transferFiles(source,destinations,logFile,force=False, specialString=''):
     db = mongoConnect()
     get_lock('transfer_files_TEMP')
 
@@ -81,6 +81,8 @@ def transferFiles(source,destinations,logFile,force=False):
     allIds = []
     allInputs = []
     for inputFile in sorted(glob.glob(source + "*.root"), key=os.path.getmtime, reverse=True):
+        if specialString != '' and specialString not in inputFile: continue
+        print(inputFile)
         for site, destination in destinations.items():
             #Details for database entry
             runNumber = int(inputFile.split("/")[-1].split("Run")[-1].split(".")[0])
@@ -127,8 +129,12 @@ def transferFiles(source,destinations,logFile,force=False):
     os.system("echo 'Transferred {0:.2f} MB in {1} file(s).' >> {2}".format(mbytesTransferred, nTransferred, logFile))
 
 if __name__ == "__main__":
-    source = "/home/milliqan/data/"
-    logFile = "/home/milliqan/MilliDAQ_FileTransfers.log"
+    #source = "/home/milliqan/data/"
+    source = '/store/user/milliqan/run3/1100/0007/'
+    #logFile = "/home/milliqan/MilliDAQ_FileTransfers.log"
+    logFile = 'test.log'
 
-    destinations = {"UCSB":"milliqan@cms3.physics.ucsb.edu:/net/cms26/cms26r0/milliqan/Run3/", "OSU":"milliqan@128.146.39.20:/store/user/milliqan/run3/"} #temporary change to OSU ip address
-    transferFiles(source,destinations,logFile,force=False)
+    #destinations = {"UCSB":"milliqan@cms3.physics.ucsb.edu:/net/cms26/cms26r0/milliqan/Run3/", "OSU":"milliqan@128.146.39.20:/store/user/milliqan/run3/"} #temporary change to OSU ip address
+    #destinations = {"UCSB":"milliqan@cms3.physics.ucsb.edu:/net/cms26/cms26r0/milliqan/Run3/", "OSU":source}
+    destinations = {"OSU":source}
+    transferFiles(source,destinations,logFile,force=False, specialString='rematch')

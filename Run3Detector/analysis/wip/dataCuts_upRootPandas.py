@@ -1,74 +1,127 @@
 import ROOT as r
 from DetectorGeometry import *
 from triggerConstants import *
+import os
+import numpy as np
+import pandas as pd
+import sys
+import time
+import uproot 
+from functools import partial
+from triggerConstants import *
 
 class DataHandler():
-    def __init__(self, dataPath,run,cuts,debug=False):
-        #self.data = self.initializeData(dataPath,run)
-        self.cuts = cuts
-        self.initializeData(dataPath,run)
-        self.debug = debug
+    def __init__(self, dataPath,run,debug=False):
 
-    #data path might need to change
-    #datapath "/store/user/mcarrigan/skim/muon/v29/"
-    #runnumber: 588
+        self.debug = debug
+        self.initializeData(dataPath,run)
+
 
 
     def initializeData(self, datapath,run):
         filesOfsameRun=[]
+        self.pandasFiles = []
+        base_name = f"MilliQan_Run{run}"
         
         for filename in os.listdir(datapath):
             if filename.startswith(base_name) and filename.endswith(".root"):
-                filesOfsameRun.append(directory+filename)
+                filesOfsameRun.append(datapath+filename)
+        
+        if self.debug == True:
+            print(filesOfsameRun)
 
         for file in filesOfsameRun:
             fin = uproot.open(file)
             tree = fin['t']
             singleData = tree.arrays(uprootInputs, library='pd')
-            applyCuts(self.cuts,singleData)
-
-    def applyCuts(self,cuts,singleData):
+            self.pandasFiles.append(singleData)
+            #applyCuts(self.cuts,singleData)
         
-        lc=len(cuts)
-        cutData = [] #save the event that pass the cuts with DaqNumber as identication.
-        None_check = []
-        #select a specifc event
-        NumEvent=singleData["event"].max() + 1
-        #quit if there is no data in the file
-        if np.isnan(NumEvent): return
-        #start the event based analysis
-        for event in range(NumEvent):
-            selected_data = singleData[(singleData["event"] == event) & (singleData["pickupFlag"] == False)] #select the data with specified event and filter out with tag "pickupFlag" == False
-
-            for cut in cuts:
-                result= cut(selected_data)
-                if result is None: 
-                    break
-                None_check.append(event.DAQEventNumber)
-
-            if None in None_check:
-                break
-            if len(None_check) == lc: # if there are two cuts then len(None_check) should be 2
-                cutData.append(None_check[0])
-
-        return cutData
         
 
-        #exactly one hit per layer cut
-        def exOneHit(self,selected_data):
-            layerList=selected_data["layer"]
-            if len(set(layerList)) != len(layerList):
-                return
-            if self.debug:
-                print(layerList)
-            return event
+    def applyCuts(self,cuts):
+        final_cutData = [] #save the event that pass the cuts with DaqNumber as identication.
+        #resultList = []
+        for singleData in self.pandasFiles:
+            #lc=len(cuts)
+            
+            #None_check = []
+            #select a specifc event
+            NumEvent=singleData["event"].max() + 1
+            #quit if there is no data in the file
+            if np.isnan(NumEvent): continue
+            #start the event based analysis
+            for event in range(NumEvent):
+                selected_data = singleData[(singleData["event"] == event) & (singleData["pickupFlag"] == False)] #select the data with specified event number and filter out those with tag "pickupFlag" == False
+                DQ = set(selected_data["DAQEventNumber"])
+                emptySet = set()
+                if DQ == emptySet: #it means currents event is empty
+                    continue
+                event_cutData = []
+                event_result = []
+                for cut in cuts:
+                    result,DaqNum= cut(selected_data)
+                    if self.debug == True:
+                        print(str(result)+ " " +str(DaqNum))
+                    #if result == 0: #this means current event can't pass a specific cut, so move to the next event.
+                    #    break 
+                    event_cutData.append(DaqNum) #it should add to event based list.
+                    event_result.append(result)   #it should add to event based list.
+                #if a single event pass all the cuts, then move the thing from file based(we have multiple files from a same run) list to run based list
+                event_result = set(event_result)
+                if 0 in event_result:
+                    continue
+                else:
+                    #assuming each event has an unique DaqNum.
+                    final_cutData.append(DaqNum)
+
+
+        return final_cutData
+        
+
+    #exactly one hit per layer cut
+    #need to exclude the panels
+    def exOneHit(self,selected_data):
+        chanList = selected_data["chan"]
+        layerList=selected_data["layer"]
+        DQ = set(selected_data["DAQEventNumber"])
+        emptySet = set()
+
+        newLayerList = [] #need to exclude hits on the panels
+        for chan,layer in zip(chanList,layerList):
+            if chan >= 68 and chan <=75:
+                continue
+            else:
+               newLayerList.append(layer) 
+
+        if self.debug:
+            print("DQ:" + str(DQ))
+        if self.debug:
+            print("layerList:"+str(layerList))
+        #DAQEventNumber = DQ[0]
+        if len(set(newLayerList)) != len(newLayerList):
+            return 0, None
+        
+        return 1,DQ
+
+
+    #might need to add a new version flag for panel swaping after June
+    def cosmicPanelVeto(self,selected_data):
+        chanList = selected_data["chan"]
+        DQ = set(selected_data["DAQEventNumber"])
+        for chan in chanList:
+            if (chan >= 68 and chan <=70) or (chan >=72 and chan <=74):
+                return 0, None
+        return 1,DQ
 
 
 
 
 if __name__ == "__main__":
-    cuts=[exOneHit]
-    DaqNumber = DataHandler("/store/user/milliqan/trees/v31/",1026,cuts)
+    data = DataHandler("/store/user/milliqan/trees/v33/",1021)
+    cutData=data.applyCuts([data.exOneHit,data.cosmicPanelVeto])
+    #cutData=data.applyCuts([data.cosmicPanelVeto])
+    print(cutData)
 
 
         

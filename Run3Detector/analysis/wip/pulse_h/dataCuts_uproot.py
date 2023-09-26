@@ -4,6 +4,8 @@ remove the display method from triggerRates.py
 
 to-do
 merge multiple panda table from same run
+duration cut + area cut
+2d histogram Npulse vs height
 
 """
 
@@ -90,6 +92,42 @@ class triggerChecker():
 		self.myarray = tree.arrays(uprootInputs, library='pd')
 		self.setTimes()
 		self.defineTrigCols()
+	
+	def openMergedFile(self, base_name,directory):
+		similar_files = []
+    
+		for filename in os.listdir(directory):
+			if filename.startswith(base_name) and filename.endswith(".root"):
+				similar_files.append(directory+filename)
+
+		data = []
+		for file in similar_files:
+			fin = uproot.open(file)
+			tree = fin['t']
+			myarray = tree.arrays(uprootInputs, library='pd')
+			data.append(myarray)
+		merged_data = pd.concat(data, ignore_index=True)
+		self.myarray=merged_data
+
+
+	#cut base on pulse and height
+	def PHECut(self,height_threshold,pulse_threshold):
+		eventList = []
+		arrays = self.myarray
+		numberOFevents = arrays["event"].max()
+		for event in range(numberOFevents):
+
+			pulse_count = 0 # count the number of pulse above height_threshold in an event
+			#get the heightList in an event
+			heightList= data[data["event"] == event]["height"]
+			for height in heightList:
+				if height >= height_threshold:
+					pulse_count += 1
+			if pulse_count >= pulse_threshold:
+				eventList.append(event)
+		
+		return event
+
 
 	#use datetime to create times of hits to be used in rolling window
 	def setTimes(self):
@@ -142,15 +180,33 @@ class triggerChecker():
 
 	def cut1(self,dataCu,cutValue,dataCo):
 		outputList = []
-		for specificData in self.myarray[self.myarray[dataCu] >= cutValue][dataCo]:
+		for specificData in self.myarray[(self.myarray[dataCu] >= cutValue) & (self.myarray["pickupFlag"] == False)][dataCo]:
 			outputList.append(specificData)
 		return outputList
 	
 	def cut2(self,dataCu,cutValue,dataCo):
 		outputList = []
-		for specificData in self.myarray[self.myarray[dataCu] <= cutValue][dataCo]:
+		for specificData in self.myarray[(self.myarray[dataCu] <= cutValue) & (self.myarray["pickupFlag"] == False)][dataCo]:
 			outputList.append(specificData)
 		return outputList
+	
+	def cut3(self,dataCu,cutValue1,cutValue2,dataCo):
+		outputList = []
+		data=self.myarray
+		for specificData in data[(self.myarray[dataCu] <= cutValue2) & (self.myarray[dataCu] >= cutValue1) & (self.myarray["pickupFlag"] == True)][dataCo]:
+			outputList.append(specificData)
+		return outputList
+
+	#cut4 is made for creating the 2D histogram.
+	def cut4(self,dataCu1,cutValue1,cutValue2,datacut2,cutValue3,cutValue4):
+		
+		data=self.myarray
+		#extract an event based data, let's use time
+		data1 = data[(self.myarray[dataCu1] <= cutValue2) & (self.myarray[dataCu1] >= cutValue1) & (self.myarray[datacut2] >= cutValue3) & (self.myarray[datacut2] <= cutValue4) & (self.myarray["pickupFlag"] == False)][time]
+		
+		Num_event = len(data1)
+		return Num_event
+
 
 	#event-based cut
 	#use pulse cut(event-based) to get pulse based data? what?
@@ -167,79 +223,82 @@ class triggerChecker():
 if __name__ == "__main__":
 
 	r.gROOT.SetBatch(1)
-
-	Run_num = 1026
-	filename = f'/store/user/milliqan/trees/v31/MilliQan_Run{Run_num}.1_v31_firstPedestals.root'
-	mychecker = triggerChecker()
-	mychecker.openFile(filename)
-	#print(mychecker.myarray)
-	#print(type(mychecker.myarray))
-	# Specify the file path for the text file
-	#txt_file_path = 'output_data.txt'
-
-	# Export the DataFrame to a text file
-	#mychecker.myarray.to_csv(txt_file_path, index=False, sep='\t') 
-	#dataList = ["time","height","area","type","duration"] #feed into cut1/2 dataCo
-	dataList = ["time","area","type","duration","column","layer","board","pickupFlag","npulses"] #column name that I selected for data collection
-	timeList = []
-	areaList = []
-	typeList = []
-	durationList = []
-	columnList = []
-	layerList = []
-	heightList = []
-	pickupFlagList = []
-	boardList = []
-	pulseList = []
-	#ignore sideband's data and max so far
-
-	#outputdataList=[timeList,heightList,areaList,typeList,duration]
-	outputdataList=[timeList,areaList,typeList,durationList,columnList,layerList,boardList,pickupFlagList,pulseList] #output data for height cut
-
-
-	#test for extracting the data
-	"""
-	areaList1 = []
-	areaList1 = mychecker.cut1("height",200,"area",areaList1)
-	"""
-	#clean the data
-
-	for CollectData,OutputLIST in zip(dataList,outputdataList):
-		for i in range(11):
-			height_threshold = 100 + i * 100
-			#print("CollectData:"+CollectData)
-			ExtractedData = mychecker.cut1("height",height_threshold,CollectData)
-			OutputLIST.append(ExtractedData)
 	
+
+	#height cut
+	runList = [1020,1021,1022,1023,1024,1025,1026,1027,1028,1029,1030]
+	for Run_num in runList:
+		#Run_num = 1026
+		mychecker = triggerChecker()
+		#mychecker.openFile(filename)
+		mychecker.openMergedFile(f"MilliQan_Run{Run_num}","/store/user/milliqan/trees/v33/bar/")
+
+		dataList = ["time","area","type","duration","column","layer","board","pickupFlag","npulses"] #column name that I selected for data collection
+		timeList = []
+		areaList = []
+		typeList = []
+		durationList = []
+		columnList = []
+		layerList = []
+		heightList = []
+		pickupFlagList = []
+		boardList = []
+		pulseList = []
+		#ignore sideband's data and max so far
+
+		#outputdataList=[timeList,heightList,areaList,typeList,duration]
+		outputdataList=[timeList,areaList,typeList,durationList,columnList,layerList,boardList,pickupFlagList,pulseList] #output data for height cut
+
+
+
+		for CollectData,OutputLIST in zip(dataList,outputdataList):
+			for i in range(11):
+				height_threshold = 100 + i * 100
+				#print("CollectData:"+CollectData)
+				ExtractedData = mychecker.cut1("height",height_threshold,CollectData)
+				OutputLIST.append(ExtractedData)
+		
+		
+		#plot the data with T hisogram
+		def height_histogram(height,xtitle,data,nBins, xMin, xMax):
+			HistogramTitle = f"{xtitle} with above {height}mV cut "
+			hist = r.TH1D(f"above {height}mV data:{xtitle}", "My Histogram", nBins, xMin, xMax)
+			hist.SetTitle(HistogramTitle)
+			hist.GetXaxis().SetTitle(xtitle)
+			for d in data:
+				hist.Fill(d)
+			#hist.Scale(1.0 / hist.GetEntries()) 
+			canvas = r.TCanvas("canvas", "Canvas Title", 800, 600)
+			hist.Draw()
+			hist.Write()
+
+		fileName = f"run{Run_num}_heightcut.root"
+		output_file = r.TFile(fileName, "RECREATE")
+
+
+		for index1,subList in enumerate(outputdataList):
+			for index2,subData in enumerate(subList):
+				if subData == None: continue
+				height = 100 + index2 * 100
+				#print(min(subData))
+				#print(max(subData))
+				if subData == []: continue
+				height_histogram(height,dataList[index1],subData,100, min(subData), max(subData))
+		
+		output_file.Close()
 	
-	#plot the data with T hisogram
-	def height_histogram(height,xtitle,data,nBins, xMin, xMax):
-		HistogramTitle = f"{xtitle} with {height}kev cut "
-		hist = r.TH1D(f"{height}kev data:{xtitle}", "My Histogram", nBins, xMin, xMax)
-		hist.SetTitle(HistogramTitle)
-		hist.GetXaxis().SetTitle(xtitle)
-		for d in data:
-			hist.Fill(d)
-		#hist.Scale(1.0 / hist.GetEntries()) 
-		canvas = r.TCanvas("canvas", "Canvas Title", 800, 600)
-		hist.Draw()
-		hist.Write()
+	#end of height cut
+	
 
-	fileName = f"run{Run_num}_heightcut.root"
-	output_file = r.TFile(fileName, "RECREATE")
-
-
-	for index1,subList in enumerate(outputdataList):
-		print("index1" + str(type(index1))) #debug
-		for index2,subData in enumerate(subList):
-			if subData == None: continue
-			height = 100 + index2 * 100
-			#print(min(subData))
-			#print(max(subData))
-			height_histogram(height,dataList[index1],subData,100, min(subData), max(subData))
-
-
+	"""
 	#start the pulse(branch) cut (0-20 with increment value 2)
+	Run_num = 1026
+	fileName = f"run{Run_num}_pulsecut_pickupFlag.root"
+	output_file = r.TFile(fileName, "RECREATE")
+	mychecker = triggerChecker()
+	mychecker.openMergedFile(f"MilliQan_Run{Run_num}","/store/user/milliqan/trees/v33/bar/")
+
+
 	#clear the data
 	timeList = []
 	areaList = []
@@ -280,13 +339,31 @@ if __name__ == "__main__":
 			if subData == None: continue
 			pulse_threshold = 0 + index2 * 2
 			pulse_histogram(pulse_threshold,dataList[index1],subData,100, min(subData), max(subData))
-
-	
 	output_file.Close()
+	#end of pulse analysis
+	"""
 
 
-	#cut N pulse(not branch) above height->count the number of events
+	"""
+	#cut N pulse(not branch) above height->get of events
+	for i in range(11):
+		height_threshold = 100 + i * 100
+		for i in range(11):
+			pulse_threshold = 0 + i * 2	
+			EventList = mychecker.PHECut(height_threshold,pulse_threshold)
+			numberOFevents = len(EventList)
+	"""
+
+	"""
+	#for both area cut and duration cut, they need to be in cut 3
+	#area cut
 	# clean up the outputdataList
+	Run_num = 1026
+	fileName = f"run{Run_num}_areacut.root"
+	output_file  = r.TFile(fileName, "RECREATE")
+	mychecker = triggerChecker()
+	mychecker.openMergedFile(f"MilliQan_Run{Run_num}","/store/user/milliqan/trees/v33/bar/")
+	
 	timeList = []
 	areaList = []
 	typeList = []
@@ -298,8 +375,105 @@ if __name__ == "__main__":
 	boardList = []
 	pulseList = []
 
-	dataList = ["time","area","type","duration","column","layer","board","pickupFlag","height"]
-	outputdataList=[timeList,areaList,typeList,durationList,columnList,layerList,boardList,pickupFlagList,heightList]
+	dataList = ["time","type","duration","column","layer","board","pickupFlag","height"]
+	outputdataList=[timeList,typeList,durationList,columnList,layerList,boardList,pickupFlagList,heightList]
+	areaLowerBound = [0,200,1200,3000,5000,7000]
+	areaUpperBound = [200,1200,3000,5000,7000,10000]
+
+	for CollectData,OutputLIST in zip(dataList,outputdataList):
+		for index in range(6):
+			LB = areaLowerBound[index]
+			UB = areaUpperBound[index]
+			ExtractedData = mychecker.cut3("area",LB,UB,CollectData)
+			#hard code 5 different bins
+
+			OutputLIST.append(ExtractedData)
+
+
+	#in the future change kev in unit input argument
+	def pulse_histogram(LB,UB,xtitle,data,nBins, xMin, xMax):
+		HistogramTitle = f"{xtitle} with {LB}-{UB} area cut "
+		hist = r.TH1D(f"{LB}-{UB} area cut:{xtitle}", "My Histogram", nBins, xMin, xMax)
+		hist.SetTitle(HistogramTitle)
+		hist.GetXaxis().SetTitle(xtitle)
+		for d in data:
+			hist.Fill(d)
+		#hist.Scale(1.0 / hist.GetEntries()) 
+		canvas = r.TCanvas("canvas", "Canvas Title", 800, 600)
+		hist.Draw()
+		hist.Write()
+	
+	for index1,subList in enumerate(outputdataList):
+		print("index1" + str(type(index1))) #debug
+		for index2,subData in enumerate(subList):
+			if subData == None: continue
+			#height = 100 + index2 * 100
+			#print(min(subData))
+			#print(max(subData))
+			areaLB = areaLowerBound[index2]
+			areaHB = areaUpperBound[index2]
+			pulse_histogram(areaLB,areaHB,dataList[index1],subData,100, min(subData), max(subData))
+	"""	
+
+	"""
+	#duration cut
+	
+	Run_num = 1026
+
+	fileName = f"run{Run_num}_durationcut_pickup.root"
+	output_file = r.TFile(fileName, "RECREATE")
+	mychecker = triggerChecker()
+	mychecker.openMergedFile(f"MilliQan_Run{Run_num}","/store/user/milliqan/trees/v33/bar/")
+	
+	timeList = []
+	areaList = []
+	typeList = []
+	columnList = []
+	layerList = []
+	heightList = []
+	pickupFlagList = []
+	boardList = []
+	pulseList = []
+
+	dataList = ["time","type","area","column","layer","board","pickupFlag","height","npulses"]
+	outputdataList=[timeList,typeList,areaList,columnList,layerList,boardList,pickupFlagList,heightList,pulseList]
+	durationLowerBound = [1,131,190,293,600,1000]
+	durationUpperBound = [131,190,293,600,1000,1400]
+
+	for CollectData,OutputLIST in zip(dataList,outputdataList):
+		for index in range(6):
+			LB = durationLowerBound[index]
+			UB = durationUpperBound[index]
+			ExtractedData = mychecker.cut3("duration",LB,UB,CollectData)
+			OutputLIST.append(ExtractedData)
+
+
+	#in the future change kev in unit input argument
+	def pulse_histogram(LB,UB,xtitle,data,nBins, xMin, xMax):
+		HistogramTitle = f"{xtitle} with {LB}-{UB} duration cut "
+		hist = r.TH1D(f"{LB}-{UB} duration cut:{xtitle}", "My Histogram", nBins, xMin, xMax)
+		hist.SetTitle(HistogramTitle)
+		hist.GetXaxis().SetTitle(xtitle)
+		for d in data:
+			hist.Fill(d)
+		#hist.Scale(1.0 / hist.GetEntries()) 
+		canvas = r.TCanvas("canvas", "Canvas Title", 800, 600)
+		hist.Draw()
+		hist.Write()
+	
+	for index1,subList in enumerate(outputdataList):
+		print("index1" + str(type(index1))) #debug
+		for index2,subData in enumerate(subList):
+			if subData == None: continue
+			#height = 100 + index2 * 100
+			#print(min(subData))
+			#print(max(subData))
+			DLB = durationLowerBound[index2]
+			DHB = durationUpperBound[index2]
+			pulse_histogram(DLB,DHB,dataList[index1],subData,100, min(subData), max(subData))
+	"""
+
+
 
 
 	

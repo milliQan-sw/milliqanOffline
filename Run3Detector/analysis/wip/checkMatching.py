@@ -1,65 +1,244 @@
 import os
 import ROOT as r
+import uproot
+import time
+import argparse
+import pandas as pd
+from datetime import datetime
+import numpy as np
+
+class runInfo:
+    
+    def __init__(self):
+        
+        self.run = -1
+        self.file = -1
+        self.rawDirectory = None
+        self.offlineDirectory = None
+        self.daqFile = None
+        self.trigFile = None
+        self.matchFile = None
+        self.offlineFile = None
+        self.totalEvents = 0
+        self.unmatchedEvents = 0
+        self.startTime = -1
+        self.unmatchedBoards = 0
+        self.daqCTime = None
+        self.trigCTime = None
+        self.matchCTime = None
+        self.offlineCTime = None
+    
+    def __str__(self):
+        out = 'run: {0} file: {1}\n\t\
+               daqFile: {2}\n\t\
+               trigFile: {3}\n\t\
+               matchFile: {4}\n\t\
+               offlineFile: {5}'.format(self.run, self.file, self.daqFile, self.trigFile, self.matchFile, self.offlineFile)
+        return out
+
+class fileChecker():
+    
+    def __init__(self):
+        self.min_run = 1022
+        self.max_run = 1123
+        self.rawDir = ''
+        self.offlineDir = ''
+        
+        self.parse_args()
+        if self.args.rawDir: self.rawDir = self.args.rawDir
+        if self.args.offlineDir: self.offlineDir = self.args.offlineDir
+            
+        self.initializePlots()
+
+        self.daqFiles = {}
+        self.trigFiles = {}
+        self.matchedFiles = {}
+        self.offlineFiles = {}
+        
+        self.runInfos = pd.DataFrame(columns=['run', 'file', 'rawDir', 'offlineDir', 'daqFile', 'trigFile',
+                                  'matchFile', 'offlineFile', 'totalEvents', 'unmatchedEvents', 
+                                  'startTime', 'unmatchedBoards', 'daqCTime', 'trigCTime', 'matchCTime',
+                                  'offlineCTime'])
+        #self.runInfos.set_index(['run', 'file'], inplace=True)
+        
+        self.debug = False
+        
+    def parse_args(self):
+        parser=argparse.ArgumentParser()
+        parser.add_argument("-r", "--rawDir", type=str, default = '/store/user/milliqan/run3/', help="Raw data directory")
+        parser.add_argument("-o", "--offlineDir", type=str, default = '/store/user/milliqan/trees/v33/bar/', help="Offline data directory")
+        self.args = parser.parse_args(args=[])
+
+    def initializePlots(self):
+
+        bins = self.max_run - self.min_run
+        self.h_total = r.TH1F("h_total", "Total Number of Events in Run", bins, self.min_run, self.max_run)
+        self.h_unmatched = r.TH1F("h_unmatched", "Number of Unmatched Events in Run", bins, self.min_run, self.max_run)
+        self.h_startTimes = r.TH1F("h_startTimes", "Start Times of Runs", bins, self.min_run, self.max_run)
+        self.h_boardUnmatched = r.TH1F("h_boardUnmatched", "Number of Boards Unmatched", bins, self.min_run, self.max_run)
+
+        self.c1  = r.TCanvas("c1", "c1", 800,800)
+        
+        
+    def checkOfflineFiles(self, fileList):
+
+        total_unmatched = 0
+        for events in uproot.iterate(
+
+            #files
+            fileList,
+
+            #branches
+            ['runNumber', 'fileNumber', 'boardsMatched'],
+
+            #cut
+            #cut="",
+
+            how="zip",
+
+            step_size=1000,
+
+            num_workers=8,
+
+            ):
+
+            unmatchedCut = events[:, "boardsMatched"] == 0
+            unmatched = events[unmatchedCut, "boardsMatched"]
+            self.h_boardUnmatched.Fill(events[0, 'runNumber'], len(unmatched))
+            
+            self.runInfos['unmatchedBoards'].loc[(self.runInfos['run'] == events[0, 'runNumber']) & (self.runInfos['file'] == events[0, 'fileNumber'])] += len(unmatched)
+    
+    def getRunFile(self, filename):
+        runNum = filename.split('Run')[-1].split('.')[0]
+        fileNum = filename.split('.')[1].split('_')[0]
+        return runNum, fileNum
+    
+    
+    def saveJson(self):
+        self.runInfos.to_json('checkMatching.json', orient = 'split', compression = 'infer', index = 'true')
+
+    def loadJson(self, jsonFile):
+        fin = open(jsonFile)
+        data = json.load(fin)
+        self.runInfos = pd.DataFrame(data['data'], columns=data['columns'])
+        fin.close()
+    
+    def checkMatchedFiles(self, fileList):
+        total_unmatched = 0
+        for events in uproot.iterate(
+
+            #files
+            fileList,
+
+            #branches
+            ['runNum', 'eventNum', 'trigger', 'startTime'],
 
 
+            #needs to be 1000 events for file number to be correct
+            step_size=1000,
 
-def getRunFile(filename):
-    runNum = filename.split('Run')[-1].split('.')[0]
-    fileNum = filename.split('.')[1].split('_')[0]
-    return runNum, fileNum
+            num_workers=8,
+            
+        ):
 
-def printFileCounts():
-    fout = open('fileCounts.csv', 'w')
-    print("{0:<10} {1:>8} {2:>8} {3:>8}".format('Run Number', 'DAQ Files', 'Trigger Files', 'Matched Files'))
-    for key, value in daqFiles.items():
-        numDAQ = len(daqFiles[key])
-        numTrig = 0
-        numMatched = 0
-        missing = ''
-        if key in trigFiles.keys(): numTrig = len(trigFiles[key])
-        if key in matchedFiles.keys(): numMatched = len(matchedFiles[key])
-        if numDAQ != numMatched: missing = 'x'
-        print("{0:<10} {1:>8} {2:>8} {3:>8} {4:>8}".format(key, numDAQ, numTrig, numMatched, missing))
-        fout.write('{0},{1},{2},{3},{4}\n'.format(key, numDAQ, numTrig, numMatched, missing))
-    fout.close()
+            unmatchedCut = events[:, "trigger"] == -1
+            unmatched = events[unmatchedCut, "trigger"]
+            self.h_unmatched.Fill(events[0, 'runNum'], len(unmatched))
+            self.h_total.Fill(events[0, 'runNum'], len(events))
+            thisbin = self.h_startTimes.FindBin(events[0, 'runNum'])
+            self.h_startTimes.SetBinContent(thisbin, events[0, 'startTime'])
+            
+            fileNum = events[0, 'eventNum']/1000 + 1
+            self.runInfos['startTime'].loc[(self.runInfos['run'] == events[0, 'runNum']) & (self.runInfos['file'] == fileNum)] = events[0, 'startTime']
+            
+            self.runInfos['totalEvents'].loc[(self.runInfos['run'] == events[0, 'runNum']) & (self.runInfos['file'] == fileNum)] += len(events)
+            self.runInfos['unmatchedEvents'].loc[(self.runInfos['run'] == events[0, 'runNum']) & (self.runInfos['file'] == fileNum)] += len(unmatched)
+    
+    def getOfflineInfo(self):
+        rawFiles = self.runInfos[['run', 'file']].to_numpy()
+        for pair in rawFiles:
+            offlineFile = 'MilliQan_Run{0}.{1}_v33_firstPedestals.root'.format(pair[0], pair[1])
+            if os.path.exists(self.offlineDir+'/'+offlineFile): 
+                self.runInfos['offlineFile'].loc[(self.runInfos['run'] == pair[0]) & (self.runInfos['file'] == pair[1])] = offlineFile
+                self.runInfos['offlineDir'].loc[(self.runInfos['run'] == pair[0]) & (self.runInfos['file'] == pair[1])] = self.offlineDir
+                self.runInfos['offlineCTime'].loc[(self.runInfos['run'] == pair[0]) & (self.runInfos['file'] == pair[1])] = datetime.fromtimestamp(os.path.getctime(self.offlineDir+'/'+offlineFile))
 
+    def getRawInfo(self):
+        for directory in rawDirectories:
+            for sub in rawSubDirectories:
+                fullPath = self.rawDir+directory+'/'+sub
+                if not os.path.isdir(fullPath): continue
+                for ifile, filename in enumerate(os.listdir(fullPath)):
+                    if not filename.endswith('.root'): continue
+                    if not filename.startswith('MilliQan'): continue
+                    if self.debug and len(self.runInfos) > 10: break
 
+                    thisRun = runInfo()
+                    runNum, fileNum = self.getRunFile(filename)
+                    thisRun.run = int(runNum)
+                    thisRun.file = int(fileNum)
+                    thisRun.daqFile = filename
+                    thisRun.rawDir = fullPath
+                    thisRun.daqCTime = datetime.fromtimestamp(os.path.getctime(fullPath+'/'+filename))
+                    trigName = "TriggerBoard_Run{0}.{1}.root".format(runNum, fileNum)
+                    matchName = "MatchedEvents_Run{0}.{1}_rematch.root".format(runNum, fileNum)
+                    if os.path.exists(fullPath+'/'+trigName): 
+                        thisRun.trigFile = trigName
+                        thisRun.trigCTime = datetime.fromtimestamp(os.path.getctime(fullPath+'/'+trigName))
+                    if os.path.exists(fullPath+'/'+matchName): 
+                        thisRun.matchFile = matchName
+                        thisRun.matchCTime = datetime.fromtimestamp(os.path.getctime(fullPath+'/'+matchName))
+                    
+                    self.runInfos.loc[len(self.runInfos.index)] = thisRun.__dict__
+                            
+    def runCheckMatchedFiles(self):
+        runs = self.runInfos.run.unique()
+        for run in runs:
+            runList = self.runInfos[['rawDir', 'matchFile']].loc[self.runInfos['run']==run].apply('/'.join, axis=1).tolist()
+            runList = [x+':matchedTrigEvents' for x in runList]
+            self.checkMatchedFiles(runList)
+        
+    def runCheckOfflineFiles(self):
+        #now look at offline files post processing info
+        runs = self.runInfos.run.unique()
+        for run in runs:
+            runList = self.runInfos[['offlineDir', 'offlineFile']].loc[self.runInfos['run']==run].apply('/'.join, axis=1).tolist()
+            runList = [x+':t' for x in runList]
+            self.checkOfflineFiles(runList)
+            
+    def customStyle(self, s):
+        colors = ['background-color: white']*len(s)
+        if s.unmatchedEvents > 10:
+            color = 'yellow'
+            if s.unmatchedEvents > 100: color = 'red'
+            colors[s.keys().get_loc('unmatchedEvents')] = 'background-color: %s' % color
+        if s.unmatchedBoards > 5:
+            color = 'yellow'
+            if s.unmatchedBoards > 50: color = 'red'
+            colors[s.keys().get_loc('unmatchedBoards')] = 'background-color: %s' % color
+        if s.startTime == -1:
+            colors[s.keys().get_loc('startTime')] = 'background-color: red'    
+        if s.trigFile == '':
+            colors[s.keys().get_loc('trigFile')] = 'background-color: red'
+        if s.matchFile == '':
+            colors[s.keys().get_loc('matchFile')] = 'background-color: red'
+        if s.offlineFile == '':
+            colors[s.keys().get_loc('offlineFile')] = 'background-color: red'
 
+        return colors
+
+    def printInfo(self):
+        display(self.runInfos.style.apply(self.customStyle, axis=1))
 if __name__ == "__main__":
 
-    path = '/store/user/milliqan/run3/'
-    directories = ['1000']
-    subdirectories = ['0000', '0001', '0002', '0003', '0004', '0005', '0006', '0007', '0008', '0009']
-
-    daqFiles = {}
-    trigFiles = {}
-    matchedFiles = {}
-
-    for directory in directories:
-        for sub in subdirectories:
-            fullPath = path+directory+'/'+sub
-            for filename in os.listdir(fullPath):
-                if not filename.endswith('.root'): continue
-                if filename.startswith('MilliQan'):
-                    runNum, fileNum = getRunFile(filename)
-                    if runNum in daqFiles:
-                        daqFiles[runNum].append(fileNum)
-                    else:
-                        daqFiles[runNum] = [fileNum]
-                elif filename.startswith('TriggerBoard'):
-                    runNum, fileNum = getRunFile(filename)
-                    if runNum in trigFiles:
-                        trigFiles[runNum].append(fileNum)
-                    else:
-                        trigFiles[runNum] = [fileNum]
-                elif filename.startswith('MatchedEvents'):
-                    if not 'rematch' in filename: continue
-                    runNum, fileNum = getRunFile(filename)
-                    if runNum in matchedFiles:
-                        matchedFiles[runNum].append(fileNum)
-                    else:
-                        matchedFiles[runNum] = [fileNum]
-                 
-
+    rawDirectories = ['1000', '1100']
+    rawSubDirectories = ['0000', '0001', '0002', '0003', '0004', '0005', '0006', '0007', '0008', '0009']
     
-    printFileCounts()
+    myfileChecker = fileChecker()
+    myfileChecker.debug = False
+    myfileChecker.getRawInfo()
+    myfileChecker.getOfflineInfo()
+    myfileChecker.runCheckMatchedFiles()
+    myfileChecker.runCheckOfflineFiles()
+    myfileChecker.saveJson()
+

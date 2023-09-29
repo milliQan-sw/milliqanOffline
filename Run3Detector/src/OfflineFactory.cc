@@ -152,6 +152,56 @@ void OfflineFactory::loadJsonConfig(string configFileName){
         throw invalid_argument(configFileName);
     }
 }
+
+//Function to load lumis json file
+void OfflineFactory::getLumis(std::string lumiFile){
+    std::string json;
+    if (lumiFile.find("{") != std::string::npos){
+        json = lumiFile;
+    }
+    else{
+        std::ifstream t(lumiFile);
+        std::stringstream buffer;
+        buffer << t.rdbuf();
+        json = buffer.str();
+    }
+
+    Json::Reader reader;
+    Json::Value jsonRoot;
+    bool parseSuccess = reader.parse(json, jsonRoot, false);
+    if (parseSuccess){
+        /*if (json.find("columns") != std::string::npos){
+            continue;
+        }
+        if (json.find("index") != std::string::npos){
+            continue;
+        }*/
+        if(json.find("data") != std::string::npos){
+            std::cout << "Got data" << std::endl;
+            const Json::Value data = jsonRoot["data"];
+            for (int index = 0; index < data.size(); index ++){
+                //TODO fix it so that the filenumber is an int
+                if ( data[index][0].asInt() == runNumber && stoi(data[index][1].asString()) == fileNumber){
+                    std::cout << "found this event" << std::endl;
+                    outputTreeContents.lumi = data[index][2].asFloat();
+                    outputTreeContents.fillId = data[index][3].asInt();
+                    outputTreeContents.beamType = data[index][9].asString();
+                    outputTreeContents.beamEnergy = data[index][10].asFloat(); 
+                    outputTreeContents.betaStar = data[index][11].asFloat();
+                    outputTreeContents.beamOn = data[index][4].asBool(); 
+                    outputTreeContents.fillStart = data[index][12].asUInt64(); 
+                    outputTreeContents.fillEnd = data[index][13].asUInt64();
+                }
+            }
+
+        }
+    }
+    else{
+        throw invalid_argument(lumiFile);
+    }
+}
+
+
 //Validate json input
 void OfflineFactory::validateInput(){
     //HACKY check if tag has been added
@@ -260,6 +310,15 @@ void OfflineFactory::prepareOutBranches(){
     outTree->Branch("fileNumber",&outputTreeContents.fileNumber);
     outTree->Branch("boardsMatched", &outputTreeContents.boardsMatched);
     outTree->Branch("DAQEventNumber", &outputTreeContents.DAQEventNumber);
+
+    outTree->Branch("lumi",&outputTreeContents.lumi);
+    outTree->Branch("fillId",&outputTreeContents.fillId);
+    outTree->Branch("beamType",&outputTreeContents.beamType);
+    outTree->Branch("beamEnergy",&outputTreeContents.beamEnergy);
+    outTree->Branch("betaStar",&outputTreeContents.betaStar);
+    outTree->Branch("beamOn",&outputTreeContents.beamOn);
+    outTree->Branch("fillStart",&outputTreeContents.fillStart);
+    outTree->Branch("fillEnd",&outputTreeContents.fillEnd);
 
     // May need to change for DRS input
     outTree->Branch("triggerThreshold",&outputTreeContents.v_triggerThresholds);

@@ -82,11 +82,12 @@ int main(int argc, char **argv){
 	}
     std::cout << "Configuration: " << configChar << std::endl;
     }
-    // OfflineFactory offlineFactory = OfflineFactory("/home/milliqan/data_2022/testing_07_12_22/MilliQan_Cd109Shell.root","testOutput.root");
-    // offlineFactory.loadJsonConfig("/home/milliqan/milliqanOffline/offlineProduction/configuration/chanMaps/testMap.json");
-    // offlineFactory.loadJsonConfig("/home/milliqan/milliqanOffline/offlineProduction/configuration/pulseFinding/pulseFindingTest.json");
-    // offlineFactory.loadJsonConfig("/home/milliqan/milliqanOffline/offlineProduction/configuration/calibrations/testCalibration.json");
+    
     offlineFactory.setFriendFile(mergedTriggerFile);
+
+    std::string lumiFile = "/home/mcarrigan/scratch0/milliQan/processTrees/milliqanOffline/Run3Detector/configuration/barConfigs/mqLumis.json";
+    offlineFactory.getLumis(lumiFile);
+
     if (displayMode) {
 	if (isDRSdata){
 	    offlineFactory.processDisplays(eventsToDisplay,TString(offlineDir)+"/displaysDRS/");

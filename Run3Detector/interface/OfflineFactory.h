@@ -67,13 +67,23 @@ struct offline_tree_{
     int t_since_fill_end;
     int t_until_next_fill;
     string event_t_string;
-    int fillNum;
+    /*int fillNum;
     float fillAvgLumi;
     float fillTotalLumi;
     bool beam;
-    bool hardNoBeam;
+    bool hardNoBeam;*/
     bool boardsMatched;
     int DAQEventNumber;
+
+    //Luminosity Info
+    float lumi;
+    int fillId;
+    TString beamType;
+    float beamEnergy; 
+    float betaStar;
+    bool beamOn; 
+    ulong fillStart; 
+    ulong fillEnd;
 
     //pulse vectors
     vector<int> v_npulses;
@@ -154,6 +164,7 @@ public:
     // virtual ~OfflineFactory();
     void makeOutputTree();
     void loadJsonConfig(string);
+    void getLumis(string);
     void readMetaData();
     vector<vector<pair<float,float> > > readWaveDataPerEvent(int);
     //        void defineColors(vector<int>, vector<TColor*>, vector<float>, vector<float>, vector<float>);

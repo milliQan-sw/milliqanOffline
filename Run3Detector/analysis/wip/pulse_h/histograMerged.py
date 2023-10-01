@@ -12,10 +12,9 @@ Datalist = []
 
 
 
-line_colors = [ROOT.kRed, ROOT.kBlue, ROOT.kGreen, ROOT.kOrange, ROOT.kMagenta,
-               ROOT.kCyan, ROOT.kViolet, ROOT.kPink, ROOT.kAzure, ROOT.kTeal,ROOT.kBlack,ROOT.kGray]
+line_colors = [ROOT.kRed, ROOT.kBlue, ROOT.kGreen, ROOT.kOrange, ROOT.kMagenta, ROOT.kCyan, ROOT.kBlue-6, ROOT.kCyan-3,ROOT.kRed-6,ROOT.kBlack,ROOT.kViolet-9]
 
-root_file = ROOT.TFile("run1026_heightcut.root", "UPDATE")
+root_file = ROOT.TFile("run1026_durationcut.root", "UPDATE")
 
 
 canvas_title = " canvas title "
@@ -36,7 +35,7 @@ for data in DataSet:
 	NewCanvasName = str(data) + "mergedPlot"
 	i = 0
 	legend = ROOT.TLegend(0.7, 0.7, 0.9, 0.9) 
-	canvas = ROOT.TCanvas(NewCanvasName, canvas_title, 800, 600)
+	canvas = ROOT.TCanvas(NewCanvasName, canvas_title, 800, 1200)
 	for obj in root_file_objects:
 		single_hist_name = obj.GetName()
 		if ":" in single_hist_name:

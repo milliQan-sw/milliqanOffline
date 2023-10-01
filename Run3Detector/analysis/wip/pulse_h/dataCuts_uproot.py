@@ -176,6 +176,12 @@ class triggerChecker():
 	#outputList:output the corresponded list
 	#pulse-based cut
 	
+	#cut0: collect the data before applied the cut
+	def cut0(self,dataCo):
+		outputList = []
+		for specificData in self.myarray[self.myarray["pickupFlag"] == False][dataCo]:
+			outputList.append(specificData)
+		return outputList
 
 
 	def cut1(self,dataCu,cutValue,dataCo):
@@ -193,7 +199,7 @@ class triggerChecker():
 	def cut3(self,dataCu,cutValue1,cutValue2,dataCo):
 		outputList = []
 		data=self.myarray
-		for specificData in data[(self.myarray[dataCu] <= cutValue2) & (self.myarray[dataCu] >= cutValue1) & (self.myarray["pickupFlag"] == True)][dataCo]:
+		for specificData in data[(self.myarray[dataCu] <= cutValue2) & (self.myarray[dataCu] >= cutValue1) & (self.myarray["pickupFlag"] == False)][dataCo]:
 			outputList.append(specificData)
 		return outputList
 
@@ -224,7 +230,7 @@ if __name__ == "__main__":
 
 	r.gROOT.SetBatch(1)
 	
-
+	"""
 	#height cut
 	runList = [1020,1021,1022,1023,1024,1025,1026,1027,1028,1029,1030]
 	for Run_num in runList:
@@ -288,12 +294,12 @@ if __name__ == "__main__":
 		output_file.Close()
 	
 	#end of height cut
-	
-
 	"""
+
+	
 	#start the pulse(branch) cut (0-20 with increment value 2)
 	Run_num = 1026
-	fileName = f"run{Run_num}_pulsecut_pickupFlag.root"
+	fileName = f"run{Run_num}_Below_Npulsecut.root"
 	output_file = r.TFile(fileName, "RECREATE")
 	mychecker = triggerChecker()
 	mychecker.openMergedFile(f"MilliQan_Run{Run_num}","/store/user/milliqan/trees/v33/bar/")
@@ -314,45 +320,61 @@ if __name__ == "__main__":
 	outputdataList=[timeList,areaList,typeList,durationList,columnList,layerList,boardList,pickupFlagList,heightList]
 
 	for CollectData,OutputLIST in zip(dataList,outputdataList):
+		#adding the extra histogram that no cut is applied.
+		DataNoCut = mychecker.cut0(CollectData)
+		OutputLIST.append(DataNoCut)
+
 		for i in range(11):
 			pulse_threshold = 0 + i * 2
 			#print("CollectData:"+CollectData)
-			ExtractedData = mychecker.cut1("npulses",pulse_threshold,CollectData)
+			ExtractedData = mychecker.cut2("npulses",pulse_threshold,CollectData)
 			OutputLIST.append(ExtractedData)
 
 	
 	def pulse_histogram(pulse_value,xtitle,data,nBins, xMin, xMax):
-		HistogramTitle = f"{xtitle} with {pulse_value} pulses cut "
-		hist = r.TH1D(f"{pulse_value}pulses data:{xtitle}", "My Histogram", nBins, xMin, xMax)
+		
+		HistogramTitle = f"{xtitle} with below {pulse_value} pulses cut "
+		hist = r.TH1D(f"below {pulse_value}pulses data:{xtitle}", "My Histogram", nBins, xMin, xMax)
 		hist.SetTitle(HistogramTitle)
 		hist.GetXaxis().SetTitle(xtitle)
 		for d in data:
 			hist.Fill(d)
 		#hist.Scale(1.0 / hist.GetEntries()) 
-		canvas = r.TCanvas("canvas", "Canvas Title", 800, 600)
-		hist.Draw()
+		#canvas = r.TCanvas("canvas", "Canvas Title", 800, 600)
+		maxBinContent = hist.GetMaximum()
+		hist.GetYaxis().SetRangeUser(0, 1.2 * maxBinContent)
+		#hist.Draw()
 		hist.Write()
 	
+	def pulse_histogram_noCuts(pulse_value,xtitle,data,nBins, xMin, xMax):
+		HistogramTitleWithOutCut = f"{xtitle} without cut"
+		hist0 = r.TH1D(f"data before applying the cut :{xtitle}", "My Histogram", nBins, xMin, xMax)
+		hist0.SetTitle(HistogramTitleWithOutCut)
+		hist0.GetXaxis().SetTitle(xtitle)
+		for d in data:
+			hist0.Fill(d)
+		maxBinContent = hist0.GetMaximum()
+		hist0.GetYaxis().SetRangeUser(0, 1.2 * maxBinContent)
+		#hist0.Draw()
+		hist0.Write()
+
+	
 	for index1,subList in enumerate(outputdataList):
-		print("index1" + str(type(index1))) #debug
+
 		for index2,subData in enumerate(subList):
-			if subData == None: continue
-			pulse_threshold = 0 + index2 * 2
-			pulse_histogram(pulse_threshold,dataList[index1],subData,100, min(subData), max(subData))
+			if index2 == 0:
+				if subData == None: continue
+				if subData == []: continue
+				pulse_histogram_noCuts(pulse_threshold,dataList[index1],subData,100, min(subData), max(subData))
+			else:	
+				if subData == None: continue
+				pulse_threshold = 0 + (index2-1) * 2
+				if subData == []: continue
+				pulse_histogram(pulse_threshold,dataList[index1],subData,100, min(subData), max(subData))
 	output_file.Close()
 	#end of pulse analysis
-	"""
+	
 
-
-	"""
-	#cut N pulse(not branch) above height->get of events
-	for i in range(11):
-		height_threshold = 100 + i * 100
-		for i in range(11):
-			pulse_threshold = 0 + i * 2	
-			EventList = mychecker.PHECut(height_threshold,pulse_threshold)
-			numberOFevents = len(EventList)
-	"""
 
 	"""
 	#for both area cut and duration cut, they need to be in cut 3
@@ -400,6 +422,8 @@ if __name__ == "__main__":
 			hist.Fill(d)
 		#hist.Scale(1.0 / hist.GetEntries()) 
 		canvas = r.TCanvas("canvas", "Canvas Title", 800, 600)
+		maxBinContent = hist.GetMaximum()
+		hist.GetYaxis().SetRangeUser(0, 1.2 * maxBinContent)
 		hist.Draw()
 		hist.Write()
 	
@@ -413,14 +437,14 @@ if __name__ == "__main__":
 			areaLB = areaLowerBound[index2]
 			areaHB = areaUpperBound[index2]
 			pulse_histogram(areaLB,areaHB,dataList[index1],subData,100, min(subData), max(subData))
-	"""	
+	"""
 
 	"""
 	#duration cut
 	
 	Run_num = 1026
 
-	fileName = f"run{Run_num}_durationcut_pickup.root"
+	fileName = f"run{Run_num}_durationcut.root"
 	output_file = r.TFile(fileName, "RECREATE")
 	mychecker = triggerChecker()
 	mychecker.openMergedFile(f"MilliQan_Run{Run_num}","/store/user/milliqan/trees/v33/bar/")
@@ -472,6 +496,8 @@ if __name__ == "__main__":
 			DHB = durationUpperBound[index2]
 			pulse_histogram(DLB,DHB,dataList[index1],subData,100, min(subData), max(subData))
 	"""
+	
+	
 
 
 

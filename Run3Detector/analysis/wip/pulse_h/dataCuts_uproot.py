@@ -19,6 +19,7 @@ import time
 import uproot 
 from functools import partial
 from triggerConstants import *
+from histogramMerged import *
 
 
 
@@ -179,27 +180,35 @@ class triggerChecker():
 	#cut0: collect the data before applied the cut
 	def cut0(self,dataCo):
 		outputList = []
-		for specificData in self.myarray[self.myarray["pickupFlag"] == False][dataCo]:
+		for specificData in self.myarray[self.myarray["pickupFlag"] == False & (self.myarray["chan"] <= 63) | (self.myarray["chan"] >= 78)][dataCo]:
 			outputList.append(specificData)
 		return outputList
 
-
+	
 	def cut1(self,dataCu,cutValue,dataCo):
 		outputList = []
-		for specificData in self.myarray[(self.myarray[dataCu] >= cutValue) & (self.myarray["pickupFlag"] == False)][dataCo]:
+		for specificData in self.myarray[(self.myarray[dataCu] >= cutValue) & (self.myarray["pickupFlag"] == False) & (self.myarray["chan"] <= 63)  | (self.myarray["chan"] >= 78)][dataCo]:
 			outputList.append(specificData)
 		return outputList
 	
+	"""
+	def cut1(self,dataCu,cutValue,dataCo):
+		outputList = []
+		for specificData in self.myarray[(self.myarray[dataCu] >= cutValue) & (self.myarray["pickupFlag"] == False) ][dataCo]:
+			outputList.append(specificData)
+		return outputList
+	"""
+
 	def cut2(self,dataCu,cutValue,dataCo):
 		outputList = []
-		for specificData in self.myarray[(self.myarray[dataCu] <= cutValue) & (self.myarray["pickupFlag"] == False)][dataCo]:
+		for specificData in self.myarray[(self.myarray[dataCu] <= cutValue) & (self.myarray["pickupFlag"] == False) & (self.myarray["chan"] <= 63)  | (self.myarray["chan"] >= 78)][dataCo]:
 			outputList.append(specificData)
 		return outputList
 	
 	def cut3(self,dataCu,cutValue1,cutValue2,dataCo):
 		outputList = []
 		data=self.myarray
-		for specificData in data[(self.myarray[dataCu] <= cutValue2) & (self.myarray[dataCu] >= cutValue1) & (self.myarray["pickupFlag"] == False)][dataCo]:
+		for specificData in data[(self.myarray[dataCu] <= cutValue2) & (self.myarray[dataCu] >= cutValue1) & (self.myarray["pickupFlag"] == False) & (self.myarray["chan"] <= 63)  | (self.myarray["chan"] >= 78)][dataCo]:
 			outputList.append(specificData)
 		return outputList
 
@@ -208,7 +217,7 @@ class triggerChecker():
 		
 		data=self.myarray
 		#extract an event based data, let's use time
-		data1 = data[(self.myarray[dataCu1] <= cutValue2) & (self.myarray[dataCu1] >= cutValue1) & (self.myarray[datacut2] >= cutValue3) & (self.myarray[datacut2] <= cutValue4) & (self.myarray["pickupFlag"] == False)][time]
+		data1 = data[(self.myarray[dataCu1] <= cutValue2) & (self.myarray[dataCu1] >= cutValue1) & (self.myarray[datacut2] >= cutValue3) & (self.myarray[datacut2] <= cutValue4) & (self.myarray["pickupFlag"] == False) & (self.myarray["chan"] <= 63)  | (self.myarray["chan"] >= 78)][time]
 		
 		Num_event = len(data1)
 		return Num_event
@@ -230,73 +239,74 @@ if __name__ == "__main__":
 
 	r.gROOT.SetBatch(1)
 	
-	"""
+	
 	#height cut
-	runList = [1020,1021,1022,1023,1024,1025,1026,1027,1028,1029,1030]
-	for Run_num in runList:
-		#Run_num = 1026
-		mychecker = triggerChecker()
-		#mychecker.openFile(filename)
-		mychecker.openMergedFile(f"MilliQan_Run{Run_num}","/store/user/milliqan/trees/v33/bar/")
+	#runList = [1020,1021,1022,1023,1024,1025,1026,1027,1028,1029,1030]
+	#for Run_num in runList:
+	Run_num = 1025
+	mychecker = triggerChecker()
+	#mychecker.openFile(filename)
+	mychecker.openMergedFile(f"MilliQan_Run{Run_num}","/store/user/milliqan/trees/v33/bar/")
 
-		dataList = ["time","area","type","duration","column","layer","board","pickupFlag","npulses"] #column name that I selected for data collection
-		timeList = []
-		areaList = []
-		typeList = []
-		durationList = []
-		columnList = []
-		layerList = []
-		heightList = []
-		pickupFlagList = []
-		boardList = []
-		pulseList = []
-		#ignore sideband's data and max so far
+	dataList = ["time","area","type","duration","column","layer","board","pickupFlag","npulses"] #column name that I selected for data collection
+	timeList = []
+	areaList = []
+	typeList = []
+	durationList = []
+	columnList = []
+	layerList = []
+	heightList = []
+	pickupFlagList = []
+	boardList = []
+	pulseList = []
+	#ignore sideband's data and max so far
 
-		#outputdataList=[timeList,heightList,areaList,typeList,duration]
-		outputdataList=[timeList,areaList,typeList,durationList,columnList,layerList,boardList,pickupFlagList,pulseList] #output data for height cut
-
-
-
-		for CollectData,OutputLIST in zip(dataList,outputdataList):
-			for i in range(11):
-				height_threshold = 100 + i * 100
-				#print("CollectData:"+CollectData)
-				ExtractedData = mychecker.cut1("height",height_threshold,CollectData)
-				OutputLIST.append(ExtractedData)
-		
-		
-		#plot the data with T hisogram
-		def height_histogram(height,xtitle,data,nBins, xMin, xMax):
-			HistogramTitle = f"{xtitle} with above {height}mV cut "
-			hist = r.TH1D(f"above {height}mV data:{xtitle}", "My Histogram", nBins, xMin, xMax)
-			hist.SetTitle(HistogramTitle)
-			hist.GetXaxis().SetTitle(xtitle)
-			for d in data:
-				hist.Fill(d)
-			#hist.Scale(1.0 / hist.GetEntries()) 
-			canvas = r.TCanvas("canvas", "Canvas Title", 800, 600)
-			hist.Draw()
-			hist.Write()
-
-		fileName = f"run{Run_num}_heightcut.root"
-		output_file = r.TFile(fileName, "RECREATE")
+	#outputdataList=[timeList,heightList,areaList,typeList,duration]
+	outputdataList=[timeList,areaList,typeList,durationList,columnList,layerList,boardList,pickupFlagList,pulseList] #output data for height cut
 
 
-		for index1,subList in enumerate(outputdataList):
-			for index2,subData in enumerate(subList):
-				if subData == None: continue
-				height = 100 + index2 * 100
-				#print(min(subData))
-				#print(max(subData))
-				if subData == []: continue
-				height_histogram(height,dataList[index1],subData,100, min(subData), max(subData))
-		
-		output_file.Close()
+
+	for CollectData,OutputLIST in zip(dataList,outputdataList):
+		for i in range(11):
+			height_threshold = 100 + i * 100
+			#print("CollectData:"+CollectData)
+			ExtractedData = mychecker.cut1("height",height_threshold,CollectData)
+			OutputLIST.append(ExtractedData)
+	
+	
+	#plot the data with T hisogram
+	def height_histogram(height,xtitle,data,nBins, xMin, xMax):
+		HistogramTitle = f"{xtitle} with above {height}mV cut "
+		hist = r.TH1D(f"above {height}mV data:{xtitle}", "My Histogram", nBins, xMin, xMax)
+		hist.SetTitle(HistogramTitle)
+		hist.GetXaxis().SetTitle(xtitle)
+		for d in data:
+			hist.Fill(d)
+		#hist.Scale(1.0 / hist.GetEntries()) 
+		canvas = r.TCanvas("canvas", "Canvas Title", 800, 600)
+		hist.Draw()
+		hist.Write()
+
+	fileName = f"run{Run_num}_heightcut_specifyChan.root"
+	output_file = r.TFile(fileName, "RECREATE")
+
+
+	for index1,subList in enumerate(outputdataList):
+		for index2,subData in enumerate(subList):
+			if subData == None: continue
+			height = 100 + index2 * 100
+			#print(min(subData))
+			#print(max(subData))
+			if subData == []: continue
+			height_histogram(height,dataList[index1],subData,100, min(subData), max(subData))
+	
+	output_file.Close()
+	HistMerge(fileName)
 	
 	#end of height cut
-	"""
-
 	
+
+	"""
 	#start the pulse(branch) cut (0-20 with increment value 2)
 	Run_num = 1026
 	fileName = f"run{Run_num}_Below_Npulsecut.root"
@@ -373,6 +383,7 @@ if __name__ == "__main__":
 				pulse_histogram(pulse_threshold,dataList[index1],subData,100, min(subData), max(subData))
 	output_file.Close()
 	#end of pulse analysis
+	"""
 	
 
 
@@ -399,11 +410,16 @@ if __name__ == "__main__":
 
 	dataList = ["time","type","duration","column","layer","board","pickupFlag","height"]
 	outputdataList=[timeList,typeList,durationList,columnList,layerList,boardList,pickupFlagList,heightList]
-	areaLowerBound = [0,200,1200,3000,5000,7000]
-	areaUpperBound = [200,1200,3000,5000,7000,10000]
+	#areaLowerBound = [0,200,1200,3000,5000,7000,10000,20000,60000]
+	#areaUpperBound = [200,1200,3000,5000,7000,10000,20000,60000,100000]
+	areaLowerBound = [0,10000,20000,30000,40000,60000,70000,80000,200000,500000,640000]
+	areaUpperBound = [10000,20000,30000,40000,50000,70000,80000,200000,500000,640000,10000000]
+
 
 	for CollectData,OutputLIST in zip(dataList,outputdataList):
-		for index in range(6):
+		NoCutData = mychecker.cut0(CollectData)
+		OutputLIST.append(NoCutData)
+		for index in range(11):
 			LB = areaLowerBound[index]
 			UB = areaUpperBound[index]
 			ExtractedData = mychecker.cut3("area",LB,UB,CollectData)
@@ -412,8 +428,8 @@ if __name__ == "__main__":
 			OutputLIST.append(ExtractedData)
 
 
-	#in the future change kev in unit input argument
-	def pulse_histogram(LB,UB,xtitle,data,nBins, xMin, xMax):
+
+	def areaCut_histogram(LB,UB,xtitle,data,nBins, xMin, xMax):
 		HistogramTitle = f"{xtitle} with {LB}-{UB} area cut "
 		hist = r.TH1D(f"{LB}-{UB} area cut:{xtitle}", "My Histogram", nBins, xMin, xMax)
 		hist.SetTitle(HistogramTitle)
@@ -421,22 +437,37 @@ if __name__ == "__main__":
 		for d in data:
 			hist.Fill(d)
 		#hist.Scale(1.0 / hist.GetEntries()) 
-		canvas = r.TCanvas("canvas", "Canvas Title", 800, 600)
 		maxBinContent = hist.GetMaximum()
 		hist.GetYaxis().SetRangeUser(0, 1.2 * maxBinContent)
-		hist.Draw()
 		hist.Write()
 	
+	def NoCut_histogram(xtitle,data,nBins, xMin, xMax):
+		HistogramTitle = f"{xtitle} with no area cut"
+		hist = r.TH1D(f"no area cut:{xtitle}", "My Histogram", nBins, xMin, xMax)
+		hist.SetTitle(HistogramTitle)
+		hist.GetXaxis().SetTitle(xtitle)
+		for d in data:
+			hist.Fill(d)
+		#hist.Scale(1.0 / hist.GetEntries()) 
+		maxBinContent = hist.GetMaximum()
+		hist.GetYaxis().SetRangeUser(0, 1.2 * maxBinContent)
+		hist.Write()
+
+
+
+	
+
 	for index1,subList in enumerate(outputdataList):
-		print("index1" + str(type(index1))) #debug
 		for index2,subData in enumerate(subList):
-			if subData == None: continue
-			#height = 100 + index2 * 100
-			#print(min(subData))
-			#print(max(subData))
-			areaLB = areaLowerBound[index2]
-			areaHB = areaUpperBound[index2]
-			pulse_histogram(areaLB,areaHB,dataList[index1],subData,100, min(subData), max(subData))
+			if index2 == 0:
+				NoCut_histogram(dataList[index1],subData,1000, min(subData), max(subData))
+			else:	
+				if subData == None: continue
+				areaLB = areaLowerBound[index2-1]
+				areaHB = areaUpperBound[index2-1]
+				if subData == []: continue
+				if subData == None: continue
+				areaCut_histogram(areaLB,areaHB,dataList[index1],subData,100, min(subData), max(subData))
 	"""
 
 	"""

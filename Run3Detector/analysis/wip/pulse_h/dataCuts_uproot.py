@@ -180,35 +180,30 @@ class triggerChecker():
 	#cut0: collect the data before applied the cut
 	def cut0(self,dataCo):
 		outputList = []
-		for specificData in self.myarray[self.myarray["pickupFlag"] == False & (self.myarray["chan"] <= 63) | (self.myarray["chan"] >= 78)][dataCo]:
+		for specificData in self.myarray[(self.myarray["pickupFlag"] == False) & (self.myarray["type"] == 0)][dataCo]:
+			if dataCo == "type" and specificData>0:
+				print("something is wrong") 
 			outputList.append(specificData)
 		return outputList
 
 	
 	def cut1(self,dataCu,cutValue,dataCo):
 		outputList = []
-		for specificData in self.myarray[(self.myarray[dataCu] >= cutValue) & (self.myarray["pickupFlag"] == False) & (self.myarray["chan"] <= 63)  | (self.myarray["chan"] >= 78)][dataCo]:
+		for specificData in self.myarray[(self.myarray[dataCu] >= cutValue) & (self.myarray["pickupFlag"] == False) & (self.myarray["type"] == 0)][dataCo]:
 			outputList.append(specificData)
 		return outputList
 	
-	"""
-	def cut1(self,dataCu,cutValue,dataCo):
-		outputList = []
-		for specificData in self.myarray[(self.myarray[dataCu] >= cutValue) & (self.myarray["pickupFlag"] == False) ][dataCo]:
-			outputList.append(specificData)
-		return outputList
-	"""
 
 	def cut2(self,dataCu,cutValue,dataCo):
 		outputList = []
-		for specificData in self.myarray[(self.myarray[dataCu] <= cutValue) & (self.myarray["pickupFlag"] == False) & (self.myarray["chan"] <= 63)  | (self.myarray["chan"] >= 78)][dataCo]:
+		for specificData in self.myarray[(self.myarray[dataCu] <= cutValue) & (self.myarray["pickupFlag"] == False) & (self.myarray["type"] == 0)][dataCo]:
 			outputList.append(specificData)
 		return outputList
 	
 	def cut3(self,dataCu,cutValue1,cutValue2,dataCo):
 		outputList = []
 		data=self.myarray
-		for specificData in data[(self.myarray[dataCu] <= cutValue2) & (self.myarray[dataCu] >= cutValue1) & (self.myarray["pickupFlag"] == False) & (self.myarray["chan"] <= 63)  | (self.myarray["chan"] >= 78)][dataCo]:
+		for specificData in data[(self.myarray[dataCu] <= cutValue2) & (self.myarray[dataCu] >= cutValue1) & (self.myarray["pickupFlag"] == False) & (self.myarray["type"] == 0)][dataCo]:
 			outputList.append(specificData)
 		return outputList
 
@@ -217,7 +212,7 @@ class triggerChecker():
 		
 		data=self.myarray
 		#extract an event based data, let's use time
-		data1 = data[(self.myarray[dataCu1] <= cutValue2) & (self.myarray[dataCu1] >= cutValue1) & (self.myarray[datacut2] >= cutValue3) & (self.myarray[datacut2] <= cutValue4) & (self.myarray["pickupFlag"] == False) & (self.myarray["chan"] <= 63)  | (self.myarray["chan"] >= 78)][time]
+		data1 = data[(self.myarray[dataCu1] <= cutValue2) & (self.myarray[dataCu1] >= cutValue1) & (self.myarray[datacut2] >= cutValue3) & (self.myarray[datacut2] <= cutValue4) & (self.myarray["pickupFlag"] == False) & (self.myarray["type"] == 0)]["time"]
 		
 		Num_event = len(data1)
 		return Num_event
@@ -243,7 +238,7 @@ if __name__ == "__main__":
 	#height cut
 	#runList = [1020,1021,1022,1023,1024,1025,1026,1027,1028,1029,1030]
 	#for Run_num in runList:
-	Run_num = 1025
+	Run_num = 1026
 	mychecker = triggerChecker()
 	#mychecker.openFile(filename)
 	mychecker.openMergedFile(f"MilliQan_Run{Run_num}","/store/user/milliqan/trees/v33/bar/")
@@ -267,17 +262,32 @@ if __name__ == "__main__":
 
 
 	for CollectData,OutputLIST in zip(dataList,outputdataList):
+		#adding the extra histogram that no cut is applied.
+		DataNoCut = mychecker.cut0(CollectData)
+		OutputLIST.append(DataNoCut)
+
 		for i in range(11):
 			height_threshold = 100 + i * 100
 			#print("CollectData:"+CollectData)
 			ExtractedData = mychecker.cut1("height",height_threshold,CollectData)
 			OutputLIST.append(ExtractedData)
 	
+	def pulse_histogram_noCuts(xtitle,data,nBins, xMin, xMax):
+		HistogramTitleWithOutCut = f"{xtitle} without cut"
+		hist0 = r.TH1D(f"data before applying the cut :{xtitle}", "My Histogram", nBins, xMin, xMax+(xMax-xMin)/nBins)
+		hist0.SetTitle(HistogramTitleWithOutCut)
+		hist0.GetXaxis().SetTitle(xtitle)
+		for d in data:
+			hist0.Fill(d)
+		maxBinContent = hist0.GetMaximum()
+		hist0.GetYaxis().SetRangeUser(0, 1.2 * maxBinContent)
+		#hist0.Draw()
+		hist0.Write()
 	
 	#plot the data with T hisogram
 	def height_histogram(height,xtitle,data,nBins, xMin, xMax):
 		HistogramTitle = f"{xtitle} with above {height}mV cut "
-		hist = r.TH1D(f"above {height}mV data:{xtitle}", "My Histogram", nBins, xMin, xMax)
+		hist = r.TH1D(f"above {height}mV data:{xtitle}", "My Histogram", nBins, xMin, xMax+(xMax-xMin)/nBins)
 		hist.SetTitle(HistogramTitle)
 		hist.GetXaxis().SetTitle(xtitle)
 		for d in data:
@@ -287,18 +297,23 @@ if __name__ == "__main__":
 		hist.Draw()
 		hist.Write()
 
-	fileName = f"run{Run_num}_heightcut_specifyChan.root"
+	fileName = f"run{Run_num}_heightcut.root"
 	output_file = r.TFile(fileName, "RECREATE")
 
 
 	for index1,subList in enumerate(outputdataList):
 		for index2,subData in enumerate(subList):
-			if subData == None: continue
-			height = 100 + index2 * 100
-			#print(min(subData))
-			#print(max(subData))
-			if subData == []: continue
-			height_histogram(height,dataList[index1],subData,100, min(subData), max(subData))
+			if index2 == 0:
+				if subData == None: continue
+				if subData == []: continue
+				pulse_histogram_noCuts(dataList[index1],subData,100, min(subData), max(subData))
+			else:
+				if subData == None: continue
+				height = 100 + (index2-1) * 100
+				#print(min(subData))
+				#print(max(subData))
+				if subData == []: continue
+				height_histogram(height,dataList[index1],subData,100, min(subData), max(subData))
 	
 	output_file.Close()
 	HistMerge(fileName)

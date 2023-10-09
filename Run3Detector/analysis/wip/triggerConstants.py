@@ -32,7 +32,7 @@ straightPaths = [[[0, 1], [16, 17], [32, 33], [48, 49]],
                 [[14, 15], [30, 31], [46, 47], [62, 63]]]
 
 #inputs to read in through uproot
-uprootInputs = ["event", "fileNumber", "time", "nPE", "height", "area", "chan", "row", "column", "layer", "type", "event_time_fromTDC", "tTrigger", "duration"]
+uprootInputs = ["event", "fileNumber", "time", "nPE", "height", "area", "chan", "row", "column", "layer", "type", "event_time_fromTDC", "tTrigger", "duration","pickupFlag","DAQEventNumber"]
 
 #list of online trigger names to search for
 offlineTrigNames = ['fourLayers', 'threeInRow', 'separateLayers', 'adjacentLayers', 'nLayers', 'nHits', 'topPanels', 'topBotPanels', 'frontBack']

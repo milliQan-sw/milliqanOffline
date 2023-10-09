@@ -78,6 +78,40 @@ class DataHandler():
 
         return final_cutData
         
+    #3.96 is the time for particle travel straight through a bar dectector and the air gap.
+    def correctedTimeCut(self,selected_data):
+        CorrectedTimeList = []
+        TimeList = selected_data["time"]
+        LayerList = selected_data["layer"]
+        TypeList = selected_data["type"]
+        NPEList = selected_data["nPE"]
+        DQ = set(selected_data["DAQEventNumber"])
+        for time,type,layer,NPE in zip(TimeList,LayerList,TypeList,NPEList):
+            if type == 0 and NPE > 1:  #bar
+                if layer == 0:
+                    CorrectedTime = time
+                if layer == 1:
+                    CorrectedTime = time - 3.96
+                if layer == 2:
+                    CorrectedTime = time - 3.96*2
+                if layer == 3:
+                    CorrectedTime = time - 3.96 * 3
+                CorrectedTimeList.append(CorrectedTime)
+        if CorrectedTimeList == []: return 0, None
+        TimeDiff = max(CorrectedTimeList) - min(CorrectedTimeList)
+        #15.02 is the time for particle travel through four bar detectector and the ajacent air gap.
+        if TimeDiff < 15.02:
+            return 1,DQ
+        else:
+            return 0, None
+
+        
+
+        
+
+
+
+
 
     #exactly one hit per layer cut
     #need to exclude the panels
@@ -118,8 +152,13 @@ class DataHandler():
 
 
 if __name__ == "__main__":
-    data = DataHandler("/store/user/milliqan/trees/v33/",1021)
-    cutData=data.applyCuts([data.exOneHit,data.cosmicPanelVeto])
+    layer1THist = r.TH1D("layer 0 corrected time","layer 0 corrected time",100,0,2500)
+    layer2THist = r.TH1D("layer 1 corrected time","layer 1 corrected time",100,0,2500)
+    layer3THist = r.TH1D("layer 2 corrected time","layer 2 corrected time",100,0,2500)
+    layer4THist = r.TH1D("layer 3 corrected time","layer 3 corrected time",100,0,2500)
+    data = DataHandler("/store/user/milliqan/trees/v33/bar/",1020)
+    #cutData=data.applyCuts([data.exOneHit,data.cosmicPanelVeto])
+    cutData=data.applyCuts([data.correctedTimeCut])
     #cutData=data.applyCuts([data.cosmicPanelVeto])
     print(cutData)
 

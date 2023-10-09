@@ -232,6 +232,7 @@ class triggerChecker():
 
 if __name__ == "__main__":
 
+	"""
 	r.gROOT.SetBatch(1)
 	
 	
@@ -269,7 +270,7 @@ if __name__ == "__main__":
 		for i in range(11):
 			height_threshold = 100 + i * 100
 			#print("CollectData:"+CollectData)
-			ExtractedData = mychecker.cut1("height",height_threshold,CollectData)
+			ExtractedData = mychecker.cut2("height",height_threshold,CollectData)
 			OutputLIST.append(ExtractedData)
 	
 	def pulse_histogram_noCuts(xtitle,data,nBins, xMin, xMax):
@@ -297,7 +298,7 @@ if __name__ == "__main__":
 		hist.Draw()
 		hist.Write()
 
-	fileName = f"run{Run_num}_heightcut.root"
+	fileName = f"run{Run_num}_heightBelowcut.root"
 	output_file = r.TFile(fileName, "RECREATE")
 
 
@@ -319,6 +320,7 @@ if __name__ == "__main__":
 	HistMerge(fileName)
 	
 	#end of height cut
+	"""
 	
 
 	"""
@@ -359,7 +361,7 @@ if __name__ == "__main__":
 	def pulse_histogram(pulse_value,xtitle,data,nBins, xMin, xMax):
 		
 		HistogramTitle = f"{xtitle} with below {pulse_value} pulses cut "
-		hist = r.TH1D(f"below {pulse_value}pulses data:{xtitle}", "My Histogram", nBins, xMin, xMax)
+		hist = r.TH1D(f"below {pulse_value}pulses data:{xtitle}", "My Histogram", nBins, xMin, xMax+(xMax-xMin)/nBins)
 		hist.SetTitle(HistogramTitle)
 		hist.GetXaxis().SetTitle(xtitle)
 		for d in data:
@@ -373,7 +375,7 @@ if __name__ == "__main__":
 	
 	def pulse_histogram_noCuts(pulse_value,xtitle,data,nBins, xMin, xMax):
 		HistogramTitleWithOutCut = f"{xtitle} without cut"
-		hist0 = r.TH1D(f"data before applying the cut :{xtitle}", "My Histogram", nBins, xMin, xMax)
+		hist0 = r.TH1D(f"data before applying the cut :{xtitle}", "My Histogram", nBins, xMin, xMax+(xMax-xMin)/nBins)
 		hist0.SetTitle(HistogramTitleWithOutCut)
 		hist0.GetXaxis().SetTitle(xtitle)
 		for d in data:
@@ -397,12 +399,11 @@ if __name__ == "__main__":
 				if subData == []: continue
 				pulse_histogram(pulse_threshold,dataList[index1],subData,100, min(subData), max(subData))
 	output_file.Close()
+	HistMerge(fileName)
 	#end of pulse analysis
 	"""
 	
-
-
-	"""
+	
 	#for both area cut and duration cut, they need to be in cut 3
 	#area cut
 	# clean up the outputdataList
@@ -427,14 +428,15 @@ if __name__ == "__main__":
 	outputdataList=[timeList,typeList,durationList,columnList,layerList,boardList,pickupFlagList,heightList]
 	#areaLowerBound = [0,200,1200,3000,5000,7000,10000,20000,60000]
 	#areaUpperBound = [200,1200,3000,5000,7000,10000,20000,60000,100000]
-	areaLowerBound = [0,10000,20000,30000,40000,60000,70000,80000,200000,500000,640000]
-	areaUpperBound = [10000,20000,30000,40000,50000,70000,80000,200000,500000,640000,10000000]
+	areaLowerBound = [0,22530,78818,123848,180135,405285,506603,652950,810556]
+	areaUpperBound = [22530,78818,123848,180135,405285,506603,652950,810556,1125766]
 
+	loopOverNum = len(areaUpperBound)
 
 	for CollectData,OutputLIST in zip(dataList,outputdataList):
 		NoCutData = mychecker.cut0(CollectData)
 		OutputLIST.append(NoCutData)
-		for index in range(11):
+		for index in range(loopOverNum):
 			LB = areaLowerBound[index]
 			UB = areaUpperBound[index]
 			ExtractedData = mychecker.cut3("area",LB,UB,CollectData)
@@ -446,7 +448,7 @@ if __name__ == "__main__":
 
 	def areaCut_histogram(LB,UB,xtitle,data,nBins, xMin, xMax):
 		HistogramTitle = f"{xtitle} with {LB}-{UB} area cut "
-		hist = r.TH1D(f"{LB}-{UB} area cut:{xtitle}", "My Histogram", nBins, xMin, xMax)
+		hist = r.TH1D(f"{LB}-{UB} area cut:{xtitle}", "My Histogram", nBins, xMin, xMax+(xMax-xMin)/nBins)
 		hist.SetTitle(HistogramTitle)
 		hist.GetXaxis().SetTitle(xtitle)
 		for d in data:
@@ -458,7 +460,7 @@ if __name__ == "__main__":
 	
 	def NoCut_histogram(xtitle,data,nBins, xMin, xMax):
 		HistogramTitle = f"{xtitle} with no area cut"
-		hist = r.TH1D(f"no area cut:{xtitle}", "My Histogram", nBins, xMin, xMax)
+		hist = r.TH1D(f"no area cut:{xtitle}", "My Histogram", nBins, xMin, xMax+(xMax-xMin)/nBins)
 		hist.SetTitle(HistogramTitle)
 		hist.GetXaxis().SetTitle(xtitle)
 		for d in data:
@@ -471,19 +473,36 @@ if __name__ == "__main__":
 
 
 	
-
+	#ajust the max and min bin number be one in no cut histogram
+	minBin = -1
+	maxBin = 0
 	for index1,subList in enumerate(outputdataList):
 		for index2,subData in enumerate(subList):
 			if index2 == 0:
-				NoCut_histogram(dataList[index1],subData,1000, min(subData), max(subData))
+				if dataList[index1] == "column" or dataList[index1] == "layer" or dataList[index1] == "board":
+					NoCut_histogram(dataList[index1],subData,10, min(subData), max(subData))
+				else:
+					NoCut_histogram(dataList[index1],subData,100, min(subData), max(subData))
+				minBin = min(subData)
+				maxBin = max(subData)
 			else:	
 				if subData == None: continue
 				areaLB = areaLowerBound[index2-1]
 				areaHB = areaUpperBound[index2-1]
 				if subData == []: continue
 				if subData == None: continue
-				areaCut_histogram(areaLB,areaHB,dataList[index1],subData,100, min(subData), max(subData))
-	"""
+				#areaCut_histogram(areaLB,areaHB,dataList[index1],subData,1000, min(subData), max(subData)) #original code.
+				if dataList[index1] == "column" or dataList[index1] == "layer" or dataList[index1] == "board":
+					areaCut_histogram(areaLB,areaHB,dataList[index1],subData,10, minBin, maxBin)
+				else:
+					print(dataList[index1])
+					print(minBin)
+					print(maxBin)
+					areaCut_histogram(areaLB,areaHB,dataList[index1],subData,100, minBin, maxBin)
+	output_file.Close()
+	HistMerge(fileName)
+	
+	
 
 	"""
 	#duration cut
@@ -507,11 +526,15 @@ if __name__ == "__main__":
 
 	dataList = ["time","type","area","column","layer","board","pickupFlag","height","npulses"]
 	outputdataList=[timeList,typeList,areaList,columnList,layerList,boardList,pickupFlagList,heightList,pulseList]
-	durationLowerBound = [1,131,190,293,600,1000]
-	durationUpperBound = [131,190,293,600,1000,1400]
+	durationLowerBound = [0,192,317,568,745,1072,1223,1349,1425,1601,1879,2104,2331]
+	durationUpperBound = [192,317,568,745,1072,1223,1329,1425,1601,1879,2104,2331,2500]
+	DataLen=len(durationUpperBound)
 
 	for CollectData,OutputLIST in zip(dataList,outputdataList):
-		for index in range(6):
+		DataNoCut = mychecker.cut0(CollectData)
+		OutputLIST.append(DataNoCut)
+
+		for index in range(DataLen):
 			LB = durationLowerBound[index]
 			UB = durationUpperBound[index]
 			ExtractedData = mychecker.cut3("duration",LB,UB,CollectData)
@@ -521,7 +544,7 @@ if __name__ == "__main__":
 	#in the future change kev in unit input argument
 	def pulse_histogram(LB,UB,xtitle,data,nBins, xMin, xMax):
 		HistogramTitle = f"{xtitle} with {LB}-{UB} duration cut "
-		hist = r.TH1D(f"{LB}-{UB} duration cut:{xtitle}", "My Histogram", nBins, xMin, xMax)
+		hist = r.TH1D(f"{LB}-{UB} duration cut:{xtitle}", "My Histogram", nBins, xMin, xMax+(xMax-xMin)/nBins)
 		hist.SetTitle(HistogramTitle)
 		hist.GetXaxis().SetTitle(xtitle)
 		for d in data:
@@ -531,17 +554,49 @@ if __name__ == "__main__":
 		hist.Draw()
 		hist.Write()
 	
+	def pulse_histogram_noCuts(xtitle,data,nBins, xMin, xMax):
+		HistogramTitleWithOutCut = f"{xtitle} without cut"
+		hist0 = r.TH1D(f"data before applying the cut :{xtitle}", "My Histogram", nBins, xMin, xMax+(xMax-xMin)/nBins)
+		hist0.SetTitle(HistogramTitleWithOutCut)
+		hist0.GetXaxis().SetTitle(xtitle)
+		for d in data:
+			hist0.Fill(d)
+		maxBinContent = hist0.GetMaximum()
+		hist0.GetYaxis().SetRangeUser(0, 1.2 * maxBinContent)
+		#hist0.Draw()
+		hist0.Write()
+	
+	#ajust the max and min bin number be one in no cut histogram
+	minBin = -1
+	maxBin = 0
 	for index1,subList in enumerate(outputdataList):
 		print("index1" + str(type(index1))) #debug
 		for index2,subData in enumerate(subList):
-			if subData == None: continue
-			#height = 100 + index2 * 100
-			#print(min(subData))
-			#print(max(subData))
-			DLB = durationLowerBound[index2]
-			DHB = durationUpperBound[index2]
-			pulse_histogram(DLB,DHB,dataList[index1],subData,100, min(subData), max(subData))
+			if index2 == 0:
+				if subData == None: continue
+				if subData == []: continue
+				if dataList[index1] == "column" or dataList[index1] == "layer" or dataList[index1] == "board":
+					pulse_histogram_noCuts(dataList[index1],subData,10, min(subData), max(subData))
+				else:
+					pulse_histogram_noCuts(dataList[index1],subData,100, min(subData), max(subData))
+				minBin = min(subData)
+				maxBin = max(subData)
+
+			else:
+				if subData == None: continue
+				if subData == []: continue
+				DLB = durationLowerBound[index2-1]
+				DHB = durationUpperBound[index2-1]
+				if dataList[index1] == "column" or dataList[index1] == "layer" or dataList[index1] == "board":
+					pulse_histogram_noCuts(dataList[index1],subData,10, min(subData), max(subData))
+				else:
+					pulse_histogram(DLB,DHB,dataList[index1],subData,100, minBin, maxBin)
+	HistMerge(fileName)
+	output_file.Close()
 	"""
+	
+	
+	
 	
 	
 

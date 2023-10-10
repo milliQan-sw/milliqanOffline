@@ -147,3 +147,13 @@ def threeAreaSaturatedInLine(events, areaCut=50000):
     events['three_sat'] = ak.any(sat_0, axis=1) & ak.any(sat_1, axis=1) & ak.any(sat_2, axis=1) | (ak.any(sat_0, axis=1) & ak.any(sat_1, axis=1) & ak.any(sat_3, axis=1)) | (ak.any(sat_0, axis=1) & ak.any(sat_2, axis=1) & ak.any(sat_3, axis=1)) | (ak.any(sat_1, axis=1) & ak.any(sat_2, axis=1) & ak.any(sat_3, axis=1))
     events['four_sat'] = ak.any(sat_0, axis=1) & ak.any(sat_1, axis=1) & ak.any(sat_2, axis=1) & (ak.any(sat_3, axis=1))
     return events
+
+def matchedTDCTimes(events):
+    board0 = events.v_groupTDC_g0[:, 0]
+    board1 = events.v_groupTDC_g0[:, 1]
+    board2 = events.v_groupTDC_g0[:, 2]
+    board3 = events.v_groupTDC_g0[:, 3]
+    board4 = events.v_groupTDC_g0[:, 4]
+
+    events['tdcMatch'] = (board0 == board1) & (board0 == board2) & (board0 == board3) & (board0 == board4)
+    return events

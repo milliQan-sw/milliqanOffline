@@ -3,6 +3,8 @@ import pandas as pd
 import ROOT as r
 from datetime import datetime
 
+#luminosity is recorded in inverse ub
+
 class lumiDict:
     
     def __init__(self):

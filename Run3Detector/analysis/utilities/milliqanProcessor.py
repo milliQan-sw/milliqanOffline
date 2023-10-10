@@ -88,7 +88,7 @@ class milliqanProcessor():
 
             self.custom_out = self.runCustomFunction(events)
 
-            self.makeHistograms()
+            #self.makeHistograms()
 
             total_events += len(events)
             passing_events += len(ak.where(events.fourLayers)[0])

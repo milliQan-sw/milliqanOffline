@@ -7,6 +7,9 @@ merge multiple panda table from same run
 duration cut + area cut
 2d histogram Npulse vs height
 
+10-10 
+modified cut1 - 4 to create pickup and pickupTight tagged plots
+I also change the output file name.
 """
 
 
@@ -180,7 +183,7 @@ class triggerChecker():
 	#cut0: collect the data before applied the cut
 	def cut0(self,dataCo):
 		outputList = []
-		for specificData in self.myarray[(self.myarray["pickupFlag"] == False) & (self.myarray["type"] == 0)][dataCo]:
+		for specificData in self.myarray[(self.myarray["pickupFlag"] == True) & (self.myarray["type"] == 0)][dataCo]:
 			if dataCo == "type" and specificData>0:
 				print("something is wrong") 
 			outputList.append(specificData)
@@ -189,21 +192,21 @@ class triggerChecker():
 	
 	def cut1(self,dataCu,cutValue,dataCo):
 		outputList = []
-		for specificData in self.myarray[(self.myarray[dataCu] >= cutValue) & (self.myarray["pickupFlag"] == False) & (self.myarray["type"] == 0)][dataCo]:
+		for specificData in self.myarray[(self.myarray[dataCu] >= cutValue) & (self.myarray["pickupFlag"] == True) & (self.myarray["type"] == 0)][dataCo]:
 			outputList.append(specificData)
 		return outputList
 	
 
 	def cut2(self,dataCu,cutValue,dataCo):
 		outputList = []
-		for specificData in self.myarray[(self.myarray[dataCu] <= cutValue) & (self.myarray["pickupFlag"] == False) & (self.myarray["type"] == 0)][dataCo]:
+		for specificData in self.myarray[(self.myarray[dataCu] <= cutValue) & (self.myarray["pickupFlag"] == True) & (self.myarray["type"] == 0)][dataCo]:
 			outputList.append(specificData)
 		return outputList
 	
 	def cut3(self,dataCu,cutValue1,cutValue2,dataCo):
 		outputList = []
 		data=self.myarray
-		for specificData in data[(self.myarray[dataCu] <= cutValue2) & (self.myarray[dataCu] >= cutValue1) & (self.myarray["pickupFlag"] == False) & (self.myarray["type"] == 0)][dataCo]:
+		for specificData in data[(self.myarray[dataCu] <= cutValue2) & (self.myarray[dataCu] >= cutValue1) & (self.myarray["pickupFlag"] == True) & (self.myarray["type"] == 0)][dataCo]:
 			outputList.append(specificData)
 		return outputList
 
@@ -232,10 +235,10 @@ class triggerChecker():
 
 if __name__ == "__main__":
 
-	"""
+	
 	r.gROOT.SetBatch(1)
 	
-	
+	"""
 	#height cut
 	#runList = [1020,1021,1022,1023,1024,1025,1026,1027,1028,1029,1030]
 	#for Run_num in runList:
@@ -270,7 +273,7 @@ if __name__ == "__main__":
 		for i in range(11):
 			height_threshold = 100 + i * 100
 			#print("CollectData:"+CollectData)
-			ExtractedData = mychecker.cut2("height",height_threshold,CollectData)
+			ExtractedData = mychecker.cut1("height",height_threshold,CollectData)
 			OutputLIST.append(ExtractedData)
 	
 	def pulse_histogram_noCuts(xtitle,data,nBins, xMin, xMax):
@@ -298,23 +301,33 @@ if __name__ == "__main__":
 		hist.Draw()
 		hist.Write()
 
-	fileName = f"run{Run_num}_heightBelowcut.root"
+	#fileName = f"run{Run_num}_heightBelowcut.root"
+	fileName = f"run{Run_num}_heightAbovecut_pickup.root"
 	output_file = r.TFile(fileName, "RECREATE")
 
-
+	minBin = -1
+	maxBin = 0
 	for index1,subList in enumerate(outputdataList):
 		for index2,subData in enumerate(subList):
 			if index2 == 0:
 				if subData == None: continue
 				if subData == []: continue
-				pulse_histogram_noCuts(dataList[index1],subData,100, min(subData), max(subData))
+				if dataList[index1] == "column" or dataList[index1] == "layer" or dataList[index1] == "board":
+					pulse_histogram_noCuts(dataList[index1],subData,10, min(subData), max(subData))
+				else:
+					pulse_histogram_noCuts(dataList[index1],subData,100, min(subData), max(subData))
+				minBin = min(subData)
+				maxBin = max(subData)
 			else:
 				if subData == None: continue
 				height = 100 + (index2-1) * 100
 				#print(min(subData))
 				#print(max(subData))
 				if subData == []: continue
-				height_histogram(height,dataList[index1],subData,100, min(subData), max(subData))
+				if dataList[index1] == "column" or dataList[index1] == "layer" or dataList[index1] == "board":
+					height_histogram(height,dataList[index1],subData,10, minBin, maxBin)
+				else:
+					height_histogram(height,dataList[index1],subData,100, minBin, maxBin)
 	
 	output_file.Close()
 	HistMerge(fileName)
@@ -326,7 +339,7 @@ if __name__ == "__main__":
 	"""
 	#start the pulse(branch) cut (0-20 with increment value 2)
 	Run_num = 1026
-	fileName = f"run{Run_num}_Below_Npulsecut.root"
+	fileName = f"run{Run_num}_Below_Npulsecut_pickup.root"
 	output_file = r.TFile(fileName, "RECREATE")
 	mychecker = triggerChecker()
 	mychecker.openMergedFile(f"MilliQan_Run{Run_num}","/store/user/milliqan/trees/v33/bar/")
@@ -385,30 +398,40 @@ if __name__ == "__main__":
 		#hist0.Draw()
 		hist0.Write()
 
-	
+	minBin = -1
+	maxBin = 0
 	for index1,subList in enumerate(outputdataList):
 
 		for index2,subData in enumerate(subList):
 			if index2 == 0:
 				if subData == None: continue
 				if subData == []: continue
-				pulse_histogram_noCuts(pulse_threshold,dataList[index1],subData,100, min(subData), max(subData))
+				if dataList[index1] == "column" or dataList[index1] == "layer" or dataList[index1] == "board":
+					pulse_histogram_noCuts(pulse_threshold,dataList[index1],subData,10, min(subData), max(subData))
+				else:
+					pulse_histogram_noCuts(pulse_threshold,dataList[index1],subData,100, min(subData), max(subData))
+				minBin = min(subData)
+				maxBin = max(subData)
 			else:	
 				if subData == None: continue
 				pulse_threshold = 0 + (index2-1) * 2
 				if subData == []: continue
-				pulse_histogram(pulse_threshold,dataList[index1],subData,100, min(subData), max(subData))
+				if dataList[index1] == "column" or dataList[index1] == "layer" or dataList[index1] == "board":
+					pulse_histogram(pulse_threshold,dataList[index1],subData,10, minBin,maxBin)
+				else:
+					pulse_histogram(pulse_threshold,dataList[index1],subData,100, minBin, maxBin)
 	output_file.Close()
 	HistMerge(fileName)
 	#end of pulse analysis
 	"""
 	
 	
+	"""
 	#for both area cut and duration cut, they need to be in cut 3
 	#area cut
 	# clean up the outputdataList
 	Run_num = 1026
-	fileName = f"run{Run_num}_areacut.root"
+	fileName = f"run{Run_num}_areacut_pickup.root"
 	output_file  = r.TFile(fileName, "RECREATE")
 	mychecker = triggerChecker()
 	mychecker.openMergedFile(f"MilliQan_Run{Run_num}","/store/user/milliqan/trees/v33/bar/")
@@ -426,8 +449,6 @@ if __name__ == "__main__":
 
 	dataList = ["time","type","duration","column","layer","board","pickupFlag","height"]
 	outputdataList=[timeList,typeList,durationList,columnList,layerList,boardList,pickupFlagList,heightList]
-	#areaLowerBound = [0,200,1200,3000,5000,7000,10000,20000,60000]
-	#areaUpperBound = [200,1200,3000,5000,7000,10000,20000,60000,100000]
 	areaLowerBound = [0,22530,78818,123848,180135,405285,506603,652950,810556]
 	areaUpperBound = [22530,78818,123848,180135,405285,506603,652950,810556,1125766]
 
@@ -501,15 +522,16 @@ if __name__ == "__main__":
 					areaCut_histogram(areaLB,areaHB,dataList[index1],subData,100, minBin, maxBin)
 	output_file.Close()
 	HistMerge(fileName)
+	"""
 	
 	
 
-	"""
+	
 	#duration cut
 	
 	Run_num = 1026
 
-	fileName = f"run{Run_num}_durationcut.root"
+	fileName = f"run{Run_num}_durationcut_pickup.root"
 	output_file = r.TFile(fileName, "RECREATE")
 	mychecker = triggerChecker()
 	mychecker.openMergedFile(f"MilliQan_Run{Run_num}","/store/user/milliqan/trees/v33/bar/")
@@ -593,7 +615,7 @@ if __name__ == "__main__":
 					pulse_histogram(DLB,DHB,dataList[index1],subData,100, minBin, maxBin)
 	HistMerge(fileName)
 	output_file.Close()
-	"""
+	
 	
 	
 	

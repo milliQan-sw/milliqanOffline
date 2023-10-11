@@ -85,7 +85,7 @@ int main(int argc, char **argv){
     
     offlineFactory.setFriendFile(mergedTriggerFile);
 
-    std::string lumiFile = "/home/mcarrigan/scratch0/milliQan/processTrees/milliqanOffline/Run3Detector/configuration/barConfigs/mqLumis.json";
+    std::string lumiFile = "/home/mcarrigan/scratch0/milliQan/processTrees/milliqanOffline/Run3Detector/configuration/barConfigs/mqLumisDebug.json";
     offlineFactory.getLumis(lumiFile);
 
     if (displayMode) {

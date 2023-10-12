@@ -71,14 +71,8 @@ struct offline_tree_{
     int t_since_fill_end;
     int t_until_next_fill;
     string event_t_string;
-    /*int fillNum;
-    float fillAvgLumi;
-    float fillTotalLumi;
-    bool beam;
-    bool hardNoBeam;*/
     bool boardsMatched;
     int DAQEventNumber;
-    ulong event_time_unix;
 
     //Luminosity Info
     float lumi;

@@ -8,6 +8,11 @@ duration cut + area cut
 2d histogram Npulse vs height(done)
 
 9-6 adding openMergedFileV2
+
+10-9 
+start doing pick up noise investigationb
+comment out some code at at line 122 for doing the analysis with pickup flag
+Now I only interest about pickupFlagTight
 """
 
 
@@ -67,12 +72,25 @@ class triggerChecker():
 		self.hist.SetTitle(HistogramTitle)
 		self.hist.GetXaxis().SetTitle("Npulse")
 		self.hist.GetYaxis().SetTitle("Height")
-		self.chanHist = r.TH2D("chan vs hight","title;chan;Height",80,0,80,20, 0, 1400)
+		self.ChanDuration = r.TH2D("chan vs duration", "chan vs duration above 1k mV;chan;duration", 80, 0, 80, 25, 0, 2500)
+		self.chanHist = r.TH2D("chan vs hight","title;chan;Height",80,0,80,140, 0, 1400)
 		self.npeHist = r.TH2D("chan vs npe","title;chan;npe",80,0,80,70, 0, 700000)
 		self.areaHist = r.TH2D("chan vs area","title;chan;area",80,0,80,70, 0, 700000)
 		self.timeHist = r.TH2D("chan vs Time","data above 1000mV",80,0,80,100,0,2500)
+		self.BoardChanHist = r.TH2D("chan vs board","chan vs board",80,0,80,6,0,6)
+		self.BoardChanHist.GetXaxis().SetTitle("chan")
+		self.BoardChanHist.GetYaxis().SetTitle("board")
 		self.timeHist.GetXaxis().SetTitle("chan")
 		self.timeHist.GetYaxis().SetTitle("time")
+
+		#making special histogram for explore pulse with duration larger than 1000ns and height is less than 1000mV
+		self.specialChan = r.TH1D("special chan", "chan : dureation > 1k ns and height < 1000m V",80,0,80)
+		self.specialArea = r.TH1D("special area", "area : dureation > 1k ns and height < 1000m V",70, 0, 700000)
+		self.specialTime = r.TH1D("special time", "time : dureation > 1k ns and height < 1000m V",100,0,2500)
+		self.specialNpulse = r.TH1D("special Npulse", "Npulse : dureation > 1k ns and height < 1000m V", 50, 0, 50,)
+
+
+		
 
 	
 	#the following method come with channel hist, might to need to separate them
@@ -85,11 +103,14 @@ class triggerChecker():
 		for event in range(NumEvent): #event based
 			selected_data = data[data["event"] == event]
 			pickupFlagList = selected_data["pickupFlag"]
+			#pickupTightFlagList = selected_data["pickupFlagTight"]
+			DurationList = selected_data["duration"]
 			height_list=selected_data["height"]
 			pulse_list =selected_data["npulses"]
 			chan_list = selected_data["chan"]
 			npe_list = selected_data["nPE"]
 			area_list = selected_data["area"]
+			board_list = selected_data["board"]
 			time_list = selected_data["time_module_calibrated"]	
 			count = 0
 			if CpanelVeot == True:
@@ -112,14 +133,24 @@ class triggerChecker():
 						break
 					"""
 			if count == 0:
-				for pickUp, height, npulse,chan,npe,area,time in zip(pickupFlagList,height_list,pulse_list,chan_list,npe_list,area_list,time_list):
+				for pickUp, height, npulse,chan,npe,area,time,duration, board in zip(pickupFlagList,height_list,pulse_list,chan_list,npe_list,area_list,time_list,DurationList,board_list):
+				#for pickUp, height, npulse,chan,npe,area,time,duration in zip(pickupTightFlagList,height_list,pulse_list,chan_list,npe_list,area_list,time_list,DurationList):
 					if pickUp==False:
 						self.hist.Fill(npulse,height)
 						self.chanHist.Fill(chan,height)
 						self.npeHist.Fill(chan,npe)
 						self.areaHist.Fill(chan,area)
+						self.BoardChanHist.Fill(chan,board)
+						if duration > 1000 and height < 1000:
+							self.specialChan.Fill(chan)
+							self.specialArea.Fill(area)
+							self.specialTime.Fill(time)
+							self.specialNpulse.Fill(npulse)
+
+
 						if height>=1000:
 							self.timeHist.Fill(chan,time)
+							self.ChanDuration.Fill(chan,duration)
 
 				#cut front and back panel need to reach 1000mV
 				"""
@@ -177,6 +208,12 @@ class triggerChecker():
 		self.npeHist.Write()
 		self.areaHist.Write()
 		self.timeHist.Write()
+		self.ChanDuration.Write()
+		self.BoardChanHist.Write()
+		self.specialChan.Write()
+		self.specialArea.Write()
+		self.specialTime.Write()
+		self.specialNpulse.Write()
 
 
 
@@ -193,13 +230,12 @@ if __name__ == "__main__":
 	#for Run_num in RunList:
 	mychecker = triggerChecker()
 	print(f"run:{Run_num} start" )
-	fileName = f"run{Run_num}_heightVSPulse_v31.root"
+	fileName = f"run{Run_num}_manyplots_more_bins.root"
 	#fileName = f"run{Run_num}_heightVSPulse_cosPanelVeto.root"
 	output_file = r.TFile(fileName, "RECREATE")
 
-	mychecker.openMergedFileV2(f"MilliQan_Run{Run_num}","/store/user/milliqan/trees/v31/")#new code
-
-
+	#mychecker.openMergedFileV2(f"MilliQan_Run{Run_num}","/store/user/milliqan/trees/v31/")#old code
+	mychecker.openMergedFileV2(f"MilliQan_Run{Run_num}","/store/user/milliqan/trees/v33/bar/")
 	output_file.Close()
 	
 

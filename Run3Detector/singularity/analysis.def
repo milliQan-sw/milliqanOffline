@@ -1,0 +1,19 @@
+BootStrap: docker
+From: rootproject/root:latest
+
+%runscript
+
+%test
+
+%post
+
+    apt install -y python3-pip
+
+    python3 -m pip install awkward
+    python3 -m pip install uproot
+    python3 -m pip install hist
+    python3 -m pip install matplotlib
+    python3 -m pip install numpy
+    python3 -m pip install jupyterlab
+    python3 -m pip install notebook
+    python3 -m pip install pandas

@@ -6,8 +6,6 @@ name=$(hostname)
 host_osu='interactive'
 host_ucsb='cms'
 
-echo $name
-
 if [[ "$name" == *"$host_osu"* ]]; then
   echo "Working on OSU T3"
   export MILLIDAQDIR="../../MilliDAQ"

@@ -17,6 +17,20 @@ Now I only interest about pickupFlagTight
 
 10-17
 attempt to get pedestel value for height < 1000mV and duration > 1000ns, but fail. it seems something is wrong in panda dataframe 
+bug fix
+
+10-20
+adding plot for explore uncorrected pulse height
+why does the number of entries in duration > 1k ns and pulse height > 1 mV suddenly increase?
+
+adding the making npe histogram - channel based (add the pulse NPE up in a same channel)
+
+
+10-27
+making max NPE per event (associate with channel) distribution
+check does Max NPE distribution looks evently distributed?
+1. sepatae by bar channel
+2. bar data separeate by 4 layers
 """
 
 
@@ -78,7 +92,7 @@ class triggerChecker():
 		self.hist.GetYaxis().SetTitle("Height")
 		self.ChanDuration = r.TH2D("chan vs duration", "chan vs duration above 1k mV;chan;duration", 80, 0, 80, 25, 0, 2500)
 		self.chanHist = r.TH2D("chan vs hight","title;chan;Height",80,0,80,140, 0, 1400)
-		self.npeHist = r.TH2D("chan vs npe","title;chan;npe",80,0,80,70, 0, 700000)
+		self.npeHist = r.TH2D("chan vs npe - pulse based","chan vs npe (pulse based);chan;npe",80,0,80,70, 0, 700000) 
 		self.areaHist = r.TH2D("chan vs area","title;chan;area",80,0,80,70, 0, 700000)
 		self.timeHist = r.TH2D("chan vs Time","data above 1000mV",80,0,80,100,0,2500)
 		self.BoardChanHist = r.TH2D("chan vs board","chan vs board",80,0,80,6,0,6)
@@ -87,6 +101,10 @@ class triggerChecker():
 		self.timeHist.GetXaxis().SetTitle("chan")
 		self.timeHist.GetYaxis().SetTitle("time")
 		self.ChanPE = r.TH1D("chan NPE larger than 1", "chan : NPE > 1",80,0,80)
+
+		#making channel based NPE distr
+		self.NPEchanBased = r.TH1D("npe : chan based","npe (chan based);NPE; # of number channels in data",500, 0, 1000) 
+		self.NPEHistchanBased = r.TH2D("chan vs npe : chan based","chan vs npe (chan based);chan;npe(chan based)",80,0,80 ,500, 0, 1000) 
 
 		#making special histogram for explore pulse with duration larger than 1000ns and height is less than 1000mV
 		self.specialChan = r.TH1D("special chan", "chan : dureation > 1k ns and height < 1000m V",80,0,80)
@@ -110,9 +128,17 @@ class triggerChecker():
 		self.specialuncorrectedHeightChan.GetYaxis().SetTitle("uncorrected height (mV)")
 		#making histogram for pulse at 22600-79000 area region
 		self.AreaSpecialChan = r.TH1D("Area SpecialChan", "chan : 22600-79000 area",80,0,80)
-		self.AreaSpecialChanHeight = r.TH2D("Area Special Chan height","chan vs height:  22600-79000 area",80,0,80,140, 0, 1400)
+		self.AreaSpecialChanHeight = r.TH2D("Area Special Chan height","chan vs height:  22600-79000 area",80,0,80,140,0,1400)
 
+		#new NPE distribution associate with bar channel 10-27
+		#separete by layers
+		self.NEWNPEbarChannelDistLay0 = r.TH1D("NPE Max Channel : layers0","NPE Max Channel : layers0",200,0,200)
+		self.NEWNPEbarChannelDistLay1 = r.TH1D("NPE Max Channel : layers1","NPE Max Channel : layers1",200,0,200)
+		self.NEWNPEbarChannelDistLay2 = r.TH1D("NPE Max Channel : layers2","NPE Max Channel : layers2",200,0,200)
+		self.NEWNPEbarChannelDistLay3 = r.TH1D("NPE Max Channel : layers3","NPE Max Channel : layers3",200,0,200)
 
+		#separate by channels
+		self.NEWNPEbarChannelDist = r.TH2D("NPE Max Channel : channel","NPE Max Channel : channel; chan; NPE_max", 80,0,80,200,0,200)
 		
 
 	
@@ -138,6 +164,7 @@ class triggerChecker():
 			board_list = selected_data["board"]
 			time_list = selected_data["time_module_calibrated"]	
 			npe_list = selected_data["nPE"]
+			layer_list = selected_data["layer"]
 			#dynamicPedestal_list = selected_data["dynamicPedestal"]
 			count = 0
 			if CpanelVeot == True:
@@ -145,7 +172,7 @@ class triggerChecker():
 					
 					#after june 29, eg run 1118, 74 and 75 become front/back panels
 					#"""
-					if chan >= 68 and chan <= 73:
+					if chan >= 68 and chan <= 75:
 						count += 1
 						break
 
@@ -161,9 +188,19 @@ class triggerChecker():
 					"""
 			if count == 0:
 				#for pickUp, height, npulse,chan,npe,area,time,duration, board, dynamicPedestal in zip(pickupFlagList,height_list,pulse_list,chan_list,npe_list,area_list,time_list,DurationList,board_list,dynamicPedestal_list):
-				for pickUp, height, npulse,chan,npe,area,time,duration, board in zip(pickupFlagList,height_list,pulse_list,chan_list,npe_list,area_list,time_list,DurationList,board_list):
-				#for pickUp, height, npulse,chan,npe,area,time,duration in zip(pickupTightFlagList,height_list,pulse_list,chan_list,npe_list,area_list,time_list,DurationList):
+				
+				# Creating an empty dictionary to add up the number of NPE in the same channel
+				NPE_chanMapping = {}
+				for pickUp, height, npulse,chan,npe,area,time,duration, board, layer in zip(pickupFlagList,height_list,pulse_list,chan_list,npe_list,area_list,time_list,DurationList,board_list,layer_list):
+					if chan > 63 and chan < 78: # I only collect data from bar detector
+						continue
 					if pickUp==False:
+						if chan not in NPE_chanMapping:
+							NPE_chanMapping[chan] = [[npe],layer,chan]
+							
+						else:
+							NPE_chanMapping[chan][0].append(npe)
+							
 						self.hist.Fill(npulse,height)
 						self.chanHist.Fill(chan,height)
 						self.npeHist.Fill(chan,npe)
@@ -195,7 +232,24 @@ class triggerChecker():
 						if height>=1000:
 							self.timeHist.Fill(chan,time)
 							self.ChanDuration.Fill(chan,duration)
-							
+
+				
+				for NPEList,layer,chan in NPE_chanMapping.items():
+					totalNPEinChan = sum(NPEList)
+					MaxNPE = NPEList.max()
+					self.NPEchanBased.Fill(totalNPEinChan)
+					self.NPEHistchanBased.Fill(chan,totalNPEinChan)
+					self.NEWNPEbarChannelDist.Fill(chan,MaxNPE)
+					if layer == 0:
+						self.NEWNPEbarChannelDistLay0.Fill(MaxNPE)
+					if layer == 1:
+						self.NEWNPEbarChannelDistLay1.Fill(MaxNPE)
+					if layer == 2:
+						self.NEWNPEbarChannelDistLay2.Fill(MaxNPE)
+					if layer == 3:
+						self.NEWNPEbarChannelDistLay3.Fill(MaxNPE)
+
+
 
 				#cut front and back panel need to reach 1000mV
 				"""
@@ -287,6 +341,13 @@ class triggerChecker():
 		self.specialuncorrectedHeightChan.Write()
 		self.specialuncorrectedHeight.Write()
 		self.specialpedastalDistribution.Write()
+		self.NPEchanBased.Write()
+		self.NPEHistchanBased.Write()
+		self.NEWNPEbarChannelDist.Write()
+		self.NEWNPEbarChannelDistLay0.Write()
+		self.NEWNPEbarChannelDistLay1.Write()
+		self.NEWNPEbarChannelDistLay2.Write()
+		self.NEWNPEbarChannelDistLay3.Write()
 
 
 
@@ -297,7 +358,7 @@ if __name__ == "__main__":
 
 	r.gROOT.SetBatch(1)
 
-	Run_num = 1026
+	Run_num = 1020
 
 	#run1025 has issue
 	#RunList = [1020,1021,1022,1023,1024,1025,1026,1027,1028,1029,1030]

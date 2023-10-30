@@ -26,32 +26,43 @@ if __name__=="__main__":
 
     d = datetime.datetime.now()
 
-    force = False
+    force = True
 
     milliDAQ = 'MilliDAQ.tar.gz'
 
-    dataDir = '/store/user/milliqan/run3/700/0000/'
-    logDir = '/data/users/milliqan/log/triggerMatching/' + d.strftime('%m_%d_%H/')
+    dataDir = '/store/user/milliqan/run3/1100/0005/'
+    logDir = '/data/users/milliqan/log/triggerMatching/' + d.strftime('%m_%d_%H')
 
     if(not os.path.isdir(logDir)): os.mkdir(logDir)
+    else:
+        index = 2
+        newLogDir = logDir + '_v' + str(index) + '/'
+        while os.path.isdir(newLogDir):
+            index += 1
+            newLogDir = logDir + '_v' + str(index) + '/'
+        os.mkdir(newLogDir)
+        logDir = newLogDir
+    if not logDir.endswith('/'): logDir += '/'
 
     runsToProcess = makeRunList(dataDir, force)
-    #runsToProcess = np.array([700])
-    print("Going to submit {0} jobs".format(len(runsToProcess)))
+    runsToProcess = np.array([1159])
+    #print("Going to submit {0} jobs".format(len(runsToProcess)))
     print(runsToProcess)
-    filelist = 'matchlist.txt'
+    filelist = 'matchlist_1150.txt'
     np.savetxt(filelist,runsToProcess.astype(int), fmt='%i')
+    condorFile = 'run_1150.sub'
 
-    f = open('run.sub', 'w')
+
+    f = open(condorFile, 'w')
     submitLines = """
     Universe = vanilla
     +IsLocalJob = true
     Rank = TARGET.IsLocalSlot
-    request_disk = 500MB
+    request_disk = 5000MB
     request_memory = 125MB
     request_cpus = 1
     executable              = matching_wrapper.py
-    arguments               = $(PROCESS) {1} {1}
+    arguments               = $(PROCESS) {1} {2}
     log                     = {3}log_$(PROCESS).log
     output                  = {3}out_$(PROCESS).txt
     error                   = {3}error_$(PROCESS).txt
@@ -65,4 +76,4 @@ if __name__=="__main__":
     f.write(submitLines)
     f.close()
 
-    os.system('condor_submit run.sub')
+    os.system('condor_submit {}'.format(condorFile))

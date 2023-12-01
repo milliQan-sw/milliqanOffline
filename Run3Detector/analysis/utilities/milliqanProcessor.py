@@ -10,19 +10,23 @@ from milliqanCuts import *
 
 class milliqanProcessor():
 
-    def __init__(self, filelist, branches):
+    def __init__(self, filelist, branches, schedule=None, cuts=None):
         self.filelist = filelist
         self.branches = branches
+        self.mqSchedule = schedule
+        self.mqCuts = cuts
 
     def setBranches(self, branches):
-        self.branchesToMake = branches
+        self.schedule = branches
 
     def setCuts(self, cuts):
         self.cuts = cuts
 
     def makeBranches(self, events):
-        for branch in self.branchesToMake:
-            if '(' in branch:
+        self.mqCuts.events = events
+        for branch in self.mqSchedule.schedule:
+            branch()
+            '''if '(' in branch:
                 branch = branch.split('(')
                 fcn = eval(branch[0])
                 args = branch[1].split(')')[0]
@@ -30,7 +34,7 @@ class milliqanProcessor():
                 events = fcn(events, *args)
             else:
                 fcn = eval(branch)
-                events = fcn(events)
+                events = fcn(events)'''
         return events
 
     def makeCuts(self, events):

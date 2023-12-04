@@ -6,6 +6,7 @@ import argparse
 import pandas as pd
 from datetime import datetime
 import numpy as np
+import json
 
 class runInfo:
     
@@ -19,10 +20,10 @@ class runInfo:
         self.trigFile = None
         self.matchFile = None
         self.offlineFile = None
-        self.totalEvents = 0
-        self.unmatchedEvents = 0
+        self.totalEvents = -1
+        self.unmatchedEvents = -1
         self.startTime = -1
-        self.unmatchedBoards = 0
+        self.unmatchedBoards = -1
         self.daqCTime = None
         self.trigCTime = None
         self.matchCTime = None
@@ -35,6 +36,7 @@ class runInfo:
                matchFile: {4}\n\t\
                offlineFile: {5}'.format(self.run, self.file, self.daqFile, self.trigFile, self.matchFile, self.offlineFile)
         return out
+        
 
 class fileChecker():
     
@@ -62,6 +64,9 @@ class fileChecker():
         #self.runInfos.set_index(['run', 'file'], inplace=True)
         
         self.debug = False
+        
+        self.rawDirs = rawDirectories = ['1000', '1100']
+        self.subRawDirs = ['0001', '0002', '0003', '0004', '0005', '0006', '0007', '0008', '0009']
         
     def parse_args(self):
         parser=argparse.ArgumentParser()
@@ -114,14 +119,13 @@ class fileChecker():
         return runNum, fileNum
     
     
-    def saveJson(self):
-        self.runInfos.to_json('checkMatching.json', orient = 'split', compression = 'infer', index = 'true')
-
+    def saveJson(self, name):
+        self.runInfos.to_json(name, orient = 'split', compression = 'infer', index = 'true')
+        
     def loadJson(self, jsonFile):
         fin = open(jsonFile)
         data = json.load(fin)
         self.runInfos = pd.DataFrame(data['data'], columns=data['columns'])
-        fin.close()
     
     def checkMatchedFiles(self, fileList):
         total_unmatched = 0
@@ -149,13 +153,16 @@ class fileChecker():
             self.h_startTimes.SetBinContent(thisbin, events[0, 'startTime'])
             
             fileNum = events[0, 'eventNum']/1000 + 1
+            
+            #ToDo sometimes the first event has no start time, need to check a few other events 
             self.runInfos['startTime'].loc[(self.runInfos['run'] == events[0, 'runNum']) & (self.runInfos['file'] == fileNum)] = events[0, 'startTime']
             
             self.runInfos['totalEvents'].loc[(self.runInfos['run'] == events[0, 'runNum']) & (self.runInfos['file'] == fileNum)] += len(events)
             self.runInfos['unmatchedEvents'].loc[(self.runInfos['run'] == events[0, 'runNum']) & (self.runInfos['file'] == fileNum)] += len(unmatched)
     
     def getOfflineInfo(self):
-        rawFiles = self.runInfos[['run', 'file']].to_numpy()
+        #add loc statement to only get those that haven't been updated yet
+        rawFiles = self.runInfos[['run', 'file']].loc[self.runInfos['offlineFile'] == None].to_numpy()
         for pair in rawFiles:
             offlineFile = 'MilliQan_Run{0}.{1}_v33_firstPedestals.root'.format(pair[0], pair[1])
             if os.path.exists(self.offlineDir+'/'+offlineFile): 
@@ -163,48 +170,67 @@ class fileChecker():
                 self.runInfos['offlineDir'].loc[(self.runInfos['run'] == pair[0]) & (self.runInfos['file'] == pair[1])] = self.offlineDir
                 self.runInfos['offlineCTime'].loc[(self.runInfos['run'] == pair[0]) & (self.runInfos['file'] == pair[1])] = datetime.fromtimestamp(os.path.getctime(self.offlineDir+'/'+offlineFile))
 
-    def getRawInfo(self):
-        for directory in rawDirectories:
-            for sub in rawSubDirectories:
-                fullPath = self.rawDir+directory+'/'+sub
-                if not os.path.isdir(fullPath): continue
-                for ifile, filename in enumerate(os.listdir(fullPath)):
-                    if not filename.endswith('.root'): continue
-                    if not filename.startswith('MilliQan'): continue
-                    if self.debug and len(self.runInfos) > 10: break
+    def getRawInfo(self, directory):
+        #for directory in rawDirectories:
+        #    for sub in rawSubDirectories:
+        fullPath = self.rawDir+directory
+        if not os.path.isdir(fullPath): 
+            print("Directory {0} does not exist, skipping...".format(fullPath))
+            return
+        for ifile, filename in enumerate(os.listdir(fullPath)):
+            if not filename.endswith('.root'): continue
+            if not filename.startswith('MilliQan'): continue
+            if self.debug and len(self.runInfos) > 10: break
 
-                    thisRun = runInfo()
-                    runNum, fileNum = self.getRunFile(filename)
-                    thisRun.run = int(runNum)
-                    thisRun.file = int(fileNum)
-                    thisRun.daqFile = filename
-                    thisRun.rawDir = fullPath
-                    thisRun.daqCTime = datetime.fromtimestamp(os.path.getctime(fullPath+'/'+filename))
-                    trigName = "TriggerBoard_Run{0}.{1}.root".format(runNum, fileNum)
-                    matchName = "MatchedEvents_Run{0}.{1}_rematch.root".format(runNum, fileNum)
-                    if os.path.exists(fullPath+'/'+trigName): 
-                        thisRun.trigFile = trigName
-                        thisRun.trigCTime = datetime.fromtimestamp(os.path.getctime(fullPath+'/'+trigName))
-                    if os.path.exists(fullPath+'/'+matchName): 
-                        thisRun.matchFile = matchName
-                        thisRun.matchCTime = datetime.fromtimestamp(os.path.getctime(fullPath+'/'+matchName))
-                    
-                    self.runInfos.loc[len(self.runInfos.index)] = thisRun.__dict__
+            thisRun = runInfo()
+            runNum, fileNum = self.getRunFile(filename)
+            thisRun.run = int(runNum)
+            thisRun.file = int(fileNum)
+            thisRun.daqFile = filename
+            thisRun.rawDir = fullPath
+            thisRun.daqCTime = datetime.fromtimestamp(os.path.getctime(fullPath+'/'+filename))
+            trigName = "TriggerBoard_Run{0}.{1}.root".format(runNum, fileNum)
+            matchName = "MatchedEvents_Run{0}.{1}_rematch.root".format(runNum, fileNum)
+            if os.path.exists(fullPath+'/'+trigName): 
+                thisRun.trigFile = trigName
+                thisRun.trigCTime = datetime.fromtimestamp(os.path.getctime(fullPath+'/'+trigName))
+            if os.path.exists(fullPath+'/'+matchName): 
+                thisRun.matchFile = matchName
+                thisRun.matchCTime = datetime.fromtimestamp(os.path.getctime(fullPath+'/'+matchName))
+
+            self.runInfos.loc[len(self.runInfos.index)] = thisRun.__dict__
                             
     def runCheckMatchedFiles(self):
         runs = self.runInfos.run.unique()
         for run in runs:
-            runList = self.runInfos[['rawDir', 'matchFile']].loc[self.runInfos['run']==run].apply('/'.join, axis=1).tolist()
-            runList = [x+':matchedTrigEvents' for x in runList]
+            runList = self.runInfos[['rawDir', 'matchFile']].loc[(self.runInfos['run']==run) & (self.runInfos['totalEvents']==-1)].apply(lambda x: '/'.join((x.rawDir, x.matchFile)) if (x.rawDir!=None and x.matchFile!=None) else None, axis=1).values.tolist()
+            #print(runList)
+            runList = [x+':matchedTrigEvents' for x in runList if x!=None]
+            if len(runList) == 0: continue
             self.checkMatchedFiles(runList)
         
     def runCheckOfflineFiles(self):
         #now look at offline files post processing info
         runs = self.runInfos.run.unique()
         for run in runs:
-            runList = self.runInfos[['offlineDir', 'offlineFile']].loc[self.runInfos['run']==run].apply('/'.join, axis=1).tolist()
+            runList = self.runInfos[['offlineDir', 'offlineFile']].loc[self.runInfos['run']==run & (self.runInfos['unmatchedBoards']==-1)].apply('/'.join, axis=1).tolist()
             runList = [x+':t' for x in runList]
+            if len(runList) == 0: continue
             self.checkOfflineFiles(runList)
+    
+    #function to do all tasks once per directory and update json
+    def looper(self, dirs=[], subDirs=[], jsonName='checkMatching.json'):
+        if len(dirs)==0 and len(subDirs)==0:
+            dirs = self.rawDirs
+            subDirs = self.subRawDirs
+        for d1 in dirs:
+            for d2 in subDirs:
+                print("Running over directory {0}/{1}".format(d1, d2))
+                self.getRawInfo('{0}/{1}'.format(d1, d2))
+                self.getOfflineInfo()
+                self.runCheckMatchedFiles()
+                self.runCheckOfflineFiles()
+                self.saveJson(jsonName)
             
     def customStyle(self, s):
         colors = ['background-color: white']*len(s)
@@ -229,16 +255,13 @@ class fileChecker():
 
     def printInfo(self):
         display(self.runInfos.style.apply(self.customStyle, axis=1))
+        
 if __name__ == "__main__":
-
-    rawDirectories = ['1000', '1100']
-    rawSubDirectories = ['0000', '0001', '0002', '0003', '0004', '0005', '0006', '0007', '0008', '0009']
     
     myfileChecker = fileChecker()
     myfileChecker.debug = False
-    myfileChecker.getRawInfo()
-    myfileChecker.getOfflineInfo()
-    myfileChecker.runCheckMatchedFiles()
-    myfileChecker.runCheckOfflineFiles()
-    myfileChecker.saveJson()
+    
+    myfileChecker.looper()
+
+    myfileChecker.printInfo()
 

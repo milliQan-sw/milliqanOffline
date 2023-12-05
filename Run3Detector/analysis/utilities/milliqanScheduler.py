@@ -20,17 +20,18 @@ class milliQanScheduler():
         if isinstance(input, partial):
             name = input.func.__name__
         elif input.__code__.co_name == '<lambda>':
-            print("Lambda:", input)
+            #print("Lambda:", input)
             name = input.__parent__
         else:
-            print("Name", input.__name__)
+            #print("Name", input.__name__)
             name = input.__name__
         
         if name in globals() or name in locals():
-                self.schedule.append(input)
+            self.schedule.append(input)
+        elif name in dir(milliqanCuts):
+            self.schedule.append(input)
         else:
             print("Function {0} does not exist".format(name))
-            print('thisAreaCut' in globals())
 
     def createSchedule(self):
         for input in self.inputs:

@@ -10,11 +10,12 @@ from milliqanCuts import *
 
 class milliqanProcessor():
 
-    def __init__(self, filelist, branches, schedule=None, cuts=None):
+    def __init__(self, filelist, branches, schedule=None, cuts=None, plotter=None):
         self.filelist = filelist
         self.branches = branches
         self.mqSchedule = schedule
         self.mqCuts = cuts
+        self.plotter = plotter
 
     def setBranches(self, branches):
         self.schedule = branches

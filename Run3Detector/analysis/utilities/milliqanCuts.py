@@ -24,9 +24,8 @@ class milliqanCuts():
 
     #event level mask selecting events with hits in 4 layers
     def fourLayerCut(self, cut=False):
-        print("Cut", cut)
-        self.events['fourLayers'] = ak.any(self.events.layer0, axis=1) & ak.any(self.events.layer1, axis=1) & ak.any(self.events.layer2, axis=1) & ak.any(self.events.layer3, axis=1)
-        if cut: self.events = self.events[event.fourLayers]
+        self.events['fourLayers'] = ak.any(self.events.layer==0, axis=1) & ak.any(self.events.layer==1, axis=1) & ak.any(self.events.layer==2, axis=1) & ak.any(self.events.layer==3, axis=1)
+        if cut: self.events = self.events[self.events.fourLayers]
 
     #create mask for pulses passing height cut
     def heightCut(self, heightCut=1200):
@@ -155,9 +154,9 @@ class milliqanCuts():
 
     def getLambda(self, func, name, *args, **kwargs):
         if func.__name__ == 'combineCuts':
-            lam_ = lambda x: func(x, name, args[0])
+            lam_ = lambda: func(name, args[0])
         else:
-            lam_ = lambda x: func(x, args, kwargs)
+            lam_ = lambda: func(*args, **kwargs)
         lam_.__name__ = name
         lam_.__parent__ = func.__name__
         return lam_

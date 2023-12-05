@@ -2,6 +2,7 @@
 
 import os
 from milliqanCuts import *
+from milliqanPlotter import *
 from functools import partial
 import types
 
@@ -17,6 +18,13 @@ class milliQanScheduler():
     def addToSchedule(self, input):
         name = None
 
+        print(input, type(input))
+
+        if isinstance(input, milliqanPlot):
+            self.schedule.append(input)
+            print("instance of milliqanPlot")
+            return
+        
         if isinstance(input, partial):
             name = input.func.__name__
         elif input.__code__.co_name == '<lambda>':

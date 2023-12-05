@@ -6,7 +6,8 @@ import matplotlib.pyplot as plt
 import awkward as ak
 import numpy as np
 import array as arr
-from milliqanCuts import *
+#from milliqanCuts import *
+from milliqanPlotter import *
 
 class milliqanProcessor():
 
@@ -25,17 +26,15 @@ class milliqanProcessor():
 
     def makeBranches(self, events):
         self.mqCuts.events = events
+        self.plotter.events = events
         for branch in self.mqSchedule.schedule:
-            branch()
-            '''if '(' in branch:
-                branch = branch.split('(')
-                fcn = eval(branch[0])
-                args = branch[1].split(')')[0]
-                args = args.split(';')
-                events = fcn(events, *args)
+            print(branch, type(branch))
+            if isinstance(branch, milliqanPlot):
+                print("Calling plot method", branch.__name__)
+                branch.plot(events)
             else:
-                fcn = eval(branch)
-                events = fcn(events)'''
+                print("Creating cuts")
+                branch()
         return events
 
     def makeCuts(self, events):

@@ -5,13 +5,17 @@ import numpy as np
 
 class milliqanPlot():
 
-    def __init__(self, histogram, variables):
+    def __init__(self, histogram, variables, cut=None):
         self.histogram = histogram
         self.variables = variables
         self.__name__ = self.histogram.GetName()
+        self.cut = cut
 
     def plot(self, events):
-        output = ak.flatten(events[self.variables])
+        if self.cut:
+            output = ak.flatten(events[self.variables][events[self.cut]])
+        else:
+            output = ak.flatten(events[self.variables])
         myarray = array('d', output)
         self.histogram.FillN(len(myarray), myarray, np.ones(len(myarray)))
 
@@ -34,8 +38,8 @@ class milliqanPlotter():
     def updateDict(self, hist):
         self.dict[hist.__name__] = hist     
 
-    def addHistograms(self, histogram, variable):
-        h_ = milliqanPlot(histogram, variable)
+    def addHistograms(self, histogram, variable, cut=None):
+        h_ = milliqanPlot(histogram, variable, cut)
         self.histograms.append(h_)
         self.updateDict(h_)
 

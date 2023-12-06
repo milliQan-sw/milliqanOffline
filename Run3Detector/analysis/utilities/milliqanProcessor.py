@@ -95,7 +95,7 @@ class milliqanProcessor():
             #self.makeHistograms()
 
             total_events += len(events)
-            passing_events += len(ak.where(events.fourLayers)[0])
+            #passing_events += len(ak.where(events.fourLayers)[0])
  
         print("Number of events", total_events)
-        print("Number of passing events", passing_events)
+        #print("Number of passing events", passing_events)

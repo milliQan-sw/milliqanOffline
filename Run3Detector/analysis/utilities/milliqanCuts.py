@@ -28,8 +28,11 @@ class milliqanCuts():
         if cut: self.events = self.events[self.events.fourLayers]
 
     #create mask for pulses passing height cut
-    def heightCut(self, heightCut=1200):
-        self.events['heightCut'] = self.events.height >= int(heightCut)
+    def heightCut(self, cutName='heightCut', cut=1200):
+        self.events[cutName] = self.events.height >= int(cut)
+
+    def areaCut(self, cutName='areaCut', cut=50000):
+        self.events[cutName] = self.events.area >= int(cut)
 
     #selection events that have hits in a straight path
     #option allowedMove will select events that only move one bar horizontally/vertically

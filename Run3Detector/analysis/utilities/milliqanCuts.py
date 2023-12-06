@@ -155,11 +155,11 @@ class milliqanCuts():
 
         self.events['tdcMatch'] = (board0 == board1) & (board0 == board2) & (board0 == board3) & (board0 == board4)
 
-    def getLambda(self, func, name, *args, **kwargs):
+    def getCut(self, func, name, *args, **kwargs):
         if func.__name__ == 'combineCuts':
             lam_ = lambda: func(name, args[0])
         else:
-            lam_ = lambda: func(*args, **kwargs)
+            lam_ = lambda: func(*args, **kwargs, cutName=name)
         lam_.__name__ = name
         lam_.__parent__ = func.__name__
         return lam_

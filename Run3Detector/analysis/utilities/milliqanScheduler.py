@@ -9,20 +9,25 @@ import types
 
 class milliQanScheduler():
 
-    def __init__(self, inputs):
+    def __init__(self, inputs, cuts=None, plotter=None):
         self.schedule = []
+        self.events = []
         self.inputs = inputs
+        self.cuts = cuts
+        self.plotter = plotter
 
         self.createSchedule()
+
+    def setEvents(self, events):
+        self.events = events
+        self.cuts.events = self.events
+        self.plotter.events = self.events
 
     def addToSchedule(self, input):
         name = None
 
-        print(input, type(input))
-
         if isinstance(input, milliqanPlot):
             self.schedule.append(input)
-            print("instance of milliqanPlot")
             return
         
         if isinstance(input, partial):

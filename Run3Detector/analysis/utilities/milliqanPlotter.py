@@ -15,7 +15,8 @@ class milliqanPlot():
         if self.cut:
             output = ak.flatten(events[self.variables][events[self.cut]])
         else:
-            output = ak.flatten(events[self.variables])
+            output = ak.drop_none(events[self.variables])
+            output = ak.flatten(output)
         myarray = array('d', output)
         if len(myarray) > 0:
             self.histogram.FillN(len(myarray), myarray, np.ones(len(myarray)))

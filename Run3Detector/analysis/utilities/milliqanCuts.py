@@ -24,7 +24,7 @@ class milliqanCuts():
 
     #event level mask selecting events with hits in 4 layers
     def fourLayerCut(self, cut=False):
-        self.events['fourLayers'] = ak.any(self.events.layer==0, axis=1) & ak.any(self.events.layer==1, axis=1) & ak.any(self.events.layer==2, axis=1) & ak.any(self.events.layer==3, axis=1)
+        self.events['fourLayerCut'] = ak.any(self.events.layer==0, axis=1) & ak.any(self.events.layer==1, axis=1) & ak.any(self.events.layer==2, axis=1) & ak.any(self.events.layer==3, axis=1)
         if cut: self.events = self.events[self.events.fourLayers]
 
     #create mask for pulses passing height cut
@@ -150,6 +150,19 @@ class milliqanCuts():
                 else: passing = passing | path
 
             self.events['moveOnePath'] = passing
+
+    def getPulseTimeDiff(self):
+        times = self.events['timeFit_module_calibrated'][self.events['eventCuts']]
+        passing = self.events['eventCuts'][self.events['eventCuts']]
+        count = ak.count(times, keepdims=True, axis=1)
+        count = count == 4
+        count, times = ak.broadcast_arrays(count, times)
+        times = times[count]
+        diffs = ak.combinations(times, 2)
+        t1, t2 = ak.unzip(diffs)
+        t_out = abs(t1-t2)
+        t_out = ak.max(t_out, axis=1, keepdims=True)
+        self.events['timeDiff'] = t_out
 
     #select self.events that have 3 area saturating pulses in a line
     def threeAreaSaturatedInLine(self, areaCut=50000):

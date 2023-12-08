@@ -31,8 +31,22 @@ class milliqanCuts():
     def heightCut(self, cutName='heightCut', cut=1200):
         self.events[cutName] = self.events.height >= int(cut)
 
+    #create mask for pulses passing area cuts
     def areaCut(self, cutName='areaCut', cut=50000):
         self.events[cutName] = self.events.area >= int(cut)
+
+    #First pulse in a given channel
+    def firstChanPulse(self):
+        self.events['firstChanPulse'] = self.events.ipulse == 0
+
+    def barCut(self):
+        self.events['barCut'] = self.events['type'] == 0
+
+    def panelCut(self):
+        self.events['panelCut'] = self.events['type'] == 2
+
+    def slabCut(self):
+        self.events['slabCut'] = self.events['type'] == 1
 
     #selection events that have hits in a straight path
     #option allowedMove will select events that only move one bar horizontally/vertically
@@ -107,14 +121,27 @@ class milliqanCuts():
             if ipath == 0: straight_path = path
             else: straight_path = straight_path | path
 
-        self.events['straightPath'] = straight_path
+        self.events['straightLineCut'] = straight_path
 
         for x in range(4):
             for y in range(4):
                 if(x == 0 and y == 0): straight_pulse = (straight_cuts[4*x+y]) & (self.events.column == x) & (self.events.row == y)
                 else: straight_pulse = (straight_pulse) | ((straight_cuts[4*x+y]) & (self.events.column == x) & (self.events.row == y))
 
-        self.events['straightPulses'] = straight_pulse
+        self.events['straightPulseCut'] = straight_pulse
+
+        '''testEvt = 2
+        tmp = ak.any(self.events['straightPulseCut'], axis=1)
+        chans = self.events['chan'][tmp]
+        pulses = self.events['straightPulseCut'][tmp]
+        heights = self.events['height'][tmp]
+        print(chans[testEvt])
+        print(pulses[testEvt])
+        print(chans[pulses][testEvt])
+        print(heights[pulses][testEvt])
+        print("Number of pulses passing", len(ak.flatten(chans[pulses])))
+        print("Number of pulses in events passing", len(ak.flatten(chans)))'''
+
 
         #get self.events passing 1 bar movement
         if allowedMove:
@@ -127,10 +154,10 @@ class milliqanCuts():
     #select self.events that have 3 area saturating pulses in a line
     def threeAreaSaturatedInLine(self, areaCut=50000):
         #make sure 3 layers have saturating hits
-        sat_0 = self.events.area[(self.events.eventCuts) & (self.events.layer0) & (self.events.area >= areaCut) & (self.events.straightPulses)]
-        sat_1 = self.events.area[(self.events.eventCuts) & (self.events.layer1) & (self.events.area >= areaCut) & (self.events.straightPulses)]
-        sat_2 = self.events.area[(self.events.eventCuts) & (self.events.layer2) & (self.events.area >= areaCut) & (self.events.straightPulses)]
-        sat_3 = self.events.area[(self.events.eventCuts) & (self.events.layer3) & (self.events.area >= areaCut) & (self.events.straightPulses)]
+        sat_0 = self.events.area[(self.events.eventCuts) & (self.events.layer0) & (self.events.area >= areaCut) & (self.events.straightPulseCut)]
+        sat_1 = self.events.area[(self.events.eventCuts) & (self.events.layer1) & (self.events.area >= areaCut) & (self.events.straightPulseCut)]
+        sat_2 = self.events.area[(self.events.eventCuts) & (self.events.layer2) & (self.events.area >= areaCut) & (self.events.straightPulseCut)]
+        sat_3 = self.events.area[(self.events.eventCuts) & (self.events.layer3) & (self.events.area >= areaCut) & (self.events.straightPulseCut)]
         
         self.events['three_sat'] = ak.any(sat_0, axis=1) & ak.any(sat_1, axis=1) & ak.any(sat_2, axis=1) | (ak.any(sat_0, axis=1) & ak.any(sat_1, axis=1) & ak.any(sat_3, axis=1)) | (ak.any(sat_0, axis=1) & ak.any(sat_2, axis=1) & ak.any(sat_3, axis=1)) | (ak.any(sat_1, axis=1) & ak.any(sat_2, axis=1) & ak.any(sat_3, axis=1))
         self.events['four_sat'] = ak.any(sat_0, axis=1) & ak.any(sat_1, axis=1) & ak.any(sat_2, axis=1) & (ak.any(sat_3, axis=1))
@@ -138,10 +165,10 @@ class milliqanCuts():
     #select self.events that have 3 height saturating pulses in a line
     def threeHeightSaturatedInLine(self, heightCut=50000):
         #make sure 3 layers have saturating hits
-        sat_0 = self.events.area[(self.events.eventCuts) & (self.events.layer0) & (self.events.area >= heightCut) & (self.events.straightPulses)]
-        sat_1 = self.events.area[(self.events.eventCuts) & (self.events.layer1) & (self.events.area >= heightCut) & (self.events.straightPulses)]
-        sat_2 = self.events.area[(self.events.eventCuts) & (self.events.layer2) & (self.events.area >= heightCut) & (self.events.straightPulses)]
-        sat_3 = self.events.area[(self.events.eventCuts) & (self.events.layer3) & (self.events.area >= heightCut) & (self.events.straightPulses)]
+        sat_0 = self.events.area[(self.events.eventCuts) & (self.events.layer0) & (self.events.area >= heightCut) & (self.events.straightPulseCut)]
+        sat_1 = self.events.area[(self.events.eventCuts) & (self.events.layer1) & (self.events.area >= heightCut) & (self.events.straightPulseCut)]
+        sat_2 = self.events.area[(self.events.eventCuts) & (self.events.layer2) & (self.events.area >= heightCut) & (self.events.straightPulseCut)]
+        sat_3 = self.events.area[(self.events.eventCuts) & (self.events.layer3) & (self.events.area >= heightCut) & (self.events.straightPulseCut)]
         
         self.events['three_sat'] = ak.any(sat_0, axis=1) & ak.any(sat_1, axis=1) & ak.any(sat_2, axis=1) | (ak.any(sat_0, axis=1) & ak.any(sat_1, axis=1) & ak.any(sat_3, axis=1)) | (ak.any(sat_0, axis=1) & ak.any(sat_2, axis=1) & ak.any(sat_3, axis=1)) | (ak.any(sat_1, axis=1) & ak.any(sat_2, axis=1) & ak.any(sat_3, axis=1))
         self.events['four_sat'] = ak.any(sat_0, axis=1) & ak.any(sat_1, axis=1) & ak.any(sat_2, axis=1) & (ak.any(sat_3, axis=1))

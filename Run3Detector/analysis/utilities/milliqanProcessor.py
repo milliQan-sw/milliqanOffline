@@ -77,7 +77,8 @@ class milliqanProcessor():
 
             events = self.makeCuts(events)
             
-            self.custom_out = self.runCustomFunction(events)
+            if hasattr(self, 'customFunction'):
+                self.custom_out = self.runCustomFunction(events)
 
 
             total_events += len(events)

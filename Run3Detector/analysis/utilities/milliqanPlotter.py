@@ -27,7 +27,6 @@ class milliqanPlotter():
         self.histograms = histograms
         self.events = []
         self.createDict()
-        print(self.dict)
 
     def __name__(self):
         self.__name__ = 'milliqanPlotter'

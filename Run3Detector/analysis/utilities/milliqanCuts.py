@@ -15,6 +15,22 @@ class milliqanCuts():
             else:
                 self.events[name] = self.events[cut]
 
+    def pickupCut(self, cutName=None, cut=False, tight=False, branches=None):
+        if cut and tight:
+            for branch in branches:
+                self.events[branch] = self.events[branch][self.events.pickupFlag]
+        elif cut and not tight:
+            for branch in branches:
+                if branch == 'boardsMatched': continue
+                self.events[branch] = self.events[branch][self.events.pickupFlag]
+
+    def boardsMatched(self, cutName=None, cut=False, branches=None):
+        self.events['boardsMatched'], junk = ak.broadcast_arrays(self.events.boardsMatched, self.events.pickupFlag)
+        if cut:
+            for branch in branches:
+                if branch == 'boardsMatched': continue
+                self.events[branch] = self.events[branch][self.events.boardsMatched]
+
     #create mask for pulses in each layer
     def layerCut(self):
         self.events['layer0'] = self.events.layer == 0
@@ -28,8 +44,11 @@ class milliqanCuts():
         if cut: self.events = self.events[self.events.fourLayers]
 
     #create mask for pulses passing height cut
-    def heightCut(self, cutName='heightCut', cut=1200):
+    def heightCut(self, cutName='heightCut', cut=1200, branches=None):
         self.events[cutName] = self.events.height >= int(cut)
+        if branches:
+            for branch in branches:
+                self.events[branch] = self.events[branch][self.events[cutName]]
 
     #create mask for pulses passing area cuts
     def areaCut(self, cutName='areaCut', cut=50000):

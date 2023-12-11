@@ -37,7 +37,8 @@ def extrapolate(dataset,order):
 fig = plt.figure()
 iFile = "./limitsMQMC_V5.root"
 datasets = {}
-for datasetName in ["directDetection","ArgoNeut","SK","MilliQ","milliQanRun3Both","FORMOSA_crystal100","milliQan","FORMOSA_nominal3layer","FORMOSA_dem","FORMOSA_nominal","CMS","Collider"]:
+# for datasetName in ["directDetection","ArgoNeut","SK","MilliQ","milliQanRun3Both","milliQan","CMS","Collider","SUBMET"][:-1]:
+for datasetName in ["directDetection","ArgoNeut","SK","MilliQ","milliQanRun3Both","milliQan","FORMOSA_nominal","CMS","Collider","SUBMET"][1:-1]:
     if  datasetName == "FORMOSA_crystal100_test":
         dataset = np.loadtxt("external/FORMOSA_nominal.csv",delimiter=",")
         dataset = extrapolate(dataset,4)
@@ -66,6 +67,8 @@ for datasetName in ["directDetection","ArgoNeut","SK","MilliQ","milliQanRun3Both
         plt.loglog(dataset[:,0],dataset[:,1],color="blue",linewidth=2,label="milliQan HL-LHC")
     elif datasetName == "FORMOSA_crystal100":
         plt.loglog(dataset[:,0],dataset[:,1],color="darkslateblue",linewidth=2,label="FORMOSA+CeBr3")
+    elif datasetName == "FORMOSA_crystal20":
+        plt.loglog(dataset[:,0],dataset[:,1],color="darkslateblue",linewidth=2,label="FORMOSA+CeBr3 20")
     elif datasetName == "FORMOSA_crystal100_test":
         plt.loglog(dataset[:,0],dataset[:,1],color="darkmagenta",linewidth=2,label="FORMOSA+CeBr3")
     elif datasetName == "FORMOSA_crystal100_3layer":
@@ -76,13 +79,15 @@ for datasetName in ["directDetection","ArgoNeut","SK","MilliQ","milliQanRun3Both
         plt.loglog(dataset[:,0],dataset[:,1],color="darkmagenta",linewidth=2,alpha=0.5)
     elif datasetName == "directDetection":
         plt.loglog(dataset[:,0],dataset[:,1],color="darkgray",linewidth=2,linestyle="--",alpha=0.8)
+    elif datasetName == "SUBMET":
+        plt.loglog(dataset[:,0],dataset[:,1],color="darkcyan",linewidth=2,label="SUBMET")
     else:
         plt.loglog(dataset[:,0],dataset[:,1],color="sienna",linewidth=2)
     datasets[datasetName] = dataset
 
 plt.fill_between(datasets["Collider"][:,0],datasets["Collider"][:,1],1,color="sienna",alpha=0.4)
 plt.fill_between(datasets["ArgoNeut"][:,0],datasets["ArgoNeut"][:,1],1,color="mediumpurple",alpha=0.4)
-plt.fill_between(datasets["directDetection"][:,0],datasets["directDetection"][:,1],1E-9,color="gray",alpha=0.1)
+# plt.fill_between(datasets["directDetection"][:,0],datasets["directDetection"][:,1],1E-9,color="gray",alpha=0.1)
 plt.fill_between(datasets["milliQan"][:,0],datasets["milliQan"][:,1],1,color="red",alpha=0.4)
 plt.fill_between(datasets["SK"][:,0],datasets["SK"][:,1],1,color="lightsalmon",alpha=0.4)
 plt.fill_betweenx(datasets["CMS"][:,1],datasets["CMS"][:,0],200,color="sienna",alpha=0.4)
@@ -90,13 +95,15 @@ plt.fill_betweenx(datasets["MilliQ"][:,1],0.01,datasets["MilliQ"][:,0],color="li
 
 plt.text(4.7,0.11," milliQan\nprototype",fontsize=9,color="red")
 plt.text(0.12,0.0018,"milliQan Run 3",fontsize=9,color="blue",alpha=0.5)
-plt.text(8,0.006,"   FORMOSA\ndemonstrator",fontsize=9,color="darkmagenta",alpha=0.5)
-plt.text(20,0.0008,"Direct DM detection",fontsize=9,color="gray",alpha=0.5,rotation=20)
-plt.text(0.52,0.0125," ArgoNeuT",fontsize=9,color="mediumpurple")
+# plt.text(8,0.006,"   FORMOSA\ndemonstrator",fontsize=9,color="darkmagenta",alpha=0.5)
+# plt.text(20,0.0008,"Direct DM detection",fontsize=9,color="gray",alpha=0.5,rotation=20)
+plt.text(0.43,0.012," ArgoNeuT",fontsize=9,color="mediumpurple")
 plt.text(0.38,0.007," SuperK",fontsize=9,color="lightsalmon")
 plt.text(0.022,0.001,"SLAC MilliQ",fontsize=9)
 plt.text(7,0.35,"Colliders",fontsize=11)
 plt.text(80,0.38,"CMS",fontsize=11)
+plt.xlabel("MCP mass/GeV",fontsize=14)
+plt.ylabel("Q/e",fontsize=14 )
 
 plt.legend(frameon=False)
 plt.xlim([0.02,200])

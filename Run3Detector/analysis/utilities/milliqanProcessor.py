@@ -6,31 +6,38 @@ import matplotlib.pyplot as plt
 import awkward as ak
 import numpy as np
 import array as arr
-from milliqanCuts import *
+from milliqanPlotter import *
 
 class milliqanProcessor():
 
-    def __init__(self, filelist, branches):
+    def __init__(self, filelist, branches, schedule=None, cuts=None, plotter=None, max_events=None):
         self.filelist = filelist
         self.branches = branches
+        self.mqSchedule = schedule
+        #self.mqCuts = cuts
+        #self.plotter = plotter
+        self.max_events = max_events
 
     def setBranches(self, branches):
-        self.branchesToMake = branches
+        self.schedule = branches
 
-    def setCuts(self, cuts):
-        self.cuts = cuts
+    '''def setCuts(self, cuts):
+        self.cuts = cuts'''
 
     def makeBranches(self, events):
-        for branch in self.branchesToMake:
-            if '(' in branch:
-                branch = branch.split('(')
-                fcn = eval(branch[0])
-                args = branch[1].split(')')[0]
-                args = args.split(';')
-                events = fcn(events, *args)
+        #self.mqCuts.events = events
+        #self.plotter.events = events
+        self.mqSchedule.setEvents(events)
+        for branch in self.mqSchedule.schedule:
+            if isinstance(branch, milliqanPlot):
+                if branch.variables in events.fields:
+                    branch.plot(events)
+                #elif branch.variables in self.custom_out:
+                #    branch.plot(self.custom_out)
+                else:
+                    print("Branch {0} does not exist in event array or custom output".format(branch.variables))
             else:
-                fcn = eval(branch)
-                events = fcn(events)
+                branch()
         return events
 
     def makeCuts(self, events):
@@ -39,34 +46,16 @@ class milliqanProcessor():
     def runCustomFunction(self, events):
         try:
             return self.customFunction(events)
-        except:
+        except Exception as error:
+            print("Error", error)
             return
 
     def setCustomFunction(self, fcn):
         self.customFunction = fcn
 
-    def makeHistograms(self, root=True, matplot=False):
-        if matplot:
-            self.ax2.scatter(ak.flatten(self.custom_out[3]).to_numpy(), ak.flatten(self.custom_out[0]).to_numpy(), s=5)
-        if root:
-            t0 = ak.flatten(self.custom_out[0]).to_list()
-            t0 = arr.array('d', t0)
-            if len(t0) > 0:
-                t3 = arr.array('d', ak.flatten(self.custom_out[3]).to_list())
-                self.h_time0.FillN(len(t0), t0, np.ones(len(t0)))
-                self.h_timeDiff.FillN(len(t0), t0, t3, np.ones(len(t0)))
-
-
     def run(self):
 
         total_events = 0
-        passing_events = 0
-        
-        self.fig2, self.ax2 = plt.subplots()
-        self.ax2.set(xlim=(1200, 1400), ylim=(1200, 1400))
-
-        self.h_timeDiff = r.TH2F("h_timeDiff", "Time Difference Layer0 and Layer3", 200, 1200, 1400, 200, 1200, 1400)
-        self.h_time0 = r.TH1F("h_time0", "Time in Layer 0", 200, 1200, 1400)
         
         for events in uproot.iterate(
 
@@ -82,16 +71,16 @@ class milliqanProcessor():
 
             ):
 
+            if self.max_events and total_events >= self.max_events: break
+
             events = self.makeBranches(events)
 
             events = self.makeCuts(events)
+            
+            if hasattr(self, 'customFunction'):
+                self.custom_out = self.runCustomFunction(events)
 
-            self.custom_out = self.runCustomFunction(events)
-
-            #self.makeHistograms()
 
             total_events += len(events)
-            passing_events += len(ak.where(events.fourLayers)[0])
  
         print("Number of events", total_events)
-        print("Number of passing events", passing_events)

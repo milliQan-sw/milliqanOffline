@@ -12,14 +12,25 @@ class milliqanPlot():
         self.cut = cut
 
     def plot(self, events):
-        if self.cut:
-            output = ak.flatten(events[self.variables][events[self.cut]])
+        if isinstance(self.variables, list):
+            if self.cut:
+                output = [ak.flatten(ak.drop_none(events[x][events[self.cut]])) for x in self.variables]
+            else:
+                output = [ak.flatten(ak.drop_none(events[x])) for x in self.variables]
+            myarray = [array('d', x) for x in output]
+            if len(myarray) == 2 and len(myarray[0]) != 0:
+                self.histogram.FillN(len(myarray[0]), myarray[0], myarray[1], np.ones(len(myarray[0])))
+            if len(myarray) == 3 and len(myarray[0]) != 0:
+                self.histogram.FillN(len(myarray[0]), myarray[0], myarray[1], myarray[2], np.ones(len(myarray[0])))
         else:
-            output = ak.drop_none(events[self.variables])
-            output = ak.flatten(output)
-        myarray = array('d', output)
-        if len(myarray) > 0:
-            self.histogram.FillN(len(myarray), myarray, np.ones(len(myarray)))
+            if self.cut:
+                output = ak.flatten(events[self.variables][events[self.cut]])
+            else:
+                output = ak.drop_none(events[self.variables])
+                output = ak.flatten(output)
+            myarray = array('d', output)
+            if len(myarray) > 0:
+                self.histogram.FillN(len(myarray), myarray, np.ones(len(myarray)))
 
 class milliqanPlotter():
 

@@ -10,11 +10,21 @@ class milliqanCuts():
         self.counter = 0
 
     def cutflowCounter(self):
+        # Tries to add the number of passing events to that stage of the cutflow
         try:
             self.cutflow[self.counter]+=len(self.events)
+        # Builds the array without knowledge of the number of cuts
+        # TODO: See if there is a more efficent way to implement this
         except:
             self.cutflow.append(len(self.events))
         self.counter+=1
+
+    def getCutflowCounts(self):
+        # Prints the value after each batch of events
+        # TODO: Only print at the very end
+        print(self.cutflow)
+        # Resets the counter at the end of the cutflow
+        self.counter=0
 
     #function to allow multiple masks (cuts) to be combined together and saved as name
     def combineCuts(self, name, cuts):
@@ -24,19 +34,16 @@ class milliqanCuts():
             else:
                 self.events[name] = self.events[cut]
 
+    # Dummy cut for use while construcing the cutflow mechanics
     def neverCut(self, cutName=None, cut=False):
         if cut: self.events = self.events
         self.cutflowCounter()
-        #self.cutflow.append(len(self.events))
-        #self.cutflow_counts['neverCut']+=len(self.events)
 
+    # Dummy cut for use while construcing the cutflow mechanics
     def idCut(self, cutName=None, cut=False):
-        self.events['idCut'] = (self.events.event % 3) == 0
+        self.events['idCut'] = (self.events.event % 5) == 0
         if cut: self.events = self.events[self.events.idCut]
         self.cutflowCounter()
-        #self.cutflow.append(len(self.events))
-        #print("number of events mod 3: ", len(self.events))
-        #self.cutflow_counts['idCut']+=len(self.events)
 
     def pickupCut(self, cutName=None, cut=False, tight=False, branches=None):
         if cut and tight:
@@ -63,11 +70,21 @@ class milliqanCuts():
 
     #event level mask selecting events with hits in 4 layers
     def fourLayerCut(self, cutName=None, cut=False):
-        self.events['fourLayerCut'] = ak.any(self.events.layer==0, axis=1) & ak.any(self.events.layer==1, axis=1) & ak.any(self.events.layer==2, axis=1) & ak.any(self.events.layer==3, axis=1)
+        self.events['fourLayerCut'] =(ak.any(self.events.layer==0, axis=1) & 
+                                      ak.any(self.events.layer==1, axis=1) & 
+                                      ak.any(self.events.layer==2, axis=1) & 
+                                      ak.any(self.events.layer==3, axis=1))
         if cut: self.events = self.events[self.events.fourLayerCut]
         self.cutflowCounter()
-        #self.cutflow.append(len(self.events))
-        #self.cutflow_counts['fourLayerCut']+=len(self.events)
+
+    #event level mask selecting events with 1 hit in each layer
+    def oneHitPerLayerCut(self, cutName=None, cut=False):
+        self.events['oneHitPerLayerCut'] =((ak.count(self.events.layer==0, axis=1)==1) & 
+                                           (ak.count(self.events.layer==1, axis=1)==1) & 
+                                           (ak.count(self.events.layer==2, axis=1)==1) &
+                                           (ak.count(self.events.layer==3, axis=1)==1))
+        if cut: self.events = self.events[self.events.oneHitPerLayerCut]
+        self.cutflowCounter()
 
     #create mask for pulses passing height cut
     def heightCut(self, cutName='heightCut', cut=1200, branches=None):

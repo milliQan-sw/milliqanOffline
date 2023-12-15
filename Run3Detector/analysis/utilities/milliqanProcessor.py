@@ -17,6 +17,9 @@ class milliqanProcessor():
         #self.mqCuts = cuts
         #self.plotter = plotter
         self.max_events = max_events
+        #self.cutflow_counts = {cut: 0 for cut in self.mqSchedule.schedule}
+        #self.cutflow_counts = {'neverCut':0,'idCut':0,'fourLayerCut':0}
+        #self.cutflow_counts = []
 
     def setBranches(self, branches):
         self.schedule = branches
@@ -29,6 +32,7 @@ class milliqanProcessor():
         #self.plotter.events = events
         self.mqSchedule.setEvents(events)
         for branch in self.mqSchedule.schedule:
+            print(branch.__name__)
             if isinstance(branch, milliqanPlot):
                 if branch.variables in events.fields:
                     branch.plot(events)
@@ -38,6 +42,7 @@ class milliqanProcessor():
                     print("Branch {0} does not exist in event array or custom output".format(branch.variables))
             else:
                 branch()
+                #self.cutflow_counts[branch] += len(events)
         return events
 
     def makeCuts(self, events):
@@ -71,6 +76,8 @@ class milliqanProcessor():
 
             ):
 
+            total_events += len(events)
+           
             if self.max_events and total_events >= self.max_events: break
 
             events = self.makeBranches(events)
@@ -80,7 +87,5 @@ class milliqanProcessor():
             if hasattr(self, 'customFunction'):
                 self.custom_out = self.runCustomFunction(events)
 
-
-            total_events += len(events)
- 
-        print("Number of events", total_events)
+        print("Number of processed events", total_events)
+        #print(self.cutflow_counts)

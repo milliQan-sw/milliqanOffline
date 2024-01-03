@@ -36,21 +36,23 @@ if __name__ == "__main__":
             print("File {} does not have the correct name format to find the run number".format(filename))
             continue
 
+        runNumber, fileNumber, fileType = getFileDetails(filename)
+
+        if fileType == 'MilliQan' or fileType == 'TriggerBoard': outputDir = dataDir + '/bar/'
+        elif fileType == 'MilliQanSlab' or fileType == 'TriggerBoardSlab': outputDir = dataDir + '/slab/'
 
         subdir1 = str((runNum // 100) * 100)
-        outputDir = dataDir + subdir1 
+        outputDir += subdir1
         if not os.path.exists(outputDir): os.mkdir(outputDir)
 
         subdir2 = directories[(runNum % 100) // 10]
         outputDir += '/' + subdir2 + '/'
         if not os.path.exists(outputDir): os.mkdir(outputDir)
 
-        runNumber, fileNumber, fileType = getFileDetails(filename)
-
         db.milliQanRawDatasets.update_one({ "run" : runNumber, "file" : fileNumber, "site" : site, "type" : fileType},
                                           { '$set': {"location" : outputDir}})
 
-        print("Moving file {0} to directory {1}".format(filename, outputDir))
+        print("Moving file {0} to directory {1}".format(dataDir+filename, outputDir+filename))
 
         shutil.move(dataDir+filename, outputDir+filename) 
         if fileType != 'MilliQan': continue

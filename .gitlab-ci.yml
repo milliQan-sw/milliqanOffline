@@ -21,6 +21,7 @@ run tests:
         - sed -i '/thisroot.sh/d' setup.sh
         - sed -i "s|/homes/milliqan/MilliDAQ|$PWD/../MilliDAQ|g" setup.sh
         - sed -i "s|UCSB|GitLab|g" setup.sh
+        - sed -i 's/\.\.\///' setup.sh
         - . setup.sh
         - curl -o input.root https://cernbox.cern.ch/s/4b3s7iRaaP2cVnj/download
         - ./compile.sh test.exe

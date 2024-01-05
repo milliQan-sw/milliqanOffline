@@ -11,6 +11,7 @@
 #include <vector>
 
 double trapezoid_rule_area(std::vector<double> x, std::vector<double> y);
+
 template <typename T>
 std::vector<T> slice_vector(std::vector<T> input_vector, int start_value,
                             int stop_value);
@@ -20,15 +21,13 @@ template <typename T> void print_vector(std::vector<T> input_vector);
 double mean(std::vector<double> values);
 
 const double NANOSECONDS_PER_SAMPLE = 2.5;
-
 int postProcess() {
   bool do_timing = false;
   int t_start = 1220;
   int t_end = 1550;
   std::cout << "Test" << std::endl;
   TFile *input_file =
-      new TFile("/home/ryan/Documents/Research/MilliQan/"
-                "DataFiles/PreProcessed/Run805preProcessed.root",
+    new TFile("/home/ryan/Documents/Research/Data/MilliQanWaveforms/Run805preProcessed.root",
                 "UPDATE");
   if (!(input_file->IsZombie())) {
     TTree *event_tree = (TTree *)input_file->Get("Events");

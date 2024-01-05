@@ -25,24 +25,23 @@ int postProcess() {
   bool do_timing = false;
   int t_start = 1220;
   int t_end = 1550;
-  std::cout << "Test" << std::endl;
   TFile *input_file =
-      new TFile("/home/ryan/Documents/Research/MilliQan/"
-                "DataFiles/PreProcessed/Run805preProcessed.root",
+      new TFile("/home/ryan/Documents/Data/MilliQan/"
+                "Run811preProcessed.root",
                 "UPDATE");
   if (!(input_file->IsZombie())) {
     TTree *event_tree = (TTree *)input_file->Get("Events");
-    std::cout << "After getting Event branch" << std::endl;
+    //std::cout << "After getting Event branch" << std::endl;
 
     std::vector<double> *times = new std::vector<double>{};
     std::vector<double> *voltages = new std::vector<double>{};
     double area[1];
     double offset[1];
     double noise[1];
-    double smoothed_max[1];
-    double tmax[1];
-    double thalfmax[1];
-    double fwhm[1];
+    // double smoothed_max[1];
+    // double tmax[1];
+    // double thalfmax[1];
+    // double fwhm[1];
 
     event_tree->SetBranchStatus("*", 0);
     event_tree->SetBranchStatus("times", 1);
@@ -54,12 +53,12 @@ int postProcess() {
     TBranch *area_branch = event_tree->Branch("area", &area, "area/D");
     TBranch *offset_branch = event_tree->Branch("offset", &offset, "area/D");
     TBranch *noise_branch = event_tree->Branch("noise", &noise, "area/D");
-    TBranch *smoothed_branch =
-        event_tree->Branch("smoothed", &smoothed_max, "area/D");
+    // TBranch *smoothed_branch =
+    //     event_tree->Branch("smoothed", &smoothed_max, "area/D");
 
-    TBranch *tmax_branch = event_tree->Branch("tmax", &tmax, "area/D");
-    TBranch *thalfmax_branch =
-        event_tree->Branch("thalfmax", &thalfmax, "area/D");
+    // TBranch *tmax_branch = event_tree->Branch("tmax", &tmax, "area/D");
+    // TBranch *thalfmax_branch =
+    //     event_tree->Branch("thalfmax", &thalfmax, "area/D");
 
     // Attempting to emulate python code. Need +1 to account of 0-indexed lists
     // since python calculates start_index and end_index differently
@@ -93,8 +92,6 @@ int postProcess() {
       delete h;
       // Noise is a little off
       noise[0] = 0.5 * (yq[0] - yq[1]);
-      std::cout << "Noise " << noise[0] << std::endl;
-      std::cout << "Offset " << offset[0] << std::endl;
       // for (auto &voltage : *voltages) {
       //   voltage -= offset[0];
       // }
@@ -132,10 +129,10 @@ std::vector<T> slice_vector(std::vector<T> input_vector, int start_value,
   auto start = input_vector.begin() + start_value;
   auto end = input_vector.begin() + stop_value + 1;
 
-  std::cout << "Input vector size" << input_vector.size() << std::endl;
+  //std::cout << "Input vector size" << input_vector.size() << std::endl;
   std::vector<T> result(stop_value - start_value + 1);
   copy(start, end, result.begin());
-  std::cout << "result_size" << result.size() << std::endl;
+  //std::cout << "result_size" << result.size() << std::endl;
   return result;
 }
 

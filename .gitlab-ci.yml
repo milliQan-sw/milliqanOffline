@@ -31,7 +31,7 @@ run tests:
 build image:
     image: docker:stable
     tags:
-        - docker-privileged
+        #- docker-privileged
     services:
         - name: docker:stable-dind
     rules:

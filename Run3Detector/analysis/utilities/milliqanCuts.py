@@ -221,8 +221,8 @@ class milliqanCuts():
     # Function to find the difference between the largest hit times
     def getMaxHitTimeDiff(self):
         times = self.events['time']
+        # Requires 2 hits
         count = ak.count(times, keepdims=True, axis=1)
-        # Requires 2 different times
         count = count > 1
         count = ak.broadcast_arrays(count, times)
         times = times[count]
@@ -253,6 +253,21 @@ class milliqanCuts():
         if cut: self.events = self.events[self.events.largeTimeDiffCut]
         self.cutflowCounter()
 
+    def nPERatioCut(self, cutName=None, cut=False):
+        nPEs = self.events['nPE']
+        # Requires 2 hits
+        count = ak.count(nPEs, keepdims=True, axis=1)
+        count = count > 1
+        count = ak.broadcast_arrays(count, nPEs)
+        nPEs = nPEs[count]
+        max_nPE = ak.max(nPEs, axis=1, keepdims=True)
+        min_nPE = ak.min(nPEs, axis=1, keepdims=True)
+        ratio = max_nPE/min_nPE
+        self.events['nPERatioCut'] = self.events[ratio < 10]
+        if cut: self.events = self.events[self.events.nPERatioCut]
+        self.cutflowCounter()
+        
+ 
     def getPulseTimeDiff(self):
         times = self.events['timeFit_module_calibrated'][self.events['eventCuts']]
         passing = self.events['eventCuts'][self.events['eventCuts']]

@@ -117,6 +117,7 @@ class milliqanCuts():
 
     #selection events that have hits in a straight path
     #option allowedMove will select events that only move one bar horizontally/vertically
+    #TODO: Validate that this also works for the slabs
     def straightLineCut(self, allowedMove=False):
         
         #allowed combinations of moving
@@ -218,6 +219,30 @@ class milliqanCuts():
 
             self.events['moveOnePath'] = passing
 
+    # event level mask to reject muons crossing the detector
+    def muonCut(self, cutName=None, cut=False):
+        nPEs = self.events['nPE']
+        nPE_threshold = 2000
+        self.events['muonCut'] = ak.all(self.events.nPE < nPE_threshold, axis=1)
+        if cut: self.events = self.events[self.events.muonCut]
+        self.cutflowCounter()
+
+    # event level mask to keep nPE ratios below a given threshold
+    def nPERatioCut(self, cutName=None, cut=False):
+        nPEs = self.events['nPE']
+        # Requires 2 hits
+        count = ak.count(nPEs, keepdims=True, axis=1)
+        count = count > 1
+        count = ak.broadcast_arrays(count, nPEs)
+        nPEs = nPEs[count]
+        max_nPE = ak.max(nPEs, axis=1, keepdims=True)
+        min_nPE = ak.min(nPEs, axis=1, keepdims=True)
+        ratio = max_nPE/min_nPE
+        ratio_threshold = 10.0
+        self.events['nPERatioCut'] = self.events[ratio < ratio_threshold]
+        if cut: self.events = self.events[self.events.nPERatioCut]
+        self.cutflowCounter()
+ 
     # Function to find the difference between the largest hit times
     def getMaxHitTimeDiff(self):
         times = self.events['time']
@@ -235,6 +260,8 @@ class milliqanCuts():
         delta_t_max =  deltas[max_delta_pos]
         self.events['maxTimeDiff'] = t_out
 
+    #TODO: Figure out how to run these cuts in the same cutflow
+    #event level mask selecting events with a small time differenc between hits
     def smallTimeDiffCut(self, cutName=None, cut=False):
         minTimeThreshold = -15.0
         maxTimeThreshold =  15.0
@@ -244,6 +271,7 @@ class milliqanCuts():
         if cut: self.events = self.events[self.events.smallTimeDiffCut]
         self.cutflowCounter()
 
+    #event level mask selecting events with a large time differenc between hits
     def largeTimeDiffCut(self, cutName=None, cut=False):
         minTimeThreshold = 15.0
         maxTimeThreshold = 45.0
@@ -253,20 +281,7 @@ class milliqanCuts():
         if cut: self.events = self.events[self.events.largeTimeDiffCut]
         self.cutflowCounter()
 
-    def nPERatioCut(self, cutName=None, cut=False):
-        nPEs = self.events['nPE']
-        # Requires 2 hits
-        count = ak.count(nPEs, keepdims=True, axis=1)
-        count = count > 1
-        count = ak.broadcast_arrays(count, nPEs)
-        nPEs = nPEs[count]
-        max_nPE = ak.max(nPEs, axis=1, keepdims=True)
-        min_nPE = ak.min(nPEs, axis=1, keepdims=True)
-        ratio = max_nPE/min_nPE
-        self.events['nPERatioCut'] = self.events[ratio < 10]
-        if cut: self.events = self.events[self.events.nPERatioCut]
-        self.cutflowCounter()
-        
+       
  
     def getPulseTimeDiff(self):
         times = self.events['timeFit_module_calibrated'][self.events['eventCuts']]

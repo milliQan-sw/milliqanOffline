@@ -10,7 +10,8 @@ class milliqanCuts():
         self.counter = 0
 
     def cutflowCounter(self):
-        # Tries to add the number of passing events to that stage of the cutflow
+        # Increments events passing each stage of the cutflow
+        # Creates each stage during the first pass
         try:
             self.cutflow[self.counter]+=len(self.events)
         # Builds the array without knowledge of the number of cuts
@@ -23,6 +24,10 @@ class milliqanCuts():
         # Prints the value after each batch of events
         # TODO: Only print at the very end
         print(self.cutflow)
+        print("Cutflow Table")
+        print("Cut           |  N passing Events")
+        for i in range(len(self.cutflow)):
+            print(i, self.cutflow[i])
         # Resets the counter at the end of the cutflow
         self.counter=0
 

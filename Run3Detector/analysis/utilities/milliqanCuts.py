@@ -75,19 +75,19 @@ class milliqanCuts():
 
     #event level mask selecting events with hits in 4 layers
     def fourLayerCut(self, cutName=None, cut=False):
-        self.events['fourLayerCut'] =(ak.any(self.events.layer==0, axis=1) & 
-                                      ak.any(self.events.layer==1, axis=1) & 
-                                      ak.any(self.events.layer==2, axis=1) & 
-                                      ak.any(self.events.layer==3, axis=1))
+        self.events['fourLayerCut'] = (ak.any(self.events.layer==0, axis=1) & 
+                                       ak.any(self.events.layer==1, axis=1) & 
+                                       ak.any(self.events.layer==2, axis=1) & 
+                                       ak.any(self.events.layer==3, axis=1))
         if cut: self.events = self.events[self.events.fourLayerCut]
         self.cutflowCounter()
 
     #event level mask selecting events with 1 hit in each layer
     def oneHitPerLayerCut(self, cutName=None, cut=False):
-        self.events['oneHitPerLayerCut'] =((ak.count(self.events.layer==0, axis=1)==1) & 
-                                           (ak.count(self.events.layer==1, axis=1)==1) & 
-                                           (ak.count(self.events.layer==2, axis=1)==1) &
-                                           (ak.count(self.events.layer==3, axis=1)==1))
+        self.events['oneHitPerLayerCut'] = ((ak.count(self.events.layer==0, axis=1)==1) & 
+                                            (ak.count(self.events.layer==1, axis=1)==1) & 
+                                            (ak.count(self.events.layer==2, axis=1)==1) &
+                                            (ak.count(self.events.layer==3, axis=1)==1))
         if cut: self.events = self.events[self.events.oneHitPerLayerCut]
         self.cutflowCounter()
 
@@ -217,6 +217,41 @@ class milliqanCuts():
                 else: passing = passing | path
 
             self.events['moveOnePath'] = passing
+
+    # Function to find the difference between the largest hit times
+    def getMaxHitTimeDiff(self):
+        times = self.events['time']
+        count = ak.count(times, keepdims=True, axis=1)
+        # Requires 2 different times
+        count = count > 1
+        count = ak.broadcast_arrays(count, times)
+        times = times[count]
+        # makes pairs of all hit combinations in the event
+        diffs = ak.combinations(times, 2)
+        t1, t2 = ak.unzip(diffs)
+        deltas = t1-t2
+        # finds the larges difference in time, preseving the sign
+        max_delta_pos = ak.argmax(abs(deltas), axis=1,keepdims=True)
+        delta_t_max =  deltas[max_delta_pos]
+        self.events['maxTimeDiff'] = t_out
+
+    def smallTimeDiffCut(self, cutName=None, cut=False):
+        minTimeThreshold = -15.0
+        maxTimeThreshold =  15.0
+        aboveMin = self.events.maxTimeDiff > minTimeThreshold
+        belowMax = self.events.maxTimeDiff < maxTimeThreshold
+        self.events['smallTimeDiffCut'] = self.events[aboveMin & belowMax]
+        if cut: self.events = self.events[self.events.smallTimeDiffCut]
+        self.cutflowCounter()
+
+    def largeTimeDiffCut(self, cutName=None, cut=False):
+        minTimeThreshold = 15.0
+        maxTimeThreshold = 45.0
+        aboveMin = self.events.maxTimeDiff > minTimeThreshold
+        belowMax = self.events.maxTimeDiff < maxTimeThreshold
+        self.events['largeTimeDiffCut'] = self.events[aboveMin & belowMax]
+        if cut: self.events = self.events[self.events.largeTimeDiffCut]
+        self.cutflowCounter()
 
     def getPulseTimeDiff(self):
         times = self.events['timeFit_module_calibrated'][self.events['eventCuts']]

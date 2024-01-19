@@ -54,7 +54,7 @@ analysis:
         - python3 analysisCI.py
 
 build image:
-    image: docker:stable
+    image: carriganm95/milliqan_uproot:latest
     stage: setup
     tags:
         #- docker-privileged

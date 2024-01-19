@@ -9,23 +9,42 @@ def parse_args():
     parser.add_argument('-i', '--inputDir', type=str, help='Input data directory', required=True)
     parser.add_argument('-v', '--version', type=str, default='v31_firstPedestals', help='Set the version of offline trees')
     parser.add_argument('-s', '--singleRun', type=str, default='-1', help='Single run number if running only one job')
+    parser.add_argument('--slab', action='store_true', help='Process slab data')
     args = parser.parse_args()
     return args
 
 def singleJob():
     print("Running single file")
-    inFile = args.inputDir + 'MilliQan_Run{0}_default.root'.format(args.singleRun)
-    outFile = 'MilliQan_Run{0}_{1}.root'.format(args.singleRun, args.version)
-    triggerFile = args.inputDir + 'MatchedEvents_Run{0}_rematch.root'.format(args.singleRun)
+    if args.slab:
+        inFile = args.inputDir + 'MilliQanSlab_Run{0}_default.root'.format(args.singleRun)
+        triggerFile = args.inputDir + 'MatchedEventsSlab_Run{0}_rematch.root'.format(args.singleRun)
+        outFile = 'MilliQanSlab_Run{0}_{1}.root'.format(args.singleRun, args.version)
+    else: 
+        inFile = args.inputDir + 'MilliQan_Run{0}_default.root'.format(args.singleRun)
+        triggerFile = args.inputDir + 'MatchedEvents_Run{0}_rematch.root'.format(args.singleRun)
+        outFile = 'MilliQan_Run{0}_{1}.root'.format(args.singleRun, args.version)
 
     print("Input file is {0}\nTrigger File is {1}\nOutput File is {2}".format(inFile, triggerFile, outFile))
 
+    cmd = 'source $PWD/setup.sh && python3 $PWD/scripts/runOfflineFactory.py --inputFile {0} --outputFile {1} --exe ./run.exe --publish'.format(inFile, outFile)
+
     if os.path.exists(triggerFile):
+        cmd = '{0} -m {1}'.format(cmd, triggerFile)
+    else:
+        print("Trigger file {} does not exist".format(triggerFile))
+
+    if args.slab:
+        print("Processing slab detector data")
+        cmd = '{0} --slab'.format(cmd)
+
+    subprocess.call(cmd, shell=True)
+
+    '''if os.path.exists(triggerFile):
         print("In tree wrapper calling subprocess, with matched trigger file")
         subprocess.call('source $PWD/setup.sh && python3 $PWD/scripts/runOfflineFactory.py --inputFile {0} --outputFile {1} -m {2} --exe ./run.exe --publish'.format(inFile, outFile, triggerFile), shell=True)
     else:
         print("In tree wrapper calling subprocess, no matched trigger file")
-        subprocess.call('source $PWD/setup.sh && python3 $PWD/scripts/runOfflineFactory.py --inputFile {0} --outputFile {1} --exe ./run.exe --publish'.format(inFile, outFile), shell=True)
+        subprocess.call('source $PWD/setup.sh && python3 $PWD/scripts/runOfflineFactory.py --inputFile {0} --outputFile {1} --exe ./run.exe --publish'.format(inFile, outFile), shell=True)'''
 
 def main():
     runNum = -1
@@ -50,19 +69,36 @@ def main():
     fileNum = str(int(float(line.split()[1])))
     subName = str(args.version)
 
-    inFile = args.inputDir + 'MilliQan_Run{0}.{1}_default.root'.format(runNum,fileNum)
-    outFile = 'MilliQan_Run{0}.{1}_{2}.root'.format(runNum,fileNum, subName)
-    triggerFile = args.inputDir + "MatchedEvents_Run{0}.{1}.root".format(runNum, fileNum)
+    if args.slab:
+        inFile = args.inputDir + 'MilliQanSlab_Run{0}.{1}_default.root'.format(runNum,fileNum)
+        outFile = 'MilliQanSlab_Run{0}.{1}_{2}.root'.format(runNum,fileNum, subName)
+        triggerFile = args.inputDir + "MatchedEventsSlab_Run{0}.{1}_rematch.root".format(runNum, fileNum)
+    else:
+        inFile = args.inputDir + 'MilliQan_Run{0}.{1}_default.root'.format(runNum,fileNum)
+        outFile = 'MilliQan_Run{0}.{1}_{2}.root'.format(runNum,fileNum, subName)
+        triggerFile = args.inputDir + "MatchedEvents_Run{0}.{1}_rematch.root".format(runNum, fileNum)
 
     print("Input file is {0}\nTrigger File is {1}\nOutput File is {2}".format(inFile, triggerFile, outFile))
 
+    cmd = 'source $PWD/setup.sh && python3 $PWD/scripts/runOfflineFactory.py --inputFile {0} --outputFile {1} --exe ./run.exe --publish'.format(inFile, outFile)
 
     if os.path.exists(triggerFile):
+        cmd = '{0} -m {1}'.format(cmd, triggerFile)
+    else:
+        print("Trigger file {} does not exist".format(triggerFile))
+
+    if args.slab:
+        print("Processing slab detector data")
+        cmd = '{0} --slab'.format(cmd)
+
+    subprocess.call(cmd, shell=True)
+
+    '''if os.path.exists(triggerFile):
         print("In tree wrapper calling subprocess, with matched trigger file")
         subprocess.call('source $PWD/setup.sh && python3 $PWD/scripts/runOfflineFactory.py --inputFile {0} --outputFile {1} -m {2} --exe ./run.exe --publish'.format(inFile, outFile, triggerFile), shell=True)
     else:
         print("In tree wrapper calling subprocess, no matched trigger file")
-        subprocess.call('source $PWD/setup.sh && python3 $PWD/scripts/runOfflineFactory.py --inputFile {0} --outputFile {1} --exe ./run.exe --publish'.format(inFile, outFile), shell=True)
+        subprocess.call('source $PWD/setup.sh && python3 $PWD/scripts/runOfflineFactory.py --inputFile {0} --outputFile {1} --exe ./run.exe --publish'.format(inFile, outFile), shell=True)'''
 
 if __name__ == "__main__":
 

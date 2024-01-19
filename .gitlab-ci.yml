@@ -52,6 +52,7 @@ analysis:
     script:  
         - echo "Put analysis here!"
         - pip list
+        - python3 analysisCI.py
 
 build image:
     image: $DOCKER_IMAGE

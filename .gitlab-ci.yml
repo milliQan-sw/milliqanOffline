@@ -48,6 +48,9 @@ analysis:
         GIT_SUBMODULE_STRATEGY: recursive
     script:  
         - echo "Put analysis here!"
+        - cd Run3Detector
+        - . setup.sh
+        - cd ../
         - python3 analysisCI.py
 
 build image:

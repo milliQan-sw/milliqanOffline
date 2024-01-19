@@ -3,6 +3,7 @@ stages:
   - setup
   - compile
   - offlineProduction
+  - analysis
   
 setup:
     image: $CI_REGISTRY_IMAGE
@@ -37,6 +38,16 @@ offlineProduction:
     script:  
         - cd Run3Detector
         - python3 scripts/runOfflineFactory.py --inputFile input.root --outputFile output.root --exe ./test.exe
+
+analysis:
+    image: $CI_REGISTRY_IMAGE
+    stage: analysis
+    rules:
+        - if: $CI_PIPELINE_SOURCE != "schedule"
+    variables:
+        GIT_SUBMODULE_STRATEGY: recursive
+    script:  
+        - echo "Put analysis here!"
 
 build image:
     image: docker:stable

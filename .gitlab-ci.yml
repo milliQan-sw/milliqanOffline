@@ -52,6 +52,9 @@ analysis:
     script:  
         - echo "Put analysis here!"
         - pip list
+        - cd root/bin
+        - source thisroot.sh
+        - cd ../
         - python3 analysisCI.py
 
 build image:

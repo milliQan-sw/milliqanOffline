@@ -4,6 +4,9 @@ stages:
   - compile
   - offlineProduction
   - analysis
+
+variables:
+    DOCKER_IMAGE: carriganm95/milliqan_uproot:latest
   
 setup:
     image: $CI_REGISTRY_IMAGE
@@ -40,7 +43,7 @@ offlineProduction:
         - python3 scripts/runOfflineFactory.py --inputFile input.root --outputFile output.root --exe ./test.exe
 
 analysis:
-    image: $CI_REGISTRY_IMAGE
+    image: $DOCKER_IMAGE
     stage: analysis
     rules:
         - if: $CI_PIPELINE_SOURCE != "schedule"
@@ -52,7 +55,7 @@ analysis:
         - pip list
 
 build image:
-    image: carriganm95/milliqan_uproot:latest
+    image: $DOCKER_IMAGE
     stage: setup
     tags:
         #- docker-privileged

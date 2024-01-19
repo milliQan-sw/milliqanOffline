@@ -49,6 +49,7 @@ analysis:
     script:  
         - echo "Put analysis here!"
         - which root
+        - pip list
 
 build image:
     image: carriganm95/milliqan_uproot:latest

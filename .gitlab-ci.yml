@@ -1,12 +1,12 @@
 
 stages:
   - setup
-  - offline
-  - analysis
+  - compile
+  - offlineProduction
   
 setup:
     image: $CI_REGISTRY_IMAGE
-    stage: setup
+    stage: compile
     rules:
         - if: $CI_PIPELINE_SOURCE != "schedule"
     variables:
@@ -27,18 +27,20 @@ setup:
         - curl -o input.root https://cernbox.cern.ch/s/4b3s7iRaaP2cVnj/download
         - ./compile.sh test.exe
 
-offline:
+offlineProduction:
     image: $CI_REGISTRY_IMAGE
-    stage: offline
+    stage: offlineProduction
     rules:
         - if: $CI_PIPELINE_SOURCE != "schedule"
     variables:
         GIT_SUBMODULE_STRATEGY: recursive
     script:  
+        - cd Run3Detector
         - python3 scripts/runOfflineFactory.py --inputFile input.root --outputFile output.root --exe ./test.exe
 
 build image:
     image: docker:stable
+    stage: setup
     tags:
         #- docker-privileged
     services:

@@ -51,7 +51,6 @@ analysis:
         GIT_SUBMODULE_STRATEGY: recursive
     script:  
         - echo "Put analysis here!"
-        - which root
         - pip list
 
 build image:

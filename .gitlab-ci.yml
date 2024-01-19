@@ -48,10 +48,7 @@ analysis:
         GIT_SUBMODULE_STRATEGY: recursive
     script:  
         - echo "Put analysis here!"
-        - cd Run3Detector
-        - . setup.sh
-        - cd ../
-        - python3 analysisCI.py
+        - which root
 
 build image:
     image: carriganm95/milliqan_uproot:latest

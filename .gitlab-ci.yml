@@ -48,6 +48,7 @@ analysis:
         GIT_SUBMODULE_STRATEGY: recursive
     script:  
         - echo "Put analysis here!"
+        - python3 analysisCI.py
 
 build image:
     image: docker:stable

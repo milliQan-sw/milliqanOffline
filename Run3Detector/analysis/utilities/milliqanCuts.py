@@ -75,19 +75,27 @@ class milliqanCuts():
 
     #event level mask selecting events with hits in 4 layers
     def fourLayerCut(self, cutName=None, cut=False):
-        self.events['fourLayerCut'] = (ak.any(self.events.layer==0, axis=1) & 
-                                       ak.any(self.events.layer==1, axis=1) & 
-                                       ak.any(self.events.layer==2, axis=1) & 
-                                       ak.any(self.events.layer==3, axis=1))
-        if cut: self.events = self.events[self.events.fourLayerCut]
+        self.events['oneHitPerLayerCut'] = ((ak.count_nonzero(self.events.layer==0, axis=1)>=1) & 
+                                            (ak.count_nonzero(self.events.layer==1, axis=1)>=1) & 
+                                            (ak.count_nonzero(self.events.layer==2, axis=1)>=1) &
+                                            (ak.count_nonzero(self.events.layer==3, axis=1)>=1))
+        if cut: self.events = self.events[self.events.oneHitPerLayerCut]
         self.cutflowCounter()
+
+
+#        self.events['fourLayerCut'] = (ak.any(self.events.layer==0, axis=1) & 
+#                                       ak.any(self.events.layer==1, axis=1) & 
+#                                       ak.any(self.events.layer==2, axis=1) & 
+#                                       ak.any(self.events.layer==3, axis=1))
+#        if cut: self.events = self.events[self.events.fourLayerCut]
+#        self.cutflowCounter()
 
     #event level mask selecting events with 1 hit in each layer
     def oneHitPerLayerCut(self, cutName=None, cut=False):
-        self.events['oneHitPerLayerCut'] = ((ak.count(self.events.layer==0, axis=1)==1) & 
-                                            (ak.count(self.events.layer==1, axis=1)==1) & 
-                                            (ak.count(self.events.layer==2, axis=1)==1) &
-                                            (ak.count(self.events.layer==3, axis=1)==1))
+        self.events['oneHitPerLayerCut'] = ((ak.count_nonzero(self.events.layer==0, axis=1)==1) & 
+                                            (ak.count_nonzero(self.events.layer==1, axis=1)==1) & 
+                                            (ak.count_nonzero(self.events.layer==2, axis=1)==1) &
+                                            (ak.count_nonzero(self.events.layer==3, axis=1)==1))
         if cut: self.events = self.events[self.events.oneHitPerLayerCut]
         self.cutflowCounter()
 

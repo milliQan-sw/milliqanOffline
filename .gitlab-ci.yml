@@ -4,6 +4,9 @@ stages:
   - compile
   - offlineProduction
   - analysis
+
+variables:
+    DOCKER_IMAGE: carriganm95/milliqan_uproot:latest
   
 setup:
     image: $CI_REGISTRY_IMAGE
@@ -40,7 +43,7 @@ offlineProduction:
         - python3 scripts/runOfflineFactory.py --inputFile input.root --outputFile output.root --exe ./test.exe
 
 analysis:
-    image: $CI_REGISTRY_IMAGE
+    image: $DOCKER_IMAGE
     stage: analysis
     rules:
         - if: $CI_PIPELINE_SOURCE != "schedule"
@@ -48,10 +51,14 @@ analysis:
         GIT_SUBMODULE_STRATEGY: recursive
     script:  
         - echo "Put analysis here!"
+        - pip list
+        - cd ~/bin
+        - source thisroot.sh
+        - cd -
         - python3 analysisCI.py
 
 build image:
-    image: docker:stable
+    image: $DOCKER_IMAGE
     stage: setup
     tags:
         #- docker-privileged
@@ -67,4 +74,5 @@ build image:
         - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER $CI_REGISTRY --password-stdin
         - docker build -t $CI_REGISTRY_IMAGE .
         - docker push $CI_REGISTRY_IMAGE
+        - echo $CI_REGISTRY_IMAGE
         

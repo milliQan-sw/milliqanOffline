@@ -62,7 +62,7 @@ if __name__ == "__main__":
     r_check = r.TFile.Open('check.root', 'read')
     h_heightCheck = r_check.Get('h_height')
     entries = h_heightCheck.GetEntries()
-    h_heightCheck.Add(h_height, 1)
+    h_heightCheck.Add(h_height, -1)
     if(h_heightCheck.Integral() > entries):
         print("Error: The plot created does not match the saved version!")
         sys.exit(1)

@@ -24,7 +24,11 @@ class milliqanCuts():
         # Prints the value after each batch of events
         # TODO: Only print at the very end
         print(self.cutflow)
-        print("Cutflow Table")
+        print("------------------Cutflow Table--------------------")
+        print ("{:<15} {:<10}".format('Cut', 'N Passing Events'))
+        for i in range((len(self.cutflow)):
+            print("{:<15}{:<10}".format(i, self.cutflow[i])
+        print("----------------------------------------------------")
         print("Cut           |  N passing Events")
         for i in range(len(self.cutflow)):
             print(i, self.cutflow[i])

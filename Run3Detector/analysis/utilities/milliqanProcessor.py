@@ -29,7 +29,6 @@ class milliqanProcessor():
         #self.plotter.events = events
         self.mqSchedule.setEvents(events)
         for branch in self.mqSchedule.schedule:
-            print(branch.__name__)
             if isinstance(branch, milliqanPlot):
                 if branch.variables in events.fields:
                     branch.plot(events)

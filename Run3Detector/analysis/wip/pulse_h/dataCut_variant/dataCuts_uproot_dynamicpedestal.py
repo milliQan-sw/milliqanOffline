@@ -114,8 +114,8 @@ class triggerChecker():
 		self.specialChanHeight = r.TH2D("special chan vs height","chan vs height:  dureation > 1k ns and height < 1000m V",80,0,80,280, 0, 1400)
 		self.specialHeight = r.TH1D("special height", " height : dureation > 1k ns and height < 1000m V",40, 0, 1400)
 		self.specialPedastal = r.TH2D("special chan vs pedastal","chan vs pedastal:  dureation > 1k ns and height < 1000m V",80,0,80,280, 0, 1400)
-		self.specialuncorrectedHeightChan = r.TH2D("Special Chan vs Uncorrected height","chan vs height:  dureation > 1k ns and height < 1000m V",80,0,80, 280, 0, 1400)
-		self.specialpedastalDistribution = r.TH1D("special pedestal distribution", "pedestal : dureation > 1k ns and height < 1000m V",280, 0, 1400)
+		self.specialuncorrectedHeightChan = r.TH2D("Special Chan vs Uncorrected height","chan vs height:  dureation > 1k ns and height < 1000m V",80,0,80, 1400, -1400, 1400)
+		self.specialpedastalDistribution = r.TH1D("special pedestal distribution", "pedestal : dureation > 1k ns and height < 1000m V",1400, -1400, 1400)
 		self.specialuncorrectedHeight = r.TH1D("special uncorrected height distribution", "uncorrected height : dureation > 1k ns and height < 1000m V",280, 0, 1400)
 		self.specialuncorrectedHeight.GetXaxis().SetTitle("mV")
 		self.specialuncorrectedHeight.GetYaxis().SetTitle("# of pulses")
@@ -132,13 +132,13 @@ class triggerChecker():
 
 		#new NPE distribution associate with bar channel 10-27
 		#separete by layers
-		self.NEWNPEbarChannelDistLay0 = r.TH1D("NPE Max Channel : layers0","NPE Max Channel : layers0",200,0,200)
-		self.NEWNPEbarChannelDistLay1 = r.TH1D("NPE Max Channel : layers1","NPE Max Channel : layers1",200,0,200)
-		self.NEWNPEbarChannelDistLay2 = r.TH1D("NPE Max Channel : layers2","NPE Max Channel : layers2",200,0,200)
-		self.NEWNPEbarChannelDistLay3 = r.TH1D("NPE Max Channel : layers3","NPE Max Channel : layers3",200,0,200)
+		self.NEWNPEbarChannelDistLay0 = r.TH1D("NPE Max Channel : layers0","NPE Max Channel : layers0",1000,0,1000)
+		self.NEWNPEbarChannelDistLay1 = r.TH1D("NPE Max Channel : layers1","NPE Max Channel : layers1",1000,0,1000)
+		self.NEWNPEbarChannelDistLay2 = r.TH1D("NPE Max Channel : layers2","NPE Max Channel : layers2",1000,0,1000)
+		self.NEWNPEbarChannelDistLay3 = r.TH1D("NPE Max Channel : layers3","NPE Max Channel : layers3",1000,0,1000)
 
 		#separate by channels
-		self.NEWNPEbarChannelDist = r.TH2D("NPE Max Channel : channel","NPE Max Channel : channel; chan; NPE_max", 80,0,80,200,0,200)
+		self.NEWNPEbarChannelDist = r.TH2D("NPE Max Channel : channel","NPE Max Channel : channel; chan; NPE_max", 80,0,80,1000,0,1000)
 		
 
 	
@@ -191,15 +191,16 @@ class triggerChecker():
 				
 				# Creating an empty dictionary to add up the number of NPE in the same channel
 				NPE_chanMapping = {}
-				for pickUp, height, npulse,chan,npe,area,time,duration, board, layer in zip(pickupFlagList,height_list,pulse_list,chan_list,npe_list,area_list,time_list,DurationList,board_list,layer_list):
+				for pickUp, height, npulse,chan,npe,area,time,duration, board,layer in zip(pickupFlagList,height_list,pulse_list,chan_list,npe_list,area_list,time_list,DurationList,board_list,layer_list):
+
 					if chan > 63 and chan < 78: # I only collect data from bar detector
 						continue
 					if pickUp==False:
 						if chan not in NPE_chanMapping:
-							NPE_chanMapping[chan] = [[npe],layer,chan]
-							
+							NPE_chanMapping[chan] = [npe]
+						
 						else:
-							NPE_chanMapping[chan][0].append(npe)
+							NPE_chanMapping[chan].append(npe)
 							
 						self.hist.Fill(npulse,height)
 						self.chanHist.Fill(chan,height)
@@ -234,12 +235,16 @@ class triggerChecker():
 							self.ChanDuration.Fill(chan,duration)
 
 				
-				for NPEList,layer,chan in NPE_chanMapping.items():
+				for chan,NPEList in NPE_chanMapping.items():					
 					totalNPEinChan = sum(NPEList)
-					MaxNPE = NPEList.max()
+					MaxNPE = max(NPEList)
 					self.NPEchanBased.Fill(totalNPEinChan)
 					self.NPEHistchanBased.Fill(chan,totalNPEinChan)
 					self.NEWNPEbarChannelDist.Fill(chan,MaxNPE)
+					if chan <= 63:
+						layer =  (chan)//16 # return int
+					if chan >= 78:
+						layer = 1
 					if layer == 0:
 						self.NEWNPEbarChannelDistLay0.Fill(MaxNPE)
 					if layer == 1:
@@ -358,7 +363,7 @@ if __name__ == "__main__":
 
 	r.gROOT.SetBatch(1)
 
-	Run_num = 1020
+	Run_num = 1026
 
 	#run1025 has issue
 	#RunList = [1020,1021,1022,1023,1024,1025,1026,1027,1028,1029,1030]

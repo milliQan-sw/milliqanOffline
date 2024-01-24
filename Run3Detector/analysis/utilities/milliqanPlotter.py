@@ -20,8 +20,8 @@ class milliqanPlot():
             myarray = [array('d', x) for x in output]
             if len(myarray) == 2 and len(myarray[0]) != 0:
                 self.histogram.FillN(len(myarray[0]), myarray[0], myarray[1], np.ones(len(myarray[0])))
-            if len(myarray) == 3 and len(myarray[0]) != 0:
-                self.histogram.FillN(len(myarray[0]), myarray[0], myarray[1], myarray[2], np.ones(len(myarray[0])))
+            elif len(myarray) == 3:
+                print("No 3d histogram capability yet!")
         else:
             if self.cut:
                 output = ak.flatten(events[self.variables][events[self.cut]])

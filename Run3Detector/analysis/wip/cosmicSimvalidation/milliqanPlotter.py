@@ -20,6 +20,30 @@ class milliqanPlot():
         myarray = array('d', output)
         if len(myarray) > 0:
             self.histogram.FillN(len(myarray), myarray, np.ones(len(myarray)))
+    
+    #create the script for plotting the histogram that count the number of bar get hit
+    #This is an event based analysis. So I can't use "flatten()" to plot histogram.
+    def NBarHitsplot(self,events):
+        #loop over events
+        for pair in events:
+            #get the truth table by checking channel type
+            bar_cut = pair["type"] == 0
+            #get the bar only data
+            bar_data = pair[bar_cut]
+            if len(bar_data["type"]) == 0: 
+                continue
+            NumBarHits = len(set(bar_data["chan"]))
+            NumLayerHits = len(set(bar_data["layer"]))
+            if NumBarHits >= 4 and NumLayerHits ==4: 
+                self.histogram.Fill(NumBarHits)
+
+            
+            
+
+
+
+        
+
 
 class milliqanPlotter():
 

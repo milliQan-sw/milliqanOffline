@@ -71,6 +71,8 @@ class milliqanProcessor():
 
             ):
 
+            total_events += len(events)
+           
             if self.max_events and total_events >= self.max_events: break
 
             events = self.makeBranches(events)
@@ -80,7 +82,4 @@ class milliqanProcessor():
             if hasattr(self, 'customFunction'):
                 self.custom_out = self.runCustomFunction(events)
 
-
-            total_events += len(events)
- 
-        print("Number of events", total_events)
+        print("Number of processed events", total_events)

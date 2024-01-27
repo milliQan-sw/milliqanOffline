@@ -1,15 +1,32 @@
 import os
 import sys
 
-from milliqanProcessor import *
-from milliqanScheduler import *
-from milliqanCuts import *
-from milliqanPlotter import *
+import numpy as np
+import pandas as pd
+import ROOT as r
+import os 
+import sys
+import time
+import uproot 
+import awkward as ak
 
 
+#filelist =['/mnt/hadoop/se/store/user/milliqan/trees/v34/MilliQan_Run1190.155_v34.root:t','/mnt/hadoop/se/store/user/milliqan/trees/v34/MilliQan_Run1190.154_v34.root:t']
 
-filelist =['/mnt/hadoop/se/store/user/milliqan/trees/v34/MilliQan_Run1190.155_v34.root:t']
+filelist = []
+directory = "/mnt/hadoop/se/store/user/milliqan/trees/v34/"
+for filename in os.listdir(directory):
+    if filename.startswith("MilliQan_Run1190") and filename.endswith(".root"):
+        filelist.append(directory+filename+":t")
+
+#print(filelist)
+
+nbars = r.TH1F("nbars", "n_BARS", 32, 0, 32)
+
+
 branches = ['boardsMatched', 'height', 'layer','type','chan','pickupFlag']
+
+
 for events in uproot.iterate(
 
             #files
@@ -21,100 +38,59 @@ for events in uproot.iterate(
     
             ):
     
-    
-    
-    #print(len(events))
-    #print(events)
-    intialdf = ak.to_pandas(events)
-    print(intialdf)
-    
-    
-    #print(type(events))
+    #if smax_events and total_events >= max_events: break
+    #total_events += len(events)
+
+    #boardMatched  check
     for branch in branches:
         if branch == 'boardsMatched': continue
         events[branch] = events[branch][events.boardsMatched]
-    afterdf = ak.to_pandas(events)
-    #print(afterdf)
+
     
+    #loose pickup check
     for branch in branches:
         if branch == 'boardsMatched': continue
         events[branch] = events[branch][events.pickupFlag]
+
     
     
-    lastdf = ak.to_pandas(events)
-    #print(lastdf)
-    
-    
-    #type cut
+    #type cut for bar
     barCut = events['type'] == 0 # create pulse base T/F table
     for branch in branches:
         if branch == 'boardsMatched': continue   #this is needed to avoid too many jacked slice in array.(dont know the meaing)
         events[branch] = events[branch][barCut]
     
-    
-    typpecutdf = ak.to_pandas(events)
-    #print(typpecutdf)
-    
-    #print the key name for high level akw array
-    field_names = events.fields
-    #print(field_names)
 
-    
-    
-    
-    #print(type(events))
-    #print(str(events))
-    
-    
-    #pulse height cut 1 npe
-    heightcut = events.height > 36
-    #print(heightcut)
-    
-    
+
+    #height cut
+    heightcut = events.height > 36   
     for branch in branches:
         if branch == 'boardsMatched': continue
         events[branch] = events[branch][heightcut]
     
     heightCutdf = ak.to_pandas(events)
-    #print(heightCutdf)
+
     
     
     #1 hit + per layer
-    
+    #broadcast the array based t/f table to the event based variable
     events['fourLayerCut'] = ak.any(events.layer==0, axis=1) & ak.any(events.layer==1, axis=1) & ak.any(events.layer==2, axis=1) & ak.any(events.layer==3, axis=1)
-    #print(ak.to_pandas(events))#event based
     events = events[events['fourLayerCut']]
-    print("final result")
-    print(ak.to_pandas(events))
-    
-    
-    
-    
-    
-    #FLcut,events=ak.broadcast_arrays(FLcut,events)
-    #print(FLcut)
-    #print(events)
-    #seems doesn't work
-    #need to used broadcase
-    
-    #FLcut = events[events['fourLayerCut']]
-    
-    #print(events)
-    #for branch in branches:
-    #    if branch == 'boardsMatched': continue
-    #    events = events[branch][FLcut]
-    
-    
-        
-    #FLcutdf = ak.to_pandas(events)
-    #print(FLcutdf)
+    #print("final result")
+    #print(ak.to_pandas(events))
+
+
     
 
-        
-    #events["heightCut"] = events.height >= int(1200)  #pulse based table
-    #events['fourLayerCut'] = ak.any(events.layer==0, axis=1) & ak.any(events.layer==1, axis=1) & ak.any(events.layer==2, axis=1) & ak.any(events.layer==3, axis=1) 
-    #expanded_array = ak.to_pandas(events)
-    #print(expanded_array)
+    if len(events) == 0: continue
+    #fill the histogram
+    for eventIndex in range(len(events)):
+        NbarHit=len(set(events[eventIndex]["chan"]))
+        nbars.Fill(NbarHit)
+
+
+    #break #use for single file debug
     
-    print("next")
-    break
+output_file = r.TFile("test.root", "RECREATE")
+nbars.Write()
+output_file.Close()

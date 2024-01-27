@@ -158,8 +158,8 @@ struct offline_tree_{
 //Offline factory class used to produce offline tree output
 class OfflineFactory {
 public:
-    OfflineFactory(TString,TString,TString,bool,bool);
-    OfflineFactory(TString,TString,TString, bool, bool, int, int);
+    OfflineFactory(TString,TString,TString,bool,bool, bool); //Changed JHS
+    OfflineFactory(TString,TString,TString, bool, bool, bool, int, int); //Changed JHS
     // virtual ~OfflineFactory();
     void makeOutputTree();
     void loadJsonConfig(string);
@@ -215,6 +215,7 @@ private:
     int fileNumber;
     bool isDRS;
     bool isSlab;
+    bool isFormosa;
     mdaq::GlobalEvent * evt = new mdaq::GlobalEvent();
     mdaq::DemonstratorConfiguration * cfg = new mdaq::DemonstratorConfiguration();
     TString* fileOpenTime;

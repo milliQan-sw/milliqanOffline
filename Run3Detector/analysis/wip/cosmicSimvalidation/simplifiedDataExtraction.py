@@ -1,6 +1,7 @@
 """
 run into some new bug ValueError: cannot broadcast RegularArray of size 988 with RegularArray of size 1000
 1039,1038,1035 has this issue
+find the event and file number
 
 1031 & 1190 is fine
 """
@@ -26,15 +27,15 @@ import awkward as ak
 filelist = []
 
 def appendRun(filelist,run):
-    directory = "/mnt/hadoop/se/store/user/milliqan/trees/v34/1000/"
-    #directory = "/mnt/hadoop/se/store/user/milliqan/trees/v34/"
+    #directory = "/mnt/hadoop/se/store/user/milliqan/trees/v34/1000/"
+    directory = "/mnt/hadoop/se/store/user/milliqan/trees/v34/"
     for filename in os.listdir(directory):
         if filename.startswith(f"MilliQan_Run{run}") and filename.endswith(".root"):
             filelist.append(directory+filename+":t")
 
 #hand pick the cosmic runs with good matching rate. The run with green color in "Matching MilliQan Files"
 #cosmicGoodRun = [1039,1038,1035,1034,1031]
-cosmicGoodRun = [1031]
+cosmicGoodRun = [1364]
 #print(filelist)
 
 for run in cosmicGoodRun:
@@ -45,6 +46,7 @@ nbars = r.TH1F("nbars", "n_BARS", 32, 0, 32)
 
 branches = ['boardsMatched', 'height', 'layer','type','chan','pickupFlag']
 
+total_events = 0
 
 for events in uproot.iterate(
 
@@ -58,7 +60,7 @@ for events in uproot.iterate(
             ):
     
     #if smax_events and total_events >= max_events: break
-    #total_events += len(events)
+    
 
     #boardMatched  check
     for branch in branches:
@@ -71,7 +73,7 @@ for events in uproot.iterate(
         if branch == 'boardsMatched': continue
         events[branch] = events[branch][events.pickupFlag]
 
-    
+    total_events += len(events)
     
     #type cut for bar
     barCut = events['type'] == 0 # create pulse base T/F table
@@ -82,7 +84,9 @@ for events in uproot.iterate(
 
 
     #height cut
-    heightcut = events.height > 36   
+    h_threashold = 36
+    #h_threashold = 100
+    heightcut = events.height > h_threashold   
     for branch in branches:
         if branch == 'boardsMatched': continue
         events[branch] = events[branch][heightcut]
@@ -113,3 +117,4 @@ for events in uproot.iterate(
 output_file = r.TFile("test.root", "RECREATE")
 nbars.Write()
 output_file.Close()
+print(f"total event(board matched only):{total_events}")

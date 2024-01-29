@@ -4,12 +4,12 @@ hostname=$(cat /proc/sys/kernel/hostname)
 
 echo "working on compute node $hostname"
 
+#mv milliqanOffline*.tar.gz milliqanOffline.tar.gz
 tar -xzvf milliqanOffline*.tar.gz
-mv milliqanOfflineTar/ milliqanOffline/
 tar -xzvf MilliDAQ.tar.gz
 
 cp tree_wrapper.py milliqanOffline/Run3Detector/
-cp filelist.txt milliqanOffline/Run3Detector/
+cp filelist*.txt milliqanOffline/Run3Detector/filelist.txt
 
 for ARG in "$@"; do
     if [ $ARG == "-m" ]; then
@@ -42,10 +42,26 @@ if [ ! -f "run.exe" ]; then
     singularity exec -B ../../milliqanOffline/,../../MilliDAQ ../../offline.sif bash compile.sh run.exe
 fi
 
-echo Trying to run process number $1
-singularity exec -B ../../milliqanOffline/,../../MilliDAQ,/store/ ../../offline.sif python3 tree_wrapper.py $1 $2 $5
+if [ $# -gt 6 ]; then
+    #Running single job
+    echo Running single job $6 $7
+    if $7; then
+        echo "Processing slab data"
+        singularity exec -B ../../milliqanOffline/,../../MilliDAQ,/store/ ../../offline.sif python3 tree_wrapper.py -s $6 -i $2 -v $5 --slab
+    else
+        singularity exec -B ../../milliqanOffline/,../../MilliDAQ,/store/ ../../offline.sif python3 tree_wrapper.py -s $6 -i $2 -v $5
+    fi
+else
+    echo Trying to run process number $1
+    if $6; then
+        echo "Processing slab data"
+        singularity exec -B ../../milliqanOffline/,../../MilliDAQ,/store/ ../../offline.sif python3 tree_wrapper.py -p $1 -i $2 -v $5 --slab
+    else
+        singularity exec -B ../../milliqanOffline/,../../MilliDAQ,/store/ ../../offline.sif python3 tree_wrapper.py -p $1 -i $2 -v $5
+    fi
+fi
 
-filename="MilliQan_Run*.*.root"
+filename="MilliQan*_Run*.*.root"
 
 outputFiles=$(ls $filename)
 

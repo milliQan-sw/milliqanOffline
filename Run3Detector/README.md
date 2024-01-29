@@ -8,8 +8,8 @@ Each event of the tree contains several vectors storing details such as the chan
 - nPE: number of photons contained in pulse (determined through SPE calibration, approximate)
 - duration: pulse duration in ns
 - height: maximum amplitude in pulse in mV
-- time: uncalibrated time of pulse in ns
-- time_module_calibrated: calibrated time of pulse in ns (currently the same as time)
+- timeFit: uncalibrated time of pulse in ns
+- timeFit_module_calibrated: calibrated time of pulse in ns (currently the same as time)
 - ipulse: pulse index
 
 In addition there are quantities that provide a single per channel measure of the noise and activity in each channel per event. These are vectors of length = number of channels (rather than number of pulses).

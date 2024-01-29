@@ -1,0 +1,19 @@
+
+    Universe = vanilla
+    +IsLocalJob = true
+    Rank = TARGET.IsLocalSlot
+    request_disk = 2000MB
+    request_memory = 250MB
+    request_cpus = 1
+    executable              = wrapper.sh
+    arguments               = $(PROCESS) /store/user/milliqan/run3/900/0000/ durp /store/user/milliqan/trees/v31/ v31_firstPedestals 903.491
+    log                     = /data/users/milliqan/log/trees/v31/logs_v31_900_0000-05-24/log_$(PROCESS).log
+    output                  = /data/users/milliqan/log/trees/v31/logs_v31_900_0000-05-24/out_$(PROCESS).txt
+    error                   = /data/users/milliqan/log/trees/v31/logs_v31_900_0000-05-24/error_$(PROCESS).txt
+    should_transfer_files   = Yes
+    when_to_transfer_output = ON_EXIT
+    transfer_input_files = wrapper.sh, tree_wrapper.py, MilliDAQ.tar.gz, milliqanOffline_v31.tar.gz, offline.sif, compile.sh
+    getenv = true
+    priority = 15
+    queue 1
+    

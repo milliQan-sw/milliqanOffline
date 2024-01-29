@@ -1,3 +1,11 @@
+"""
+run into some new bug ValueError: cannot broadcast RegularArray of size 988 with RegularArray of size 1000
+1039,1038,1035 has this issue
+
+1031 & 1190 is fine
+"""
+
+
 import os
 import sys
 
@@ -12,15 +20,26 @@ import awkward as ak
 
 
 #filelist =['/mnt/hadoop/se/store/user/milliqan/trees/v34/MilliQan_Run1190.155_v34.root:t','/mnt/hadoop/se/store/user/milliqan/trees/v34/MilliQan_Run1190.154_v34.root:t']
+#filelist = ['/mnt/hadoop/se/store/user/milliqan/trees/v34/1000/MilliQan_Run1039.1_v34.root:t']
 
+#"""
 filelist = []
-directory = "/mnt/hadoop/se/store/user/milliqan/trees/v34/"
-for filename in os.listdir(directory):
-    if filename.startswith("MilliQan_Run1190") and filename.endswith(".root"):
-        filelist.append(directory+filename+":t")
 
+def appendRun(filelist,run):
+    directory = "/mnt/hadoop/se/store/user/milliqan/trees/v34/1000/"
+    #directory = "/mnt/hadoop/se/store/user/milliqan/trees/v34/"
+    for filename in os.listdir(directory):
+        if filename.startswith(f"MilliQan_Run{run}") and filename.endswith(".root"):
+            filelist.append(directory+filename+":t")
+
+#hand pick the cosmic runs with good matching rate. The run with green color in "Matching MilliQan Files"
+#cosmicGoodRun = [1039,1038,1035,1034,1031]
+cosmicGoodRun = [1031]
 #print(filelist)
 
+for run in cosmicGoodRun:
+    appendRun(filelist,run)
+#"""
 nbars = r.TH1F("nbars", "n_BARS", 32, 0, 32)
 
 

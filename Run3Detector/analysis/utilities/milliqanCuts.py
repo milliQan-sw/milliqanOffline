@@ -88,6 +88,17 @@ class milliqanCuts():
         if cut: self.events = self.events[self.events.oneHitPerLayerCut]
         self.cutflowCounter()
 
+    def CosmicVeto(self, cutName=None, cut=False):
+        self.events['CosmicVeto'] =((ak.count(self.events.chan==68, axis=1)>=1) | 
+                                           (ak.count(self.events.chan==72, axis=1)>=1) |
+                                           (ak.count(self.events.chan == 70, axis=1)>=1) |
+                                           (ak.count(self.events.chan == 69, axis=1)>=1) |
+                                           (ak.count(self.events.chan == 74, axis=1)>=1) |
+                                           (ak.count(self.events.chan == 73, axis=1)>=1))
+        if cut: self.events = self.events[self.events.CosmicVeto]
+        self.cutflowCounter()
+        
+
     #create mask for pulses passing height cut
     def heightCut(self, cutName='heightCut', cut=1200, branches=None):
         self.events[cutName] = self.events.height >= int(cut)

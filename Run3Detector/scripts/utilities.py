@@ -5,6 +5,9 @@ import json
 from mongoConnect import mongoConnect
 from transferFiles import checkMongoDB, get_lock
 
+fileTypes = ['MilliQan', 'MilliQanSlab', 'TriggerBoard', 'TriggerBoardSlab', 'MatchedEvents', 'MatchedEventsSlab']
+
+
 def updateLocation(inputFile, destination, site, force=False):
 
     db = mongoConnect()

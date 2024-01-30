@@ -42,16 +42,26 @@ if [ ! -f "run.exe" ]; then
     singularity exec -B ../../milliqanOffline/,../../MilliDAQ ../../offline.sif bash compile.sh run.exe
 fi
 
-if [ $# -gt 5 ]; then
+if [ $# -gt 6 ]; then
     #Running single job
-    echo Running single job
-    singularity exec -B ../../milliqanOffline/,../../MilliDAQ,/store/ ../../offline.sif python3 tree_wrapper.py -s $6 -i $2 -v $5
+    echo Running single job $6 $7
+    if $7; then
+        echo "Processing slab data"
+        singularity exec -B ../../milliqanOffline/,../../MilliDAQ,/store/ ../../offline.sif python3 tree_wrapper.py -s $6 -i $2 -v $5 --slab
+    else
+        singularity exec -B ../../milliqanOffline/,../../MilliDAQ,/store/ ../../offline.sif python3 tree_wrapper.py -s $6 -i $2 -v $5
+    fi
 else
     echo Trying to run process number $1
-    singularity exec -B ../../milliqanOffline/,../../MilliDAQ,/store/ ../../offline.sif python3 tree_wrapper.py -p $1 -i $2 -v $5
+    if $6; then
+        echo "Processing slab data"
+        singularity exec -B ../../milliqanOffline/,../../MilliDAQ,/store/ ../../offline.sif python3 tree_wrapper.py -p $1 -i $2 -v $5 --slab
+    else
+        singularity exec -B ../../milliqanOffline/,../../MilliDAQ,/store/ ../../offline.sif python3 tree_wrapper.py -p $1 -i $2 -v $5
+    fi
 fi
 
-filename="MilliQan_Run*.*.root"
+filename="MilliQan*_Run*.*.root"
 
 outputFiles=$(ls $filename)
 

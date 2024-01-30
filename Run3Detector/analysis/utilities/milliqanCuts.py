@@ -72,7 +72,11 @@ class milliqanCuts():
                                       ak.any(self.events.layer==1, axis=1) & 
                                       ak.any(self.events.layer==2, axis=1) & 
                                       ak.any(self.events.layer==3, axis=1))
-        if cut: self.events = self.events[self.events.fourLayerCut]
+        #if cut: 
+        self.events = self.events[self.events.fourLayerCut]
+        #for branch in ak.fields(self.events):
+        #    self.events[branch] = self.events[branch][self.events.fourLayerCut]
+
         self.cutflowCounter()
 
     #event level mask selecting events with 1 hit in each layer
@@ -88,7 +92,8 @@ class milliqanCuts():
     def heightCut(self, cutName='heightCut', cut=1200, branches=None):
         self.events[cutName] = self.events.height >= int(cut)
         if branches:
-            for branch in branches:
+            #for branch in branches:
+            for branch in ak.fields(self.events):
                 self.events[branch] = self.events[branch][self.events[cutName]]
 
     #create mask for pulses passing area cuts

@@ -20,6 +20,18 @@ class milliqanPlot():
         myarray = array('d', output)
         if len(myarray) > 0:
             self.histogram.FillN(len(myarray), myarray, np.ones(len(myarray)))
+    
+    def NBarHitsplot(self,events):
+        if len(events) == 0: return
+        #fill the histogram
+        for eventIndex in range(len(events)):
+            eventFLresult = events[eventIndex]["fourLayerCut"]
+            
+            if True == eventFLresult:
+                NbarHit=len(set(events[eventIndex]["chan"]))
+                self.histogram.Fill(NbarHit)
+            
+            
 
 class milliqanPlotter():
 

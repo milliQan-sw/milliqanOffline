@@ -30,12 +30,14 @@ class milliqanProcessor():
         self.mqSchedule.setEvents(events)
         for branch in self.mqSchedule.schedule:
             if isinstance(branch, milliqanPlot):
-                if branch.variables in events.fields:
-                    branch.plot(events)
+                branch.NBarHitsplot(events)
+                #if branch.variables in events.fields:
+                #branch.plot(events)
+                #branch.NBarHitsplot(events)
                 #elif branch.variables in self.custom_out:
                 #    branch.plot(self.custom_out)
-                else:
-                    print("Branch {0} does not exist in event array or custom output".format(branch.variables))
+                #else:
+                #    print("Branch {0} does not exist in event array or custom output".format(branch.variables))
             else:
                 branch()
         return events
@@ -81,5 +83,6 @@ class milliqanProcessor():
             
             if hasattr(self, 'customFunction'):
                 self.custom_out = self.runCustomFunction(events)
+            
 
         print("Number of processed events", total_events)

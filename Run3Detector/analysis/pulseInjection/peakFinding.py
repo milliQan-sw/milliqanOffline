@@ -1,5 +1,6 @@
-from ROOT import TSpectrum, TFile, TString, TH1, TCanvas, TLine, kRed, TH1F
-from typing import Union
+from ROOT import TSpectrum, TFile, TString, TH1, TCanvas, TLine, kRed, TH1F, TF1
+import ROOT 
+from typing import Union, Callable
 
 
 
@@ -29,8 +30,9 @@ def peak_finding ( input_file:TFile, sigma: int = 2,
                 peak_location.append((spectrum.GetPositionX()[i], spectrum.GetPositionY()[i]))
             peak_locations.append(peak_location)
     return peak_locations
+
 def get_area (input_item:Union[TFile, TH1],
-             start:float, stop:float)-> Union[float, list[float]] :
+             start:float, stop:float)-> Union[float, list[float], None] :
     """
     Calculate the area between start and stop. If the input is a hist
     return just the area. If the input is a TFile return the area
@@ -45,6 +47,8 @@ def get_area (input_item:Union[TFile, TH1],
         return [key.ReadObj.Integral(key.ReadObj.FindFixBin(start),
                                      key.ReadObj.FindFixBin(stop))
                 for key in keys if isinstance(key.ReadObj(), TH1)]
+    return None
+
 def draw_area_bounds (canvas:TCanvas, lines:list[float]):
     """
     Draw a list of vertical lines on a TCanvas to designate
@@ -59,22 +63,36 @@ def draw_area_bounds (canvas:TCanvas, lines:list[float]):
 
     draw_canvas.Update()
 
+        
+    
+    
 if __name__ == "__main__":
+    ROOT.gROOT.SetBatch(True)
+
     PEAK_WIDTH = 200
-    input_file = TFile("/home/ryan/Documents/Research/Data/MilliQanWaveforms/outputWaveforms_812_2p5V.root", "READ")
-    #peaks = peak_finding(input_file, threshold=.80, max_peaks=100) # We only want the highest peak
+    led_file = TFile("/home/ryan/Documents/Data/MilliQan/"
+                      "outputWaveforms_812_2p5V.root", "READ")
+    no_led_file = TFile("/home/ryan/Documents/Data/MilliQan/"
+                         "outputWaveforms_805_noLED.root", "READ")
+
+    # We only want the highest peak
+    no_led_peaks = peak_finding(no_led_file, threshold=.80, max_peaks=100)
     output_file = TFile("areaWaveforms.root", "RECREATE")
 
-    areas = get_area(output_file, 10, 20)
-    #assert len(peaks) == len(input_file.GetListOfKeys()), "Mismatch between peaks and keys"
-    i = 0
-    areas = []
-    for key in input_file.GetListOfKeys():
+    led_areas = get_area(output_file, 10, 20)
+
+    assert len(no_led_peaks) == len(no_led_file.GetListOfKeys()), ("Mismatch"
+    "between peaks and keys")
+
+    led_areas = []
+    led_area_hist = None
+    for i, key in enumerate(led_file.GetListOfKeys()):
         hist = key.ReadObj()
         
+        led_area_hist = TH1F("led_hist", "LED Area Histogram",
+                             200, -2000, 10000)
         if isinstance(hist, TH1):
-            area = get_area(hist, 1200, 1600)
-            areas.append(area)
+            led_area_hist.Fill(get_area(hist, 1200, 1600))
             canvas = TCanvas(f"canvas_{i}")
             hist.Draw()
             line1 = TLine(1200, 0, 1200, 20)
@@ -88,13 +106,28 @@ if __name__ == "__main__":
             line2.Draw()
 
             canvas.Write()
-        i+=1
-    area_hist = TH1F("hist", "LED Area Histogram", 200, -2000, 10000)
-    for area in areas:
-        area_hist.Fill(area)
+
+    g1 = TF1("g1", "gaus", 0, 1000)
+    g2 = TF1("g2", "gaus", 0, 1000)
+    g3 = TF1("g3", "gaus", 0, 1000)
+    
+
+    total = TF1("total", "gaus(0)+gaus(3)+gaus(6)", 0, 1000)
+    total.SetLineColor(2)
+    if led_area_hist:
+        led_area_hist.Fit(total, "E")
+
+    no_led_hist = TH1F("no_led_hist", "No LED Area Histogram", 200, -2000, 10000)
+    for i, key in enumerate(no_led_file.GetListOfKeys()):
+        hist = key.ReadObj()
+
+        if isinstance(hist, TH1):
+            no_led_hist.Fill(get_area(hist, no_led_peaks[i][0] - PEAK_WIDTH,
+                                      no_led_peaks[i][0] + PEAK_WIDTH))
 
     area_canvas = TCanvas("area", "LED Area")
-    area_hist.Draw()
+    if led_area_hist:
+        led_area_hist.Draw()
     area_canvas.Update()
     area_canvas.Write()
     output_file.Close()

@@ -12,6 +12,9 @@ class milliqanCuts():
     def cutflowCounter(self):
         # Increments events passing each stage of the cutflow
         # Creates each stage during the first pass
+        print("(counter):"+str(self.counter))
+        print("self.cutflow:" + str(len(self.cutflow)))
+
         if len(self.cutflow) > self.counter:
             self.cutflow[self.counter]+=len(self.events)
         # Builds the array without knowledge of the number of cuts

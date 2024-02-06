@@ -34,7 +34,7 @@ from milliqanScheduler import *
 from milliqanCuts import *
 from milliqanPlotter import *
 
-filelist =['/home/czheng/scratch0/upROOT_SIM/FlatSimSampleFile/output_99.root:t']
+filelist =['/share/scratch0/czheng/cosmicSimFlatTree/output_2.root:t']
 
 branches = ['pmt_nPE','pmt_layer','pmt_chan','layer']
 
@@ -62,20 +62,20 @@ def LayerCut(self, cutName=None, cut=False, branches=None):
 
 
 def fourLayerCutSIM(self, cutName=None, cut=False):
-    self.events['fourLayerCut'] =(ak.any(self.events.pmt_layer==0, axis=1) & 
+    self.events['fourLayerCutSIM'] =(ak.any(self.events.pmt_layer==0, axis=1) & 
                                     ak.any(self.events.pmt_layer==1, axis=1) & 
                                     ak.any(self.events.pmt_layer==2, axis=1) & 
                                     ak.any(self.events.pmt_layer==3, axis=1))
 
 def oneHitPerLayerCutSIM(self, cutName=None, cut=False):
-    self.events['oneHitPerLayerCut'] =((ak.count(self.events.pmt_layer==0, axis=1)==1) & 
+    self.events['oneHitPerLayerCutSIM'] =((ak.count(self.events.pmt_layer==0, axis=1)==1) & 
                                         (ak.count(self.events.pmt_layer==1, axis=1)==1) & 
                                         (ak.count(self.events.pmt_layer==2, axis=1)==1) &
                                         (ak.count(self.events.pmt_layer==3, axis=1)==1))
 
 
 def CosmicVetoSIM(self, cutName=None, cut=False):
-    self.events['CosmicVeto'] =not((ak.count(self.events.pmt_chan==68, axis=1)>=1) | 
+    self.events['CosmicVetoSIM'] =not((ak.count(self.events.pmt_chan==68, axis=1)>=1) | 
                                 (ak.count(self.events.pmt_chan==72, axis=1)>=1) |
                                 (ak.count(self.events.pmt_chan == 70, axis=1)>=1) |
                                 (ak.count(self.events.pmt_chan == 69, axis=1)>=1) |
@@ -101,10 +101,15 @@ def barCutSim(self, cutName=None, cut=False):
     self.events['barCut'] = self.events.pmt_chan <= 64
 
 
+def EmptyListFilter(self,cutName=None):
+    condition = ak.num(self.events[branches[0]]) > 0
+    self.events=self.events[condition]
 
 
 
 #-----------------------------------------------------------------------------------------------------------------
+setattr(milliqanCuts, 'EmptyListFilter', EmptyListFilter)
+
 setattr(milliqanCuts, 'oneHitPerLayerCutSIM', oneHitPerLayerCutSIM)
 
 setattr(milliqanCuts, 'CosmicVetoSIM', CosmicVetoSIM)
@@ -115,8 +120,8 @@ setattr(milliqanCuts, 'LayerCut', LayerCut)
 
 setattr(milliqanCuts, 'barCutSim', barCutSim)
 
-R_fourlayer = mycuts.getCut(mycuts.combineCuts, 'R_fourlayer', ['barCut','fourLayerCut'])
-R_OneHitperLayer = mycuts.getCut(mycuts.combineCuts, 'R_OneHitperLayer', ['barCut','oneHitPerLayerCut'])
+R_fourlayer = mycuts.getCut(mycuts.combineCuts, 'R_fourlayer', ['barCut','fourLayerCutSIM'])
+R_OneHitperLayer = mycuts.getCut(mycuts.combineCuts, 'R_OneHitperLayer', ['barCut','oneHitPerLayerCutSIM'])
 
 
 #print(myplotter.dict)
@@ -124,9 +129,9 @@ R_OneHitperLayer = mycuts.getCut(mycuts.combineCuts, 'R_OneHitperLayer', ['barCu
 
 
 #cutflow = [mycuts.LayerCut,eventCuts,myplotter.dict['nPE']]
-cutflow = [mycuts.barCutSim, mycuts.fourLayerCutSIM,mycuts.oneHitPerLayerCutSIM,R_fourlayer,R_OneHitperLayer]
+#cutflow = [mycuts.barCutSim, mycuts.fourLayerCutSIM,mycuts.oneHitPerLayerCutSIM,R_fourlayer,R_OneHitperLayer]
 
-
+cutflow = [mycuts.EmptyListFilter,mycuts.barCutSim, mycuts.fourLayerCutSIM]
 
 myschedule = milliQanScheduler(cutflow, mycuts)
 

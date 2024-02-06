@@ -65,7 +65,7 @@ class milliqanProcessor():
             #branches
             self.branches,
 
-            step_size=10000,
+            step_size=100,
 
             num_workers=8,
 
@@ -81,11 +81,26 @@ class milliqanProcessor():
             
             if hasattr(self, 'customFunction'):
                 self.custom_out = self.runCustomFunction(events)
+            break
 
         #do some quick checks.        
         #print(ak.to_pandas(events["R_fourlayer"]))
         #print(len(events["R_fourlayer"]))
         #count_true = ak.count_nonzero(events["R_fourlayer"])
         #print(count_true)
-        print(events["R_fourlayer"==True])
+
+        # Define a condition to filter out empty lists
+        #condition = ak.num(events['barCut']) > 0
+
+        #print(ak.to_pandas(events[condition]))
+        #print("filter empty list array")
+
+
+        #count the number of event that pass four layer cut
+        #print(events["R_fourlayer"==True])
+        #print(events['barCut'] == True)
+        print(ak.to_pandas(events))
+        #print(ak.to_pandas(events[events['barCut'] == True]))
+
+
         print("Number of processed events", total_events)

@@ -102,8 +102,15 @@ def barCutSim(self, cutName=None, cut=False):
 
 
 def EmptyListFilter(self,cutName=None):
-    condition = ak.num(self.events[branches[0]]) > 0
-    self.events=self.events[condition]
+    self.events['None_empty_event'] = ak.num(self.events['layer']) > 0
+    self.events=self.events[self.events.None_empty_event]
+
+    #for branch in ak.fields(self.events):
+    #    self.events[branch] = self.events[branch][condition]
+
+    print(ak.to_pandas(self.events))
+    print("inside emptylist filter")
+    #return self.events
 
 
 
@@ -131,8 +138,8 @@ R_OneHitperLayer = mycuts.getCut(mycuts.combineCuts, 'R_OneHitperLayer', ['barCu
 #cutflow = [mycuts.LayerCut,eventCuts,myplotter.dict['nPE']]
 #cutflow = [mycuts.barCutSim, mycuts.fourLayerCutSIM,mycuts.oneHitPerLayerCutSIM,R_fourlayer,R_OneHitperLayer]
 
-cutflow = [mycuts.EmptyListFilter,mycuts.barCutSim, mycuts.fourLayerCutSIM]
-
+cutflow = [mycuts.barCutSim, mycuts.fourLayerCutSIM,R_fourlayer,mycuts.EmptyListFilter]
+#cutflow = [mycuts.EmptyListFilter]
 myschedule = milliQanScheduler(cutflow, mycuts)
 
 

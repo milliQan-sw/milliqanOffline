@@ -38,6 +38,7 @@ class milliqanProcessor():
                     print("Branch {0} does not exist in event array or custom output".format(branch.variables))
             else:
                 branch()
+                print(ak.to_pandas(events))
         return events
 
     def makeCuts(self, events):
@@ -65,7 +66,7 @@ class milliqanProcessor():
             #branches
             self.branches,
 
-            step_size=100,
+            step_size=1000,
 
             num_workers=8,
 
@@ -77,10 +78,10 @@ class milliqanProcessor():
 
             events = self.makeBranches(events)
 
-            events = self.makeCuts(events)
-            
-            if hasattr(self, 'customFunction'):
-                self.custom_out = self.runCustomFunction(events)
+            #events = self.makeCuts(events)
+            #print(ak.to_pandas(events))
+            #if hasattr(self, 'customFunction'):
+            #    self.custom_out = self.runCustomFunction(events)
             break
 
         #do some quick checks.        
@@ -99,8 +100,10 @@ class milliqanProcessor():
         #count the number of event that pass four layer cut
         #print(events["R_fourlayer"==True])
         #print(events['barCut'] == True)
-        print(ak.to_pandas(events))
-        #print(ak.to_pandas(events[events['barCut'] == True]))
+        #print(ak.to_pandas(events))
+        #condition = ak.num(events['layer']) > 0
+        #events=events[condition]
+        #print(ak.to_pandas(events))
 
 
         print("Number of processed events", total_events)

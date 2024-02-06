@@ -75,15 +75,32 @@ def oneHitPerLayerCutSIM(self, cutName=None, cut=False):
 
 
 def CosmicVetoSIM(self, cutName=None, cut=False):
-    self.events['CosmicVeto'] =((ak.count(self.events.pmt_chan==68, axis=1)>=1) | 
+    self.events['CosmicVeto'] =not((ak.count(self.events.pmt_chan==68, axis=1)>=1) | 
                                 (ak.count(self.events.pmt_chan==72, axis=1)>=1) |
                                 (ak.count(self.events.pmt_chan == 70, axis=1)>=1) |
                                 (ak.count(self.events.pmt_chan == 69, axis=1)>=1) |
                                 (ak.count(self.events.pmt_chan == 74, axis=1)>=1) |
                                 (ak.count(self.events.pmt_chan == 73, axis=1)>=1))
 
+#if the summing bar NPE of two beam panels is larger than 50Npe, then return false
+def BeamVeto (self,cutName=None,heightCut = 50):
+    self.events['BeamVeto'] = not (ak.sum(self.events.pmt_nPE[self.events.pmt_chan==75 | self.events.pmt_chan==71], axis=1) >= heightCut)
+
+def NPECut(self,cutName = None):
+    self.events['BarNPERatio'] = (ak.max(self.events.pmt_nPE[self.events.pmt_chan<=64],axis=1)/ak.min(self.events.pmt_nPE[self.events.pmt_chan<=64],axis=1)) <= 10
+
+#reprocess the tree such that it come with correct time.
+#Don't recreate the tree. wait until I finish the the cut validation for cuts at above.
+def correctTimeCut(self,cutName = None):
+    self.events['time'] = (ak.max(self.events.pmt_time[self.events.pmt_chan<=64],axis=1)-ak.min(self.events.pmt_time[self.events.pmt_chan<=64],axis=1))
+
+
+
+
 def barCutSim(self, cutName=None, cut=False):
     self.events['barCut'] = self.events.pmt_chan <= 64
+
+
 
 
 

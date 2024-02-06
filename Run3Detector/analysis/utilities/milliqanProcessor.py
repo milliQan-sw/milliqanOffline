@@ -21,7 +21,7 @@ class milliqanProcessor():
     def setBranches(self, branches):
         self.schedule = branches
 
-    '''def setCuts(self, cuts):
+    '''def setCuts(s    elf, cuts):
         self.cuts = cuts'''
 
     def makeBranches(self, events):
@@ -65,7 +65,7 @@ class milliqanProcessor():
             #branches
             self.branches,
 
-            step_size=1000,
+            step_size=10000,
 
             num_workers=8,
 
@@ -82,4 +82,10 @@ class milliqanProcessor():
             if hasattr(self, 'customFunction'):
                 self.custom_out = self.runCustomFunction(events)
 
+        #do some quick checks.        
+        #print(ak.to_pandas(events["R_fourlayer"]))
+        #print(len(events["R_fourlayer"]))
+        #count_true = ak.count_nonzero(events["R_fourlayer"])
+        #print(count_true)
+        print(events["R_fourlayer"==True])
         print("Number of processed events", total_events)

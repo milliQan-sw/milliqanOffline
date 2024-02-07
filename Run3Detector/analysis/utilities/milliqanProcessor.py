@@ -36,9 +36,14 @@ class milliqanProcessor():
                 #    branch.plot(self.custom_out)
                 else:
                     print("Branch {0} does not exist in event array or custom output".format(branch.variables))
+
+
+            #temporary solution for removing the event with empty list data in simulation anlysis. This can further decrease the time for doing analysis.
+            elif branch.__name__ == "EmptyListFilter":
+                events=branch()
+                self.mqSchedule.setEvents(events)            
             else:
                 branch()
-                print(ak.to_pandas(events))
         return events
 
     def makeCuts(self, events):
@@ -66,7 +71,7 @@ class milliqanProcessor():
             #branches
             self.branches,
 
-            step_size=1000,
+            step_size=10000,
 
             num_workers=8,
 
@@ -78,13 +83,13 @@ class milliqanProcessor():
 
             events = self.makeBranches(events)
 
-            #events = self.makeCuts(events)
-            #print(ak.to_pandas(events))
-            #if hasattr(self, 'customFunction'):
-            #    self.custom_out = self.runCustomFunction(events)
-            break
+            events = self.makeCuts(events)
+            
+            if hasattr(self, 'customFunction'):
+                self.custom_out = self.runCustomFunction(events)
 
-        #do some quick checks.        
+        #do some quick checks.   
+        print(ak.to_pandas(events))     
         #print(ak.to_pandas(events["R_fourlayer"]))
         #print(len(events["R_fourlayer"]))
         #count_true = ak.count_nonzero(events["R_fourlayer"])

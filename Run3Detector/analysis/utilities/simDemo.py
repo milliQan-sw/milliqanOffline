@@ -105,12 +105,11 @@ def EmptyListFilter(self,cutName=None):
     self.events['None_empty_event'] = ak.num(self.events['layer']) > 0
     self.events=self.events[self.events.None_empty_event]
 
+    #for some unknown reason, the script at below can't remove the empty event.
+    #to get this done I make some changes inside makeBranches()
     #for branch in ak.fields(self.events):
     #    self.events[branch] = self.events[branch][condition]
-
-    print(ak.to_pandas(self.events))
-    print("inside emptylist filter")
-    #return self.events
+    return self.events
 
 
 
@@ -138,7 +137,7 @@ R_OneHitperLayer = mycuts.getCut(mycuts.combineCuts, 'R_OneHitperLayer', ['barCu
 #cutflow = [mycuts.LayerCut,eventCuts,myplotter.dict['nPE']]
 #cutflow = [mycuts.barCutSim, mycuts.fourLayerCutSIM,mycuts.oneHitPerLayerCutSIM,R_fourlayer,R_OneHitperLayer]
 
-cutflow = [mycuts.barCutSim, mycuts.fourLayerCutSIM,R_fourlayer,mycuts.EmptyListFilter]
+cutflow = [mycuts.EmptyListFilter,mycuts.barCutSim, mycuts.fourLayerCutSIM,R_fourlayer]
 #cutflow = [mycuts.EmptyListFilter]
 myschedule = milliQanScheduler(cutflow, mycuts)
 

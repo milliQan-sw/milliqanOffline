@@ -30,13 +30,17 @@ def NHitsPlot(events):
 
 #extra function for trim down the size of event
 def NPEtrim(self,cutName=None, NPEcut = 1):
-    slimmedEvents = self.events[self.events['nPE']>=NPEcut]
-    return slimmedEvents
+    for branch in branches:
+        if branch == 'boardsMatched': continue
+        self.events[branch] = self.events[branch][self.events['nPE']>=NPEcut]
+    
 
 
 def bartrim(self,cutName=None):
-    slimmedEvents = self.events[self.events['type']==0]
-    return slimmedEvents
+    for branch in branches:
+        if branch == 'boardsMatched': continue
+        self.events[branch] = self.events[branch][self.events['type']==0]
+    
 
 mycuts = milliqanCuts()
 
@@ -77,8 +81,9 @@ boardMatchCut = mycuts.getCut(mycuts.boardsMatched, 'boardMatchCut', cut=True, b
 
 
 
-cutflow = [boardMatchCut,pickupCut,mycuts.bartrim,mycuts.NPEtrim,mycuts.fourLayerCut]
-
+cutflow = [boardMatchCut,pickupCut,mycuts.bartrim,mycuts.fourLayerCut]
+#cutflow = [boardMatchCut,pickupCut,mycuts.fourLayerCut,mycuts.bartrim]
+#cutflow = [boardMatchCut,pickupCut,mycuts.bartrim]
 
 myschedule = milliQanScheduler(cutflow, mycuts)
 

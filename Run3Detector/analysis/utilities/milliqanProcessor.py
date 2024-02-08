@@ -36,6 +36,10 @@ class milliqanProcessor():
                 #    branch.plot(self.custom_out)
                 else:
                     print("Branch {0} does not exist in event array or custom output".format(branch.variables))
+            elif "trim" in branch.__name__ :
+                trimEvents = branch()
+                self.mqSchedule.setEvents(trimEvents)
+                
             else:
                 branch()
         return events

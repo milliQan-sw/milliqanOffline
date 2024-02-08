@@ -15,7 +15,31 @@ from milliqanPlotter import *
 #------------------------------------------customized function--------------------------------------
 #plotting function for makind N-bars got hits when it pass four layer cut
 
-nbars=r.TH1F("nbars","nbars",32,0,32)
+nbars=r.TH1F("nbars","nbars;number of bars",32,0,32)
+
+
+#based on previous study nPE collected from cosmic muon hitting  on bar can reach up 30k(cosmic muon travel staight through) - 2.5k(
+#cosmic travel transvererly through the bar).   
+WideNPEh = r.TH1F("bar NPE","bar NPE histogram;bar NPE; events",25000,0,50000)
+NPERatio = r.TH1F("bar NPE ratio", "bar NPE ratio;max bar Npe / min bar Npe;events",40,0,200) 
+CorrectedTimeDist = r.TH1F("D T max", "D T max;dT max;events",40,-30,50)
+
+
+def CorrectTimeDt(TimeArray,layerArray):
+    arraylen = len(TimeArray)
+    for index in range(arraylen):
+        n = 80
+        #find the time for the first hit of each channel 
+        timeDict = {}
+        for time,chan in zip(TimeArray[index],ChanArray[index]):
+            if chan in timeDict:
+
+
+            else:
+                timeDict[chan] =[time]    
+        
+
+
 
 #function for making the plot
 def NHitsPlot(events):
@@ -23,12 +47,32 @@ def NHitsPlot(events):
     events = events[events.fourLayerCut]
     if len(events) == 0:return
     ChanArray = (ak.to_list(events.chan))
+    NpeArray = (ak.to_list(events.nPE))
+    #TimeArray = (ak.to_list(events.timeFit_module_calibrated))
+    #layerArray = (ak.to_list(events.layer))
+    n = 80  # Number of zeros you want
+    #print(ChanArray)
+    #print(NpeArray)
+    arraylen = len(ChanArray)
+    for index in range(arraylen):
+        Npe_list = [0] * n
+        for nPE, chan in zip(NpeArray[index],ChanArray[index]):
+            Npe_list[chan] += nPE
+
+        maxNPE = max(Npe_list)
+        minNPE = min(Npe_list)
+        NPERatio.Fill(maxNPE/minNPE)
+        for npe in Npe_list:
+            if npe > 0:
+                WideNPEh.Fill(npe)
+
     uniqueBarsCount = [len(set(inner_list)) for inner_list in ChanArray]
     #print(uniqueBarsCount)
     for count in uniqueBarsCount:
         nbars.Fill(count)
     #nbars.FillN(len(uniqueBarsCount), uniqueBarsCount, np.ones(len(uniqueBarsCount)))
     #FIXME: FillN has weird bug
+    
 
 
 #extra function for trim down the size of event
@@ -55,9 +99,9 @@ setattr(milliqanCuts, 'NPEtrim', NPEtrim)
 
 #------------------------------------------start of main function----------------------------------------------------------
 
-#filelist =['/mnt/hadoop/se/store/user/milliqan/trees/v34/MilliQan_Run1190.155_v34.root:t']
+#filelist =['/mnt/hadoop/se/store/user/milliqan/trees/v34/MilliQan_Run1190.4_v34.root:t']
 
-
+#"""
 filelist = []
 
 def appendRun(filelist,run):
@@ -71,9 +115,9 @@ cosmicGoodRun = [1190]
 
 for run in cosmicGoodRun:
     appendRun(filelist,run)
+#"""
 
-
-branches = ['boardsMatched', 'nPE', 'layer','type','chan','pickupFlag']
+branches = ['boardsMatched', 'nPE', 'layer','type','chan','pickupFlag','timeFit_module_calibrated']
 
 
 pickupCut = mycuts.getCut(mycuts.pickupCut, 'pickupCut', cut=True, branches=branches)
@@ -100,4 +144,6 @@ myiterator.run()
 
 output_file = r.TFile("test1190.root", "RECREATE")
 nbars.Write()
+WideNPEh.Write()
+NPERatio.Write()
 output_file.Close()

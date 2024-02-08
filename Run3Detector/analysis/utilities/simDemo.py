@@ -20,6 +20,21 @@ milliqanCut.py require a new init variable with {BranchName for checking the eve
 
 issue two: it will be great to let geometric cuts to change into NPE_branch when doing sim analysis
 
+#creating cosmic cut to
+
+create the branch name corrected, copy the data from time branch
+
+event["correctTime"] = even["time"][event["layer"]==1] -ndT
+
+
+how to include "event" inside th branch and apply the pulse based cut?
+I need to event & file number to trace the interesting event. I can use them to do further exploration with the raw root file.
+for branch in ["height", "area","layer","time"]:
+    branches[branch]=branches[branch][lay0Cut]
+
+
+
+
 """
 
 
@@ -53,7 +68,10 @@ myplotter.addHistograms(h_NPE, 'pmt_nPE', 'eventCuts')
 
 #-------------------------extra functions for doing analysis on "NPE" branch-------------------------------------
 def LayerCut(self, cutName=None, cut=False, branches=None):
+    self.events['layer0'] = self.events['pmt_layer'] == 0
     self.events['layer1'] = self.events['pmt_layer'] == 1
+    self.events['layer2'] = self.events['pmt_layer'] == 2
+    self.events['layer3'] = self.events['pmt_layer'] == 3
 
     if cut:
         branches.append('layer1')
@@ -61,17 +79,28 @@ def LayerCut(self, cutName=None, cut=False, branches=None):
             self.events[branch] = self.events[branch][LayerCuts]
 
 
-def fourLayerCutSIM(self, cutName=None, cut=False):
-    self.events['fourLayerCutSIM'] =(ak.any(self.events.pmt_layer==0, axis=1) & 
-                                    ak.any(self.events.pmt_layer==1, axis=1) & 
-                                    ak.any(self.events.pmt_layer==2, axis=1) & 
-                                    ak.any(self.events.pmt_layer==3, axis=1))
+def geometricCutSIM(self, cutName=None, cut=False):
+    self.events['layer0_bar'] = self.events['layer0']  & self.events['barCut']
+    self.events['layer1_bar'] = self.events['layer1']  & self.events['barCut']
+    self.events['layer2_bar'] = self.events['layer2']  & self.events['barCut']
+    self.events['layer3_bar'] = self.events['layer3']  & self.events['barCut']
+    
+    
 
-def oneHitPerLayerCutSIM(self, cutName=None, cut=False):
-    self.events['oneHitPerLayerCutSIM'] =((ak.count(self.events.pmt_layer==0, axis=1)==1) & 
-                                        (ak.count(self.events.pmt_layer==1, axis=1)==1) & 
-                                        (ak.count(self.events.pmt_layer==2, axis=1)==1) &
-                                        (ak.count(self.events.pmt_layer==3, axis=1)==1))
+    self.events['fourLayerCutSIM'] =(ak.any(self.events.layer0_bar==True, axis=1) & 
+                                    ak.any(self.events.layer1_bar==True, axis=1) & 
+                                    ak.any(self.events.layer2_bar==True, axis=1) & 
+                                    ak.any(self.events.layer3_bar==True, axis=1))
+
+    self.events['oneHitPerLayerCutSIM'] =((ak.count(self.events.layer0_bar==True, axis=1)==1) & 
+                                        (ak.count(self.events.layer1_bar==True, axis=1)==1) & 
+                                        (ak.count(self.events.layer2_bar==True, axis=1)==1) &
+                                        (ak.count(self.events.layer3_bar==True, axis=1)==1))
+
+
+    
+
+
 
 
 def CosmicVetoSIM(self, cutName=None, cut=False):
@@ -81,6 +110,21 @@ def CosmicVetoSIM(self, cutName=None, cut=False):
                                 (ak.count(self.events.pmt_chan == 69, axis=1)>=1) |
                                 (ak.count(self.events.pmt_chan == 74, axis=1)>=1) |
                                 (ak.count(self.events.pmt_chan == 73, axis=1)>=1))
+
+
+def barCutSim(self, cutName=None):
+    self.events['barCutSim'] = self.events['type'] <= 63
+
+
+
+def oneHitPerLayerCutSIM(self, cutName=None, cut=False):
+    self.events['oneHitPerLayerCutSIM'] =((ak.count(self.events.pmt_layer==0, axis=1)==1) & 
+                                        (ak.count(self.events.pmt_layer==1, axis=1)==1) & 
+                                        (ak.count(self.events.pmt_layer==2, axis=1)==1) &
+                                        (ak.count(self.events.pmt_layer==3, axis=1)==1))
+
+
+
 
 #if the summing bar NPE of two beam panels is larger than 50Npe, then return false
 def BeamVeto (self,cutName=None,heightCut = 50):
@@ -100,15 +144,22 @@ def correctTimeCut(self,cutName = None):
 def barCutSim(self, cutName=None, cut=False):
     self.events['barCut'] = self.events.pmt_chan <= 64
 
-
+#We want to remove the empty empty event and the empty instance inside an event
 def EmptyListFilter(self,cutName=None):
-    self.events['None_empty_event'] = ak.num(self.events['layer']) > 0
+    #remove empty events
+    self.events['None_empty_event'] = ak.num(self.events['pmt_layer']) > 0
     self.events=self.events[self.events.None_empty_event]
-
-    #for some unknown reason, the script at below can't remove the empty event.
-    #to get this done I make some changes inside makeBranches()
-    #for branch in ak.fields(self.events):
-    #    self.events[branch] = self.events[branch][condition]
+    #remove the empty instance
+    print(ak.to_pandas(self.events))
+    #check if empty instance exist
+    print(ak.to_list(self.events))
+    print(ak.to_list(self.events.layer))
+    """
+    condition = self.events['layer'] ==1
+    #self.events = self.events[condition]
+    for branch in ak.fields(self.events):
+        self.events[branch] = self.events[branch][condition]
+    """
     return self.events
 
 

@@ -15,17 +15,20 @@ from milliqanPlotter import *
 #------------------------------------------customized function--------------------------------------
 #plotting function for makind N-bars got hits when it pass four layer cut
 
-#nbars=r.TH1("nbars","nbars",32,0,32)
+nbars=r.TH1F("nbars","nbars",32,0,32)
 
 #function for making the plot
 def NHitsPlot(events):
-    print(ak.to_pandas(events))
+    #print(ak.to_pandas(events))
     events = events[events.fourLayerCut]
     if len(events) == 0:return
     ChanArray = (ak.to_list(events.chan))
     uniqueBarsCount = [len(set(inner_list)) for inner_list in ChanArray]
-    print(uniqueBarsCount)
-    #unfinished
+    #print(uniqueBarsCount)
+    for count in uniqueBarsCount:
+        nbars.Fill(count)
+    #nbars.FillN(len(uniqueBarsCount), uniqueBarsCount, np.ones(len(uniqueBarsCount)))
+    #FIXME: FillN has weird bug
 
 
 #extra function for trim down the size of event
@@ -52,9 +55,9 @@ setattr(milliqanCuts, 'NPEtrim', NPEtrim)
 
 #------------------------------------------start of main function----------------------------------------------------------
 
-filelist =['/mnt/hadoop/se/store/user/milliqan/trees/v34/MilliQan_Run1190.155_v34.root:t']
+#filelist =['/mnt/hadoop/se/store/user/milliqan/trees/v34/MilliQan_Run1190.155_v34.root:t']
 
-"""
+
 filelist = []
 
 def appendRun(filelist,run):
@@ -68,7 +71,7 @@ cosmicGoodRun = [1190]
 
 for run in cosmicGoodRun:
     appendRun(filelist,run)
-"""
+
 
 branches = ['boardsMatched', 'nPE', 'layer','type','chan','pickupFlag']
 
@@ -93,3 +96,8 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts)
 myiterator.setCustomFunction(NHitsPlot)
 
 myiterator.run()
+
+
+output_file = r.TFile("test1190.root", "RECREATE")
+nbars.Write()
+output_file.Close()

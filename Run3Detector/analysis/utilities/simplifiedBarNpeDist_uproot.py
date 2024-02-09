@@ -8,8 +8,8 @@ from array import array
 import numpy as np
 
 
-filelist = ["/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhoton/output_592.root"]
-"""
+#filelist = ["/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhoton/output_592.root"]
+#"""
 filelist = []
 
 def appendRun(filelist):
@@ -19,12 +19,26 @@ def appendRun(filelist):
             filelist.append(directory+filename+":t")
 
 appendRun(filelist)
-"""
+#"""
 
 Npedist=r.TH1F("Npedist","Npedist;barNpe",500,0,100000)
 
+ChanHist = r.TH1F("Chan dist" , "Chan dist; chan number(old mapping)", 80,0,80)
+
+
+def ChanDist(events,barpmtCut = 2000):
+    for branch in ["pmt_chan","pmt_nPE"]:
+        events[branch] = events[branch][events.pmt_nPE >= barpmtCut]
+    output = ak.flatten(events.pmt_chan,axis=None)
+    myarray = array('d', output)
+    ChanHist.FillN(len(myarray), myarray, np.ones(len(myarray)))
+
+
+
+
 def NpedistPlot(events):
     #remove empty events
+    #event based cut
     events['None_empty_event'] = ak.num(events.pmt_chan) > 0
     events=events[events.None_empty_event]
     #remove the non-bar channel
@@ -51,11 +65,13 @@ for events in uproot.iterate(
 
     total_events += len(events)
     NpedistPlot(events)
+    ChanDist(events)
 
 
 
 print("Number of processed events:", total_events)
 
-output_file = r.TFile("NPEtest.root", "RECREATE")
+output_file = r.TFile("WitPhotontest.root", "RECREATE")
 Npedist.Write()
+ChanHist.Write()
 output_file.Close()

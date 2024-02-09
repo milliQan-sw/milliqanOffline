@@ -109,7 +109,16 @@ class fileChecker():
         self.h_boardUnmatched = r.TH1F("h_boardUnmatched", "Number of Boards Unmatched", bins, self.min_run, self.max_run)
 
         self.c1  = r.TCanvas("c1", "c1", 800,800)
-        
+
+    def checkActiveTriggers(self, trigger):
+        t_bin = trigger & 0b0000000001011111 #check only first 8 triggers
+        minimumTriggers = t_bin & 0b01011111 #(1011111)
+        if minimumTriggers == 95: 
+            #print("Trigger passing", minimumTriggers)
+            return True
+        else: 
+            #print("Trigger failing", minimumTriggers)
+            return False
         
     def checkOfflineFiles(self, fileList):
 
@@ -219,10 +228,9 @@ class fileChecker():
             runNum, fileNum = self.getRunFile(file)
             for events in metadata:
                 passing = passing and events.fwVersion >= 11
-                passing = passing and events.trigger == 5983
+                passing = passing and self.checkActiveTriggers(events.trigger)
                 passing = passing and events.coincidenceTime == 10
-                passing = passing and events.deadTime == 142
-            #print("Trigger board file {} meta data passing {}, run {}, file {}".format(file, passing, runNum, fileNum))
+                passing = passing and events.deadTime >= 100 #TODO changed to 142 in later runs
             self.runInfos.loc[(self.runInfos['run'] == int(runNum)) & (self.runInfos['file'] == int(fileNum)), 'triggerConfigPassing'] = passing
     
     def getOfflineInfo(self):
@@ -278,8 +286,8 @@ class fileChecker():
         #now look at offline files post processing info
         runs = self.runInfos.run.unique()
         for run in runs:
-            runList = self.runInfos[['offlineDir', 'offlineFile']].loc[(self.runInfos['run']==run) & (self.runInfos['unmatchedBoards']==0)].apply('/'.join, axis=1).tolist()
-            runList = [x+':t' for x in runList]
+            runList = self.runInfos[['offlineDir', 'offlineFile']].loc[(self.runInfos['run']==run) & (self.runInfos['unmatchedBoards']==0)].apply(lambda x: '/'.join((x.offlineDir, x.offlineFile)) if (x.offlineDir!=None and x.offlineFile!=None) else None, axis=1).values.tolist()
+            runList = [x+':t' for x in runList if x!=None]
             if len(runList) == 0: continue
             self.checkOfflineFiles(runList)
     
@@ -302,14 +310,14 @@ class fileChecker():
     def finalChecks(self):
 
         self.runInfos['TriggersMatched'] = self.runInfos['unmatchedEvents'].apply(lambda x: True if x < 10 else False)
-        self.runInfos['OfflineFilesTrigMatched'] = self.runInfos.apply(lambda x: True if ((x['offlineTrigMatched'] / x['totalEvents']) > 0.99) else False, axis=1)
-        self.runInfos['passBoardMatching'] = self.runInfos.apply(lambda x: True if ((x['unmatchedBoards'] / x['totalEvents']) < 0.01) else False, axis=1)
+        self.runInfos['OfflineFilesTrigMatched'] = self.runInfos.apply(lambda x: True if (x['totalEvents'] > 0 and (x['offlineTrigMatched'] / x['totalEvents']) > 0.99) else False, axis=1)
+        self.runInfos['passBoardMatching'] = self.runInfos.apply(lambda x: True if (x['totalEvents'] > 0 and (x['unmatchedBoards'] / x['totalEvents']) < 0.01) else False, axis=1)
         self.runInfos['passActiveChannels'] = self.runInfos.apply(lambda x: False if np.any(x['activeChannels'][usedChannels]==False) else True, axis=1)
+        self.runInfos['inactiveChannels'] = self.runInfos.apply(lambda x: np.intersect1d(np.where(x['activeChannels']==False), usedChannels), axis=1)
 
         self.runInfos['goodRuns'] = self.runInfos['TriggersMatched'] & self.runInfos['OfflineFilesTrigMatched'] & \
-                                    self.runInfos['passBoardMatching'] & self.runInfos['triggerConfigPassing'] & \
-                                    self.runInfos['passActiveChannels']
-
+                                    self.runInfos['passBoardMatching'] & self.runInfos['triggerConfigPassing'] #& \
+                                    #self.runInfos['passActiveChannels'] #remove condition for now to create era appropriate missing channels
     def makeGoodRunList(self, outName='goodRunList.json'):
                 
         goodRuns = self.runInfos

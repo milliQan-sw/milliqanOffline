@@ -87,12 +87,11 @@ class fileChecker():
                                   'matchFile', 'offlineFile', 'totalEvents', 'unmatchedEvents', 
                                   'startTime', 'unmatchedBoards', 'daqCTime', 'trigCTime', 'matchCTime',
                                   'offlineCTime', 'offlineTrigMatched', 'triggerConfigPassing', 'activeChannels'])
-        #self.runInfos.set_index(['run', 'file'], inplace=True)
         
         self.debug = False
         
-        self.rawDirs = rawDirectories = ['1000', '1100', '1200']
-        self.subRawDirs = ['0001', '0002', '0003', '0004', '0005', '0006', '0007', '0008', '0009']
+        self.rawDirs = rawDirectories = ['1000', '1100', '1200', '1300', '1400']
+        self.subRawDirs = ['0000', '0001', '0002', '0003', '0004', '0005', '0006', '0007', '0008', '0009']
         
     def parse_args(self):
         parser=argparse.ArgumentParser()
@@ -114,10 +113,8 @@ class fileChecker():
         t_bin = trigger & 0b0000000001011111 #check only first 8 triggers
         minimumTriggers = t_bin & 0b01011111 #(1011111)
         if minimumTriggers == 95: 
-            #print("Trigger passing", minimumTriggers)
             return True
         else: 
-            #print("Trigger failing", minimumTriggers)
             return False
         
     def checkOfflineFiles(self, fileList):
@@ -130,9 +127,6 @@ class fileChecker():
 
             #branches
             ['runNumber', 'fileNumber', 'boardsMatched', 'tStartTime', 'tTrigger'],
-
-            #cut
-            #cut="",
 
             how="zip",
 
@@ -195,7 +189,6 @@ class fileChecker():
             #branches
             ['runNum', 'eventNum', 'trigger', 'startTime'],
 
-
             #needs to be 1000 events for file number to be correct
             step_size=10000,
 
@@ -229,7 +222,7 @@ class fileChecker():
             for events in metadata:
                 passing = passing and events.fwVersion >= 11
                 passing = passing and self.checkActiveTriggers(events.trigger)
-                passing = passing and events.coincidenceTime == 10
+                passing = passing and (events.coincidenceTime == 10 or events.coincidenceTime == 20) #This also changed
                 passing = passing and events.deadTime >= 100 #TODO changed to 142 in later runs
             self.runInfos.loc[(self.runInfos['run'] == int(runNum)) & (self.runInfos['file'] == int(fileNum)), 'triggerConfigPassing'] = passing
     
@@ -277,7 +270,6 @@ class fileChecker():
         runs = self.runInfos.run.unique()
         for run in runs:
             runList = self.runInfos[['rawDir', 'matchFile']].loc[(self.runInfos['run']==run) & (self.runInfos['totalEvents']==0)].apply(lambda x: '/'.join((x.rawDir, x.matchFile)) if (x.rawDir!=None and x.matchFile!=None) else None, axis=1).values.tolist()
-            #print(runList)
             runList = [x+':matchedTrigEvents' for x in runList if x!=None]
             if len(runList) == 0: continue
             self.checkMatchedFiles(runList)
@@ -359,6 +351,8 @@ class fileChecker():
         display(self.runInfos.style.apply(self.customStyle, axis=1))
         
 if __name__ == "__main__":
+
+    r.gROOT.SetBatch(1)
 
     args = parse_args()
 

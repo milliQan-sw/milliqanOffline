@@ -1,4 +1,4 @@
-#This is an example of how to use my 2d/3d plotting functionality in milliqanPlotter
+#This is an example of how to use my 2d/3d plotting functionality in milliqanPlotter!
 import os
 import ROOT as r
 

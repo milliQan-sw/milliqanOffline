@@ -89,12 +89,5 @@ class milliqanProcessor():
             
             if hasattr(self, 'customFunction'):
                 self.custom_out = self.runCustomFunction(events)
-
-<<<<<<< HEAD
+    
         print("Number of processed events", total_events)
-=======
-
-            total_events += len(events)
- 
-        print("Number of events prior to cuts", total_events)
->>>>>>> b12d1c1 (Added a script to explore time walk effects. Also modified Plot() in milliqanProcessor to be able to generate 2d and 3d histograms.)

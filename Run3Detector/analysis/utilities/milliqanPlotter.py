@@ -12,7 +12,6 @@ class milliqanPlot():
         self.cut = cut
 
     def plot(self, events):
-<<<<<<< HEAD
         if self.cut:
             output = ak.flatten(events[self.variables][events[self.cut]],axis=None)
         else:
@@ -21,27 +20,6 @@ class milliqanPlot():
         myarray = array('d', output)
         if len(myarray) > 0:
             self.histogram.FillN(len(myarray), myarray, np.ones(len(myarray)))
-=======
-        if isinstance(self.variables, list):
-            if self.cut:
-                output = [ak.flatten(ak.drop_none(events[x][events[self.cut]])) for x in self.variables]
-            else:
-                output = [ak.flatten(ak.drop_none(events[x])) for x in self.variables]
-            myarray = [array('d', x) for x in output]
-            if len(myarray) == 2 and len(myarray[0]) != 0:
-                self.histogram.FillN(len(myarray[0]), myarray[0], myarray[1], np.ones(len(myarray[0])))
-            elif len(myarray) == 3:
-                print("No 3d histogram capability yet!")
-        else:
-            if self.cut:
-                output = ak.flatten(events[self.variables][events[self.cut]])
-            else:
-                output = ak.drop_none(events[self.variables])
-                output = ak.flatten(output)
-            myarray = array('d', output)
-            if len(myarray) > 0:
-                self.histogram.FillN(len(myarray), myarray, np.ones(len(myarray)))
->>>>>>> b12d1c1 (Added a script to explore time walk effects. Also modified Plot() in milliqanProcessor to be able to generate 2d and 3d histograms.)
 
 class milliqanPlotter():
 

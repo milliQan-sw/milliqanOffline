@@ -42,15 +42,18 @@ eventCuts = mycuts.getCut(mycuts.combineCuts, 'eventCuts', ['fourLayerCut', 'str
 myplotter = milliqanPlotter()
 
 #create root histograms
+h_test1d = r.TH1F("h_test1d", "1d Histogram", 100, 0, 500000)
+h_test1d.GetXaxis().SetTitle("area [pVs]")
 h_test2d = r.TH2F("h_test2d", "2d Histogram", 140, 0, 500000, 100, 0, 3000)
 h_test2d.GetXaxis().SetTitle("area [pVs]")
 h_test2d.GetYaxis().SetTitle("time [ns]")
 
 #add root histogram to plotter
+myplotter.addHistograms(h_test1d, 'area', 'eventCuts')
 myplotter.addHistograms(h_test2d, ['area', 'time'], 'eventCuts')
 
 #defining the cutflow
-cutflow = [mycuts.fourLayerCut, mycuts.layerCut, mycuts.straightLineCut, heightCut200, mycuts.slabCut, eventCuts, myplotter.dict['h_test2d']]
+cutflow = [mycuts.fourLayerCut, mycuts.layerCut, mycuts.straightLineCut, heightCut200, mycuts.slabCut, eventCuts, myplotter.dict['h_test1d'], myplotter.dict['h_test2d']]
 
 #create a schedule of the cuts
 myschedule = milliQanScheduler(cutflow, mycuts, myplotter)
@@ -68,6 +71,7 @@ myiterator.run()
 f = r.TFile("2dTest.root", "recreate")
 
 # Write the histograms to the file
+h_test1d.Write()
 h_test2d.Write()
 
 # Close the file

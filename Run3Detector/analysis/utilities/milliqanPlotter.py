@@ -14,22 +14,28 @@ class milliqanPlot():
     def plot(self, events):
         if isinstance(self.variables, list):
             if self.cut:
-                output = [ak.flatten(ak.drop_none(events[x][events[self.cut]]), axis=None) for x in self.variables]
+                output = [ak.flatten(events[x][events[self.cut]],axis=None) for x in self.variables]
             else:
-                output = [ak.flatten(ak.drop_none(events[x]), axis=None) for x in self.variables]
-            myarray = [array('d', x) for x in output]
-            if len(myarray) == 2 and len(myarray[0]) != 0:
-                self.histogram.FillN(len(myarray[0]), myarray[0], myarray[1], np.ones(len(myarray[0])))
-            elif len(myarray) == 3:
-                print("No 3d histogram capability yet!")
+                output = [ak.drop_none(events[x]) for x in self.variables]
+                output = [ak.flatten(y,axis=None) for y in output]
+            #2D histograms
+            if len(output) == 2 and len(output[0])>0:
+                myarray0 = array('d', output[0])
+                myarray1 = array('d', output[1])
+                self.histogram.FillN(len(myarray0), myarray0, myarray1, np.ones(len(myarray0)))
+            #3d histograms
+            elif len(output) == 3 and len(output[0])>0:
+                print("No 3d printing capabilities yet!")
+                
         else:
             if self.cut:
-                output = ak.flatten(events[self.variables][events[self.cut]], axis=None)
+                output = ak.flatten(events[self.variables][events[self.cut]],axis=None)
             else:
                 output = ak.drop_none(events[self.variables])
-                output = ak.flatten(output, axis=None)
+                output = ak.flatten(output,axis=None)
             myarray = array('d', output)
-            if len(myarray) > 0:
+            #1D histograms
+            if len(myarray)>0:
                 self.histogram.FillN(len(myarray), myarray, np.ones(len(myarray)))
 
 class milliqanPlotter():

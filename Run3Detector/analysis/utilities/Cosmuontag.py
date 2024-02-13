@@ -43,9 +43,9 @@ def Cosmuontag1(events,NpeCut=20):
 
 filelist =['/mnt/hadoop/se/store/user/milliqan/trees/v34/MilliQan_Run1190.4_v34.root:t']
 
-pulseBasedBranches = ["pickupFlag","layer","nPE","type","row"]
+pulseBasedBranches = ["pickupFlag","layer","nPE","type","row","chan"]
 
-branches = ["runNumber","event","fileNumber",'boardsMatched',"pickupFlag","layer","nPE","type","row"]
+branches = ["runNumber","event","fileNumber",'boardsMatched',"pickupFlag","layer","nPE","type","row","chan"]
 
 
 NPECut = 20
@@ -101,8 +101,9 @@ PossibleMuonEvent = events[events.fourRowBigHits == True]
 print(ak.to_list(PossibleMuonEvent["event"][PossibleMuonEvent.fourRowBigHits == True]))
 print(ak.to_list(PossibleMuonEvent["runNumber"][PossibleMuonEvent.fourRowBigHits == True]))
 print(ak.to_list(PossibleMuonEvent["fileNumber"][PossibleMuonEvent.fourRowBigHits == True]))
+print(ak.to_pandas(PossibleMuonEvent))
     
---------------------------------------
+#--------------------------------------
 
 
     

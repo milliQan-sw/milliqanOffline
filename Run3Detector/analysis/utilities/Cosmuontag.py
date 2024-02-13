@@ -95,14 +95,27 @@ for events in uproot.iterate(
                                 ak.any(events.l3R2==True, axis=1) & 
                                 ak.any(events.l3R3==True, axis=1)) 
     
+    #top and bottom row has big hit
+    events["TBBigHit"] = (ak.any(events.l0R0==True, axis=1) & 
+                                ak.any(events.l0R1==True, axis=1) & 
+                                ak.any(events.l0R2==True, axis=1) & 
+                                ak.any(events.l0R3==True, axis=1)) | (ak.any(events.l3R0==True, axis=1) & 
+                                ak.any(events.l3R1==True, axis=1) & 
+                                ak.any(events.l3R2==True, axis=1) & 
+                                ak.any(events.l3R3==True, axis=1)) 
+    
 
 
+
+
+print(ak.to_list(events["event"][events.TBBigHit == True]))
+"""
 PossibleMuonEvent = events[events.fourRowBigHits == True]
 print(ak.to_list(PossibleMuonEvent["event"][PossibleMuonEvent.fourRowBigHits == True]))
 print(ak.to_list(PossibleMuonEvent["runNumber"][PossibleMuonEvent.fourRowBigHits == True]))
 print(ak.to_list(PossibleMuonEvent["fileNumber"][PossibleMuonEvent.fourRowBigHits == True]))
 print(ak.to_pandas(PossibleMuonEvent))
-    
+"""
 #--------------------------------------
 
 

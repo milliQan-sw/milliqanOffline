@@ -59,10 +59,13 @@ filelist =['/mnt/hadoop/se/store/user/milliqan/trees/v34/MilliQan_Run1190.4_v34.
 
 pulseBasedBranches = ["pickupFlag","layer","nPE","type","row","chan"]
 
-branches = ["runNumber","event","fileNumber",'boardsMatched',"pickupFlag","layer","nPE","type","row","chan"]
+#branches = ["runNumber","event","fileNumber",'boardsMatched',"pickupFlag","layer","nPE","type","row","chan"]
 
+fakebranches = ["runNumber","pickupFlag","layer","nPE","type","row","chan"]
 
 NPECut = 20
+
+
 
 for events in uproot.iterate(
     filelist,
@@ -83,15 +86,15 @@ for events in uproot.iterate(
     """
 
     #create dummy arrays
-    dummyDict={'dummy': [0]}
+    dummyDict={'runNumber': [0]}
     barEvents = ak.Array(dummyDict)
     PanelEvents = ak.Array(dummyDict)
     
 
-    for branch in pulseBasedBranches:
-        #trimevent[branch] = events[branch][events['type']>=0] # get rid of the ev
-        barEvents = events[events['type']==0]
-        PanelEvents = events[events['type']>=1]
+    #for branch in pulseBasedBranches:
+    #trimevent[branch] = events[branch][events['type']>=0] # get rid of the ev
+    barEvents = events[events['type']==0] #FIXME: ValueError: too many jagged slice dimensions for array when using branches in interate()
+    PanelEvents = events[events['type']>=1]
     
 
     #currently the panel NPE is the same of pulse area. 1320 is the average spe pulse area from bars. 
@@ -137,9 +140,9 @@ for events in uproot.iterate(
                                 ak.any(barEvents.l3R3==True, axis=1)) 
 
 
-
-
-print(ak.to_list(barEvents.TBBigHit))
+print(ak.to_pandas(PanelEvents))
+#print(ak.to_list(PanelEvents["event"][PanelEvents.panelNPE >= NPECut]))
+#print(ak.to_list(barEvents.TBBigHit))
 #print(ak.to_list(events["event"][events.TBBigHit == True]))
 """
 PossibleMuonEvent = events[events.fourRowBigHits == True]

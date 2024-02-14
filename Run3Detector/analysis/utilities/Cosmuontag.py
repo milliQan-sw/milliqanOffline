@@ -1,3 +1,17 @@
+"""
+when I apply bartrim & 4 rows got big hit in a layer
+The pulse NPE measurement is accurate under 20NPE
+I saw some channel reach 300-400NPE(saturated value), Can I use those saturated value check cosmic muon?
+
+
+
+    events["panelBighit"] = ak.any(events.type == 2,axis = 1) & ak.any(events.nPE >= NPECut,axis = 1)
+TypeError: __eq__(): incompatible function arguments. The following argument types are supported:
+    1. (self: awkward._ext.Type, arg0: awkward._ext.Type) -> bool
+
+
+
+"""
 import ROOT as r
 import os 
 import sys
@@ -52,13 +66,13 @@ NPECut = 20
 
 for events in uproot.iterate(
     filelist,
-    branches,
+    pulseBasedBranches,
     step_size=1000,
     num_workers=8,
     ):
 
     #total_events += len(events)
-
+    """
     events['boardsMatched'], junk = ak.broadcast_arrays(events.boardsMatched, events.pickupFlag)
     
     for branch in pulseBasedBranches:
@@ -66,49 +80,67 @@ for events in uproot.iterate(
 
     for branch in pulseBasedBranches:
         events[branch] = events[branch][events.pickupFlag]
+    """
+
+    #create dummy arrays
+    dummyDict={'dummy': [0]}
+    barEvents = ak.Array(dummyDict)
+    PanelEvents = ak.Array(dummyDict)
+    
 
     for branch in pulseBasedBranches:
-        events[branch] = events[branch][events['type']==0]
+        #trimevent[branch] = events[branch][events['type']>=0] # get rid of the ev
+        barEvents = events[events['type']==0]
+        PanelEvents = events[events['type']>=1]
+    
+
+    #currently the panel NPE is the same of pulse area. 1320 is the average spe pulse area from bars. 
+    PanelEvents["panelNPE"] = PanelEvents["nPE"]/1320
+
+    #unifinished TBD
+    #when cosmic muon hit the panel(5cm thickness) and bar, it will generate at least 2k NPE
     
     for branch in pulseBasedBranches:
-        events[branch] = events[branch][events.nPE >= NPECut]
+        barEvents[branch] = barEvents[branch][barEvents.nPE >= NPECut]
+        PanelEvents[branch] = PanelEvents[branch][PanelEvents.panelNPE >= NPECut]
+
+    #event based, NPE trim is applied at above.(I need to think about this again. it seems redundant)
+    #PanelEvents["panelBigHit"] = ak.any(PanelEvents.type == 2,axis = 1)
 
     
-    for r in range(4):
-        for l in range(4):
-            events[f"l{l}R{r}"] = (events.layer == l) & (events.row == r)
+    for l in range(4):
+        for r in range(4):
+            barEvents[f"l{l}R{r}"] = (barEvents.layer == l) & (barEvents.row == r)
     
 
 
     
-    events["fourRowBigHits"] = (ak.any(events.l0R0==True, axis=1) & 
-                                ak.any(events.l0R1==True, axis=1) & 
-                                ak.any(events.l0R2==True, axis=1) & 
-                                ak.any(events.l0R3==True, axis=1)) | (ak.any(events.l1R0==True, axis=1) & 
-                                ak.any(events.l1R1==True, axis=1) & 
-                                ak.any(events.l1R2==True, axis=1) & 
-                                ak.any(events.l1R3==True, axis=1)) | (ak.any(events.l2R0==True, axis=1) & 
-                                ak.any(events.l2R1==True, axis=1) & 
-                                ak.any(events.l2R2==True, axis=1) & 
-                                ak.any(events.l2R3==True, axis=1)) | (ak.any(events.l3R0==True, axis=1) & 
-                                ak.any(events.l3R1==True, axis=1) & 
-                                ak.any(events.l3R2==True, axis=1) & 
-                                ak.any(events.l3R3==True, axis=1)) 
+    barEvents["fourRowBigHits"] = (ak.any(barEvents.l0R0==True, axis=1) & 
+                                ak.any(barEvents.l0R1==True, axis=1) & 
+                                ak.any(barEvents.l0R2==True, axis=1) & 
+                                ak.any(barEvents.l0R3==True, axis=1)) | (ak.any(barEvents.l1R0==True, axis=1) & 
+                                ak.any(barEvents.l1R1==True, axis=1) & 
+                                ak.any(barEvents.l1R2==True, axis=1) & 
+                                ak.any(barEvents.l1R3==True, axis=1)) | (ak.any(barEvents.l2R0==True, axis=1) & 
+                                ak.any(barEvents.l2R1==True, axis=1) & 
+                                ak.any(barEvents.l2R2==True, axis=1) & 
+                                ak.any(barEvents.l2R3==True, axis=1)) | (ak.any(barEvents.l3R0==True, axis=1) & 
+                                ak.any(barEvents.l3R1==True, axis=1) & 
+                                ak.any(barEvents.l3R2==True, axis=1) & 
+                                ak.any(barEvents.l3R3==True, axis=1)) 
     
     #top and bottom row has big hit
-    events["TBBigHit"] = (ak.any(events.l0R0==True, axis=1) & 
-                                ak.any(events.l0R1==True, axis=1) & 
-                                ak.any(events.l0R2==True, axis=1) & 
-                                ak.any(events.l0R3==True, axis=1)) | (ak.any(events.l3R0==True, axis=1) & 
-                                ak.any(events.l3R1==True, axis=1) & 
-                                ak.any(events.l3R2==True, axis=1) & 
-                                ak.any(events.l3R3==True, axis=1)) 
-    
+    barEvents["TBBigHit"] = (ak.any(barEvents.l0R0==True, axis=1) & 
+                                ak.any(barEvents.l0R3==True, axis=1)) | (ak.any(barEvents.l1R0==True, axis=1) &  
+                                ak.any(barEvents.l1R3==True, axis=1)) | (ak.any(barEvents.l2R0==True, axis=1) & 
+                                ak.any(barEvents.l2R3==True, axis=1)) | (ak.any(barEvents.l3R0==True, axis=1) & 
+                                ak.any(barEvents.l3R3==True, axis=1)) 
 
 
 
 
-print(ak.to_list(events["event"][events.TBBigHit == True]))
+print(ak.to_list(barEvents.TBBigHit))
+#print(ak.to_list(events["event"][events.TBBigHit == True]))
 """
 PossibleMuonEvent = events[events.fourRowBigHits == True]
 print(ak.to_list(PossibleMuonEvent["event"][PossibleMuonEvent.fourRowBigHits == True]))

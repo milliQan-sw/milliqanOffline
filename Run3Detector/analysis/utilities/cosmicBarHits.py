@@ -16,15 +16,14 @@ from milliqanPlotter import *
 #plotting function for makind N-bars got hits when it pass four layer cut
 
 nbars=r.TH1F("nbars","nbars;number of bars",32,0,32)
-
-
 #based on previous study nPE collected from cosmic muon hitting  on bar can reach up 30k(cosmic muon travel staight through) - 2.5k(
 #cosmic travel transvererly through the bar).   
 WideNPEh = r.TH1F("bar NPE","bar NPE histogram;bar NPE; events",25000,0,50000)
 NPERatio = r.TH1F("bar NPE ratio", "bar NPE ratio;max bar Npe / min bar Npe;events",40,0,200) 
+pulseNpeh = r.TH1F("pulse NPE","pulse NPE histogram;pulse NPE; events",25000,0,50000)
 CorrectedTimeDist = r.TH1F("D T max", "D T max;dT max;events",40,-30,50)
 
-
+#unfinished
 def CorrectTimeDt(TimeArray,layerArray):
     arraylen = len(TimeArray)
     for index in range(arraylen):
@@ -33,19 +32,20 @@ def CorrectTimeDt(TimeArray,layerArray):
         timeDict = {}
         for time,chan in zip(TimeArray[index],ChanArray[index]):
             if chan in timeDict:
-
+                pass
 
             else:
                 timeDict[chan] =[time]    
         
-
+def remove_non_zero(lst):
+    return [x for x in lst if x > 0]
 
 
 #function for making the plot
 def NHitsPlot(events):
     #print(ak.to_pandas(events))
-    events = events[events.fourLayerCut]
-    if len(events) == 0:return
+    #events = events[events.fourLayerCut]
+    if len(events) == 0:return  #quit if the current file is empty
     ChanArray = (ak.to_list(events.chan))
     NpeArray = (ak.to_list(events.nPE))
     #TimeArray = (ak.to_list(events.timeFit_module_calibrated))
@@ -54,14 +54,19 @@ def NHitsPlot(events):
     #print(ChanArray)
     #print(NpeArray)
     arraylen = len(ChanArray)
+    #print(arraylen)
     for index in range(arraylen):
         Npe_list = [0] * n
         for nPE, chan in zip(NpeArray[index],ChanArray[index]):
             Npe_list[chan] += nPE
-
-        maxNPE = max(Npe_list)
-        minNPE = min(Npe_list)
-        NPERatio.Fill(maxNPE/minNPE)
+        #print(Npe_list)    
+        #NonezeroNpelist = remove_non_zero(Npe_list)
+        #maxNPE = max(NonezeroNpelist)
+        #minNPE = min(NonezeroNpelist)  #FIXME: I want the non-zero minimum. I need to fix it.
+        #print(minNPE)
+        #print(Npe_list)
+        #if minNPE > 0:
+        #    NPERatio.Fill(maxNPE/minNPE)
         for npe in Npe_list:
             if npe > 0:
                 WideNPEh.Fill(npe)
@@ -110,7 +115,7 @@ def appendRun(filelist,run):
     for filename in os.listdir(directory):
         if filename.startswith(f"MilliQan_Run{run}") and filename.endswith(".root"):
             filelist.append(directory+filename+":t")
-cosmicGoodRun = [1190]
+cosmicGoodRun = [1163]
 
 
 for run in cosmicGoodRun:
@@ -128,7 +133,8 @@ boardMatchCut = mycuts.getCut(mycuts.boardsMatched, 'boardMatchCut', cut=True, b
 
 
 
-cutflow = [boardMatchCut,pickupCut,mycuts.bartrim,mycuts.fourLayerCut]
+#cutflow = [boardMatchCut,pickupCut,mycuts.bartrim,mycuts.fourLayerCut]
+cutflow = [boardMatchCut,pickupCut,mycuts.bartrim]
 #cutflow = [boardMatchCut,pickupCut,mycuts.fourLayerCut,mycuts.bartrim]
 #cutflow = [boardMatchCut,pickupCut,mycuts.bartrim]
 
@@ -142,7 +148,7 @@ myiterator.setCustomFunction(NHitsPlot)
 myiterator.run()
 
 
-output_file = r.TFile("test1190.root", "RECREATE")
+output_file = r.TFile("test1163.root", "RECREATE")
 nbars.Write()
 WideNPEh.Write()
 NPERatio.Write()

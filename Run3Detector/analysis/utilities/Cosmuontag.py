@@ -9,8 +9,6 @@ I saw some channel reach 300-400NPE(saturated value), Can I use those saturated 
 TypeError: __eq__(): incompatible function arguments. The following argument types are supported:
     1. (self: awkward._ext.Type, arg0: awkward._ext.Type) -> bool
 
-
-
 """
 import ROOT as r
 import os 
@@ -59,7 +57,7 @@ filelist =['/mnt/hadoop/se/store/user/milliqan/trees/v34/MilliQan_Run1190.4_v34.
 
 pulseBasedBranches = ["pickupFlag","layer","nPE","type","row","chan"]
 
-#branches = ["runNumber","event","fileNumber",'boardsMatched',"pickupFlag","layer","nPE","type","row","chan"]
+branches = ["runNumber","event","fileNumber",'boardsMatched',"pickupFlag","layer","nPE","type","row","chan"]
 
 fakebranches = ["runNumber","pickupFlag","layer","nPE","type","row","chan"]
 
@@ -69,8 +67,8 @@ NPECut = 20
 
 for events in uproot.iterate(
     filelist,
-    pulseBasedBranches,
-    step_size=1000,
+    branches,
+    step_size=3,
     num_workers=8,
     ):
 
@@ -86,14 +84,25 @@ for events in uproot.iterate(
     """
 
     #create dummy arrays
-    dummyDict={'runNumber': [0]}
-    barEvents = ak.Array(dummyDict)
-    PanelEvents = ak.Array(dummyDict)
+    #dummyDict={'runNumber': [0]}
+    #barEvents = ak.Array(dummyDict)
+    #PanelEvents = ak.Array(dummyDict)
     
-
+    #print(ak.to_list(events.type))
     #for branch in pulseBasedBranches:
     #trimevent[branch] = events[branch][events['type']>=0] # get rid of the ev
+    #events['runNumber'], junk = ak.broadcast_arrays(events.runNumber, events.type)  #FIXME: brocase seems doesn't work as expected
+    print(ak.to_list(events.runNumber))
+    print(ak.to_pandas(events.row))
+    #print(ak.to_pandas(events.nPE))
+    """
+    print(ak.broadcast_arrays(events.runNumber, events.type))
+    print(ak.to_pandas(events.runNumber))
+
+    barEvents['runNumber'], junk = ak.broadcast_arrays(events.runNumber, events.type)
+    print(ak.to_pandas(barEvents))
     barEvents = events[events['type']==0] #FIXME: ValueError: too many jagged slice dimensions for array when using branches in interate()
+    #need do broadcast?
     PanelEvents = events[events['type']>=1]
     
 
@@ -138,9 +147,10 @@ for events in uproot.iterate(
                                 ak.any(barEvents.l1R3==True, axis=1)) | (ak.any(barEvents.l2R0==True, axis=1) & 
                                 ak.any(barEvents.l2R3==True, axis=1)) | (ak.any(barEvents.l3R0==True, axis=1) & 
                                 ak.any(barEvents.l3R3==True, axis=1)) 
+    """
+    break
 
-
-print(ak.to_pandas(PanelEvents))
+#print(ak.to_pandas(PanelEvents))
 #print(ak.to_list(PanelEvents["event"][PanelEvents.panelNPE >= NPECut]))
 #print(ak.to_list(barEvents.TBBigHit))
 #print(ak.to_list(events["event"][events.TBBigHit == True]))

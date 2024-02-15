@@ -2,7 +2,7 @@
 #The head(max) of NPE distribution is for cosmic muon and the tail is for low energy photon 
 #there is need to get the origianl event since I used bar & NPE trim
 
-
+import uproot 
 
 
 def plots(RunNum,filenum,eventNum,NPEvsChanplot = None):

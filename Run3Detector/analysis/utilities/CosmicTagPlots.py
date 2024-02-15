@@ -2,7 +2,14 @@
 #The head(max) of NPE distribution is for cosmic muon and the tail is for low energy photon 
 #there is need to get the origianl event since I used bar & NPE trim
 
+import ROOT as r
+import os 
+import sys
+import time
 import uproot 
+import awkward as ak
+from array import array
+import numpy as np
 
 
 def plots(RunNum,filenum,eventNum,NPEvsChanplot = None):
@@ -41,14 +48,6 @@ def plots(RunNum,filenum,eventNum,NPEvsChanplot = None):
 if __name__ == "__main__":
 
 
-    import ROOT as r
-    import os 
-    import sys
-    import time
-    import uproot 
-    import awkward as ak
-    from array import array
-    import numpy as np
 
 
     #tag1: top & bottom rows have big hits

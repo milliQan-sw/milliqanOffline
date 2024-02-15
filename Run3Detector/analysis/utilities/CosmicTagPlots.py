@@ -14,8 +14,8 @@ import numpy as np
 
 def plots(RunNum,filenum,eventNum,NPEvsChanplot = None):
 
-    pulseBasedBranches = ["pickupFlag","layer","nPE","type","row","chan"]
-    branches = ["runNumber","event","fileNumber",'boardsMatched',"pickupFlag","layer","nPE","type","row","chan"]
+    pulseBasedBranches = ["pickupFlag","layer","nPE","type","area","chan"]
+    branches = ["runNumber","event","fileNumber",'boardsMatched',"pickupFlag","layer","nPE","type","area","chan"]
     filelist =[f'/mnt/hadoop/se/store/user/milliqan/trees/v34/MilliQan_Run{RunNum}.{filenum}_v34.root:t']
     
     for events in uproot.iterate(

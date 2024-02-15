@@ -17,8 +17,8 @@ import numpy as np
 
 from CosmicTagPlots import plots
 
-filelist =['/mnt/hadoop/se/store/user/milliqan/trees/v34/MilliQan_Run1190.4_v34.root:t']
-"""
+#filelist =['/mnt/hadoop/se/store/user/milliqan/trees/v34/MilliQan_Run1190.4_v34.root:t']
+#"""
 filelist = []
 
 def appendRun(filelist,run):
@@ -27,11 +27,11 @@ def appendRun(filelist,run):
     for filename in os.listdir(directory):
         if filename.startswith(f"MilliQan_Run{run}") and filename.endswith(".root"):
             filelist.append(directory+filename+":t")
-cosmicGoodRun = [1190]
+cosmicGoodRun = [1163]
 
 for run in cosmicGoodRun:
     appendRun(filelist,run)
-"""
+#"""
 pulseBasedBranches = ["pickupFlag","layer","nPE","type","row","chan"]
 branches = ["runNumber","event","fileNumber",'boardsMatched',"pickupFlag","layer","nPE","type","row","chan"]
 NPECut = 20

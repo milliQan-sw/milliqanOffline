@@ -1,11 +1,10 @@
 from ROOT import TSpectrum, TFile, TString, TH1, TCanvas, TLine, kRed, TH1F, TF1
 import ROOT 
 from typing import Union, Callable
+from array import array
 
 
-
-def peak_finding ( input_file:TFile, sigma: int = 2,
-                 threshold: float = 0.9, max_peaks:int= 20):
+def peak_finding ( input_file:TFile):
     """
     Function to perform peak finding on a set of histograms
     Return location of peaks and estimated background
@@ -15,21 +14,13 @@ def peak_finding ( input_file:TFile, sigma: int = 2,
         print("Could not open ROOT file")
         exit()
     keys = input_file.GetListOfKeys()
-    print(len(keys))
-    peak_locations = []
+    max_locations = []
     for key in keys:
         
         obj = key.ReadObj()
         if isinstance(obj, TH1):
-            spectrum = TSpectrum(max_peaks)
-
-            # Find peaks that are 2 sigma above average, and exclude peaks that are less that 0.01 * max height of tallest peak
-            peaks = spectrum.Search(obj, sigma, "", threshold) #
-            peak_location = []
-            for i in range(spectrum.GetNPeaks()):
-                peak_location.append((spectrum.GetPositionX()[i], spectrum.GetPositionY()[i]))
-            peak_locations.append(peak_location)
-    return peak_locations
+            max_locations.append(obj.GetBinCenter(obj.GetMaximumBin()))
+    return max_locations
 
 def get_area (input_item:Union[TFile, TH1],
              start:float, stop:float)-> Union[float, list[float], None] :
@@ -74,23 +65,22 @@ if __name__ == "__main__":
                       "outputWaveforms_812_2p5V.root", "READ")
     no_led_file = TFile("/home/ryan/Documents/Data/MilliQan/"
                          "outputWaveforms_805_noLED.root", "READ")
-
+    
     # We only want the highest peak
-    no_led_peaks = peak_finding(no_led_file, threshold=.80, max_peaks=100)
     output_file = TFile("areaWaveforms.root", "RECREATE")
 
-    led_areas = get_area(output_file, 10, 20)
-
-    assert len(no_led_peaks) == len(no_led_file.GetListOfKeys()), ("Mismatch"
-    "between peaks and keys")
+    led_waveform_dir = output_file.mkdir("led_waveforms")
+    no_led_waveform_dir = output_file.mkdir("no_led_waveforms")
+    area_dir = output_file.mkdir("area")
+    
 
     led_areas = []
-    led_area_hist = None
+    led_area_hist = TH1F("led_hist", "LED Area Histogram",
+                            200, 0, 2000)
+    led_waveform_dir.cd()
     for i, key in enumerate(led_file.GetListOfKeys()):
         hist = key.ReadObj()
         
-        led_area_hist = TH1F("led_hist", "LED Area Histogram",
-                             200, -2000, 10000)
         if isinstance(hist, TH1):
             led_area_hist.Fill(get_area(hist, 1200, 1600))
             canvas = TCanvas(f"canvas_{i}")
@@ -106,29 +96,66 @@ if __name__ == "__main__":
             line2.Draw()
 
             canvas.Write()
+    led_area_hist.Scale(1/led_area_hist.Integral())
+    par = array( 'd', 9*[0.] )
+    g1 = TF1("g1", "gaus", 0, 2000)
+    g2 = TF1("g2", "gaus", 0, 2000)
 
-    g1 = TF1("g1", "gaus", 0, 1000)
-    g2 = TF1("g2", "gaus", 0, 1000)
-    g3 = TF1("g3", "gaus", 0, 1000)
-    
 
-    total = TF1("total", "gaus(0)+gaus(3)+gaus(6)", 0, 1000)
-    total.SetLineColor(2)
-    if led_area_hist:
-        led_area_hist.Fit(total, "E")
+    total = TF1("total", "gaus(0)+gaus(3)", 0, 2000)
+    total.SetLineColor(4)
 
-    no_led_hist = TH1F("no_led_hist", "No LED Area Histogram", 200, -2000, 10000)
+    led_area_hist.Fit(g1, "N")
+    led_area_hist.Fit(g2, "N+")
+
+    par1 = g1.GetParameters()
+
+
+    g2.SetParameter(1, 1000)  
+    par2 = g2.GetParameters()
+
+
+    par[0], par[1], par[2] = par1[0], par1[1], par1[2]
+    par[3], par[4], par[5] = par2[0], par2[1], par2[2]
+
+    assert par2[1] == 1000, "the mean did not get set"
+
+    total.SetParameters(par)
+    led_area_hist.Fit(total, 'R+')
+
+    no_led_area_hist = TH1F("no_led_hist", "No LED Area Histogram", 200, 0, 2000)
+    no_led_peaks = peak_finding(no_led_file)
+    no_led_waveform_dir.cd()
     for i, key in enumerate(no_led_file.GetListOfKeys()):
         hist = key.ReadObj()
-
         if isinstance(hist, TH1):
-            no_led_hist.Fill(get_area(hist, no_led_peaks[i][0] - PEAK_WIDTH,
-                                      no_led_peaks[i][0] + PEAK_WIDTH))
-
+            no_led_area_hist.Fill(get_area(hist, no_led_peaks[i] - PEAK_WIDTH,
+                                      no_led_peaks[i] + PEAK_WIDTH))
+            canvas = TCanvas(f"canvas_{i}")
+            hist.Draw()
+            line1 = TLine(no_led_peaks[i] - PEAK_WIDTH, 0,
+                          no_led_peaks[i] - PEAK_WIDTH, 20)
+            line2 = TLine(no_led_peaks[i] + PEAK_WIDTH, 0,
+                          no_led_peaks[i] + PEAK_WIDTH, 20)
+            line1.SetLineColor(kRed)
+            line1.SetLineWidth(2)
+            line1.Draw()
+            line2.SetLineColor(kRed)
+            line2.SetLineWidth(2)
+            line2.Draw()
+            canvas.Write()
+            
+    no_led_area_hist.Scale(1/no_led_area_hist.Integral())
+    no_led_area_hist.Fit(g1, "+", "", 0, 1000)
     area_canvas = TCanvas("area", "LED Area")
+
+    led_area_hist.SetLineColor(2)
+    no_led_area_hist.SetLineColor(3)
     if led_area_hist:
-        led_area_hist.Draw()
+        led_area_hist.Draw("")
+        no_led_area_hist.Draw("SAME")
     area_canvas.Update()
+    area_dir.cd()
     area_canvas.Write()
     output_file.Close()
     

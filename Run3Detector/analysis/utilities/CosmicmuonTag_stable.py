@@ -58,9 +58,9 @@ for events in uproot.iterate(
     for branch in pulseBasedBranches:
         events[branch] = events[branch][events.nPE >= NPECut]
     
-    for r in range(4):
+    for R in range(4):
         for l in range(4):
-            events[f"l{l}R{r}"] = (events.layer == l) & (events.row == r)
+            events[f"l{l}R{R}"] = (events.layer == l) & (events.row == R)
     
     
     events["fourRowBigHits"] = (ak.any(events.l0R0==True, axis=1) & 

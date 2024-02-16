@@ -12,11 +12,11 @@ from array import array
 import numpy as np
 
 
-def plots(RunNum,filenum,eventNum,BARNPEvsChanplot = None,PanelNPEvsChanplot = None):
+def plots(RunNum,eventNum,BARNPEvsChanplot = None,PanelNPEvsChanplot = None):
 
-    pulseBasedBranches = [layer","nPE","type","chan"]
-    branches = ["runNumber","event","layer","nPE","type","area","chan"]
-    filelist =[f'/mnt/hadoop/se/store/user/milliqan/trees/v34/MilliQan_Run{RunNum}.{filenum}_v34.root:t']
+    pulseBasedBranches = ["layer","nPE","type","chan"]
+    branches = ["runNumber","event","layer","nPE","type","chan"]
+    filelist =[f'/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhoton/output_{RunNum}.root:t']
     
     for events in uproot.iterate(
                 filelist,
@@ -24,11 +24,6 @@ def plots(RunNum,filenum,eventNum,BARNPEvsChanplot = None,PanelNPEvsChanplot = N
                 step_size=1000,
                 num_workers=8,
                 ):
-
-                for branch in pulseBasedBranches:
-                    events[branch] = events[branch][events.boardsMatched]
-                for branch in pulseBasedBranches:
-                    events[branch] = events[branch][events.pickupFlag]
 
                 #extract the intersting events
                 events =  events[events.event == eventNum]
@@ -43,7 +38,7 @@ def plots(RunNum,filenum,eventNum,BARNPEvsChanplot = None,PanelNPEvsChanplot = N
                 nPEarray = array('d', npeList)
                 Chanarray = array('d', chanList)
 
-
+                if len(nPEarray) == 0: continue
 
                 if (BARNPEvsChanplot != None) & (len(nPEarray) == len(Chanarray)):
                     BARNPEvsChanplot.FillN(len(nPEarray), Chanarray, nPEarray, np.ones(len(nPEarray)))
@@ -55,22 +50,26 @@ def plots(RunNum,filenum,eventNum,BARNPEvsChanplot = None,PanelNPEvsChanplot = N
                 num_workers=8,
                 ):
 
-                for branch in pulseBasedBranches:
-                    events[branch] = events[branch][events.boardsMatched]
-                for branch in pulseBasedBranches:
-                    events[branch] = events[branch][events.pickupFlag]
+
 
                 #extract the intersting events
                 events =  events[events.event == eventNum]
                 
                 #separate get bar only pulses
                 panelCUT = events['type']>0
-                for branch in pulseBasedBranches:
-                    events[branch] = events[branch][panelCUT]
                 
-                events["nPEEst"] = events["area"]/1320
+                print(events['type'])#debug
+                print(events['layer'])
+                for branch in pulseBasedBranches:
+                    print(branch) #debug
+                    print(len(events[branch])) #debug
+                    print(events[branch]) #debug
+                    print(len(panelCUT)) #debug
+                    print(panelCUT) #debug
+                    events[branch] = events[branch][panelCUT]
 
-                npeList = ak.flatten(events.nPEEst,axis=None)
+
+                npeList = ak.flatten(events.nPE,axis=None)
                 chanList = ak.flatten(events.chan,axis=None)
                 nPEarray = array('d', npeList)
                 #print(npeList)
@@ -84,32 +83,4 @@ def plots(RunNum,filenum,eventNum,BARNPEvsChanplot = None,PanelNPEvsChanplot = N
 
 
 
-if __name__ == "__main__":
 
-
-
-
-    #tag1: top & bottom rows have big hits
-    #tag2: 4 rows haves big hits
-
-    #hitograms
-
-    #panel pulse npe distribution
-    #panPulseDistTag1 = 
-    #panPulseDistTag2 =
-
-
-    ChanVsbarNpeTag1 = r.TH2F("ChanvsNPE","chanvsmpe;chan;pulse NPE", 80,0,80,200,0,1000)
-    #ChanVsbarNpeTag2
-
-    plots(1190,100,249,ChanVsbarNpeTag1)
-
-    output_file = r.TFile("chanvsNPEtest.root", "RECREATE")
-    ChanVsbarNpeTag1.Write()
-
-    output_file.Close()
-
-
-    #plotting function
-
-    #pickup & board matching cuts

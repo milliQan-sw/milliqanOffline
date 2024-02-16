@@ -17,45 +17,33 @@ import numpy as np
 
 from muonTagPlot import plots
 
-#filelist =['/mnt/hadoop/se/store/user/milliqan/trees/v34/MilliQan_Run1190.4_v34.root:t']
-#runN = 1190
-#"""
-runN = 1163
 filelist = []
 
-def appendRun(filelist,run):
-    #directory = "/mnt/hadoop/se/store/user/milliqan/trees/v34/1000/"
-    directory = "/mnt/hadoop/se/store/user/milliqan/trees/v34/"
+def appendRun(filelist):
+    directory = "/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhoton/"
     for filename in os.listdir(directory):
-        if filename.startswith(f"MilliQan_Run{run}") and filename.endswith(".root"):
+        if filename.startswith("output") and filename.endswith(".root"):
             filelist.append(directory+filename+":t")
-cosmicGoodRun = [runN]
 
-for run in cosmicGoodRun:
-    appendRun(filelist,run)
+
+appendRun(filelist)
 #"""
 pulseBasedBranches = ["chan","layer","nPE","type","row"]
 branches = ["chan","runNumber","event","layer","nPE","type","row"]
-NPECut = 100
-ChanVsbarNpeBTag1 = r.TH2F("B ChanvsNPE tag 1","bar chanvsmpe tag1;chan; pulse NPE", 80,0,80,200,0,1000)
-ChanVsbarNpePTag1 = r.TH2F("P ChanvsNPE tag 1","panel chanvsmpe tag1;chan; pulse NPE", 80,0,80,200,0,1000)
-ChanVsbarNpeBTag2 = r.TH2F("B ChanvsNPE tag 2","bar chanvsmpe tag2;chan; pulse NPE", 80,0,80,200,0,1000)
-ChanVsbarNpePTag2 = r.TH2F("P ChanvsNPE tag 2","panel chanvsmpe tag2;chan; pulse NPE", 80,0,80,200,0,1000)
+NPECut = 2000
+ChanVsbarNpeBTag1 = r.TH2F("B ChanvsNPE tag 1","bar chanvsmpe tag1;chan; bar NPE", 80,0,80,200,0,1000)
+ChanVsbarNpePTag1 = r.TH2F("P ChanvsNPE tag 1","panel chanvsmpe tag1;chan; bar NPE", 80,0,80,200,0,1000)
+ChanVsbarNpeBTag2 = r.TH2F("B ChanvsNPE tag 2","bar chanvsmpe tag2;chan; bar NPE", 80,0,80,200,0,1000)
+ChanVsbarNpePTag2 = r.TH2F("P ChanvsNPE tag 2","panel chanvsmpe tag2;chan; bar NPE", 80,0,80,200,0,1000)
 
 
 for events in uproot.iterate(
     filelist,
     branches,
-    step_size=1000,
+    step_size=10000,
     num_workers=8,
     ):
     #total_events += len(events)
-    events['boardsMatched'], junk = ak.broadcast_arrays(events.boardsMatched, events.pickupFlag)
-    
-    for branch in pulseBasedBranches:
-        events[branch] = events[branch][events.boardsMatched]
-    for branch in pulseBasedBranches:
-        events[branch] = events[branch][events.pickupFlag]
     barCut=events['type']==0
     for branch in pulseBasedBranches:
         events[branch] = events[branch][barCut]
@@ -97,29 +85,26 @@ for events in uproot.iterate(
     #print(ak.to_pandas(events[events.fourRowBigHits]))
     
     #the script at below is commented out for debugging.
-   
-    FileNumberList=(ak.to_list(events["fileNumber"][events.TBBigHit == True]))
+
     runNumberList=(ak.to_list(events["runNumber"][events.TBBigHit == True]))
     EventIDlist=(ak.to_list(events["event"][events.TBBigHit == True]))
     #collect the range of NPE for event that is tagged & channel that has hit above 20 NPE(plot chan vs NPE).
     #The head(max) of NPE distribution is for cosmic muon and the tail is for low energy photon 
     #there is need to get the origianl event since I used bar & NPE trim
-    for RN,FN,EV in zip(runNumberList,FileNumberList,EventIDlist):
+    for RN,EV in zip(runNumberList,EventIDlist):
        
-        plots(RN,FN,EV,ChanVsbarNpeBTag1,ChanVsbarNpePTag1)
+        plots(RN,EV,ChanVsbarNpeBTag1,ChanVsbarNpePTag1)
     
 
-    
-    FileNumberList2=(ak.to_list(events["fileNumber"][events.fourRowBigHits == True]))
     runNumberList2=(ak.to_list(events["runNumber"][events.fourRowBigHits == True]))
     EventIDlist2 = (ak.to_list(events["event"][events.fourRowBigHits == True]))
-    for RN,FN,EV in zip(runNumberList2,FileNumberList2,EventIDlist2):
-        plots(RN,FN,EV,ChanVsbarNpeBTag2,ChanVsbarNpePTag2)
+    for RN,EV in zip(runNumberList2,EventIDlist2):
+        plots(RN,EV,ChanVsbarNpeBTag2,ChanVsbarNpePTag2)
     
     
 
 
-output_file = r.TFile(f"Run{runN}chanvsNPE_100NPE.root", "RECREATE")
+output_file = r.TFile(f"SIMchanvsNPE_2KNPE.root", "RECREATE")
 ChanVsbarNpeBTag1.Write()
 ChanVsbarNpePTag1.Write()
 ChanVsbarNpeBTag2.Write()

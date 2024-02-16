@@ -56,11 +56,13 @@ for events in uproot.iterate(
         events[branch] = events[branch][events.boardsMatched]
     for branch in pulseBasedBranches:
         events[branch] = events[branch][events.pickupFlag]
+    barCut=events['type']==0
     for branch in pulseBasedBranches:
-        events[branch] = events[branch][events['type']==0]
+        events[branch] = events[branch][barCut]
     
+    NPECuts = events.nPE >= NPECut
     for branch in pulseBasedBranches:
-        events[branch] = events[branch][events.nPE >= NPECut]
+        events[branch] = events[branch][NPECuts]
     
     for R in range(4):
         for l in range(4):

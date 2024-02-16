@@ -1,5 +1,5 @@
 """
-2-14-24 This file only check the bar channel when try to tag cosmic muon evnet.
+2-14-24 This file is for All four rows hit & top row hit, bottom row hit cosmic muon tag
 
 
 """
@@ -17,9 +17,9 @@ import numpy as np
 
 from CosmicTagPlots import plots
 
-filelist =['/mnt/hadoop/se/store/user/milliqan/trees/v34/MilliQan_Run1190.4_v34.root:t']
-runN = 1190
-"""
+#filelist =['/mnt/hadoop/se/store/user/milliqan/trees/v34/MilliQan_Run1190.4_v34.root:t']
+#runN = 1190
+#"""
 runN = 1163
 filelist = []
 
@@ -33,7 +33,7 @@ cosmicGoodRun = [runN]
 
 for run in cosmicGoodRun:
     appendRun(filelist,run)
-"""
+#"""
 pulseBasedBranches = ["pickupFlag","chan","layer","nPE","type","row"]
 branches = ["chan","runNumber","event","fileNumber",'boardsMatched',"pickupFlag","layer","nPE","type","row"]
 NPECut = 20
@@ -92,12 +92,12 @@ for events in uproot.iterate(
     
 
     #debug
-    print(ak.to_pandas(events[events.TBBigHit]))
+    #print(ak.to_pandas(events[events.TBBigHit]))
     
-    print(ak.to_pandas(events[events.fourRowBigHits]))
+    #print(ak.to_pandas(events[events.fourRowBigHits]))
     
     #the script at below is commented out for debugging.
-    """
+   
     FileNumberList=(ak.to_list(events["fileNumber"][events.TBBigHit == True]))
     runNumberList=(ak.to_list(events["runNumber"][events.TBBigHit == True]))
     EventIDlist=(ak.to_list(events["event"][events.TBBigHit == True]))
@@ -105,36 +105,24 @@ for events in uproot.iterate(
     #The head(max) of NPE distribution is for cosmic muon and the tail is for low energy photon 
     #there is need to get the origianl event since I used bar & NPE trim
     for RN,FN,EV in zip(runNumberList,FileNumberList,EventIDlist):
-        print(RN)
-        print(FN)
-        print(EV)
+       
         plots(RN,FN,EV,ChanVsbarNpeBTag1,ChanVsbarNpePTag1)
     
 
-    #print("-----")
+    
     FileNumberList2=(ak.to_list(events["fileNumber"][events.fourRowBigHits == True]))
     runNumberList2=(ak.to_list(events["runNumber"][events.fourRowBigHits == True]))
     EventIDlist2 = (ak.to_list(events["event"][events.fourRowBigHits == True]))
     for RN,FN,EV in zip(runNumberList2,FileNumberList2,EventIDlist2):
         plots(RN,FN,EV,ChanVsbarNpeBTag2,ChanVsbarNpePTag2)
-    #print("next")
-    """
+    
+    
 
 
-output_file = r.TFile(f"Run{runN}chanvsNPEtest_debug.root", "RECREATE")
+output_file = r.TFile(f"Run{runN}chanvsNPE.root", "RECREATE")
 ChanVsbarNpeBTag1.Write()
 ChanVsbarNpePTag1.Write()
 ChanVsbarNpeBTag2.Write()
 ChanVsbarNpePTag2.Write()
 output_file.Close()
 
-#print(ak.to_list(events["event"][events.TBBigHit == True]))
-"""
-PossibleMuonEvent = events[events.fourRowBigHits == True]
-print(ak.to_list(PossibleMuonEvent["event"][PossibleMuonEvent.fourRowBigHits == True]))
-print(ak.to_list(PossibleMuonEvent["runNumber"][PossibleMuonEvent.fourRowBigHits == True]))
-print(ak.to_list(PossibleMuonEvent["fileNumber"][PossibleMuonEvent.fourRowBigHits == True]))
-print(ak.to_pandas(PossibleMuonEvent))
-    
-"""
-#--------------------------------------

@@ -34,8 +34,9 @@ def plots(RunNum,filenum,eventNum,BARNPEvsChanplot = None,PanelNPEvsChanplot = N
                 events =  events[events.event == eventNum]
                 
                 #separate get bar only pulses
+                barCUT = events['type']==0
                 for branch in pulseBasedBranches:
-                    events[branch] = events[branch][events['type']==0]
+                    events[branch] = events[branch][barCUT]
 
                 npeList = ak.flatten(events.nPE,axis=None)
                 chanList = ak.flatten(events.chan,axis=None)
@@ -63,15 +64,16 @@ def plots(RunNum,filenum,eventNum,BARNPEvsChanplot = None,PanelNPEvsChanplot = N
                 events =  events[events.event == eventNum]
                 
                 #separate get bar only pulses
+                panelCUT = events['type']>0
                 for branch in pulseBasedBranches:
-                    events[branch] = events[branch][events['type']>0]
+                    events[branch] = events[branch][panelCUT]
                 
                 events["nPEEst"] = events["area"]/1320
 
                 npeList = ak.flatten(events.nPEEst,axis=None)
                 chanList = ak.flatten(events.chan,axis=None)
                 nPEarray = array('d', npeList)
-                print(npeList)
+                #print(npeList)
                 Chanarray = array('d', chanList)
                 if len(Chanarray) == 0: continue
 		

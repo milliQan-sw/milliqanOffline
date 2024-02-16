@@ -42,4 +42,4 @@ def EventCheck(RunNum=1190,filenum=4,eventNum=47):
                     print(ak.to_pandas(events))
 if __name__ == "__main__":
 
-    EventCheck(1190,4,47)
+    EventCheck(1190,4,2)

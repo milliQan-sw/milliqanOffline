@@ -36,7 +36,7 @@ for run in cosmicGoodRun:
 #"""
 pulseBasedBranches = ["pickupFlag","chan","layer","nPE","type","row"]
 branches = ["chan","runNumber","event","fileNumber",'boardsMatched',"pickupFlag","layer","nPE","type","row"]
-NPECut = 20
+NPECut = 100
 ChanVsbarNpeBTag1 = r.TH2F("B ChanvsNPE tag 1","bar chanvsmpe tag1;chan; pulse NPE", 80,0,80,200,0,1000)
 ChanVsbarNpePTag1 = r.TH2F("P ChanvsNPE tag 1","panel chanvsmpe tag1;chan; pulse NPE", 80,0,80,200,0,1000)
 ChanVsbarNpeBTag2 = r.TH2F("B ChanvsNPE tag 2","bar chanvsmpe tag2;chan; pulse NPE", 80,0,80,200,0,1000)
@@ -119,7 +119,7 @@ for events in uproot.iterate(
     
 
 
-output_file = r.TFile(f"Run{runN}chanvsNPE.root", "RECREATE")
+output_file = r.TFile(f"Run{runN}chanvsNPE_100NPE.root", "RECREATE")
 ChanVsbarNpeBTag1.Write()
 ChanVsbarNpePTag1.Write()
 ChanVsbarNpeBTag2.Write()

@@ -66,16 +66,18 @@ def plots(RunNum,filenum,eventNum,BARNPEvsChanplot = None,PanelNPEvsChanplot = N
                 for branch in pulseBasedBranches:
                     events[branch] = events[branch][events['type']>0]
                 
-                events["nPEEst"] = events["nPE"]/1320
+                events["nPEEst"] = events["area"]/1320
 
                 npeList = ak.flatten(events.nPEEst,axis=None)
                 chanList = ak.flatten(events.chan,axis=None)
                 nPEarray = array('d', npeList)
+                print(npeList)
                 Chanarray = array('d', chanList)
-
-
+                if len(Chanarray) == 0: continue
+		
 
                 if (PanelNPEvsChanplot != None) & (len(nPEarray) == len(Chanarray)):
+                    
                     PanelNPEvsChanplot.FillN(len(nPEarray), Chanarray, nPEarray, np.ones(len(nPEarray)))
 
 

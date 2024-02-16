@@ -17,9 +17,10 @@ import numpy as np
 
 from CosmicTagPlots import plots
 
-#filelist =['/mnt/hadoop/se/store/user/milliqan/trees/v34/MilliQan_Run1190.4_v34.root:t']
-#"""
+filelist =['/mnt/hadoop/se/store/user/milliqan/trees/v34/MilliQan_Run1190.4_v34.root:t']
 runN = 1190
+"""
+runN = 1163
 filelist = []
 
 def appendRun(filelist,run):
@@ -32,9 +33,9 @@ cosmicGoodRun = [runN]
 
 for run in cosmicGoodRun:
     appendRun(filelist,run)
-#"""
-pulseBasedBranches = ["pickupFlag","layer","nPE","type","row","chan"]
-branches = ["runNumber","event","fileNumber",'boardsMatched',"pickupFlag","layer","nPE","type","row","chan"]
+"""
+pulseBasedBranches = ["pickupFlag","chan","layer","nPE","type","row"]
+branches = ["chan","runNumber","event","fileNumber",'boardsMatched',"pickupFlag","layer","nPE","type","row"]
 NPECut = 20
 ChanVsbarNpeBTag1 = r.TH2F("B ChanvsNPE tag 1","bar chanvsmpe tag1;chan; pulse NPE", 80,0,80,200,0,1000)
 ChanVsbarNpePTag1 = r.TH2F("P ChanvsNPE tag 1","panel chanvsmpe tag1;chan; pulse NPE", 80,0,80,200,0,1000)
@@ -86,7 +87,15 @@ for events in uproot.iterate(
                                 ak.any(events.l1R3==True, axis=1)) | (ak.any(events.l2R0==True, axis=1) & 
                                 ak.any(events.l2R3==True, axis=1)) | (ak.any(events.l3R0==True, axis=1) & 
                                 ak.any(events.l3R3==True, axis=1)) 
+    
 
+    #debug
+    print(ak.to_pandas(events[events.TBBigHit]))
+    
+    print(ak.to_pandas(events[events.fourRowBigHits]))
+    
+    #the script at below is commented out for debugging.
+    """
     FileNumberList=(ak.to_list(events["fileNumber"][events.TBBigHit == True]))
     runNumberList=(ak.to_list(events["runNumber"][events.TBBigHit == True]))
     EventIDlist=(ak.to_list(events["event"][events.TBBigHit == True]))
@@ -94,6 +103,9 @@ for events in uproot.iterate(
     #The head(max) of NPE distribution is for cosmic muon and the tail is for low energy photon 
     #there is need to get the origianl event since I used bar & NPE trim
     for RN,FN,EV in zip(runNumberList,FileNumberList,EventIDlist):
+        print(RN)
+        print(FN)
+        print(EV)
         plots(RN,FN,EV,ChanVsbarNpeBTag1,ChanVsbarNpePTag1)
     
 
@@ -104,10 +116,10 @@ for events in uproot.iterate(
     for RN,FN,EV in zip(runNumberList2,FileNumberList2,EventIDlist2):
         plots(RN,FN,EV,ChanVsbarNpeBTag2,ChanVsbarNpePTag2)
     #print("next")
+    """
 
 
-
-output_file = r.TFile(f"Run{runN}chanvsNPEtest.root", "RECREATE")
+output_file = r.TFile(f"Run{runN}chanvsNPEtest_debug.root", "RECREATE")
 ChanVsbarNpeBTag1.Write()
 ChanVsbarNpePTag1.Write()
 ChanVsbarNpeBTag2.Write()

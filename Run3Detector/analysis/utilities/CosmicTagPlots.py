@@ -16,7 +16,7 @@ def plots(RunNum,filenum,eventNum,BARNPEvsChanplot = None,PanelNPEvsChanplot = N
 
     pulseBasedBranches = ["pickupFlag","layer","nPE","type","area","chan"]
     branches = ["runNumber","event","fileNumber",'boardsMatched',"pickupFlag","layer","nPE","type","area","chan"]
-    filelist =[f'/mnt/hadoop/se/store/user/milliqan/trees/v34/MilliQan_Run{RunNum}.{filenum}_v34.root:t']
+    filelist =[f'/mnt/hadoop/se/store/user/milliqan/trees/v34/1100/MilliQan_Run{RunNum}.{filenum}_v34.root:t']
     
     for events in uproot.iterate(
                 filelist,

@@ -20,12 +20,12 @@ from CosmicTagPlots import plots
 #filelist =['/mnt/hadoop/se/store/user/milliqan/trees/v34/MilliQan_Run1190.4_v34.root:t']
 #runN = 1190
 #"""
-runN = 1163
+runN = 1190
 filelist = []
 
 def appendRun(filelist,run):
     #directory = "/mnt/hadoop/se/store/user/milliqan/trees/v34/1000/"
-    directory = "/mnt/hadoop/se/store/user/milliqan/trees/v34/"
+    directory = "/mnt/hadoop/se/store/user/milliqan/trees/v34/1100/"
     for filename in os.listdir(directory):
         if filename.startswith(f"MilliQan_Run{run}") and filename.endswith(".root"):
             filelist.append(directory+filename+":t")

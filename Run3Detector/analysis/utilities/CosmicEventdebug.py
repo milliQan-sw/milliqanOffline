@@ -23,12 +23,12 @@ def EventCheck(RunNum=1190,filenum=4,eventNum=47):
                 step_size=1000,
                 num_workers=8,
                 ):
-                #"""
+                """
                 for branch in pulseBasedBranches:
                     events[branch] = events[branch][events.boardsMatched]
                 for branch in pulseBasedBranches:
                     events[branch] = events[branch][events.pickupFlag]
-                #"""
+                """
                 #extract the intersting events
                 events =  events[events.event == eventNum]
                 print("before doing the cut")

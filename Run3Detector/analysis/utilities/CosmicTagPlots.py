@@ -25,10 +25,14 @@ def plots(RunNum,filenum,eventNum,BARNPEvsChanplot = None,PanelNPEvsChanplot = N
                 num_workers=8,
                 ):
 
+                """
+
                 for branch in pulseBasedBranches:
                     events[branch] = events[branch][events.boardsMatched]
                 for branch in pulseBasedBranches:
                     events[branch] = events[branch][events.pickupFlag]
+
+                """
 
                 #extract the intersting events
                 events =  events[events.event == eventNum]

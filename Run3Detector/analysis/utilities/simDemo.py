@@ -49,9 +49,9 @@ from milliqanScheduler import *
 from milliqanCuts import *
 from milliqanPlotter import *
 
-filelist =['/share/scratch0/czheng/cosmicSimFlatTree/output_2.root:t']
+filelist =['/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhoton/output_1.root:t']
 
-branches = ['pmt_nPE','pmt_layer','pmt_chan','layer']
+branches = ['pmt_nPE','pmt_layer','pmt_chan','layer','pmt_type','event','runNumber']
 
 mycuts = milliqanCuts()
 
@@ -113,7 +113,7 @@ def CosmicVetoSIM(self, cutName=None, cut=False):
 
 
 def barCutSim(self, cutName=None):
-    self.events['barCutSim'] = self.events['type'] <= 63
+    self.events['barCutSim'] = self.events['pmt_type'] == 0
 
 
 
@@ -128,21 +128,22 @@ def oneHitPerLayerCutSIM(self, cutName=None, cut=False):
 
 #if the summing bar NPE of two beam panels is larger than 50Npe, then return false
 def BeamVeto (self,cutName=None,heightCut = 50):
-    self.events['BeamVeto'] = not (ak.sum(self.events.pmt_nPE[self.events.pmt_chan==75 | self.events.pmt_chan==71], axis=1) >= heightCut)
+    self.events['BeamVeto'] = not (ak.sum(self.events.pmt_nPE[self.events.pmt_type==1], axis=1) >= heightCut)
 
 def NPECut(self,cutName = None):
-    self.events['BarNPERatio'] = (ak.max(self.events.pmt_nPE[self.events.pmt_chan<=64],axis=1)/ak.min(self.events.pmt_nPE[self.events.pmt_chan<=64],axis=1)) <= 10
+    self.events['BarNPERatio'] = (ak.max(self.events.pmt_nPE[self.events.pmt_type==0],axis=1)/ak.min(self.events.pmt_nPE[self.events.pmt_type==0],axis=1)) <= 10
 
 #reprocess the tree such that it come with correct time.
 #Don't recreate the tree. wait until I finish the the cut validation for cuts at above.
 def correctTimeCut(self,cutName = None):
-    self.events['time'] = (ak.max(self.events.pmt_time[self.events.pmt_chan<=64],axis=1)-ak.min(self.events.pmt_time[self.events.pmt_chan<=64],axis=1))
+    self.events['time'] = (ak.max(self.events.pmt_time[self.events.pmt_type==0],axis=1)-ak.min(self.events.pmt_time[self.events.events.pmt_type==0],axis=1))
 
 
 
 
 def barCutSim(self, cutName=None, cut=False):
-    self.events['barCut'] = self.events.pmt_chan <= 64
+    print(ak.to_pandas(self.events))
+    self.events['barCut'] = self.events.pmt_type==0
 
 #We want to remove the empty empty event and the empty instance inside an event
 def EmptyListFilter(self,cutName=None):
@@ -150,10 +151,10 @@ def EmptyListFilter(self,cutName=None):
     self.events['None_empty_event'] = ak.num(self.events['pmt_layer']) > 0
     self.events=self.events[self.events.None_empty_event]
     #remove the empty instance
-    print(ak.to_pandas(self.events))
+    #print(ak.to_pandas(self.events))
     #check if empty instance exist
-    print(ak.to_list(self.events))
-    print(ak.to_list(self.events.layer))
+    #print(ak.to_list(self.events))
+    #print(ak.to_list(self.events.layer))
     """
     condition = self.events['layer'] ==1
     #self.events = self.events[condition]
@@ -171,14 +172,14 @@ setattr(milliqanCuts, 'oneHitPerLayerCutSIM', oneHitPerLayerCutSIM)
 
 setattr(milliqanCuts, 'CosmicVetoSIM', CosmicVetoSIM)
 
-setattr(milliqanCuts, 'fourLayerCutSIM', fourLayerCutSIM)
+setattr(milliqanCuts, 'geometricCutSIM', geometricCutSIM)
 
 setattr(milliqanCuts, 'LayerCut', LayerCut)
 
 setattr(milliqanCuts, 'barCutSim', barCutSim)
 
-R_fourlayer = mycuts.getCut(mycuts.combineCuts, 'R_fourlayer', ['barCut','fourLayerCutSIM'])
-R_OneHitperLayer = mycuts.getCut(mycuts.combineCuts, 'R_OneHitperLayer', ['barCut','oneHitPerLayerCutSIM'])
+#R_fourlayer = mycuts.getCut(mycuts.combineCuts, 'R_fourlayer', ['barCut','fourLayerCutSIM'])
+#R_OneHitperLayer = mycuts.getCut(mycuts.combineCuts, 'R_OneHitperLayer', ['barCut','oneHitPerLayerCutSIM'])
 
 
 #print(myplotter.dict)
@@ -188,7 +189,7 @@ R_OneHitperLayer = mycuts.getCut(mycuts.combineCuts, 'R_OneHitperLayer', ['barCu
 #cutflow = [mycuts.LayerCut,eventCuts,myplotter.dict['nPE']]
 #cutflow = [mycuts.barCutSim, mycuts.fourLayerCutSIM,mycuts.oneHitPerLayerCutSIM,R_fourlayer,R_OneHitperLayer]
 
-cutflow = [mycuts.EmptyListFilter,mycuts.barCutSim, mycuts.fourLayerCutSIM,R_fourlayer]
+cutflow = [mycuts.EmptyListFilter,mycuts.barCutSim,mycuts.LayerCut, mycuts.geometricCutSIM]
 #cutflow = [mycuts.EmptyListFilter]
 myschedule = milliQanScheduler(cutflow, mycuts)
 

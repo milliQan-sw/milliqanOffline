@@ -39,9 +39,9 @@ class milliqanProcessor():
 
 
             #temporary solution for removing the event with empty list data in simulation anlysis. This can further decrease the time for doing analysis.
-            elif branch.__name__ == "EmptyListFilter":
-                events=branch()
-                self.mqSchedule.setEvents(events)            
+            #elif branch.__name__ == "EmptyListFilter":
+            #    events=branch()
+            #    self.mqSchedule.setEvents(events)            
             else:
                 branch()
         return events
@@ -87,9 +87,12 @@ class milliqanProcessor():
             
             if hasattr(self, 'customFunction'):
                 self.custom_out = self.runCustomFunction(events)
+            #break
 
         #do some quick checks.   
-        print(ak.to_pandas(events))     
+        #print(ak.to_pandas(events))  
+        #print(len(events.R_fourlayer))
+        #print(ak.to_pandas(events[events.R_fourlayer]))
         #print(ak.to_pandas(events["R_fourlayer"]))
         #print(len(events["R_fourlayer"]))
         #count_true = ak.count_nonzero(events["R_fourlayer"])
@@ -103,7 +106,9 @@ class milliqanProcessor():
 
 
         #count the number of event that pass four layer cut
-        #print(events["R_fourlayer"==True])
+        #print(events["fourLayerCutSIM"])
+        #print(events["R_fourlayer"]==True)
+        #print(ak.to_pandas(events[events["R_fourlayer"]==True]))
         #print(events['barCut'] == True)
         #print(ak.to_pandas(events))
         #condition = ak.num(events['layer']) > 0

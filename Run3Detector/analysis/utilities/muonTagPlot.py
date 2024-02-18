@@ -14,14 +14,14 @@ import numpy as np
 
 def plots(RunNum,eventNum,BARNPEvsChanplot = None,PanelNPEvsChanplot = None):
 
-    pulseBasedBranches = ["layer","nPE","type","chan"]
-    branches = ["runNumber","event","layer","nPE","type","chan"]
+    pulseBasedBranches = ["layer","nPE","type","chan","row","column"]
+    branches = ["runNumber","event","layer","nPE","type","chan","row","column"]
     filelist =[f'/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhoton/output_{RunNum}.root:t']
     
     for events in uproot.iterate(
                 filelist,
                 branches,
-                step_size=1000,
+                step_size=10000,
                 num_workers=8,
                 ):
 
@@ -32,7 +32,7 @@ def plots(RunNum,eventNum,BARNPEvsChanplot = None,PanelNPEvsChanplot = None):
                 barCUT = events['type']==0
                 for branch in pulseBasedBranches:
                     events[branch] = events[branch][barCUT]
-
+                #print(ak.to_pandas(events))
                 npeList = ak.flatten(events.nPE,axis=None)
                 chanList = ak.flatten(events.chan,axis=None)
                 nPEarray = array('d', npeList)
@@ -42,35 +42,36 @@ def plots(RunNum,eventNum,BARNPEvsChanplot = None,PanelNPEvsChanplot = None):
 
                 if (BARNPEvsChanplot != None) & (len(nPEarray) == len(Chanarray)):
                     BARNPEvsChanplot.FillN(len(nPEarray), Chanarray, nPEarray, np.ones(len(nPEarray)))
-    
-    for events in uproot.iterate(
+    #"""
+    for events2 in uproot.iterate(
                 filelist,
                 branches,
-                step_size=1000,
+                step_size=10000,
                 num_workers=8,
                 ):
 
 
 
                 #extract the intersting events
-                events =  events[events.event == eventNum]
-                
+                events2 =  events2[events2.event == eventNum]
+                #print(ak.to_pandas(events2))
+                #print(ak.to_list(events2))
                 #separate get bar only pulses
-                panelCUT = events['type']>0
+                panelCUT = events2['type']>0
                 
-                print(events['type'])#debug
-                print(events['layer'])
+                #print(events2['type'])#debug
+                #print(events2['layer'])
                 for branch in pulseBasedBranches:
-                    print(branch) #debug
-                    print(len(events[branch])) #debug
-                    print(events[branch]) #debug
-                    print(len(panelCUT)) #debug
-                    print(panelCUT) #debug
-                    events[branch] = events[branch][panelCUT]
+                    #print(branch) #debug
+                    #print(len(events2[branch])) #debug
+                    #print(events2[branch]) #debug
+                    #print(len(panelCUT)) #debug
+                    #print(panelCUT) #debug
+                    events2[branch] = events2[branch][panelCUT]
 
 
-                npeList = ak.flatten(events.nPE,axis=None)
-                chanList = ak.flatten(events.chan,axis=None)
+                npeList = ak.flatten(events2.nPE,axis=None)
+                chanList = ak.flatten(events2.chan,axis=None)
                 nPEarray = array('d', npeList)
                 #print(npeList)
                 Chanarray = array('d', chanList)
@@ -80,7 +81,7 @@ def plots(RunNum,eventNum,BARNPEvsChanplot = None,PanelNPEvsChanplot = None):
                 if (PanelNPEvsChanplot != None) & (len(nPEarray) == len(Chanarray)):
                     
                     PanelNPEvsChanplot.FillN(len(nPEarray), Chanarray, nPEarray, np.ones(len(nPEarray)))
-
+    #"""
 
 
 

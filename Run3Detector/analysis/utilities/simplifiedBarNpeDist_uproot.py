@@ -25,10 +25,16 @@ Npedist=r.TH1F("Npedist","Npedist;barNpe",500,0,100000)
 
 ChanHist = r.TH1F("Chan dist" , "Chan dist; chan number(old mapping)", 80,0,80)
 
+layerHist = r.TH1F("layer dist" , "layer dist; layer number", 5,0,5)
+
+rowHist = r.TH1F("row dist" , "row dist; row number", 5,0,5)
 
 def ChanDist(events,barpmtCut = 2000):
+    events['None_empty_event'] = ak.num(events.pmt_chan) > 0
+    events=events[events.None_empty_event]
+    NPECut = events.pmt_nPE >= barpmtCut 
     for branch in ["pmt_chan","pmt_nPE"]:
-        events[branch] = events[branch][events.pmt_nPE >= barpmtCut]
+        events[branch] = events[branch][NPECut]
     output = ak.flatten(events.pmt_chan,axis=None)
     myarray = array('d', output)
     ChanHist.FillN(len(myarray), myarray, np.ones(len(myarray)))
@@ -42,9 +48,10 @@ def NpedistPlot(events):
     events['None_empty_event'] = ak.num(events.pmt_chan) > 0
     events=events[events.None_empty_event]
     #remove the non-bar channel
+    barCut = events.pmt_chan <= 64
     for branch in ["pmt_chan","pmt_nPE"]:
 
-        events[branch] = events[branch][events.pmt_chan <= 64]
+        events[branch] = events[branch][barCut]
     output = ak.flatten(events.pmt_nPE,axis=None)
     myarray = array('d', output)
     Npedist.FillN(len(myarray), myarray, np.ones(len(myarray)))

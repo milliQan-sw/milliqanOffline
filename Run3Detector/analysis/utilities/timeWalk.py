@@ -38,18 +38,51 @@ fourLayerCut = mycuts.getCut(mycuts.fourLayerCut, 'fourLayerCut', cut=False) #Re
 #slabCut = mycuts.getCut(mycuts.slabCut, 'slabCut', cut=False) #Required for slabIncludedCut
 
 #Custom cuts
-def slabIncludedCut(self): #This requires both slabs to be hit
+def slabIncludedCut(self): #This requires both slabs to be hit with a certain threshold
   mask1 = ak.any((self.events['layer'] == -1) & (self.events['height'] > 400), axis=-1) & ak.any((self.events['layer'] == 4) & (self.events['height'] > 400), axis=-1)
   self.events['slabIncludedCut'] = mask1
   
-def slabsOnly(self):
+def slabsOnly(self): #Looking for just the slabs themselves
   mask2 = ((self.events['layer']==1) | (self.events['layer']==4))
   self.events['slabsOnly'] = mask2
   
 #def globPulse(self): #This will create a new branch with an integer corresponding to each pulse
 #  self.events['globPulse'] = ak.local_index(self.events['ipulse'], axis=1)
 
-def notMaxPulseBool(self):
+def maxPulsePerLayer(self): #This labels the maximum pulse in each layer
+  isMaxPulse = ak.zeros_like(self.events['height'], dtype=bool)
+  #Cycle over each of the four layers and identify the maximum pulse time
+  for i in np.arange(4):
+    maxMask = ak.fill_none(self.events['height'] == ak.max(self.events['height'][self.events['layer'] == i], axis=-1, keepdims=True), False)
+    first_occurrence_mask = (ak.num(maxMask[maxMask==True], axis=-1)) == 1 #Prevents the rare cases where two pulses are exact same height in same layer
+    maxMask = ak.where(first_occurrence_mask, maxMask, isMaxPulse)
+    isMaxPulse = isMaxPulse | maxMask 
+  self.events['maxPulsePerLayer'] = isMaxPulse
+  print("\nHeights: ", self.events['height'])
+  print("Layer: ", self.events['layer'])
+  print("Time: ", self.events['timeFit_module_calibrated'])
+  print("Max Pulse Per Layer: ", isMaxPulse)
+
+def timeDiffMaxPulse(self): #This looks for the time difference between the max pulse and the other pulses
+  maxPulsePerLayerMask = self.events['maxPulsePerLayer']
+  timeDiffs = ak.zeros_like(self.events['height'], dtype=None)
+  noneArray = ak.nan_to_none(ak.full_like(self.events['height'], None))
+  onesArray = ak.ones_like(self.events['height'], dtype=int)
+  
+  for i in np.arange(4):
+    layerMask = self.events['layer'] == i
+    layerTimes = ak.where(layerMask, self.events['timeFit_module_calibrated'], noneArray) 
+    layerMaxes = self.events['timeFit_module_calibrated'][layerMask & maxPulsePerLayerMask]
+    expandedMaxes = ak.broadcast_arrays(ak.flatten(ak.pad_none(layerMaxes, 1)), onesArray)[0]
+
+    tempTimeDiffs = expandedMaxes - layerTimes
+    print(tempTimeDiffs)
+    timeDiffs = ak.where(layerMask, tempTimeDiffs, timeDiffs)
+    
+  self.events['timeDiffMaxPulse'] = timeDiffs
+  print("Time Diffs: ", timeDiffs)
+
+def notMaxPulseBool(self): #This looks for the activity in nearby channels
   overall_indices = ak.zeros_like(self.events['height'], dtype=bool)
   false_array = ak.zeros_like(self.events['height'], dtype=bool)
   
@@ -70,8 +103,12 @@ def notMaxPulseBool(self):
           overall_indices = overall_indices | neighbor_height_indices
   self.events['notMaxPulseBool'] = overall_indices
 
+
+
 #Calling custom cuts
 setattr(milliqanCuts, 'slabIncludedCut', slabIncludedCut)
+setattr(milliqanCuts, 'maxPulsePerLayer', maxPulsePerLayer)
+setattr(milliqanCuts, 'timeDiffMaxPulse', timeDiffMaxPulse)
 #setattr(milliqanCuts, 'globPulse', globPulse)
 setattr(milliqanCuts, 'notMaxPulseBool', notMaxPulseBool)
 setattr(milliqanCuts, 'slabsOnly', slabsOnly)
@@ -104,6 +141,9 @@ h_layers.GetXaxis().SetTitle("Layer")
 #h_globPulse = r.TH1F("h_globPulse", "Global Pulse Integers", 100, 0, 100)
 #h_globPulse.GetXaxis().SetTitle("Global Pulse Integer")
 
+h_timeDiffMaxPulse = r.TH1F("h_timeDiffMaxPulse", "Time Difference from Max Pulse", 100, -1000, 1000)
+h_timeDiffMaxPulse.GetXaxis().SetTitle("Time Difference [ns]")
+
 h_posn = r.TH2F("h_posn", "Position", 4, 0, 4, 4, 0, 4)
 h_posn.GetXaxis().SetTitle("Column")
 h_posn.GetYaxis().SetTitle("Row")
@@ -112,14 +152,15 @@ h_posn.GetYaxis().SetTitle("Row")
 #add root histogram to plotter
 myplotter.addHistograms(h_heights, 'height', 'eventCuts')
 myplotter.addHistograms(h_timeWalk, ['area', 'timeFit_module_calibrated'], 'eventCuts')
+myplotter.addHistograms(h_slabCutVerify, 'height', 'slabVerifyCut')
 #myplotter.addHistograms(h_timeWalkOrig, ['area', 'time'], 'eventCuts')
 myplotter.addHistograms(h_layers, 'layer', 'eventCuts')
 #myplotter.addHistograms(h_globPulse, 'globPulse', 'eventCuts')
+myplotter.addHistograms(h_timeDiffMaxPulse, 'timeDiffMaxPulse', 'eventCuts')
 myplotter.addHistograms(h_posn, ['column', 'row'], 'eventCuts')
-myplotter.addHistograms(h_slabCutVerify, 'height', 'slabVerifyCut')
 
 #defining the cutflow
-cutflow = [mycuts.fourLayerCut, mycuts.slabIncludedCut, mycuts.notMaxPulseBool, eventCuts, mycuts.slabsOnly, slabVerifyCut, myplotter.dict['h_heights'], myplotter.dict['h_timeWalk'], myplotter.dict['h_posn'], myplotter.dict['h_layers'], myplotter.dict['h_slabCutVerify']]
+cutflow = [mycuts.fourLayerCut, mycuts.slabIncludedCut, mycuts.notMaxPulseBool, mycuts.maxPulsePerLayer, mycuts.timeDiffMaxPulse, eventCuts, mycuts.slabsOnly, slabVerifyCut, myplotter.dict['h_heights'], myplotter.dict['h_timeWalk'], myplotter.dict['h_posn'], myplotter.dict['h_layers'], myplotter.dict['h_slabCutVerify'], myplotter.dict['h_timeDiffMaxPulse']]
 
 #create a schedule of the cuts
 myschedule = milliQanScheduler(cutflow, mycuts, myplotter)
@@ -144,6 +185,7 @@ h_layers.Write()
 #h_globPulse.Write()
 h_posn.Write()
 h_slabCutVerify.Write()
+h_timeDiffMaxPulse.Write()
 
 # Close the file
 f.Close()

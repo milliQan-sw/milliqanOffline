@@ -51,7 +51,7 @@ from milliqanPlotter import *
 
 filelist =['/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhoton/output_1.root:t']
 
-branches = ['pmt_nPE','pmt_layer','pmt_chan','layer','pmt_type','event','runNumber']
+branches = ['pmt_nPE','pmt_layer','pmt_chan','pmt_time','pmt_type','event','runNumber']
 
 mycuts = milliqanCuts()
 
@@ -97,6 +97,9 @@ def geometricCutSIM(self, cutName=None, cut=False):
                                         (ak.count(self.events.layer2_bar==True, axis=1)==1) &
                                         (ak.count(self.events.layer3_bar==True, axis=1)==1))
 
+    if cut:
+        self.events=self.events[self.events['oneHitPerLayerCutSIM']]
+
 
     
 
@@ -130,19 +133,93 @@ def oneHitPerLayerCutSIM(self, cutName=None, cut=False):
 def BeamVeto (self,cutName=None,heightCut = 50):
     self.events['BeamVeto'] = not (ak.sum(self.events.pmt_nPE[self.events.pmt_type==1], axis=1) >= heightCut)
 
-def NPECut(self,cutName = None):
+def NPERatioCut(self,cutName = None):
     self.events['BarNPERatio'] = (ak.max(self.events.pmt_nPE[self.events.pmt_type==0],axis=1)/ak.min(self.events.pmt_nPE[self.events.pmt_type==0],axis=1)) <= 10
 
 #reprocess the tree such that it come with correct time.
 #Don't recreate the tree. wait until I finish the the cut validation for cuts at above.
-def correctTimeCut(self,cutName = None):
-    self.events['time'] = (ak.max(self.events.pmt_time[self.events.pmt_type==0],axis=1)-ak.min(self.events.pmt_time[self.events.events.pmt_type==0],axis=1))
+
+#correct time cut should be used only after apply one hit per layer cut(reduced the size of array)
+
+
+def timeCutManipulation(Lay0Time,Lay1Time,Lay2Time,Lay3Time):
+    if len(Lay0Time) == 0 or len(Lay1Time) == 0 or len(Lay2Time) == 0 or len(Lay3Time) == 0:
+        return False
+    dT = 3.96 #The shortest time for photon travel 1 bar scitillator + 1 air gap between two bars.
+    Time = []
+    for time0 in Lay0Time:
+        Time.append(time0)
+    for time1 in Lay1Time:
+        Time.append(time1-dT)
+    for time2 in Lay2Time:
+        Time.append(time2-2*dT)
+    for time3 in Lay3Time:
+        Time.append(time3-3*dT)
+    if any(num < 0 for num in Time):
+        return False 
+    return max(Time)-min(Time) <= 15.09
+
+#
+def CorrectTimeCut(self,cutName = None):
+    #self.events['time'] = (ak.max(self.events.pmt_time[self.events.pmt_type==0],axis=1)-ak.min(self.events.pmt_time[self.events.events.pmt_type==0],axis=1))
+    
+    Timelist = ak.to_list(self.events.pmt_time)
+    Layerlist = ak.to_list(self.events.pmt_layer)
+    typelist = ak.to_list(self.events.pmt_type)
+    nPElist = ak.to_list(self.events.pmt_nPE)
+    eventIDlist = ak.to_list(self.events.event)
+    runNumberlist = ak.to_list(self.events.runNumber)
+    
+
+    NumEvents = len(Layerlist)
+    #things inside the sublist are the data within a single event
+    i = 0
+    for Timesublist,Layersublist in zip(Timelist,Layerlist):
+
+        if len(Timesublist) == len(Layersublist):
+            NPECut = True
+            TimeCut = False 
+            Lay0time = list()
+            Lay1time = list()
+            Lay2time = list()
+            Lay3time = list()
+            for j,time in enumerate(Timesublist):
+                if (typelist[i][j] == 0) and (nPElist[i][j] >=0.6):
+
+                    if Layersublist[j] == 0:
+                        Lay0time.append(time)
+                    if Layersublist[j] == 1:
+                        Lay1time.append(time)
+                    if Layersublist[j] == 2:
+                        Lay2time.append(time)
+                    if Layersublist[j] == 3:
+                        Lay3time.append(time)
+
+            TimeCut=timeCutManipulation(Lay0time,Lay1time,Lay2time,Lay3time)
+
+            if TimeCut:
+                #pass
+                print(f"found it! run number: {runNumberlist[i]} event: {eventIDlist[i]}")
+                #save the runNumber and event to txt file
+
+            
+            
+        else:
+            print(f"issue occur at run {self.events.runNumber[i]} event {self.events.event[i]}" )
+
+        i +=1
+        
+
+
+def probabilityTrim(self,cutName = None):
+    pass
+    
 
 
 
 
 def barCutSim(self, cutName=None, cut=False):
-    print(ak.to_pandas(self.events))
+    #print(ak.to_pandas(self.events))
     self.events['barCut'] = self.events.pmt_type==0
 
 #We want to remove the empty empty event and the empty instance inside an event
@@ -178,6 +255,10 @@ setattr(milliqanCuts, 'LayerCut', LayerCut)
 
 setattr(milliqanCuts, 'barCutSim', barCutSim)
 
+setattr(milliqanCuts, 'NPERatioCut',NPERatioCut)
+
+setattr(milliqanCuts, 'CorrectTimeCut' ,CorrectTimeCut)
+
 #R_fourlayer = mycuts.getCut(mycuts.combineCuts, 'R_fourlayer', ['barCut','fourLayerCutSIM'])
 #R_OneHitperLayer = mycuts.getCut(mycuts.combineCuts, 'R_OneHitperLayer', ['barCut','oneHitPerLayerCutSIM'])
 
@@ -189,7 +270,7 @@ setattr(milliqanCuts, 'barCutSim', barCutSim)
 #cutflow = [mycuts.LayerCut,eventCuts,myplotter.dict['nPE']]
 #cutflow = [mycuts.barCutSim, mycuts.fourLayerCutSIM,mycuts.oneHitPerLayerCutSIM,R_fourlayer,R_OneHitperLayer]
 
-cutflow = [mycuts.EmptyListFilter,mycuts.barCutSim,mycuts.LayerCut, mycuts.geometricCutSIM]
+cutflow = [mycuts.EmptyListFilter,mycuts.barCutSim,mycuts.LayerCut, mycuts.geometricCutSIM,mycuts.NPERatioCut,mycuts.CorrectTimeCut]
 #cutflow = [mycuts.EmptyListFilter]
 myschedule = milliQanScheduler(cutflow, mycuts)
 

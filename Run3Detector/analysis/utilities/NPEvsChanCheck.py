@@ -34,13 +34,17 @@ def appendRun(filelist,run):
         if filename.startswith(f"MilliQan_Run{run}") and filename.endswith(".root"):
             filelist.append(directory+filename+":t")
 cosmicGoodRun = [runN]
+
+for run in cosmicGoodRun:
+    appendRun(filelist,run)
+
 #"""
 
 pulseBasedBranches = ["pickupFlag","layer","nPE","type","area","chan"]
 branches = ["runNumber","event","fileNumber",'boardsMatched',"pickupFlag","layer","nPE","type","area","chan"]
 
-ChanVsbarNpeB = r.TH2F("B ChanvsNPE","bar chanvsmpe;chan; pulse NPE", 80,0,80,200,0,1000)
-ChanVsbarNpeP = r.TH2F("P ChanvsNPE","panel chanvsmpe;chan; pulse NPE", 80,0,80,200,0,1000)
+ChanVsbarNpeB = r.TH2F("B ChanvsNPE","bar chanvsmpe with pickup & board matching cut;chan; pulse NPE", 80,0,80,200,0,1000)
+ChanVsbarNpeP = r.TH2F("P ChanvsNPE","panel chanvsmpe with pickup & board matching cut;chan; pulse NPE", 80,0,80,200,0,1000)
 
 
 for events in uproot.iterate(
@@ -50,14 +54,14 @@ for events in uproot.iterate(
         num_workers=8,
         ):
 
-        """
+        #"""
 
         for branch in pulseBasedBranches:
             events[branch] = events[branch][events.boardsMatched]
         for branch in pulseBasedBranches:
             events[branch] = events[branch][events.pickupFlag]
 
-        """
+        #"""
 
         #separate get bar only pulses
         barCUT = events['type']==0
@@ -80,12 +84,12 @@ for events2 in uproot.iterate(
         step_size=1000,
         num_workers=8,
         ):
-        """
+        #"""
         for branch in pulseBasedBranches:
-            events[branch] = events[branch][events.boardsMatched]
+            events2[branch] = events2[branch][events2.boardsMatched]
         for branch in pulseBasedBranches:
-            events[branch] = events[branch][events.pickupFlag]
-        """
+            events2[branch] = events2[branch][events2.pickupFlag]
+        #"""
 
         #separate get panel only pulses
         panelCUT = events2['type']>0
@@ -111,7 +115,7 @@ for events2 in uproot.iterate(
 
 
 
-output_file = r.TFile("chanvsNPE_Nocut.root", "RECREATE")
+output_file = r.TFile("chanvsNPE_withcut.root", "RECREATE")
 ChanVsbarNpeB.Write()
 ChanVsbarNpeP.Write()
 output_file.Close()

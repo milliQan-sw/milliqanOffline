@@ -54,6 +54,7 @@ class milliqanCuts():
 
     def boardsMatched(self, cutName=None, cut=False, branches=None):
         self.events['boardsMatched'], junk = ak.broadcast_arrays(self.events.boardsMatched, self.events.pickupFlag)
+        
         if cut:
             for branch in branches:
                 if branch == 'boardsMatched': continue
@@ -77,10 +78,8 @@ class milliqanCuts():
 
     #event level mask selecting events with 1 hit in each layer
     def oneHitPerLayerCut(self, cutName=None, cut=False):
-        self.events['oneHitPerLayerCut'] =((ak.count(self.events.layer==0, axis=1)==1) & 
-                                           (ak.count(self.events.layer==1, axis=1)==1) & 
-                                           (ak.count(self.events.layer==2, axis=1)==1) &
-                                           (ak.count(self.events.layer==3, axis=1)==1))
+        self.events['oneHitPerLayerCut'] =((ak.count(self.events.layer==0, axis=1)==4) & 
+                                           self.events['fourLayerCut'])
         if cut: self.events = self.events[self.events.oneHitPerLayerCut]
         self.cutflowCounter()
 

@@ -34,9 +34,19 @@ for branch in ["height", "area","layer","time"]:
 
 
 
+File "/share/scratch0/czheng/sim_uproot/milliqanOffline/Run3Detector/analysis/utilities/simDemo.py", line 223, in probabilityTrim
+self.events.pmt_nPE_p=1-math.exp(-1* self.events.pmt_nPE)
+TypeError: must be real number, not Array
+
+def probabilityTrim(self,cutName = None):
+
+self.events.pmt_nPE_p=1-math.exp(-1* self.events.pmt_nPE)
+
+
+
 
 """
-
+import math
 
 
 import os
@@ -52,6 +62,8 @@ from milliqanPlotter import *
 filelist =['/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhoton/output_1.root:t']
 
 branches = ['pmt_nPE','pmt_layer','pmt_chan','pmt_time','pmt_type','event','runNumber']
+
+barbranches = ['pmt_nPE','pmt_layer','pmt_chan','pmt_time','pmt_type']
 
 mycuts = milliqanCuts()
 
@@ -78,6 +90,13 @@ def LayerCut(self, cutName=None, cut=False, branches=None):
         for branch in branches:
             self.events[branch] = self.events[branch][LayerCuts]
 
+"""
+def geometricCut_count(self,cutName = None):
+
+    print(ak.to_list(self.events[self.events.fourLayerCutSIM])
+"""
+
+
 
 def geometricCutSIM(self, cutName=None, cut=False):
     self.events['layer0_bar'] = self.events['layer0']  & self.events['barCut']
@@ -101,7 +120,7 @@ def geometricCutSIM(self, cutName=None, cut=False):
         self.events=self.events[self.events['oneHitPerLayerCutSIM']]
 
 
-    
+
 
 
 
@@ -211,16 +230,19 @@ def CorrectTimeCut(self,cutName = None):
         
 
 
-def probabilityTrim(self,cutName = None):
-    pass
     
 
-
+def NPEcut(self, cutName=None, cut=False):
+    NPEcuts = self.events.pmt_nPE>=1
+    #for branch in barbranches:
+    #    self.events[branch] = self.events[branch][NPEcuts]
 
 
 def barCutSim(self, cutName=None, cut=False):
     #print(ak.to_pandas(self.events))
     self.events['barCut'] = self.events.pmt_type==0
+    #for branch in barbranches:
+    #    self.events[branch] = self.events[branch][self.events.barCut]
 
 #We want to remove the empty empty event and the empty instance inside an event
 def EmptyListFilter(self,cutName=None):
@@ -240,7 +262,13 @@ def EmptyListFilter(self,cutName=None):
     """
     return self.events
 
-
+def printEvents(self, cutName=None):
+    print(ak.to_pandas(self.events))
+    #print(ak.eve)
+    print(self.events.fourLayerCutSIM)
+    #print(ak.count(self.events.fourLayerCutSIM == True )) #this one is actting weird.
+    print(ak.count(self.events[self.events.fourLayerCutSIM]))
+    print(ak.count(self.events[self.events.fourLayerCutSIM]))
 
 #-----------------------------------------------------------------------------------------------------------------
 setattr(milliqanCuts, 'EmptyListFilter', EmptyListFilter)
@@ -259,6 +287,14 @@ setattr(milliqanCuts, 'NPERatioCut',NPERatioCut)
 
 setattr(milliqanCuts, 'CorrectTimeCut' ,CorrectTimeCut)
 
+setattr(milliqanCuts,'printEvents',printEvents)
+
+setattr(milliqanCuts,'NPEcut',NPEcut)
+
+#setattr(milliqanCuts, 'probabilityTrim' ,probabilityTrim)
+
+#setattr(milliqanCuts, 'geometricCut_count' , geometricCut_count)
+
 #R_fourlayer = mycuts.getCut(mycuts.combineCuts, 'R_fourlayer', ['barCut','fourLayerCutSIM'])
 #R_OneHitperLayer = mycuts.getCut(mycuts.combineCuts, 'R_OneHitperLayer', ['barCut','oneHitPerLayerCutSIM'])
 
@@ -270,7 +306,8 @@ setattr(milliqanCuts, 'CorrectTimeCut' ,CorrectTimeCut)
 #cutflow = [mycuts.LayerCut,eventCuts,myplotter.dict['nPE']]
 #cutflow = [mycuts.barCutSim, mycuts.fourLayerCutSIM,mycuts.oneHitPerLayerCutSIM,R_fourlayer,R_OneHitperLayer]
 
-cutflow = [mycuts.EmptyListFilter,mycuts.barCutSim,mycuts.LayerCut, mycuts.geometricCutSIM,mycuts.NPERatioCut,mycuts.CorrectTimeCut]
+
+cutflow = [mycuts.EmptyListFilter,mycuts.barCutSim,mycuts.NPEcut,mycuts.LayerCut, mycuts.geometricCutSIM,mycuts.NPERatioCut,mycuts.CorrectTimeCut,mycuts.printEvents]
 #cutflow = [mycuts.EmptyListFilter]
 myschedule = milliQanScheduler(cutflow, mycuts)
 
@@ -282,6 +319,11 @@ myschedule.printSchedule()
 myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts)
 
 myiterator.run()
+
+
+
+
+
 
 #output_file = r.TFile("run99_NPEL1.root", "RECREATE")
 #h_NPE.Write()

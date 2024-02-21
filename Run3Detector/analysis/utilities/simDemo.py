@@ -99,6 +99,7 @@ def geometricCut_count(self,cutName = None):
 
 
 def geometricCutSIM(self, cutName=None, cut=False):
+    """
     self.events['layer0_bar'] = self.events['layer0']  & self.events['barCut']
     self.events['layer1_bar'] = self.events['layer1']  & self.events['barCut']
     self.events['layer2_bar'] = self.events['layer2']  & self.events['barCut']
@@ -115,6 +116,55 @@ def geometricCutSIM(self, cutName=None, cut=False):
                                         (ak.count(self.events.layer1_bar==True, axis=1)==1) & 
                                         (ak.count(self.events.layer2_bar==True, axis=1)==1) &
                                         (ak.count(self.events.layer3_bar==True, axis=1)==1))
+    """
+    #FIXME: ak.count(self.events.layer*_bar==True) seems to have issue
+    #any is working fine
+    self.events['fourLayerCutSIM'] =(ak.any(self.events.pmt_layer==0, axis=1) & 
+                                      ak.any(self.events.pmt_layer==1, axis=1) & 
+                                      ak.any(self.events.pmt_layer==2, axis=1) & 
+                                      ak.any(self.events.pmt_layer==3, axis=1))
+    #[True, False, False, False, True], it count the size of second layer array but ignore the ture / false values
+    #possible solution remove the "false" inside the inner array of self.events.pmt_layer==* and then do the count.
+    #create four different layer trim that remove the pulse before doing the count
+    """
+    self.layer0events[layer] = self.events[layer][self.events.layer==0]
+    self.layer1events[layer] = self.events[layer][self.events.layer==1]
+    self.layer2events[layer] = self.events[layer][self.events.layer==2]
+    self.layer3events[layer] = self.events[layer][self.events.layer==3]
+    self.events['fourLayerCutSIM'] =(ak.any(self.layer0events.pmt_layer, axis=1) & 
+                                      ak.any(self.layer1events.pmt_layer, axis=1) & 
+                                      ak.any(self.layer2events.pmt_layer, axis=1) & 
+                                      ak.any(self.layer3events.pmt_layer, axis=1))
+    
+
+    
+    """
+
+    self.events['oneHitPerLayerCutSIM'] =((ak.count(self.events.pmt_layer==0, axis=1)==1) & 
+                                           (ak.count(self.events.pmt_layer==1, axis=1)==1) & 
+                                           (ak.count(self.events.pmt_layer==2, axis=1)==1) &
+                                           (ak.count(self.events.pmt_layer==3, axis=1)==1))
+    #debug
+    print(self.events.pmt_type)
+    print((ak.count(self.events.pmt_layer==0, axis=1)==1))
+    print(ak.to_list(self.events.pmt_layer==5))   #[[False], [], [], [], [False]]
+    print("self.events.pmt_layer==5" + str((ak.count(self.events.pmt_layer==5, axis=1)==1)))  #[True, False, False, False, True], it count the size of second layer array but ignore the ture / false values
+    print((ak.count(self.events.pmt_layer==2, axis=1)==1))
+    print((ak.count(self.events.pmt_layer==3, axis=1)==1))
+    print("self.events.pmt_layer:" + str(ak.to_list(self.events.pmt_layer)))
+    print(ak.any(self.events.pmt_layer==0, axis=1))
+    print("self.events.pmt_layer:" + str(ak.to_list(self.events.pmt_layer)))
+    print(ak.any(self.events.pmt_layer==1, axis=1))
+    print("self.events.pmt_layer:" + str(ak.to_list(self.events.pmt_layer)))
+    print(ak.any(self.events.pmt_layer==2, axis=1))
+    print("self.events.pmt_layer:" + str(ak.to_list(self.events.pmt_layer)))
+    print("self.events.pmt_layer==3:" + str(ak.any(self.events.pmt_layer==3, axis=1)))
+    print(ak.any(self.events.pmt_layer==3, axis=1))
+    print("here is the detail of current array")
+    sizeOfarray = len(self.events)
+    for i in range(sizeOfarray):
+        print(ak.to_list(self.events[i]))
+
 
     if cut:
         self.events=self.events[self.events['oneHitPerLayerCutSIM']]
@@ -241,13 +291,16 @@ def NPEcut(self, cutName=None, cut=False):
 def barCutSim(self, cutName=None, cut=False):
     #print(ak.to_pandas(self.events))
     self.events['barCut'] = self.events.pmt_type==0
-    #for branch in barbranches:
-    #    self.events[branch] = self.events[branch][self.events.barCut]
+    for branch in barbranches:
+        self.events[branch] = self.events[branch][self.events.barCut]
 
 #We want to remove the empty empty event and the empty instance inside an event
 def EmptyListFilter(self,cutName=None):
     #remove empty events
     self.events['None_empty_event'] = ak.num(self.events['pmt_layer']) > 0
+    print(ak.to_list(self.events.None_empty_event))
+    #print(ak.to_list(self.events.pmt_layer))
+    #print(ak.to_pandas(self.events))
     self.events=self.events[self.events.None_empty_event]
     #remove the empty instance
     #print(ak.to_pandas(self.events))
@@ -260,15 +313,17 @@ def EmptyListFilter(self,cutName=None):
     for branch in ak.fields(self.events):
         self.events[branch] = self.events[branch][condition]
     """
-    return self.events
+    #return self.events
 
 def printEvents(self, cutName=None):
+    
     print(ak.to_pandas(self.events))
+    print(ak.to_list(self.events))
     #print(ak.eve)
-    print(self.events.fourLayerCutSIM)
+    #print(self.events.fourLayerCutSIM)
     #print(ak.count(self.events.fourLayerCutSIM == True )) #this one is actting weird.
-    print(ak.count(self.events[self.events.fourLayerCutSIM]))
-    print(ak.count(self.events[self.events.fourLayerCutSIM]))
+    #print(ak.count(self.events[self.events.fourLayerCutSIM]))
+    #print(ak.count(self.events[self.events.fourLayerCutSIM]))
 
 #-----------------------------------------------------------------------------------------------------------------
 setattr(milliqanCuts, 'EmptyListFilter', EmptyListFilter)
@@ -306,8 +361,13 @@ setattr(milliqanCuts,'NPEcut',NPEcut)
 #cutflow = [mycuts.LayerCut,eventCuts,myplotter.dict['nPE']]
 #cutflow = [mycuts.barCutSim, mycuts.fourLayerCutSIM,mycuts.oneHitPerLayerCutSIM,R_fourlayer,R_OneHitperLayer]
 
+#sample of withphoton sim analysis cutflow
+#cutflow = [mycuts.EmptyListFilter,mycuts.barCutSim,mycuts.NPEcut,mycuts.LayerCut, mycuts.geometricCutSIM,mycuts.NPERatioCut,mycuts.CorrectTimeCut,mycuts.printEvents]
 
-cutflow = [mycuts.EmptyListFilter,mycuts.barCutSim,mycuts.NPEcut,mycuts.LayerCut, mycuts.geometricCutSIM,mycuts.NPERatioCut,mycuts.CorrectTimeCut,mycuts.printEvents]
+
+#debug cutflow. I suspect Mike' geometric cut has issue
+cutflow = [mycuts.EmptyListFilter,mycuts.barCutSim, mycuts.geometricCutSIM]
+
 #cutflow = [mycuts.EmptyListFilter]
 myschedule = milliQanScheduler(cutflow, mycuts)
 

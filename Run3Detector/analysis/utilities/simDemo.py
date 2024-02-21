@@ -195,7 +195,6 @@ def timeCutManipulation(Lay0Time,Lay1Time,Lay2Time,Lay3Time):
 
 #
 def CorrectTimeCut(self,cutName = None):
-    self.events=self.events[self.events.BarNPERatio]
     if len(self.events) == 0: return
     print(self.events)
     Timelist = ak.to_list(self.events.pmt_time)
@@ -297,8 +296,9 @@ def furtherTrim(self,cutName=None):
     print(ak.to_pandas(self.events))
     #print(ak.to_list(self.events.BarNPERatio)) #FIXME: it has None. 
     self.events = self.events[self.events.BarNPERatio]
+    #print(ak.to_list(self.events.event))
     #print(ak.to_list(self.events.BarNPERatio))
-    print(ak.to_pandas(self.events))
+    #print(ak.to_pandas(self.events))
 
 
 #-----------------------------------------------------------------------------------------------------------------

@@ -157,8 +157,18 @@ def NPERatioCut(self,cutName = None):
     #remove the none-bar data, so Nan will not exist inside BarNPERatio
     for branch in barbranches:
         self.events[branch] = self.events[branch][self.events.barCut]
+    print(ak.to_list(self.events['oneHitPerLayerCutSIM']))
+    #remove the empty event
+    EmptyCuts= ak.num(self.events['pmt_type']) > 0
+    self.events = self.events[EmptyCuts]
+
     self.events['BarNPERatio'] = ((ak.max(self.events.pmt_nPE[self.events.pmt_type==0],axis=1)/ak.min(self.events.pmt_nPE[self.events.pmt_type==0],axis=1)) <= 10) & self.events['oneHitPerLayerCutSIM']
-                                    
+    print("BarNPERatio tag:" + str(ak.to_list(self.events['BarNPERatio'])))
+    #print(ak.to_list(((ak.max(self.events.pmt_nPE[self.events.pmt_type==0],axis=1)/ak.min(self.events.pmt_nPE[self.events.pmt_type==0],axis=1)) <= 10)))
+    #print("event number" + str(ak.to_list(self.events.event)))
+    #print("npe list:"+ str(ak.to_list(self.events.pmt_nPE)))
+    #print(ak.to_pandas(self.events))
+    #print(ak.to_list(self.events['BarNPERatio']))   
 
 #reprocess the tree such that it come with correct time.
 #Don't recreate the tree. wait until I finish the the cut validation for cuts at above.
@@ -185,7 +195,7 @@ def timeCutManipulation(Lay0Time,Lay1Time,Lay2Time,Lay3Time):
 
 #
 def CorrectTimeCut(self,cutName = None):
-    #self.events['time'] = (ak.max(self.events.pmt_time[self.events.pmt_type==0],axis=1)-ak.min(self.events.pmt_time[self.events.events.pmt_type==0],axis=1))
+    self.events=self.events[self.events.BarNPERatio]
     if len(self.events) == 0: return
     print(self.events)
     Timelist = ak.to_list(self.events.pmt_time)
@@ -283,6 +293,14 @@ def printEvents(self, cutName=None):
     #print(ak.count(self.events[self.events.fourLayerCutSIM]))
 
 
+def furtherTrim(self,cutName=None):
+    print(ak.to_pandas(self.events))
+    #print(ak.to_list(self.events.BarNPERatio)) #FIXME: it has None. 
+    self.events = self.events[self.events.BarNPERatio]
+    #print(ak.to_list(self.events.BarNPERatio))
+    print(ak.to_pandas(self.events))
+
+
 #-----------------------------------------------------------------------------------------------------------------
 setattr(milliqanCuts, 'EmptyListFilter', EmptyListFilter)
 
@@ -302,7 +320,7 @@ setattr(milliqanCuts,'printEvents',printEvents)
 
 setattr(milliqanCuts,'NPEcut',NPEcut)
 
-
+setattr(milliqanCuts,'furtherTrim',furtherTrim)
 
 #setattr(milliqanCuts, 'probabilityTrim' ,probabilityTrim)
 
@@ -321,7 +339,7 @@ setattr(milliqanCuts,'NPEcut',NPEcut)
 
 #sample of withphoton sim analysis cutflow
 #I applied the geometric & NPE cut at 
-cutflow = [mycuts.EmptyListFilter,mycuts.NPEcut,mycuts.barCutSim,mycuts.LayerCut, mycuts.geometricCutSIM,mycuts.NPERatioCut,mycuts.printEvents,mycuts.CorrectTimeCut]
+cutflow = [mycuts.EmptyListFilter,mycuts.NPEcut,mycuts.barCutSim,mycuts.LayerCut, mycuts.geometricCutSIM,mycuts.NPERatioCut,mycuts.printEvents,mycuts.furtherTrim,mycuts.CorrectTimeCut]
 
 
 #debug cutflow. 

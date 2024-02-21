@@ -276,9 +276,10 @@ def EmptyListFilter(self,cutName=None):
 def printEvents(self, cutName=None):
     print(len(self.events))
     print(ak.to_pandas(self.events[self.events.fourLayerCutSIM]))
+    print(ak.to_list(self.events[self.events.fourLayerCutSIM]))
     #print(ak.to_list(self.events))
     
-    print(ak.count(self.events[self.events.fourLayerCutSIM]))
+    print(len(self.events[self.events.fourLayerCutSIM]))#the way to count the event
     #print(ak.count(self.events[self.events.fourLayerCutSIM]))
 
 #-----------------------------------------------------------------------------------------------------------------

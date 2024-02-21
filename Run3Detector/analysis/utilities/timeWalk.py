@@ -9,12 +9,12 @@ from milliqanScheduler import *
 from milliqanCuts import *
 from milliqanPlotter import *
 
-if not os.path.isfile('/Users/jahe0/Desktop/Physics-Research/Graduate-Research/MilliQan/milliqanOffline/Run3Detector/analysis/utilities/MilliQan_Run1035_v34.root'):
+'''if not os.path.isfile('/Users/jahe0/Desktop/Physics-Research/Graduate-Research/MilliQan/milliqanOffline/Run3Detector/analysis/utilities/MilliQan_Run1035_v34.root'):
     print("Downloading our example files...")
     filePath2 = 'https://cernbox.cern.ch/s/tamc9PknEzhHwq4/download'
     os.system("wget -O $PWD/MilliQan_Run1035_v34.root {0} ".format(filePath2))
 else:
-    print("We already have our file!")
+    print("We already have our file!")'''
     
 #Trying to plot the pulse area vs pulse time to see if we have time effects. This requires:
 # 1) Identifying beam muons
@@ -22,7 +22,9 @@ else:
 # 3) pulse area vs pulse time plots
 
 #define a file list to run over
-filelist = ['/Users/jahe0/Desktop/Physics-Research/Graduate-Research/MilliQan/milliqanOffline/Run3Detector/analysis/utilities/MilliQan_Run1035_v34.root:t']
+#filelist = ['/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1114_default_v34.root:t']
+filelist = ['/Users/jahe0/Desktop/Physics-Research/Graduate-Research/MilliQan/milliqanOffline/Run3Detector/analysis/utilities/MilliQan_Run1035_v34.root:t',
+            '/Users/jahe0/Desktop/Physics-Research/Graduate-Research/MilliQan/milliqanOffline/Run3Detector/analysis/utilities/MilliQan_Run1114_default_v34.root:t']
 
 #define the relevant branches
 branches = ['timeFit_module_calibrated', 'time', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type']
@@ -85,6 +87,9 @@ def notMaxPulseBool(self): #This looks for the activity in nearby channels to th
   notMaxPulseBool = ak.where((self.events['layer']!=-1) & (self.events['layer']!=4), notMaxPulseBool, False)
   self.events['notMaxPulseBool'] = notMaxPulseBool
 
+def singleChannelOnly(self): #Requires everything only be in a speficic channel
+  singleChannelMask = (self.events['layer'] == 0) & (self.events['column'] == 0) & (self.events['row'] == 0)
+  self.events['singleChannelOnly'] = singleChannelMask
 
 #Calling custom cuts
 setattr(milliqanCuts, 'slabIncludedCut', slabIncludedCut)
@@ -93,9 +98,11 @@ setattr(milliqanCuts, 'timeDiffMaxPulse', timeDiffMaxPulse)
 setattr(milliqanCuts, 'notMaxPulseBool', notMaxPulseBool)
 setattr(milliqanCuts, 'timeDiffMaxPulseCut', timeDiffMaxPulseCut)
 setattr(milliqanCuts, 'slabsOnly', slabsOnly)
+setattr(milliqanCuts, 'singleChannelOnly', singleChannelOnly)
 
 #create our combined cut
 eventCuts = mycuts.getCut(mycuts.combineCuts, 'eventCuts', ['fourLayerCut', 'slabIncludedCut', 'notMaxPulseBool', 'timeDiffMaxPulseCut'])
+eventCutsSingleChannel = mycuts.getCut(mycuts.combineCuts, 'eventCutsSingleChannel', ['singleChannelOnly', 'fourLayerCut', 'slabIncludedCut', 'notMaxPulseBool', 'timeDiffMaxPulseCut'])
 slabVerifyCut = mycuts.getCut(mycuts.combineCuts, 'slabVerifyCut', ['fourLayerCut', 'slabIncludedCut', 'slabsOnly'])
 panelVerifyCut = mycuts.getCut(mycuts.combineCuts, 'panelVerifyCut', ['fourLayerCut', 'slabsOnly'])
 
@@ -103,28 +110,40 @@ panelVerifyCut = mycuts.getCut(mycuts.combineCuts, 'panelVerifyCut', ['fourLayer
 myplotter = milliqanPlotter()
 
 #create root histograms
+#Eventcut heights
 h_heights = r.TH1F("h_heights", "Heights [mV]", 140, 0, 1400)
 h_heights.GetXaxis().SetTitle("Height [mV]")
 
+#EventCut timeWalk plot (All channels)
 h_timeWalk = r.TH2F("h_timeWalk", "Areas [mV] vs Time Difference from Max-in-Layer [ns]", 140, 0, 500000, 100, -100, 100)
 h_timeWalk.GetXaxis().SetTitle("Area [pVs]")
 h_timeWalk.GetYaxis().SetTitle("timeDiff [ns]")
 
+#For looking at the slab cut verification
 h_slabCutVerify = r.TH1F("h_slabCutVerify", "Slab Cut Verification", 100, 0, 1500)
-h_timeWalk.GetXaxis().SetTitle("height [mV]")
+h_slabCutVerify.GetXaxis().SetTitle("height [mV]")
 
+#For looking at the eventCut layer distribution
 h_layers = r.TH1F("h_layers", "Layers", 6, -1, 5)
 h_layers.GetXaxis().SetTitle("Layer")
 
+#For looking at eventCut time differences
 h_timeDiffMaxPulse = r.TH1F("h_timeDiffMaxPulse", "Time Difference from Max Pulse", 100, -1000, 1000)
 h_timeDiffMaxPulse.GetXaxis().SetTitle("Time Difference [ns]")
 
+#For looking at in-layer eventCut positions of events
 h_posn = r.TH2F("h_posn", "Position", 4, 0, 4, 4, 0, 4)
 h_posn.GetXaxis().SetTitle("Column")
 h_posn.GetYaxis().SetTitle("Row")
 
+#For looking for the muon area threshold
 h_panelArea = r.TH1F("h_panelArea", "Front/Back End Panel Areas", 100, 0, 700000)
 h_panelArea.GetXaxis().SetTitle("Area [pVs]")
+
+#For looking at the timeWalk plots in a specific channel
+h_timeWalkSingleChannel = r.TH2F("h_timeWalkSingleChannel", "Areas [mV] vs Time Difference from Max-in-Layer [ns]", 140, 0, 500000, 100, -100, 100)
+h_timeWalkSingleChannel.GetXaxis().SetTitle("Area [pVs]")
+h_timeWalkSingleChannel.GetYaxis().SetTitle("timeDiff [ns]")
 
 #add root histogram to plotter
 myplotter.addHistograms(h_heights, 'height', 'eventCuts')
@@ -134,9 +153,10 @@ myplotter.addHistograms(h_layers, 'layer', 'eventCuts')
 myplotter.addHistograms(h_timeDiffMaxPulse, 'timeDiffMaxPulse', 'eventCuts')
 myplotter.addHistograms(h_posn, ['column', 'row'], 'eventCuts')
 myplotter.addHistograms(h_panelArea, 'area', 'panelVerifyCut')
+myplotter.addHistograms(h_timeWalkSingleChannel, ['area', 'timeDiffMaxPulse'], 'eventCutsSingleChannel')
 
 #defining the cutflow
-cutflow = [mycuts.fourLayerCut, mycuts.slabIncludedCut, mycuts.maxPulsePerLayer, mycuts.notMaxPulseBool, mycuts.timeDiffMaxPulse, mycuts.timeDiffMaxPulseCut, eventCuts, mycuts.slabsOnly, slabVerifyCut, panelVerifyCut, myplotter.dict['h_heights'], myplotter.dict['h_timeWalk'], myplotter.dict['h_posn'], myplotter.dict['h_layers'], myplotter.dict['h_slabCutVerify'], myplotter.dict['h_timeDiffMaxPulse'], myplotter.dict['h_panelArea']]
+cutflow = [mycuts.singleChannelOnly, mycuts.fourLayerCut, mycuts.slabIncludedCut, mycuts.maxPulsePerLayer, mycuts.notMaxPulseBool, mycuts.timeDiffMaxPulse, mycuts.timeDiffMaxPulseCut, eventCuts, eventCutsSingleChannel, mycuts.slabsOnly, slabVerifyCut, panelVerifyCut, myplotter.dict['h_heights'], myplotter.dict['h_timeWalk'], myplotter.dict['h_posn'], myplotter.dict['h_layers'], myplotter.dict['h_slabCutVerify'], myplotter.dict['h_timeDiffMaxPulse'], myplotter.dict['h_panelArea'], myplotter.dict['h_timeWalkSingleChannel']]
 
 #create a schedule of the cuts
 myschedule = milliQanScheduler(cutflow, mycuts, myplotter)
@@ -161,6 +181,7 @@ h_posn.Write()
 h_slabCutVerify.Write()
 h_timeDiffMaxPulse.Write()
 h_panelArea.Write()
+h_timeWalkSingleChannel.Write()
 
 # Close the file
 f.Close()

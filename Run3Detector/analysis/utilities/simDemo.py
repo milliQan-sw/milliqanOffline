@@ -147,21 +147,18 @@ def CosmicVetoSIM(self, cutName=None, cut=False):
 
 
 
-def oneHitPerLayerCutSIM(self, cutName=None, cut=False):
-    self.events['oneHitPerLayerCutSIM'] =((ak.count(self.events.pmt_layer==0, axis=1)==1) & 
-                                        (ak.count(self.events.pmt_layer==1, axis=1)==1) & 
-                                        (ak.count(self.events.pmt_layer==2, axis=1)==1) &
-                                        (ak.count(self.events.pmt_layer==3, axis=1)==1))
-
-
-
 
 #if the summing bar NPE of two beam panels is larger than 50Npe, then return false
 def BeamVeto (self,cutName=None,heightCut = 50):
     self.events['BeamVeto'] = not (ak.sum(self.events.pmt_nPE[self.events.pmt_type==1], axis=1) >= heightCut)
 
 def NPERatioCut(self,cutName = None):
-    self.events['BarNPERatio'] = (ak.max(self.events.pmt_nPE[self.events.pmt_type==0],axis=1)/ak.min(self.events.pmt_nPE[self.events.pmt_type==0],axis=1)) <= 10
+
+    #remove the none-bar data, so Nan will not exist inside BarNPERatio
+    for branch in barbranches:
+        self.events[branch] = self.events[branch][self.events.barCut]
+    self.events['BarNPERatio'] = ((ak.max(self.events.pmt_nPE[self.events.pmt_type==0],axis=1)/ak.min(self.events.pmt_nPE[self.events.pmt_type==0],axis=1)) <= 10) & self.events['oneHitPerLayerCutSIM']
+                                    
 
 #reprocess the tree such that it come with correct time.
 #Don't recreate the tree. wait until I finish the the cut validation for cuts at above.
@@ -189,7 +186,8 @@ def timeCutManipulation(Lay0Time,Lay1Time,Lay2Time,Lay3Time):
 #
 def CorrectTimeCut(self,cutName = None):
     #self.events['time'] = (ak.max(self.events.pmt_time[self.events.pmt_type==0],axis=1)-ak.min(self.events.pmt_time[self.events.events.pmt_type==0],axis=1))
-    
+    if len(self.events) == 0: return
+    print(self.events)
     Timelist = ak.to_list(self.events.pmt_time)
     Layerlist = ak.to_list(self.events.pmt_layer)
     typelist = ak.to_list(self.events.pmt_type)
@@ -202,7 +200,7 @@ def CorrectTimeCut(self,cutName = None):
     #things inside the sublist are the data within a single event
     i = 0
     for Timesublist,Layersublist in zip(Timelist,Layerlist):
-
+        
         if len(Timesublist) == len(Layersublist):
             NPECut = True
             TimeCut = False 
@@ -211,7 +209,7 @@ def CorrectTimeCut(self,cutName = None):
             Lay2time = list()
             Lay3time = list()
             for j,time in enumerate(Timesublist):
-                if (typelist[i][j] == 0) and (nPElist[i][j] >=0.6):
+                if (typelist[i][j] == 0) and (nPElist[i][j] >=1):
 
                     if Layersublist[j] == 0:
                         Lay0time.append(time)
@@ -260,7 +258,7 @@ def EmptyListFilter(self,cutName=None):
     #print(ak.to_list(self.events.pmt_layer))
     #print(ak.to_pandas(self.events))
     self.events=self.events[self.events.None_empty_event]
-    #remove the empty instance
+    
     #print(ak.to_pandas(self.events))
     #check if empty instance exist
     #print(ak.to_list(self.events))
@@ -275,17 +273,18 @@ def EmptyListFilter(self,cutName=None):
 
 def printEvents(self, cutName=None):
     print(len(self.events))
-    print(ak.to_pandas(self.events[self.events.fourLayerCutSIM]))
-    print(ak.to_list(self.events[self.events.fourLayerCutSIM]))
+    #print(ak.to_pandas(self.events[self.events.fourLayerCutSIM]))
+    #print(ak.to_list(self.events[self.events.fourLayerCutSIM]))
     #print(ak.to_list(self.events))
     
     print(len(self.events[self.events.fourLayerCutSIM]))#the way to count the event
+    print(len(self.events[self.events.oneHitPerLayerCutSIM]))
+    
     #print(ak.count(self.events[self.events.fourLayerCutSIM]))
+
 
 #-----------------------------------------------------------------------------------------------------------------
 setattr(milliqanCuts, 'EmptyListFilter', EmptyListFilter)
-
-setattr(milliqanCuts, 'oneHitPerLayerCutSIM', oneHitPerLayerCutSIM)
 
 setattr(milliqanCuts, 'CosmicVetoSIM', CosmicVetoSIM)
 
@@ -303,6 +302,8 @@ setattr(milliqanCuts,'printEvents',printEvents)
 
 setattr(milliqanCuts,'NPEcut',NPEcut)
 
+
+
 #setattr(milliqanCuts, 'probabilityTrim' ,probabilityTrim)
 
 #setattr(milliqanCuts, 'geometricCut_count' , geometricCut_count)
@@ -319,7 +320,8 @@ setattr(milliqanCuts,'NPEcut',NPEcut)
 #cutflow = [mycuts.barCutSim, mycuts.fourLayerCutSIM,mycuts.oneHitPerLayerCutSIM,R_fourlayer,R_OneHitperLayer]
 
 #sample of withphoton sim analysis cutflow
-cutflow = [mycuts.EmptyListFilter,mycuts.NPEcut,mycuts.barCutSim,mycuts.LayerCut, mycuts.geometricCutSIM,mycuts.NPERatioCut,mycuts.CorrectTimeCut,mycuts.printEvents]
+#I applied the geometric & NPE cut at 
+cutflow = [mycuts.EmptyListFilter,mycuts.NPEcut,mycuts.barCutSim,mycuts.LayerCut, mycuts.geometricCutSIM,mycuts.NPERatioCut,mycuts.printEvents,mycuts.CorrectTimeCut]
 
 
 #debug cutflow. 

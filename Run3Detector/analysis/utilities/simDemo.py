@@ -59,9 +59,9 @@ from milliqanScheduler import *
 from milliqanCuts import *
 from milliqanPlotter import *
 
-#filelist =['/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhoton/output_284.root:t']
+filelist =['/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhoton/output_23.root:t']
 
-#"""
+"""
 filelist = []
 
 def appendRun(filelist):
@@ -72,7 +72,7 @@ def appendRun(filelist):
 
 
 appendRun(filelist)
-#"""
+"""
 
 
 
@@ -126,6 +126,8 @@ def geometricCutSIM(self, cutName=None, cut=False):
                                     ak.any(self.events.layer1_bar==True, axis=1) & 
                                     ak.any(self.events.layer2_bar==True, axis=1) & 
                                     ak.any(self.events.layer3_bar==True, axis=1))
+    
+    self.events.layer0_bar = self.events['layer0_bar'][self.events.barCut]
 
     self.events['oneHitPerLayerCutSIM'] =((ak.count(self.events.layer0_bar, axis=1)==4) & 
                                     self.events['fourLayerCutSIM'])
@@ -271,6 +273,8 @@ def NPEcut(self, cutName=None, cut=False):
 def barCutSim(self, cutName=None, cut=False):
 
     self.events['barCut'] = self.events.pmt_type==0
+    #for branch in barbranches:
+    #    self.events[branch] = self.events[branch][self.events['barCut']]
 
 
 
@@ -305,8 +309,17 @@ def printEvents(self, cutName=None):
     #print(ak.to_list(self.events[self.events.fourLayerCutSIM]))
     #print(ak.to_list(self.events))
     #print("fileNum:" + str(set(self.events.runNumber)))
-    print(len(self.events[self.events.fourLayerCutSIM]))#the way to count the event
-    print(len(self.events[self.events.oneHitPerLayerCutSIM]))
+    print("four layers cut :" + str(len(self.events[self.events.fourLayerCutSIM])))
+    if (len(self.events[self.events.fourLayerCutSIM])) > 0:
+        print(ak.to_pandas(self.events[self.events.fourLayerCutSIM]))
+    
+    Num1HITPL=self.events[self.events.oneHitPerLayerCutSIM]
+    print("one hit per layer cut :" + str(len(Num1HITPL)))
+    if len(Num1HITPL) >= 1:
+        print(f"found it at EventID {Num1HITPL.event}  file {set(Num1HITPL.runNumber)}")
+    
+    #print(len(self.events[self.events.fourLayerCutSIM]))#the way to count the event
+    #print(len(self.events[self.events.oneHitPerLayerCutSIM]))
     
     #print(ak.count(self.events[self.events.fourLayerCutSIM]))
 
@@ -315,6 +328,8 @@ def furtherTrim(self,cutName=None):
     #print(ak.to_pandas(self.events))
     #print(ak.to_list(self.events.BarNPERatio)) #FIXME: it has None. 
     self.events = self.events[self.events.BarNPERatio]
+    print("NPE ratio cut :" + str(len(self.events)))
+
     #print(ak.to_list(self.events.event))
     #print(ak.to_list(self.events.BarNPERatio))
     #print(ak.to_pandas(self.events))
@@ -360,7 +375,10 @@ setattr(milliqanCuts,'begin',begin)
 
 #sample of withphoton sim analysis cutflow
 #I applied the geometric & NPE cut at 
-cutflow = [mycuts.begin,mycuts.EmptyListFilter,mycuts.NPEcut,mycuts.barCutSim,mycuts.LayerCut, mycuts.geometricCutSIM,mycuts.NPERatioCut,mycuts.printEvents,mycuts.furtherTrim,mycuts.CorrectTimeCut]
+#cutflow = [mycuts.begin,mycuts.EmptyListFilter,mycuts.NPEcut,mycuts.barCutSim,mycuts.LayerCut, mycuts.geometricCutSIM,mycuts.NPERatioCut,mycuts.printEvents,mycuts.furtherTrim,mycuts.CorrectTimeCut]
+
+#debug cutflow for checking why the number of  1 hit per layer events is less than previous result.
+cutflow = [mycuts.begin,mycuts.EmptyListFilter,mycuts.NPEcut,mycuts.barCutSim,mycuts.LayerCut, mycuts.geometricCutSIM,mycuts.printEvents]
 
 
 #debug cutflow. 

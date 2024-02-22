@@ -27,6 +27,7 @@ def barTrim(self, cutName=None):
 
 def printEvents(self,cutName=None):
     print(ak.to_pandas(self.events))
+    print(ak.to_pandas(self.events[self.events.oneHitPerLayerCut]))
     
 def evensizeTrim(self,cutName=None):
     sizeCuts=(ak.count(self.events.layer==0, axis=1)==1) #extract the events that only has 1 pulse
@@ -42,10 +43,10 @@ setattr(milliqanCuts, 'printEvents', printEvents)
 
 #cutflow that create the mask for the old one 1 hit per layer cut
 
-cutflow = [mycuts.barTrim,mycuts.evensizeTrim,mycuts.OLDoneHitPerLayerCut,mycuts.printEvents]
+#cutflow = [mycuts.barTrim,mycuts.evensizeTrim,mycuts.OLDoneHitPerLayerCut,mycuts.printEvents]
 
 #cutflow that create the mask for the new one 1 hit per layer cut
-#cutflow = [mycuts.barTrim,mycuts.fourLayerCut,mycuts.oneHitPerLayerCut,mycuts.printEvents]
+cutflow = [mycuts.barTrim,mycuts.fourLayerCut,mycuts.oneHitPerLayerCut,mycuts.printEvents]
 
 myschedule = milliQanScheduler(cutflow, mycuts)
 

@@ -78,7 +78,15 @@ class milliqanCuts():
 
     #event level mask selecting events with 1 hit in each layer
     def oneHitPerLayerCut(self, cutName=None, cut=False):
-        self.events['oneHitPerLayerCut'] =((ak.count(self.events.layer==0, axis=1)==4) & 
+        #find the number of unique bar channels get hit
+        #I assume the bar trimming is done, so the self.events.chan only has the the data from bar channel
+        UniqueBarHits = []
+        for barData in self.events.chan:
+            UniqueBarHits.append(len(set(barData)))
+        
+        self.events["uniqueBarHits"] = UniqueBarHits
+
+        self.events['oneHitPerLayerCut'] =((self.events.uniqueBarHits==4) & 
                                            self.events['fourLayerCut'])
         if cut: self.events = self.events[self.events.oneHitPerLayerCut]
         self.cutflowCounter()

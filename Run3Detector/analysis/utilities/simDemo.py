@@ -70,7 +70,7 @@ def geometricCutSIM(self, cutName=None, cut=False):
                                     ak.any(self.events.layer3_bar==True, axis=1))
     
     self.events.layer0_bar = self.events['layer0_bar'][self.events.barCut]
-
+    #After applying the mask at above, for each event, the size of layer0_bar is equal the number of unique bars channels get hit.
     self.events['oneHitPerLayerCutSIM'] =((ak.count(self.events.layer0_bar, axis=1)==4) & 
                                     self.events['fourLayerCutSIM'])
     #"""

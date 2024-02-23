@@ -7,7 +7,6 @@ And I notice there is not much hit at layer 2 and 3. I suspect it is related the
 
 tag1: there is a layer that both top and the bottom rows got big hits
 tag2: there is a layer that both 4 rows got big hits
-top & bottom row
 
 This script is modified based on /home/czheng/scratch0/cosmicExplore/milliqanOffline/Run3Detector/analysis/utilities/CosmicTagPlots.py
 
@@ -63,7 +62,7 @@ for events in uproot.iterate(
 
         #"""
 
-        #separate get bar only pulses
+        # get bar only pulses
         barCUT = events['type']==0
         for branch in pulseBasedBranches:
             events[branch] = events[branch][barCUT]
@@ -91,7 +90,7 @@ for events2 in uproot.iterate(
             events2[branch] = events2[branch][events2.pickupFlag]
         #"""
 
-        #separate get panel only pulses
+        # get panel only pulses
         panelCUT = events2['type']>0
         for branch in pulseBasedBranches:
             events2[branch] = events2[branch][panelCUT]

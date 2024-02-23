@@ -2,21 +2,7 @@ import os
 
 event_sums = {}
 
-"""
-input_files = []
-
-directory= "/net/cms26/cms26r0/zheng/barSimulation/withPhotonAnalysis/newFlatResult/"
-#base_name = "WPIndividual" #old counting come with NPE > 0
-#base_name = "WPIndividual_new"
-base_name = "withOutPhotonCutresult"
-#base_name = "special_new"
-
-
-for filename in os.listdir(directory):
-    if filename.startswith(base_name) and filename.endswith(".txt"):
-        input_files.append(directory+filename)
-"""
-input_files = ["/home/czheng/scratch0/sim_uproot/milliqanOffline/Run3Detector/analysis/utilities/output.txt"]
+input_files = ["/share/scratch0/czheng/SIManalysisDEV/milliqanOffline/Run3Detector/analysis/simAnalysis/withPhotonResultSim.txt"]
 
 interestFile = list()
 

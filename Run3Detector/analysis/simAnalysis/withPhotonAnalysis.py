@@ -11,7 +11,7 @@ from milliqanScheduler import *
 from milliqanCuts import *
 from milliqanPlotter import *
 
-#filelist =['/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhoton/output_23.root:t']
+#filelist =['/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhoton/output_810.root:t']
 
 #"""
 filelist = []
@@ -133,6 +133,7 @@ def timeCutManipulation(Lay0Time,Lay1Time,Lay2Time,Lay3Time):
         Time.append(time3-3*dT)
     if any(num < 0 for num in Time):
         return False 
+    print(f"correct time diff {max(Time)-min(Time)}")
     return max(Time)-min(Time) <= 15.09
 
 #
@@ -224,10 +225,16 @@ def furtherTrim(self,cutName=None):
     self.events = self.events[self.events.BarNPERatio]
     print("NPE ratio cut :" + str(len(self.events)))
 
+def selectEvent(self,cutName =None, evenNum=6800):
+    self.events = self.events[self.events.event == evenNum]
+
+
 
 
 
 #-----------------------------------------------------------------------------------------------------------------
+setattr(milliqanCuts, 'selectEvent', selectEvent)
+
 setattr(milliqanCuts, 'EmptyListFilter', EmptyListFilter)
 
 setattr(milliqanCuts, 'CosmicVetoSIM', CosmicVetoSIM)

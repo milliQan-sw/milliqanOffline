@@ -49,9 +49,13 @@ def plots(RunNum,eventNum,BARNPEvsChanplot = None,PanelNPEvsChanplot = None,NBar
                     BARNPEvsChanplot.FillN(len(nPEarray), Chanarray, nPEarray, np.ones(len(nPEarray)))
                 
                 if (NBarsHit != None):
+                    
                     uniqueBars = ak.Array([np.unique(x) for x in barEvents.chan])
+
                     NumberOfBarHits = ak.count(uniqueBars, axis = 1)
-                    NBarsHit.FillN(len(NumberOfBarHits), NumberOfBarHits, np.ones(len(NumberOfBarHits)))
+
+                    NBarsHit.Fill(NumberOfBarHits[0])
+
                 
 
                 dT = 3.96 #The shortest time for photon travel 1 bar scitillator + 1 air gap between two bars.
@@ -61,16 +65,16 @@ def plots(RunNum,eventNum,BARNPEvsChanplot = None,PanelNPEvsChanplot = None,NBar
                 Lay3Time=barEvents["time"][barEvents.layer==3] -3*dT
                 CorretTimeArray = np.concatenate((Lay0Time, Lay1Time,Lay2Time,Lay3Time), axis=1)
                 CorretTimeDiff = (np.max(CorretTimeArray,axis=1)-np.min(CorretTimeArray,axis=1)).tolist()
-                DTHist.FillN(len(CorretTimeDiff), CorretTimeDiff, np.ones(len(CorretTimeDiff)))
+                DTHist.Fill(CorretTimeDiff[0])
 
                 NpeRatioArr = (np.max(barEvents.nPE,axis=1) / np.min(barEvents.nPE,axis=1)).tolist()
-                NPERatio.FillN(len(NpeRatioArr), NpeRatioArr, np.ones(len(NpeRatioArr)))
+                NPERatio.Fill( NpeRatioArr[0])
 
 
                 #-----------------------
                 panelEvents = events
                 #separate get panel only pulses
-                panelEvents = panelEvents['type']>0
+                panelCUT = panelEvents['type']>0
                 
 
                 for branch in pulseBasedBranches:

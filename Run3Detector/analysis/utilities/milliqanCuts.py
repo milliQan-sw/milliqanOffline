@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import awkward as ak
+import numpy as np
 
 class milliqanCuts():
 
@@ -76,6 +77,38 @@ class milliqanCuts():
         if cut: self.events = self.events[self.events.fourLayerCut]
         self.cutflowCounter()
 
+    def oneHitPerLayerCut(self, cutName=None, cut=False, multipleHits=False):
+        if multipleHits:
+            layer0 = (self.events.layer==0) & (self.events['type']==0)
+            layer1 = (self.events.layer==1) & (self.events['type']==0)
+            layer2 = (self.events.layer==2) & (self.events['type']==0)
+            layer3 = (self.events.layer==3) & (self.events['type']==0)
+    
+            unique0 = ak.Array([np.unique(x) for x in self.events.chan[layer0]])
+            unique1 = ak.Array([np.unique(x) for x in self.events.chan[layer1]])
+            unique2 = ak.Array([np.unique(x) for x in self.events.chan[layer2]])
+            unique3 = ak.Array([np.unique(x) for x in self.events.chan[layer3]])
+    
+            self.events['oneHitPerLayerCut'] = (
+                                            (ak.count_nonzero(unique0, axis=1)==1) &
+                                            (ak.count_nonzero(unique1, axis=1)==1) &
+                                            (ak.count_nonzero(unique2, axis=1)==1) &
+                                            (ak.count_nonzero(unique3, axis=1)==1)
+                                            )
+        else:
+            print(self.events.layer==0)
+            print(self.events['type']==0)
+            print((self.events.layer==0) & (self.events['type']==0))
+            self.events['oneHitPerLayerCut'] = (
+                                            (ak.count_nonzero((self.events.layer==0) & (self.events['type']==0), axis=1)==1) &
+                                            (ak.count_nonzero((self.events.layer==1) & (self.events['type']==0), axis=1)==1) &
+                                            (ak.count_nonzero((self.events.layer==2) & (self.events['type']==0), axis=1)==1) &
+                                            (ak.count_nonzero((self.events.layer==3) & (self.events['type']==0), axis=1)==1)
+                                            )
+        if cut: self.events = self.events[self.events.oneHitPerLayerCut]            
+        self.cutflowCounter()
+
+    """
     #event level mask selecting events with 1 hit in each layer
     def oneHitPerLayerCut(self, cutName=None, cut=False):
         self.events['oneHitPerLayerCut'] =((ak.count_nonzero(self.events.layer==0, axis=1)==1) & 
@@ -91,7 +124,7 @@ class milliqanCuts():
         if branches:
             for branch in branches:
                 self.events[branch] = self.events[branch][self.events[cutName]]
-
+    """
     #create mask for pulses passing area cuts
     def areaCut(self, cutName='areaCut', cut=50000):
         self.events[cutName] = self.events.area >= int(cut)

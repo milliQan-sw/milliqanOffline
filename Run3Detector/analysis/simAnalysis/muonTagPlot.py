@@ -2,6 +2,7 @@
 #The head(max) of NPE distribution is for cosmic muon and the tail is for low energy photon 
 #there is need to get the origianl event since I used bar & NPE trim
 
+
 import ROOT as r
 import os 
 import sys
@@ -12,10 +13,12 @@ from array import array
 import numpy as np
 
 
-def plots(RunNum,eventNum,BARNPEvsChanplot = None,PanelNPEvsChanplot = None):
 
-    pulseBasedBranches = ["layer","nPE","type","chan","row","column"]
-    branches = ["runNumber","event","layer","nPE","type","chan","row","column"]
+
+def plots(RunNum,eventNum,BARNPEvsChanplot = None,PanelNPEvsChanplot = None,NBarsHit = None,DTHist=None,NPERatio=None):
+
+    pulseBasedBranches = ["layer","nPE","type","chan","row","column","time"]
+    branches = ["runNumber","event","layer","nPE","type","chan","row","column","time"]
     filelist =[f'/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhoton/output_{RunNum}.root:t']
     
     for events in uproot.iterate(
@@ -27,14 +30,16 @@ def plots(RunNum,eventNum,BARNPEvsChanplot = None,PanelNPEvsChanplot = None):
 
                 #extract the intersting events
                 events =  events[events.event == eventNum]
+                barEvents = events
                 
-                #separate get bar only pulses
-                barCUT = events['type']==0
+                
+                #separate to get bar only data
+                barCUT = barEvents['type']==0
                 for branch in pulseBasedBranches:
-                    events[branch] = events[branch][barCUT]
+                    barEvents[branch] = barEvents[branch][barCUT]
                 #print(ak.to_pandas(events))
-                npeList = ak.flatten(events.nPE,axis=None)
-                chanList = ak.flatten(events.chan,axis=None)
+                npeList = ak.flatten(barEvents.nPE,axis=None)
+                chanList = ak.flatten(barEvents.chan,axis=None)
                 nPEarray = array('d', npeList)
                 Chanarray = array('d', chanList)
 
@@ -42,45 +47,47 @@ def plots(RunNum,eventNum,BARNPEvsChanplot = None,PanelNPEvsChanplot = None):
 
                 if (BARNPEvsChanplot != None) & (len(nPEarray) == len(Chanarray)):
                     BARNPEvsChanplot.FillN(len(nPEarray), Chanarray, nPEarray, np.ones(len(nPEarray)))
-    #"""
-    for events2 in uproot.iterate(
-                filelist,
-                branches,
-                step_size=10000,
-                num_workers=8,
-                ):
-
-
-
-                #extract the intersting events
-                events2 =  events2[events2.event == eventNum]
-                #print(ak.to_pandas(events2))
-                #print(ak.to_list(events2))
-                #separate get bar only pulses
-                panelCUT = events2['type']>0
                 
-                #print(events2['type'])#debug
-                #print(events2['layer'])
+                if (NBarsHit != None):
+                    uniqueBars = ak.Array([np.unique(x) for x in barEvents.chan])
+                    NumberOfBarHits = ak.count(uniqueBars, axis = 1)
+                    NBarsHit.FillN(len(NumberOfBarHits), NumberOfBarHits, np.ones(len(NumberOfBarHits)))
+                
+
+                dT = 3.96 #The shortest time for photon travel 1 bar scitillator + 1 air gap between two bars.
+                Lay0Time=barEvents["time"][barEvents.layer==0]
+                Lay1Time=barEvents["time"][barEvents.layer==1] -dT
+                Lay2Time=barEvents["time"][barEvents.layer==2] -2*dT
+                Lay3Time=barEvents["time"][barEvents.layer==3] -3*dT
+                CorretTimeArray = np.concatenate((Lay0Time, Lay1Time,Lay2Time,Lay3Time), axis=1)
+                CorretTimeDiff = (np.max(CorretTimeArray,axis=1)-np.min(CorretTimeArray,axis=1)).tolist()
+                DTHist.FillN(len(CorretTimeDiff), CorretTimeDiff, np.ones(len(CorretTimeDiff)))
+
+                NpeRatioArr = (np.max(barEvents.nPE,axis=1) / np.min(barEvents.nPE,axis=1)).tolist()
+                NPERatio.FillN(len(NpeRatioArr), NpeRatioArr, np.ones(len(NpeRatioArr)))
+
+
+                #-----------------------
+                panelEvents = events
+                #separate get panel only pulses
+                panelEvents = panelEvents['type']>0
+                
+
                 for branch in pulseBasedBranches:
-                    #print(branch) #debug
-                    #print(len(events2[branch])) #debug
-                    #print(events2[branch]) #debug
-                    #print(len(panelCUT)) #debug
-                    #print(panelCUT) #debug
-                    events2[branch] = events2[branch][panelCUT]
+                    panelEvents[branch] = panelEvents[branch][panelCUT]
 
 
-                npeList = ak.flatten(events2.nPE,axis=None)
-                chanList = ak.flatten(events2.chan,axis=None)
-                nPEarray = array('d', npeList)
-                #print(npeList)
-                Chanarray = array('d', chanList)
-                if len(Chanarray) == 0: continue
+                npeList2 = ak.flatten(panelEvents.nPE,axis=None)
+                chanList2 = ak.flatten(panelEvents.chan,axis=None)
+                nPEarray2 = array('d', npeList2)
+
+                Chanarray2 = array('d', chanList2)
+                if len(Chanarray2) == 0: continue
 		
 
-                if (PanelNPEvsChanplot != None) & (len(nPEarray) == len(Chanarray)):
+                if (PanelNPEvsChanplot != None) & (len(nPEarray2) == len(Chanarray2)):
                     
-                    PanelNPEvsChanplot.FillN(len(nPEarray), Chanarray, nPEarray, np.ones(len(nPEarray)))
+                    PanelNPEvsChanplot.FillN(len(nPEarray2), Chanarray2, nPEarray2, np.ones(len(nPEarray2)))
     #"""
 
 

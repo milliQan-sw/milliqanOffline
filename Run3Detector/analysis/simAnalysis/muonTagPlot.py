@@ -53,7 +53,10 @@ def plots(RunNum,eventNum,BARNPEvsChanplot = None,PanelNPEvsChanplot = None,NBar
                     uniqueBars = ak.Array([np.unique(x) for x in barEvents.chan])
 
                     NumberOfBarHits = ak.count(uniqueBars, axis = 1)
-
+                    #debug for BarHist 
+                    if NumberOfBarHits[0] <= 1:
+                        print(f"event has issue fileNum:{RunNum} eventID{eventNum}")
+                        print(f"Current tag{BARNPEvsChanplot.GetName()}")
                     NBarsHit.Fill(NumberOfBarHits[0])
 
                 

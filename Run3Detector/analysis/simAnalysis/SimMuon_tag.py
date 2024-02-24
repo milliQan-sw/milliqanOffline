@@ -17,9 +17,9 @@ import numpy as np
 
 from muonTagPlot import plots
 
-run = 21
-filelist = [f"/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhoton/output_{run}.root:t"]
-"""
+#run = 21
+#filelist = [f"/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhoton/output_{run}.root:t"]
+#"""
 filelist = []
 
 def appendRun(filelist):
@@ -31,8 +31,8 @@ def appendRun(filelist):
 
 appendRun(filelist)
 #print(filelist)
-"""
-#filelist = filelist[:20]
+#"""
+
 pulseBasedBranches = ["chan","layer","nPE","type","row"]
 branches = ["chan","runNumber","event","layer","nPE","type","row"]
 NPECut = 20
@@ -67,24 +67,16 @@ for events in uproot.iterate(
     step_size=10000,
     num_workers=8,
     ):
-    #print(ak.to_pandas(events))
-    #print(ak.to_list(events)) #event branches is indeed event based. Jagged slide might come the way of using cuts
+
     events['None_empty_event'] = ak.num(events.chan) > 0
     events=events[events.None_empty_event]
 
 
-    #total_events += len(events)
+
     barCut=events['type']==0
     events["bar"]=events['type']==0
     events["barHits"] = (events['type']==0) & (events.nPE >= NPECut)
-    #for branch in pulseBasedBranches:
-    #    events[branch] = events[branch][barCut]
-    
-    #NPECuts = events.nPE >= NPECut
-    #for branch in pulseBasedBranches:
-    #    events[branch] = events[branch][NPECuts]
-    
-    #print(ak.to_pandas(events))
+
 
     for R in range(4):
         for l in range(4):

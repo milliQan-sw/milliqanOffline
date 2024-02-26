@@ -35,7 +35,7 @@ appendRun(filelist)
 
 pulseBasedBranches = ["chan","layer","nPE","type","row"]
 branches = ["chan","runNumber","event","layer","nPE","type","row"]
-NPECut = 20
+NPECut = 2000
 ChanVsbarNpeBTag1 = r.TH2F("B ChanvsNPE tag 1","bar chanvsmpe tag1;chan; bar NPE", 80,0,80,200,0,100000)
 ChanVsbarNpePTag1 = r.TH2F("P ChanvsNPE tag 1","panel chanvsmpe tag1;chan; bar NPE", 80,0,80,200,0,100000)
 NBarsHitTag1 =  r.TH1F("NBarsHitTag1" , "number of bars get hit;number of bars; Events",30,0,30)
@@ -105,7 +105,7 @@ for events in uproot.iterate(
                                 ak.any(events.l3R3==True, axis=1)) 
     
     #Top cosmic panel + row 0 bar channel have big hits
-    events["panel"]=events['type']==1
+    events["panel"]=events['row']==4
     events["panelHit"] = ak.any((events.nPE >= NPECut) & (events.panel), axis = 1)
 
 

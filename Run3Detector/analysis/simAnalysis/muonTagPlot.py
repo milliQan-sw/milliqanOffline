@@ -30,7 +30,7 @@ def plots(RunNum,eventNum,BARNPEvsChanplot = None,PanelNPEvsChanplot = None,NBar
 
                 #extract the intersting events
                 events =  events[events.event == eventNum]
-                barEvents = events
+                barEvents = ak.copy(events)
                 
                 
                 #separate to get bar only data
@@ -75,7 +75,7 @@ def plots(RunNum,eventNum,BARNPEvsChanplot = None,PanelNPEvsChanplot = None,NBar
 
 
                 #-----------------------
-                panelEvents = events
+                panelEvents = ak.copy(events)
                 #separate get panel only pulses
                 panelCUT = panelEvents['type']>0
                 

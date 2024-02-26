@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import awkward as ak
+import numpy as np
 
 class milliqanCuts():
 
@@ -46,14 +47,15 @@ class milliqanCuts():
     def pickupCut(self, cutName=None, cut=False, tight=False, branches=None):
         if cut and tight:
             for branch in branches:
-                self.events[branch] = self.events[branch][!self.events.pickupFlagTight]
+                self.events[branch] = self.events[branch][~self.events.pickupFlag]
         elif cut and not tight:
             for branch in branches:
                 if branch == 'boardsMatched': continue
-                self.events[branch] = self.events[branch][!self.events.pickupFlag]
+                self.events[branch] = self.events[branch][~self.events.pickupFlag]
 
     def boardsMatched(self, cutName=None, cut=False, branches=None):
         self.events['boardsMatched'], junk = ak.broadcast_arrays(self.events.boardsMatched, self.events.pickupFlag)
+        
         if cut:
             for branch in branches:
                 if branch == 'boardsMatched': continue
@@ -75,21 +77,36 @@ class milliqanCuts():
         if cut: self.events = self.events[self.events.fourLayerCut]
         self.cutflowCounter()
 
-    #event level mask selecting events with 1 hit in each layer
-    def oneHitPerLayerCut(self, cutName=None, cut=False):
-        self.events['oneHitPerLayerCut'] =((ak.count(self.events.layer==0, axis=1)==1) & 
-                                           (ak.count(self.events.layer==1, axis=1)==1) & 
-                                           (ak.count(self.events.layer==2, axis=1)==1) &
-                                           (ak.count(self.events.layer==3, axis=1)==1))
-        if cut: self.events = self.events[self.events.oneHitPerLayerCut]
+    def oneHitPerLayerCut(self, cutName=None, cut=False, multipleHits=False):
+        if multipleHits:
+            layer0 = (self.events.layer==0) & (self.events['type']==0)
+            layer1 = (self.events.layer==1) & (self.events['type']==0)
+            layer2 = (self.events.layer==2) & (self.events['type']==0)
+            layer3 = (self.events.layer==3) & (self.events['type']==0)
+    
+            unique0 = ak.Array([np.unique(x) for x in self.events.chan[layer0]])
+            unique1 = ak.Array([np.unique(x) for x in self.events.chan[layer1]])
+            unique2 = ak.Array([np.unique(x) for x in self.events.chan[layer2]])
+            unique3 = ak.Array([np.unique(x) for x in self.events.chan[layer3]])
+    
+            self.events['oneHitPerLayerCut'] = (
+                                            (ak.count_nonzero(unique0, axis=1)==1) &
+                                            (ak.count_nonzero(unique1, axis=1)==1) &
+                                            (ak.count_nonzero(unique2, axis=1)==1) &
+                                            (ak.count_nonzero(unique3, axis=1)==1)
+                                            )
+        else:
+            print(self.events.layer==0)
+            print(self.events['type']==0)
+            print((self.events.layer==0) & (self.events['type']==0))
+            self.events['oneHitPerLayerCut'] = (
+                                            (ak.count_nonzero((self.events.layer==0) & (self.events['type']==0), axis=1)==1) &
+                                            (ak.count_nonzero((self.events.layer==1) & (self.events['type']==0), axis=1)==1) &
+                                            (ak.count_nonzero((self.events.layer==2) & (self.events['type']==0), axis=1)==1) &
+                                            (ak.count_nonzero((self.events.layer==3) & (self.events['type']==0), axis=1)==1)
+                                            )
+        if cut: self.events = self.events[self.events.oneHitPerLayerCut]            
         self.cutflowCounter()
-
-    #create mask for pulses passing height cut
-    def heightCut(self, cutName='heightCut', cut=1200, branches=None):
-        self.events[cutName] = self.events.height >= int(cut)
-        if branches:
-            for branch in branches:
-                self.events[branch] = self.events[branch][self.events[cutName]]
 
     #create mask for pulses passing area cuts
     def areaCut(self, cutName='areaCut', cut=50000):

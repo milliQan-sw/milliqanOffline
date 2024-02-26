@@ -12,10 +12,10 @@ from array import array
 import numpy as np
 
 
-def plots(RunNum,filenum,eventNum,BARNPEvsChanplot = None,PanelNPEvsChanplot = None):
+def plots(RunNum,filenum,eventNum,BARNPEvsChanplot = None,PanelNPEvsChanplot = None,NBarsHit = None,DTHist=None,NPERatio=None):
 
-    pulseBasedBranches = ["pickupFlag","layer","nPE","type","area","chan"]
-    branches = ["runNumber","event","fileNumber",'boardsMatched',"pickupFlag","layer","nPE","type","area","chan"]
+    pulseBasedBranches = ["pickupFlag","layer","nPE","type","area","chan","time"]
+    branches = ["runNumber","event","fileNumber",'boardsMatched',"pickupFlag","layer","nPE","type","area","chan","time"]
     filelist =[f'/mnt/hadoop/se/store/user/milliqan/trees/v34/1100/MilliQan_Run{RunNum}.{filenum}_v34.root:t']
     
     for events in uproot.iterate(
@@ -25,66 +25,86 @@ def plots(RunNum,filenum,eventNum,BARNPEvsChanplot = None,PanelNPEvsChanplot = N
                 num_workers=8,
                 ):
 
-                """
+                #"""
 
                 for branch in pulseBasedBranches:
                     events[branch] = events[branch][events.boardsMatched]
                 for branch in pulseBasedBranches:
-                    events[branch] = events[branch][events.pickupFlag]
+                    events[branch] = events[branch][~events.pickupFlag]
 
-                """
+                #"""
 
                 #extract the intersting events
                 events =  events[events.event == eventNum]
-                
-                #separate get bar only pulses
-                barCUT = events['type']==0
+                barEvents = events
+                 #separate to get bar only data
+                barCUT = barEvents['type']==0
                 for branch in pulseBasedBranches:
-                    events[branch] = events[branch][barCUT]
-
-                npeList = ak.flatten(events.nPE,axis=None)
-                chanList = ak.flatten(events.chan,axis=None)
+                    barEvents[branch] = barEvents[branch][barCUT]
+                #print(ak.to_pandas(events))
+                npeList = ak.flatten(barEvents.nPE,axis=None)
+                chanList = ak.flatten(barEvents.chan,axis=None)
                 nPEarray = array('d', npeList)
                 Chanarray = array('d', chanList)
 
-
+                if len(nPEarray) == 0: continue
 
                 if (BARNPEvsChanplot != None) & (len(nPEarray) == len(Chanarray)):
                     BARNPEvsChanplot.FillN(len(nPEarray), Chanarray, nPEarray, np.ones(len(nPEarray)))
-    
-    for events in uproot.iterate(
-                filelist,
-                branches,
-                step_size=1000,
-                num_workers=8,
-                ):
-
-                for branch in pulseBasedBranches:
-                    events[branch] = events[branch][events.boardsMatched]
-                for branch in pulseBasedBranches:
-                    events[branch] = events[branch][events.pickupFlag]
-
-                #extract the intersting events
-                events =  events[events.event == eventNum]
                 
-                #separate get bar only pulses
-                panelCUT = events['type']>0
-                for branch in pulseBasedBranches:
-                    events[branch] = events[branch][panelCUT]
-                
-                events["nPEEst"] = events["area"]/1320
+                if (NBarsHit != None):
+                    
+                    uniqueBars = ak.Array([np.unique(x) for x in barEvents.chan])
 
-                npeList = ak.flatten(events.nPEEst,axis=None)
-                chanList = ak.flatten(events.chan,axis=None)
-                nPEarray = array('d', npeList)
-                #print(npeList)
-                Chanarray = array('d', chanList)
-                if len(Chanarray) == 0: continue
+                    NumberOfBarHits = ak.count(uniqueBars, axis = 1)
+                    #debug for BarHist(uncomment it if you run into some weird issues) 
+                    #if NumberOfBarHits[0] <= 1:
+                    #    print(f"event has issue fileNum:{RunNum} eventID{eventNum}")
+                    #    print(f"Current tag{BARNPEvsChanplot.GetName()}")
+                    NBarsHit.Fill(NumberOfBarHits[0])
+
+                
+
+                dT = 3.96 #The shortest time for photon travel 1 bar scitillator + 1 air gap between two bars.
+                Lay0Time=barEvents["time"][barEvents.layer==0]
+                Lay1Time=barEvents["time"][barEvents.layer==1] -dT
+                Lay2Time=barEvents["time"][barEvents.layer==2] -2*dT
+                Lay3Time=barEvents["time"][barEvents.layer==3] -3*dT
+                CorretTimeArray = np.concatenate((Lay0Time, Lay1Time,Lay2Time,Lay3Time), axis=1)
+                CorretTimeDiff = (np.max(CorretTimeArray,axis=1)-np.min(CorretTimeArray,axis=1)).tolist()
+                DTHist.Fill(CorretTimeDiff[0])
+
+                NpeRatioArr = (np.max(barEvents.nPE,axis=1) / np.min(barEvents.nPE,axis=1)).tolist()
+                NPERatio.Fill( NpeRatioArr[0])
+
+
+                #-----------------------
+                panelEvents = events
+                #separate get panel only pulses
+                panelCUT = panelEvents['type']>0
+                
+
+                for branch in pulseBasedBranches:
+                    panelEvents[branch] = panelEvents[branch][panelCUT]
+
+
+                npeList2 = ak.flatten(panelEvents.nPE,axis=None)
+                chanList2 = ak.flatten(panelEvents.chan,axis=None)
+                nPEarray2 = array('d', npeList2)
+
+                Chanarray2 = array('d', chanList2)
+                if len(Chanarray2) == 0: continue
 		
 
-                if (PanelNPEvsChanplot != None) & (len(nPEarray) == len(Chanarray)):
+                if (PanelNPEvsChanplot != None) & (len(nPEarray2) == len(Chanarray2)):
                     
-                    PanelNPEvsChanplot.FillN(len(nPEarray), Chanarray, nPEarray, np.ones(len(nPEarray)))
+                    PanelNPEvsChanplot.FillN(len(nPEarray2), Chanarray2, nPEarray2, np.ones(len(nPEarray2)))
+
+
+
+
+
+                
 
 
 

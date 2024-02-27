@@ -4,7 +4,6 @@ import uproot
 import logging
 import unittest
 
-
 class WaveformProcessor():
     def __init__(self, input_file_path: str):
         input_file = uproot.open(input_file_path)
@@ -23,24 +22,26 @@ class WaveformProcessor():
             waveform_values = self.histogram_to_array(hist)
             waveform_bounds = self.find_waveform_bounds(hist)
 
-    # def histogram_to_array(self, waveform:TH1):
-    #     # Extract noise level by taking a percentile of the voltages
-    #     num_bins = waveform.GetNbinsX()
-    #     bin_contents = np.zeros(num_bins)
-    #     logging.debug(f"Number of bins in waveform histogram: {bin_contents}")
-    #     # Fill the array with bin contents
-    #     for i in range(1, num_bins + 1):
-    #         bin_contents[i - 1] = waveform.GetBinContent(i)
-    #     return bin_contents
-
-    def find_waveform_bounds(self, noise_percentile=20):
+    def find_waveform_bounds(self, threshold):
+        peak_dictionary = {} 
         for key, value in self.histogram_dict.items():
-            noise = np.percentile(value, noise_percentile)
-            logging.info(f"Noise level for waveform is {noise}")
+            peak_positions, _ = find_peaks(value, height=threshold)
+            pulse_bounds = np.empty([len(peak_positions),2])
 
-            peak_positions, _ = find_peaks(value, prominence=1, width=15)
-            print(peak_positions)
+            for i, index in enumerate(peak_positions):
+                start_index = index 
+                while start_index > 0 and value[start_index] > threshold:
+                    start_index -= 1
 
+                pulse_bounds[i][0] = start_index
+
+                stop_index = index
+                while stop_index < len(value) and value[start_index] > threshold:
+                    stop_index += 1
+                pulse_bounds[i][1] = stop_index
+
+            peak_dictionary[key] = pulse_bounds
+        return peak_dictionary
         # spectrum = TSpectrum()
         # n_peaks = spectrum.Search(waveform)
         # logging.info(f"Found {n_peaks} peaks")
@@ -79,5 +80,6 @@ class TestWaveformProcessor(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    processor = WaveformProcessor("/home/ryan/Documents/Research/Data/MilliQanWaveforms/outputWaveforms_805_noLED.root")
-    processor.find_waveform_bounds()
+    processor = WaveformProcessor("/home/ryan/Documents/Data/MilliQan/outputWaveforms_805_noLED.root")
+    bounds = processor.find_waveform_bounds(30)
+    print(bounds)

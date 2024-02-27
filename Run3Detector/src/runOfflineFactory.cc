@@ -100,7 +100,8 @@ int main(int argc, char **argv){
         std::cout << "Cannot currently make displays of slab detector" << std::endl;
     }
     else if (isFormosa){
-        std::cout << "Cannot currently make displays of formosa detector" << std::endl;
+        //std::cout << "Cannot currently make displays of formosa detector" << std::endl;
+	    offlineFactory.processDisplays(eventsToDisplay,TString(offlineDir)+"/displays/");
     }
 	else{
 	    offlineFactory.processDisplays(eventsToDisplay,TString(offlineDir)+"/displays/");

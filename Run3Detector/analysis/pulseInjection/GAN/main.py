@@ -57,20 +57,20 @@ class WaveformProcessor():
     def find_waveform_bounds(self) -> None:
         self.peak_dictionary = {} 
         for key, value in self.histogram_dict.items():
-            peak_positions, _ = find_peaks(value, distance=10)
-            pulse_bounds = np.empty([len(peak_positions),2])
+            peak_positions, _ = find_peaks(value, prominence=5, height=15)
+            pulse_bounds = np.empty([len(peak_positions), 2])
 
             for i, index in enumerate(peak_positions):
                 start_index = index 
                 while start_index > 0 and value[start_index] > self.noise_dict[key]:
                     start_index -= 1
 
-                pulse_bounds[i][0] = value[start_index-1]
+                pulse_bounds[i][0] = self.times[start_index-1]
 
                 stop_index = index
-                while stop_index < len(value) and value[start_index] > self.noise_dict[key]:
+                while stop_index < len(value) and value[stop_index] > self.noise_dict[key]:
                     stop_index += 1
-                pulse_bounds[i][1] = value[stop_index-1]
+                pulse_bounds[i][1] = self.times[stop_index-1]
 
             self.peak_dictionary[key] = pulse_bounds
         logging.debug(f"Peaks: {self.peak_dictionary}")
@@ -98,7 +98,7 @@ class TestWaveformProcessor(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    processor = WaveformProcessor("/home/ryan/Documents/Data/MilliQan/outputWaveforms_805_noLED.root")
+    processor = WaveformProcessor("/home/ryan/Documents/Research/Data/MilliQanWaveforms/outputWaveforms_805_noLED.root")
     bounds = processor.find_waveform_bounds()
     processor.plot_waveforms("Plots")
 

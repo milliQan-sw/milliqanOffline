@@ -45,7 +45,7 @@ myplotter = milliqanPlotter()
 
 #histograms for different cosmic muon tags
 
-ChanVsbarNpeBTag1 = r.TH2F("B ChanvsNPE tag 1","bar chanvsmpe tag1;chan; bar NPE", 80,0,80,200,0,100000)
+ChanVsbarNpeBTag1 = r.TH2F("ChanVsbarNpeBTag1","bar chanvsmpe tag1;chan; bar NPE", 80,0,80,200,0,100000)
 ChanVsbarNpePTag1 = r.TH2F("P ChanvsNPE tag 1","panel chanvsmpe tag1;chan; bar NPE", 80,0,80,200,0,100000)
 NBarsHitTag1 =  r.TH1F("NBarsHitTag1" , "number of bars get hit;number of bars; Events",60,0,60)
 CorrectTimeDtTag1 =  r.TH1F("CorrectTimeDtTag1" , "D_t Max with correction w;D_t Max; Events",40,-15,25)
@@ -152,7 +152,8 @@ def ChannelNPEDist(self,cutName = None, cut = None, hist=None):
 
 
 #bar trim should be used prior using this one
-def NbarsHitsCount(self,cutName = "NBarsHits",cut = None):
+#FIXME: remove the hist arguemtn if I can't make the histogram with milliqanCut
+def NbarsHitsCount(self,cutName = "NBarsHits",cut = None, hist = None):
 
     if cut:
         cutMask, junk = ak.broadcast_arrays(self.events.cut, self.events.layer)
@@ -163,6 +164,12 @@ def NbarsHitsCount(self,cutName = "NBarsHits",cut = None):
         uniqueBarArr = ak.Array([np.unique(x) for x in self.events.chan])
         self.events[cutName] = ak.count(uniqueBarArr, axis = 1)
         print(self.events[cutName])
+        print(self.events.fields)
+    
+    if hist:
+        bararr = ak.flatten(self.events[cutName],axis=None)
+        hist.FillN(len(bararr), bararr, np.ones(len(bararr)))
+
 
 #bar trim should be used prior using this function
 def BarNPERatioCalculate(self,cutName = "BarNPERatio",cut = None):
@@ -321,7 +328,8 @@ fourRowBigHitsCut = mycuts.getCut(mycuts.fourRowBigHits, "fourRowBigHitsCut",cut
 TBBigHitCut = mycuts.getCut(mycuts.TBBigHit,"TBBigHitCut", cut = True)
 P_TBBigHitCut= mycuts.getCut(mycuts.P_TBBigHit, "P_TBBigHitCut",cut = True)
 P_BBigHitCut= mycuts.getCut(mycuts.P_BBigHit, "P_BBigHitCut",cut = True)
-cutflow = [mycuts.MuonEvent,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,mycuts.NbarsHitsCount ,myplotter.dict['NBarsHitTag1'],mycuts.countEvent,fourRowBigHitsCut,mycuts.countEvent,P_BBigHitCut,mycuts.countEvent,P_TBBigHitCut,mycuts.countEvent]
+#NbarsHitsCount1= mycuts.getCut(mycuts.P_BBigHit, "NBarsHits",cut = None,hist = NBarsHitTag1)#FIXME: getCut can't take hist as argument. Maybe I should remove it
+cutflow = [mycuts.MuonEvent,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,mycuts.NbarsHitsCount ,myplotter.dict['NBarsHitTag1']]
 
 myschedule = milliQanScheduler(cutflow, mycuts)
 

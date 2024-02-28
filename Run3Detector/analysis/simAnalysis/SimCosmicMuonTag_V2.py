@@ -72,32 +72,64 @@ NPERatioTag4 = r.TH1F("NPEratioTag4","NPE ratio;max NPE/min NPE;Events",150,0,15
 
 
 #----------------------------plotting preparation script----------------------
+
+#row constraint plotting script
+def RowbasedPlot(self,ROWs,cut):
+    interestEvents =ak.copy(self.events[self.events[cut]])
+    rowCuts = ak.Array([])
+    for ROW in ROWs:
+        rowCuts = rowCuts | sinterestEvents.row == ROW
+
+    interestEvents = interestEvents[rowCuts]
+
+    #plots
+    self.
+
+
+
+
+
 #the plots requires extra manipulation, so I merge the plotting script with milliqanCut.
+
+
+#bar NPE
+
+
+#num of unique bar(if possible also think about offline)
+
+
+
+
+#-------plot that work with milliqanplot -------
+#Nbars(require extra in milliqancut)
+
+# num of unque bars
 #If you try to compare the effects of different cosmic muon tagging algorism, then don't use the "cut".
 
+
 #bar trim should be used prior using this one
-def NbarsHitsCount(self,cut = None):
+def NbarsHitsCount(self,cutName = "NBarsHits",cut = None):
 
     if cut:
         cutMask, junk = ak.broadcast_arrays(self.events.cut, self.events.layer)
 
         uniqueBarArr = ak.Array([np.unique(x) for x in self.event.chan[cutMask]])
-        self.events["NBarsHits"] = ak.count(uniqueBarArr,axis = 1)
+        self.events[cutName] = ak.count(uniqueBarArr,axis = 1)
     else:
         uniqueBarArr = ak.Array([np.unique(x) for x in self.event.chan])
-        self.events["NBarsHits"] = ak.count(uniqueBarArr, axis = 1)
+        self.events[cutName] = ak.count(uniqueBarArr, axis = 1)
 
 #bar trim should be used prior using this function
-def BarNPERatioCalculate(self,cut = None):
+def BarNPERatioCalculate(self,cutName = None,cut = None):
     if cut:
         cutMask, junk = ak.broadcast_arrays(self.events.cut, self.events.layer)
-        self.events['BarNPERatio'] = ((ak.max(self.events.pmt_nPE[cutMask],axis=1)/ak.min(self.events.pmt_nPE[cutMask],axis=1)))
+        self.events[cutName] = ((ak.max(self.events.pmt_nPE[cutMask],axis=1)/ak.min(self.events.pmt_nPE[cutMask],axis=1)))
     else:
-        self.events['BarNPERatio'] = ((ak.max(self.events.pmt_nPE,axis=1)/ak.min(self.events.pmt_nPE,axis=1)))
+        self.events[cutName] = ((ak.max(self.events.pmt_nPE,axis=1)/ak.min(self.events.pmt_nPE,axis=1)))
 
 #bar trim should be used prior using this function
 #introduce correction factor such that time for paricle travel from IP to bar channel is same for time at different layer
-def findCorrectTime(self,cut = None):
+def findCorrectTime(self,cutName = None,cut = None):
     if cut:
         cutMask, junk = ak.broadcast_arrays(self.events.cut, self.events.layer)
         TimeArrayL0 = slef.events["time"][cutMask & self.events.layer==0]
@@ -114,7 +146,7 @@ def findCorrectTime(self,cut = None):
         
     
     CorretTimeArray = np.concatenate((Lay0Time, Lay1Time,Lay2Time,Lay3Time), axis=1)
-    self.events["CorrectTime"] = (np.max(CorretTimeArray,axis=1)-np.min(CorretTimeArray,axis=1)).tolist()
+    self.events[cutName] = (np.max(CorretTimeArray,axis=1)-np.min(CorretTimeArray,axis=1)).tolist()
 
 
 

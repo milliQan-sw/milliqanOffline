@@ -1,5 +1,6 @@
 #this file is created based on SimMuon_tag.py & muonTagPlot.py. But it can work with offline offline utilies
 #TBD add pulse based plot & event based plot with MilliqanPlotter & Check TBD
+#get the muon hit after the empty check.
 
 import math
 
@@ -7,14 +8,18 @@ import math
 import os
 import sys
 
-sys.path.append("/share/scratch0/czheng/sim_uproot/milliqanOffline/Run3Detector/analysis/utilities/")
+sys.path.append("/home/czheng/scratch0/SIManalysisDEV/milliqanOffline/Run3Detector/analysis/utilities")
 
 from milliqanProcessor import *
 from milliqanScheduler import *
 from milliqanCuts import *
 from milliqanPlotter import *
+import awkward as ak
 
 
+filelist =['/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhoton/output_1.root:t']
+
+"""
 filelist = []
 
 def appendRun(filelist):
@@ -25,11 +30,12 @@ def appendRun(filelist):
 
 
 appendRun(filelist)
+"""
 
 
-branches = ['pmt_nPE','pmt_layer','pmt_chan','pmt_time','pmt_type','event','runNumber']
+branches = ["chan","runNumber","event","layer","nPE","type","row"]
 
-barbranches = ['pmt_nPE','pmt_layer','pmt_chan','pmt_time','pmt_type']
+barbranches = ["chan","layer","nPE","type","row"]
 
 mycuts = milliqanCuts()
 
@@ -40,25 +46,25 @@ myplotter = milliqanPlotter()
 
 ChanVsbarNpeBTag1 = r.TH2F("B ChanvsNPE tag 1","bar chanvsmpe tag1;chan; bar NPE", 80,0,80,200,0,100000)
 ChanVsbarNpePTag1 = r.TH2F("P ChanvsNPE tag 1","panel chanvsmpe tag1;chan; bar NPE", 80,0,80,200,0,100000)
-NBarsHitTag1 =  r.TH1F("NBarsHitTag1" , "number of bars get hit;number of bars; Events",30,0,30)
+NBarsHitTag1 =  r.TH1F("NBarsHitTag1" , "number of bars get hit;number of bars; Events",60,0,60)
 CorrectTimeDtTag1 =  r.TH1F("CorrectTimeDtTag1" , "D_t Max with correction w;D_t Max; Events",40,-15,25)
 NPERatioTag1 = r.TH1F("NPEratioTag1","NPE ratio;max NPE/min NPE;Events",150,0,150)
 
 ChanVsbarNpeBTag2 = r.TH2F("B ChanvsNPE tag 2","bar chanvsmpe tag2;chan; bar NPE", 80,0,80,200,0,100000)
 ChanVsbarNpePTag2 = r.TH2F("P ChanvsNPE tag 2","panel chanvsmpe tag2;chan; bar NPE", 80,0,80,200,0,100000)
-NBarsHitTag2 =  r.TH1F("NBarsHitTag2" , "number of bars get hit;number of bars; Events",30,0,30)
+NBarsHitTag2 =  r.TH1F("NBarsHitTag2" , "number of bars get hit;number of bars; Events",60,0,60)
 CorrectTimeDtTag2 =  r.TH1F("CorrectTimeDtTag2" , "D_t Max with correction w;D_t Max; Events",40,-15,25)
 NPERatioTag2 = r.TH1F("NPEratioTag2","NPE ratio;max NPE/min NPE;Events",150,0,150)
 
 ChanVsbarNpeBTag3 = r.TH2F("B ChanvsNPE tag 3","bar chanvsmpe tag3;chan; bar NPE", 80,0,80,200,0,1000)
 ChanVsbarNpePTag3 = r.TH2F("P ChanvsNPE tag 3","panel chanvsmpe tag3;chan; bar NPE", 80,0,80,200,0,1000)
-NBarsHitTag3 =  r.TH1F("NBarsHitTag3" , "number of bars get hit;number of bars; Events",30,0,30)
+NBarsHitTag3 =  r.TH1F("NBarsHitTag3" , "number of bars get hit;number of bars; Events",60,0,60)
 CorrectTimeDtTag3 =  r.TH1F("CorrectTimeDtTag3" , "D_t Max with correction w;D_t Max; Events",40,-15,25)
 NPERatioTag3 = r.TH1F("NPEratioTag3","NPE ratio;max NPE/min NPE;Events",150,0,150)
 
 ChanVsbarNpeBTag4 = r.TH2F("B ChanvsNPE tag 4","bar chanvsmpe tag4;chan; bar NPE", 80,0,80,200,0,1000)
 ChanVsbarNpePTag4 = r.TH2F("P ChanvsNPE tag 4","panel chanvsmpe tag4;chan; bar NPE", 80,0,80,200,0,1000)
-NBarsHitTag4 =  r.TH1F("NBarsHitTag4" , "number of bars get hit;number of bars; Events",30,0,30)
+NBarsHitTag4 =  r.TH1F("NBarsHitTag4" , "number of bars get hit;number of bars; Events",60,0,60)
 CorrectTimeDtTag4 =  r.TH1F("CorrectTimeDtTag4" , "D_t Max with correction w;D_t Max; Events",40,-15,25)
 NPERatioTag4 = r.TH1F("NPEratioTag4","NPE ratio;max NPE/min NPE;Events",150,0,150)
 
@@ -118,51 +124,79 @@ def findCorrectTime(self,cut = None):
 def CosmuonTagIntialization(self, NPEcut = 0, offline = None):
     for R in range(4):
         for l in range(4):
-            self.events[f"l{l}R{R}"] = (self.events.layer == l) & (self.events.row == R) & self.events["barCut"] & self.events["nPE"] >= NPEcut
+            self.events[f"l{l}R{R}"] = (self.events.layer == l) & (self.events.row == R) & (self.events.barCut) & (self.events.nPE >= NPEcut)
+
     
     if offline:
         #1320 is the average spe pulse area from bar channel. Since the calibration on panel is not being done, so NPE need to be recalculated from (pulse area / spe pulse area).
         self.events["TopPanelHit"] = ak.any(self.events["row"]==4 & (self.events["area"]/1320) >= NPEcut ,axis =1)
     else:
-        self.events["TopPanelHit"] = ak.any(self.events["row"]==4 & self.events["nPE"] >= NPEcut, axis = 1)
+        self.events["TopPanelHit"] = ak.any((self.events["row"]==4) & (self.events["nPE"] >= NPEcut), axis = 1)
 
-def fourRowBigHits(self):
+def fourRowBigHits(self,cutName = None, cut = None):
     self.events["fourRowBigHits"] = (ak.any(self.events.l0R0==True, axis=1) & 
                                 ak.any(self.events.l0R1==True, axis=1) & 
                                 ak.any(self.events.l0R2==True, axis=1) & 
                                 ak.any(self.events.l0R3==True, axis=1)) | (ak.any(self.events.l1R0==True, axis=1) & 
                                 ak.any(self.events.l1R1==True, axis=1) & 
                                 ak.any(self.events.l1R2==True, axis=1) & 
-                                ak.any(self.events.l1R3==True, axis=1)) | (self.ak.any(events.l2R0==True, axis=1) & 
+                                ak.any(self.events.l1R3==True, axis=1)) | (ak.any(self.events.l2R0==True, axis=1) & 
                                 ak.any(self.events.l2R1==True, axis=1) & 
                                 ak.any(self.events.l2R2==True, axis=1) & 
                                 ak.any(self.events.l2R3==True, axis=1)) | (ak.any(self.events.l3R0==True, axis=1) & 
                                 ak.any(self.events.l3R1==True, axis=1) & 
                                 ak.any(self.events.l3R2==True, axis=1) & 
                                 ak.any(self.events.l3R3==True, axis=1)) 
+
+    if cut:
+        self.events = self.events[self.events["fourRowBigHits"]]
 #top and bottom row have big hit
-def TBBigHit(self):
+def TBBigHit(self,cutName = None,cut = None):
     self.events["TBBigHit"] = (ak.any(self.events.l0R0==True, axis=1) & 
                                 ak.any(self.events.l0R3==True, axis=1)) | (ak.any(self.events.l1R0==True, axis=1) &  
                                 ak.any(self.events.l1R3==True, axis=1)) | (ak.any(self.events.l2R0==True, axis=1) & 
                                 ak.any(self.events.l2R3==True, axis=1)) | (ak.any(self.events.l3R0==True, axis=1) & 
                                 ak.any(self.events.l3R3==True, axis=1)) 
+    
+    if cut: self.events = self.events[self.events["TBBigHit"]]
+
 #cosmic panel , top and bottom row have big hit.
-def P_TBBigHit(self):
+def P_TBBigHit(self,cutName = None,cut = None):
     self.events["P_TBBigHit"] = self.events["TBBigHit"] & self.events["TopPanelHit"]
+    
+    if cut: self.events = self.events[self.events["P_TBBigHit"]]
 
 #cosmic panel & bottom row have big hits.
 
-def P_BBigHit(self):
+def P_BBigHit(self, cutName = None,cut = None):
     self.events["P_BBigHit"] = ak.any(self.events["row"]==0 & self.events["barCut"], axis=1) & self.events["TopPanelHit"]
-
+    
+    if cut:
+        self.events=self.events[self.events["P_BBigHit"]]
 
 #remove the empty events
 def EmptyListFilter(self,cutName=None):
 
-    self.events['None_empty_event'] = ak.num(self.events['pmt_layer']) > 0
+    self.events['None_empty_event'] = ak.num(self.events['layer']) > 0
     self.events=self.events[self.events.None_empty_event]
 
+
+#tag muon event (sim only)
+def MuonEvent(self):
+
+    self.events = self.events(ak.any(self.events.muonHit == 1, axis = 1))
+
+def countEvent(self, cut=None):
+    if cut:
+        print(f"{cut} event: {len(self.events[self.events[cut]])}")
+    else:
+        print(f"current available events {len(self.events['event'])}")
+
+
+
+setattr(milliqanCuts, 'countEvent', countEvent)
+
+setattr(milliqanCuts, 'MuonEvent', MuonEvent)
 
 setattr(milliqanCuts, 'CosmuonTagIntialization', CosmuonTagIntialization)
 
@@ -185,6 +219,9 @@ setattr(milliqanCuts, 'findCorrectTime',findCorrectTime)
 
 
 
+
+
+
 #pulse based plot
 
 
@@ -194,10 +231,18 @@ setattr(milliqanCuts, 'findCorrectTime',findCorrectTime)
 
 
 
-cutflow = [mycuts.EmptyListFilter,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,mycuts.fourRowBigHits,mycuts.TBBigHit,mycuts.P_TBBigHit,mycut.P_BBigHit]
 
+#test cut flow. Check if the mask can be made
+#cutflow = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,mycuts.fourRowBigHits,mycuts.TBBigHit,mycuts.P_TBBigHit,mycuts.P_BBigHit]
 
-
-
+fourRowBigHitsCut = mycuts.getCut(mycuts.fourRowBigHits, "fourRowBigHitsCut",cut=True)
+TBBigHitCut = mycuts.getCut(mycuts.TBBigHit,"TBBigHitCut", cut = True)
+P_TBBigHitCut= mycuts.getCut(mycuts.P_TBBigHit, "P_TBBigHitCut",cut = True)
+P_BBigHitCut= mycuts.getCut(mycuts.P_BBigHit, "P_BBigHitCut",cut = True)
+cutflow = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,mycuts.countEvent,fourRowBigHitsCut,mycuts.countEvent,P_BBigHitCut,mycuts.countEvent,P_TBBigHitCut,mycuts.countEvent]
 
 myschedule = milliQanScheduler(cutflow, mycuts)
+
+myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts)
+
+myiterator.run()

@@ -17,13 +17,13 @@ import numpy as np
 
 from muonTagPlot import plots
 
-#run = 21
-#filelist = [f"/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhoton/output_{run}.root:t"]
-#"""
+run = 21
+filelist = [f"/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhotonMuontag/output_{run}.root:t"]
+"""
 filelist = []
 
 def appendRun(filelist):
-    directory = "/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhoton/"
+    directory = "/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhotonMuontag/"
     for filename in os.listdir(directory):
         if filename.startswith("output") and filename.endswith(".root"):
             filelist.append(directory+filename+":t")
@@ -31,11 +31,11 @@ def appendRun(filelist):
 
 appendRun(filelist)
 #print(filelist)
-#"""
+"""
 
-pulseBasedBranches = ["chan","layer","nPE","type","row"]
-branches = ["chan","runNumber","event","layer","nPE","type","row"]
-NPECut = 2000
+pulseBasedBranches = ["chan","layer","nPE","type","row","muonHit"]
+branches = ["chan","runNumber","event","layer","nPE","type","row","muonHit"]
+NPECut = 2500
 ChanVsbarNpeBTag1 = r.TH2F("B ChanvsNPE tag 1","bar chanvsmpe tag1;chan; bar NPE", 80,0,80,200,0,100000)
 ChanVsbarNpePTag1 = r.TH2F("P ChanvsNPE tag 1","panel chanvsmpe tag1;chan; bar NPE", 80,0,80,200,0,100000)
 NBarsHitTag1 =  r.TH1F("NBarsHitTag1" , "number of bars get hit;number of bars; Events",30,0,30)
@@ -67,6 +67,10 @@ for events in uproot.iterate(
     step_size=10000,
     num_workers=8,
     ):
+
+    #remove the non-muon hit channels
+    for branch in pulseBasedBranches:
+        events[branch] = events[branch][events.muonHit == 1]
 
     events['None_empty_event'] = ak.num(events.chan) > 0
     events=events[events.None_empty_event]
@@ -146,7 +150,7 @@ for events in uproot.iterate(
     
 
 #"""
-output_file = r.TFile(f"SIMchanvsNPE_{NPECut}NPE.root", "RECREATE")
+output_file = r.TFile(f"SIMchanvsNPE_{NPECut}NPE_MuonTag.root", "RECREATE")
 ChanVsbarNpeBTag1.Write()
 ChanVsbarNpePTag1.Write()
 NBarsHitTag1.Write()

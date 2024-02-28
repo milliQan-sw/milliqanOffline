@@ -1,6 +1,7 @@
 #this file is created based on SimMuon_tag.py & muonTagPlot.py. But it can work with offline offline utilies
 #TBD add pulse based plot & event based plot with MilliqanPlotter & Check TBD
 #get the muon hit after the empty check.
+#The row constrain for making plots is not implement yet
 
 import math
 
@@ -17,7 +18,7 @@ from milliqanPlotter import *
 import awkward as ak
 
 
-filelist =['/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhoton/output_1.root:t']
+filelist =['/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhotonMuontag/output_1.root:t']
 
 """
 filelist = []
@@ -33,9 +34,9 @@ appendRun(filelist)
 """
 
 
-branches = ["chan","runNumber","event","layer","nPE","type","row"]
+branches = ["chan","runNumber","event","layer","nPE","type","row","muonHit"]
 
-barbranches = ["chan","layer","nPE","type","row"]
+barbranches = ["chan","layer","nPE","type","row","muonHit"]
 
 mycuts = milliqanCuts()
 
@@ -73,7 +74,8 @@ NPERatioTag4 = r.TH1F("NPEratioTag4","NPE ratio;max NPE/min NPE;Events",150,0,15
 
 #----------------------------plotting preparation script----------------------
 
-#row constraint plotting script
+"""
+#row constraint plotting script FIXME: non finished yet
 def RowbasedPlot(self,ROWs,cut):
     interestEvents =ak.copy(self.events[self.events[cut]])
     rowCuts = ak.Array([])
@@ -85,8 +87,7 @@ def RowbasedPlot(self,ROWs,cut):
     #plots
     self.
 
-
-
+"""
 
 
 #the plots requires extra manipulation, so I merge the plotting script with milliqanCut.
@@ -96,6 +97,32 @@ def RowbasedPlot(self,ROWs,cut):
 
 
 #num of unique bar(if possible also think about offline)
+
+myplotter.addHistograms(NBarsHitTag1, 'NBarsHits', 'fourRowBigHits')
+
+myplotter.addHistograms(NBarsHitTag2, 'NBarsHits', 'TBBigHit')
+
+myplotter.addHistograms(NBarsHitTag3, 'NBarsHits', 'P_TBBigHit')
+
+myplotter.addHistograms(NBarsHitTag4, 'NBarsHits', 'P_BBigHit')
+
+
+myplotter.addHistograms(NPERatioTag1, 'BarNPERatio', 'fourRowBigHits')
+
+myplotter.addHistograms(NPERatioTag2, 'BarNPERatio', 'TBBigHit')
+
+myplotter.addHistograms(NPERatioTag3, 'BarNPERatio', 'P_TBBigHit')
+
+myplotter.addHistograms(NPERatioTag4, 'BarNPERatio', 'P_BBigHit')
+
+
+myplotter.addHistograms(CorrectTimeDtTag1, 'DT_CorrectTime', 'fourRowBigHits')
+
+myplotter.addHistograms(CorrectTimeDtTag2, 'DT_CorrectTime', 'TBBigHit')
+
+myplotter.addHistograms(CorrectTimeDtTag3, 'DT_CorrectTime', 'P_TBBigHit')
+
+myplotter.addHistograms(CorrectTimeDtTag4, 'DT_CorrectTime', 'P_BBigHit')
 
 
 
@@ -107,20 +134,38 @@ def RowbasedPlot(self,ROWs,cut):
 #If you try to compare the effects of different cosmic muon tagging algorism, then don't use the "cut".
 
 
+def ChannelNPEDist(self,cutName = None, cut = None, hist=None):
+    if cut:
+        interestArrays = ak.copy(self.events[self.events[cut]])
+    else:
+        interestArrays = ak.copy(self.events)
+    
+    npeList = ak.flatten(interestArrays.nPE,axis=None)
+    chanList = ak.flatten(interestArrays.chan,axis=None)
+    nPEarray = array('d', npeList)
+    Chanarray = array('d', chanList)
+
+    if len(nPEarray) == 0: return
+
+    if (hist != None) & (len(nPEarray) == len(Chanarray)):
+        hist.FillN(len(nPEarray), Chanarray, nPEarray, np.ones(len(nPEarray)))
+
+
 #bar trim should be used prior using this one
 def NbarsHitsCount(self,cutName = "NBarsHits",cut = None):
 
     if cut:
         cutMask, junk = ak.broadcast_arrays(self.events.cut, self.events.layer)
 
-        uniqueBarArr = ak.Array([np.unique(x) for x in self.event.chan[cutMask]])
+        uniqueBarArr = ak.Array([np.unique(x) for x in self.events.chan[cutMask]])
         self.events[cutName] = ak.count(uniqueBarArr,axis = 1)
     else:
-        uniqueBarArr = ak.Array([np.unique(x) for x in self.event.chan])
+        uniqueBarArr = ak.Array([np.unique(x) for x in self.events.chan])
         self.events[cutName] = ak.count(uniqueBarArr, axis = 1)
+        print(self.events[cutName])
 
 #bar trim should be used prior using this function
-def BarNPERatioCalculate(self,cutName = None,cut = None):
+def BarNPERatioCalculate(self,cutName = "BarNPERatio",cut = None):
     if cut:
         cutMask, junk = ak.broadcast_arrays(self.events.cut, self.events.layer)
         self.events[cutName] = ((ak.max(self.events.pmt_nPE[cutMask],axis=1)/ak.min(self.events.pmt_nPE[cutMask],axis=1)))
@@ -129,7 +174,7 @@ def BarNPERatioCalculate(self,cutName = None,cut = None):
 
 #bar trim should be used prior using this function
 #introduce correction factor such that time for paricle travel from IP to bar channel is same for time at different layer
-def findCorrectTime(self,cutName = None,cut = None):
+def findCorrectTime(self,cutName = "DT_CorrectTime",cut = None):
     if cut:
         cutMask, junk = ak.broadcast_arrays(self.events.cut, self.events.layer)
         TimeArrayL0 = slef.events["time"][cutMask & self.events.layer==0]
@@ -214,9 +259,14 @@ def EmptyListFilter(self,cutName=None):
 
 
 #tag muon event (sim only)
-def MuonEvent(self):
+def MuonEvent(self, cutName = None, CutonBars = True):
 
-    self.events = self.events(ak.any(self.events.muonHit == 1, axis = 1))
+    if CutonBars:
+        for branch in barbranches:
+            self.events[branch] = self.events[branch][self.events.muonHit == 1]
+
+    else:
+        self.events = self.events[ak.any(self.events.muonHit == 1, axis = 1)]
 
 def countEvent(self, cut=None):
     if cut:
@@ -271,7 +321,7 @@ fourRowBigHitsCut = mycuts.getCut(mycuts.fourRowBigHits, "fourRowBigHitsCut",cut
 TBBigHitCut = mycuts.getCut(mycuts.TBBigHit,"TBBigHitCut", cut = True)
 P_TBBigHitCut= mycuts.getCut(mycuts.P_TBBigHit, "P_TBBigHitCut",cut = True)
 P_BBigHitCut= mycuts.getCut(mycuts.P_BBigHit, "P_BBigHitCut",cut = True)
-cutflow = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,mycuts.countEvent,fourRowBigHitsCut,mycuts.countEvent,P_BBigHitCut,mycuts.countEvent,P_TBBigHitCut,mycuts.countEvent]
+cutflow = [mycuts.MuonEvent,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,mycuts.NbarsHitsCount ,myplotter.dict['NBarsHitTag1'],mycuts.countEvent,fourRowBigHitsCut,mycuts.countEvent,P_BBigHitCut,mycuts.countEvent,P_TBBigHitCut,mycuts.countEvent]
 
 myschedule = milliQanScheduler(cutflow, mycuts)
 

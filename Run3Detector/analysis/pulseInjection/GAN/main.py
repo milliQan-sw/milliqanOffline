@@ -5,10 +5,10 @@ from scipy.signal import find_peaks
 import uproot
 import logging
 import unittest
-
+import keras.Model
 from ROOT import TSpectrum, TFile, TH1
 
-logging.basicConfig(level="WARNING")
+logging.basicConfig(level="DEBUG")
 
 class WaveformProcessor():
     def __init__(self, input_file_path: str):
@@ -60,21 +60,51 @@ class WaveformProcessor():
             peak_positions, _ = find_peaks(value, prominence=5, height=15)
             pulse_bounds = np.empty([len(peak_positions), 2])
 
+            continue_flag = False
             for i, index in enumerate(peak_positions):
                 start_index = index 
                 while start_index > 0 and value[start_index] > self.noise_dict[key]:
                     start_index -= 1
 
-                pulse_bounds[i][0] = self.times[start_index-1]
+                pulse_bounds[i][0] = start_index
 
                 stop_index = index
                 while stop_index < len(value) and value[stop_index] > self.noise_dict[key]:
                     stop_index += 1
-                pulse_bounds[i][1] = self.times[stop_index-1]
+                pulse_bounds[i][1] = stop_index
 
+                # If the bounds of the waveform lie at the edge of the window, it's probably
+                # a messy event so just dump it
+                if stop_index == len(value) or start_index == 0:
+                    continue_flag = True
+                    break
+
+            if continue_flag:
+                continue
             self.peak_dictionary[key] = pulse_bounds
+
         logging.debug(f"Peaks: {self.peak_dictionary}")
 
+    def isolate_waveforms(self) -> None:
+        number_of_waves: int = sum([len(peak) for peak in self.peak_dictionary.values()])
+        input_data = np.zeros((number_of_waves, 1024))
+
+        index = 0
+        for key, value in self.peak_dictionary.items():
+            # Slice values in histogram_dict to just capture waveforms
+            for waveform in value:
+                logging.debug(f"Key: {key} \n"
+                             f"Index: {waveform[0]}, {waveform[1]}\n")
+                sliced_histogram_values = self.histogram_dict[key][int(waveform[0]):int(waveform[1]+1)]
+                input_data[index][:len(sliced_histogram_values)] = sliced_histogram_values
+                index += 1
+
+    def calculate_npe(self, waveform, area_per_spe) -> int:
+        waveform_area = np.trapz(waveform, dx=self.ns_per_measurement)
+        return round(waveform_area / area_per_spe)
+
+
+        
     def plot_waveforms(self, plotDirectory: str) -> None:
         if not os.path.exists(plotDirectory):
             os.mkdir(plotDirectory)
@@ -88,17 +118,19 @@ class WaveformProcessor():
 
             plt.savefig("{0}/{1}.png".format(plotDirectory, key))
             
-            
-class TestWaveformProcessor(unittest.TestCase):
-    def test_find_waveform_bounds(self):
-        file = TFile("/home/ryan/Documents/Research/Data/MilliQanWaveforms/outputWaveforms_805_noLED.root")
-        hist = file.Get("Waves_41")
-        processor = WaveformProcessor(file)
-        waveform_bounds = processor.find_waveform_bounds()
 
+def build_waveform_generator(latent_dim, num_classes):    
+    noise = layers.Input(shape=(latent_dim,))
+    label = layer.Input(shape=(num_classes,))
+
+    x = layers.Concatenate()([noise, label])
+    x = layers.Dense(128, activation='relu')(x)
+    x = layers.Dense(784, activation='sigmoid')(x)
+    x = layers.Dense(1024, activation='sigmoid')(x)
+    return Model([noise, label], x)
 
 if __name__ == "__main__":
-    processor = WaveformProcessor("/home/ryan/Documents/Research/Data/MilliQanWaveforms/outputWaveforms_805_noLED.root")
+    processor = WaveformProcessor("/home/ryan/Documents/Data/MilliQan/outputWaveforms_805_noLED.root")
     bounds = processor.find_waveform_bounds()
-    processor.plot_waveforms("Plots")
+    processor.isolate_waveforms()
 

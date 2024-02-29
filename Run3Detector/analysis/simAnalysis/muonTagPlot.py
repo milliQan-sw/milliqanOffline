@@ -17,9 +17,9 @@ import numpy as np
 
 def plots(RunNum,eventNum,BARNPEvsChanplot = None,PanelNPEvsChanplot = None,NBarsHit = None,DTHist=None,NPERatio=None):
 
-    pulseBasedBranches = ["layer","nPE","type","chan","row","column","time"]
-    branches = ["runNumber","event","layer","nPE","type","chan","row","column","time"]
-    filelist =[f'/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhoton/output_{RunNum}.root:t']
+    pulseBasedBranches = ["layer","nPE","type","chan","row","column","time","muonHit"]
+    branches = ["runNumber","event","layer","nPE","type","chan","row","column","time","muonHit"]
+    filelist =[f'/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhotonMuontag/output_{RunNum}.root:t']
     
     for events in uproot.iterate(
                 filelist,
@@ -30,7 +30,18 @@ def plots(RunNum,eventNum,BARNPEvsChanplot = None,PanelNPEvsChanplot = None,NBar
 
                 #extract the intersting events
                 events =  events[events.event == eventNum]
+                #remove the non-muon hit channels
+                #for branch in pulseBasedBranches:
+                #    events[branch] = events[branch][events.muonHit == 1]
+
+                #keep the non-muon hit channels
+                """
+                for branch in pulseBasedBranches:
+                    events[branch] = events[branch][events.muonHit == 0]
+                """
                 barEvents = ak.copy(events)
+
+
                 
                 
                 #separate to get bar only data

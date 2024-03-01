@@ -60,6 +60,8 @@ def validateOutput(outputFile,runNumber=-1,fileNumber=-1):
 def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publish,database,appendToTag,mergedTriggerFile,drs,display,slab,formosa,runNumber=None,fileNumber=None):
     if force_publish:
         publish = True
+    if not os.path.exists("/".join(outputFile.split("/")[:-1])):
+        os.makedirs("/".join(outputFile.split("/")[:-1]))
     if runNumber == None:
         try:
             if drs:
@@ -90,7 +92,7 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
         if formosa:
             chanConfig = offlineDir + "/configuration/formosaConfigs/" + getConfigs(runNumber, offlineDir+'/configuration/formosaConfigs') + '.json'
             print("Using the chan config", chanConfig)
-            configurations = [chanConfig, offlineDir+"/configuration/pulseFinding/pulseFindingTest.json"]
+            configurations = [chanConfig, offlineDir+"/configuration/pulseFinding/pulseFindingFORMOSA.json"]
         else:
             chanConfig = offlineDir + "/configuration/barConfigs/" + getConfigs(runNumber, offlineDir+'/configuration/barConfigs') + '.json'
             print("Using the chan config", chanConfig)

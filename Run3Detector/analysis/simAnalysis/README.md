@@ -28,3 +28,23 @@ SimMuon_tag.py: find the events that matches the cosmic muon characteristic and 
 
 
 
+----------------------sample for using condor job------------------
+
+for test
+
+python3 SIMCondor.py -i /mnt/hadoop/se/store/user/czheng/SimFlattree/withPhotonMuontag/ -o /home/czheng/scratch0/SIManalysisDEV/milliqanOffline/Run3Detector/analysis/simAnalysis/condorTest/ -s layerConstrainDemo_job.py -t
+
+ bash condor_wrapper.sh layerConstrainDemo_job.py 0 filelist.json locationForsavingFile
+
+if thing is working fine then 
+python3 SIMCondor.py -i /mnt/hadoop/se/store/user/czheng/SimFlattree/withPhotonMuontag/ -o /home/czheng/scratch0/SIManalysisDEV/milliqanOffline/Run3Detector/analysis/simAnalysis/condorTest/ -s layerConstrainDemo_job.py
+
+------------------------sample for using bsub job(TBD ----------------
+UCSB cluster doesn't come with uproot now
+python3 
+
+
+
+
+
+

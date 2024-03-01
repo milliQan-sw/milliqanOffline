@@ -61,7 +61,7 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
     if force_publish:
         publish = True
     if not os.path.exists("/".join(outputFile.split("/")[:-1])):
-	os.makedirs("/".join(outputFile.split("/")[:-1]))
+        os.makedirs("/".join(outputFile.split("/")[:-1]))
     if runNumber == None:
         try:
             if drs:

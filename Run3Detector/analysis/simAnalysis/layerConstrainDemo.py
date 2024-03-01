@@ -28,7 +28,7 @@ NBarsHitTag1 =  r.TH1F("NBarsHitTag1" , "number of bars get hit;number of bars; 
 
 
 
-def CosmuonTagIntialization(self, NPEcut = 0, offline = None):
+def CosmuonTagIntialization(self, NPEcut = 2500, offline = None):
     for R in range(4):
         for l in range(4):
             self.events[f"l{l}R{R}"] = (self.events.layer == l) & (self.events.row == R) & (self.events.barCut) & (self.events.nPE >= NPEcut)
@@ -43,13 +43,7 @@ def CosmuonTagIntialization(self, NPEcut = 0, offline = None):
 
 #top and bottom row have big hit
 def TBBigHit(self,cutName = None,cut = None, constraint = True):
-    """
-    self.events["TBBigHit"] = (ak.any(self.events.l0R0==True, axis=1) & 
-                                ak.any(self.events.l0R3==True, axis=1)) | (ak.any(self.events.l1R0==True, axis=1) &  
-                                ak.any(self.events.l1R3==True, axis=1)) | (ak.any(self.events.l2R0==True, axis=1) & 
-                                ak.any(self.events.l2R3==True, axis=1)) | (ak.any(self.events.l3R0==True, axis=1) & 
-                                ak.any(self.events.l3R3==True, axis=1)) 
-    """
+
 
     TBBigHit_lay0 =  (ak.any(self.events.l0R0==True, axis=1) & ak.any(self.events.l0R3==True, axis=1))
     TBBigHit_lay1 =  (ak.any(self.events.l1R0==True, axis=1) & ak.any(self.events.l1R3==True, axis=1))
@@ -70,6 +64,8 @@ def TBBigHit(self,cutName = None,cut = None, constraint = True):
         for b in barbranches:
             self.events[b] = self.events[b][TBBigHit_lay0 | TBBigHit_lay1 | TBBigHit_lay2 | TBBigHit_lay3]
 
+    #print(ak.to_pandas(self.events))
+
 
 
 
@@ -78,16 +74,28 @@ def TBBigHit(self,cutName = None,cut = None, constraint = True):
 
 def NbarsHitsCount(self,cutName = "NBarsHits",cut = None, hist = None):
 
-    if cut:
-        cutMask, junk = ak.broadcast_arrays(self.events.cut, self.events.layer)
+    bararr = ak.copy(self.events)
+    
+    print(ak.to_pandas(bararr))
 
-        uniqueBarArr = ak.Array([np.unique(x) for x in self.events.chan[cutMask]])
-        self.events[cutName] = ak.count(uniqueBarArr,axis = 1)
+    for b in barbranches:    
+        bararr[b] = bararr[b][bararr["type"]==0] #get bar only data
+
+    print(ak.to_pandas(bararr)) #non-bar datas are all removed
+    #FIXME: it only has 6 events???????
+
+    if cut:
+        cutMask, junk = ak.broadcast_arrays(bararr.cut, bararr.layer)
+
+        uniqueBarArr = ak.Array([np.unique(x) for x in bararr.chan[cutMask]])
+        self.events[cutName] = ak.count(uniqueBarArr,axis = 1) #create a extra tag. in case you want to count the number of bar got hit with specific cut
+        
     else:
-        uniqueBarArr = ak.Array([np.unique(x) for x in self.events.chan])
-        self.events[cutName] = ak.count(uniqueBarArr, axis = 1)
-        print(self.events[cutName])
-        print(self.events.fields)
+        uniqueBarArr = ak.Array([np.unique(x) for x in bararr.chan])
+        self.events[cutName] = ak.count(uniqueBarArr, axis = 1) #FIXME: it stuck at zero, the minimun amount of unique bar should be 2 when a event pass TBBigHit
+        print(ak.count(uniqueBarArr, axis = 1))  #majority are zero. 
+        #print(self.events[cutName])
+        #print(self.events.fields)
     
     if hist:
         #bararr = ak.flatten(self.events[cutName],axis=None)

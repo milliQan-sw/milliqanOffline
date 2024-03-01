@@ -155,13 +155,17 @@ def ChannelNPEDist(self,cutName = None, cut = None, hist=None):
 #FIXME: remove the hist arguemtn if I can't make the histogram with milliqanCut
 def NbarsHitsCount(self,cutName = "NBarsHits",cut = None, hist = None):
 
-    if cut:
-        cutMask, junk = ak.broadcast_arrays(self.events.cut, self.events.layer)
+    bararr = ak.copy(self.events)
 
-        uniqueBarArr = ak.Array([np.unique(x) for x in self.events.chan[cutMask]])
+
+
+    if cut:
+        cutMask, junk = ak.broadcast_arrays(bararr.cut, bararr.layer)
+
+        uniqueBarArr = ak.Array([np.unique(x) for x in bararr.chan[cutMask]])
         self.events[cutName] = ak.count(uniqueBarArr,axis = 1)
     else:
-        uniqueBarArr = ak.Array([np.unique(x) for x in self.events.chan])
+        uniqueBarArr = ak.Array([np.unique(x) for x in bararr.chan])
         self.events[cutName] = ak.count(uniqueBarArr, axis = 1)
         print(self.events[cutName])
         print(self.events.fields)

@@ -17,9 +17,34 @@ from milliqanCuts import *
 from milliqanPlotter import *
 import awkward as ak
 
+#---------------------------------------condor job section(get the file that needs to be processed)---------------------------------
+def getFile(processNum, fileList):
 
-filelist =['/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhotonMuontag/output_1.root:t']
+    filelist = open(fileList)
+    files = json.load(filelist)['filelist']
+    filelist.close()
 
+    return files[processNum]
+
+#run number, filelist
+processNum = int(sys.argv[1])
+fileList = sys.argv[2]
+
+
+#get the filename to run over
+filename = getFile(processNum, fileList)
+
+if('.root' in filename and 'output' in filename):
+    numRun = filename.split('_')[1].split('.')[0].replace('Run', '')
+
+#filelist =['/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhotonMuontag/output_1.root:t']
+filelist =[f'{filename}:t']
+
+#-----------------------------------------------------------------------------------------------------------------------------------
+#signle file test
+#filelist =['/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhotonMuontag/output_1.root:t']
+
+#multiple file test(non recommend to use due to time consuming)
 """
 filelist = []
 
@@ -90,6 +115,129 @@ def RowbasedPlot(self,ROWs,cut):
 """
 
 
+#collect the data from adjacient layer
+#FIXME:unfinished
+def adjLayerData(self,layer0Cut,layer1Cut,layer2Cut,layer3Cut):
+
+    #keep the array size 
+    arrSize = ak.copy(layer0Cut)
+
+
+    layer0Cut = ak.any(layer0Cut,axis =1)
+    layer1Cut = ak.any(layer1Cut,axis =1)
+    layer2Cut = ak.any(layer2Cut,axis =1)
+    layer3Cut = ak.any(layer3Cut,axis =1)
+    adjLayArrL0= []
+    adjLayArrL1= []
+    adjLayArrL2= []
+    adjLayArrL3= []
+    for L0, L1, L2, L3 in zip(layer0Cut,layer1Cut,layer2Cut,layer3Cut):
+        innerArr = []
+        adjlay = []
+        if L0:
+            innerArr.append(0)
+        if L1:
+            innerArr.append(1)
+        if L2:
+            innerArr.append(2)
+        if L3:
+            innerArr.append(3)
+        
+        if len(innerArr) == 1:
+            if innerArr[0] == 4:
+                adjLay.append(3) 
+            else:
+                adjLay.append(innerArr[0] + 1)
+        elif len(innerArr) == 2:
+            if 1 in innerArr and 0 in innerArr:
+                adjLay.append(3) 
+                adjLay.append(2) 
+            elif 3 in innerArr and 2 in innerArr:
+                adjLay.append(0) 
+                adjLay.append(1)
+            else:
+                for num in [0,1,2,3]:
+                    if num not in innerArr:
+                        adjLay.append(num)
+        elif len(innerArr) == 3:
+            for num in [0,1,2,3]:
+                if num not in innerArr:
+                        adjLay.append(num)
+        
+        #check what is in the adjLay
+        if 0 in adjLay:
+            adjLayArrL0.append(True)
+        else:
+            adjLayArrL0.append(False)
+        if 1 in adjLay:
+            adjLayArrL1.append(True)
+        else:
+            adjLayArrL1.append(False)
+        
+        if 2 in adjLay:
+            adjLayArrL2.append(True)
+        else:
+            adjLayArrL2.append(False)
+        
+        if 3 in adjLay:
+            adjLayArrL3.append(True)
+        else:
+            adjLayArrL3.append(False)
+
+    #convert the 
+    adjLayArrL0, junk=ak.broadcast_arrays(adjLayArrL0, arrSize)
+    adjLayArrL1, junk=ak.broadcast_arrays(adjLayArrL1, arrSize)
+    adjLayArrL2, junk=ak.broadcast_arrays(adjLayArrL2, arrSize)
+    adjLayArrL3, junk=ak.broadcast_arrays(adjLayArrL3, arrSize)
+
+    return adjLayArrL0,adjLayArrL1,adjLayArrL2,adjLayArrL3
+
+
+
+
+#need to use getCut to make it work
+#barbraches in sim is bar-based variable. In offline you should choose the pulse based variable
+# I want to extract the data with layer constaint but without changing the original array
+#To do: get the adjacent array
+def LayerContraint(self,layer0Cut,layer1Cut,layer2Cut,layer3Cut, layerConstraintEnable = None,selectedBranches=barbraches,CutomizedEvents=None):
+
+    if CutomizedEvents:
+        SpecialArr = ak.copy(CutomizedEvents)
+
+        
+
+        elif layerConstraintEnable == False:
+            return SpecialArr
+        
+    
+    else:
+        specialArr = ak.copy(self.events)
+        if layerConstraintEnable == "adjacent":
+            layer0Cut,layer1Cut,layer2Cut,layer3Cut=adjLayerData (layer0Cut,layer1Cut,layer2Cut,layer3Cut)
+
+        elif layerConstraintEnable  == False:
+            return SpecialArr
+    
+    if layerConstraintEnable == "adjacent":
+        layer0Cut,layer1Cut,layer2Cut,layer3Cut=adjLayerData (layer0Cut,layer1Cut,layer2Cut,layer3Cut)
+        #think hard did I do it right? adjcuts?
+        for b in selectedBranches:
+            specialArr[b] = specialArr[b][adjCuts]
+        return specialArr
+    
+    for b in selectedBranches:
+        #ideally, layer0Cut should be = spcialArr.LayX == X(current layer0Cut if true for an event)
+
+
+        specialArr[b] = specialArr[b][(specialArr.layer ==0 & layer0Cut)|(specialArr.layer ==1  & layer1Cut)  | ( specialArr.layer == 2 & layer2Cut) | (specialArr.layer == 3 & layer3Cut)]
+    
+    return specialArr
+
+    
+    
+
+
+
 #the plots requires extra manipulation, so I merge the plotting script with milliqanCut.
 
 
@@ -97,6 +245,8 @@ def RowbasedPlot(self,ROWs,cut):
 
 
 #num of unique bar(if possible also think about offline)
+
+
 
 myplotter.addHistograms(NBarsHitTag1, 'NBarsHits', 'fourRowBigHits')
 
@@ -174,6 +324,16 @@ def NbarsHitsCount(self,cutName = "NBarsHits",cut = None, hist = None):
         bararr = ak.flatten(self.events[cutName],axis=None)
         hist.FillN(len(bararr), bararr, np.ones(len(bararr)))
 
+def NbarsHitsCountV2(self,arr, hist):
+    for b in barbraches:
+        arr[b] = arr[b][arr.type == 0]
+
+    uniqueBarArr = ak.Array([np.unique(x) for x in arr.chan])
+    uniqueBarArr = ak.drop_none[uniqueBarArr]
+    uniqueBarArr = ak.flatten(uniqueBarArr,axis=None)
+    hist.FillN(len(uniqueBarArr), uniqueBarArr, np.ones(len(uniqueBarArr)))
+
+
 
 #bar trim should be used prior using this function
 def BarNPERatioCalculate(self,cutName = "BarNPERatio",cut = None):
@@ -239,14 +399,38 @@ def fourRowBigHits(self,cutName = None, cut = None):
     if cut:
         self.events = self.events[self.events["fourRowBigHits"]]
 #top and bottom row have big hit
-def TBBigHit(self,cutName = None,cut = None):
-    self.events["TBBigHit"] = (ak.any(self.events.l0R0==True, axis=1) & 
-                                ak.any(self.events.l0R3==True, axis=1)) | (ak.any(self.events.l1R0==True, axis=1) &  
-                                ak.any(self.events.l1R3==True, axis=1)) | (ak.any(self.events.l2R0==True, axis=1) & 
-                                ak.any(self.events.l2R3==True, axis=1)) | (ak.any(self.events.l3R0==True, axis=1) & 
-                                ak.any(self.events.l3R3==True, axis=1)) 
+def TBBigHit(self,cutName = None,cut = None, ,Hist1 = None):
+    
+    TBBigHit_lay0 =  (ak.any(self.events.l0R0==True, axis=1) & ak.any(self.events.l0R3==True, axis=1)) #data at layer 0 should be kept
+    TBBigHit_lay1 =  (ak.any(self.events.l1R0==True, axis=1) & ak.any(self.events.l1R3==True, axis=1))
+    TBBigHit_lay2 =  (ak.any(self.events.l2R0==True, axis=1) & ak.any(self.events.l2R3==True, axis=1))
+    TBBigHit_lay3 =  (ak.any(self.events.l3R0==True, axis=1) & ak.any(self.events.l3R3==True, axis=1))
+    
+
+
+    self.events["TBBigHit"] = (TBBigHit_lay0 | TBBigHit_lay1 | TBBigHit_lay2 | TBBigHit_lay3) 
+
     
     if cut: self.events = self.events[self.events["TBBigHit"]]
+
+    #plot section
+    if Hist1:
+        #convert the events based tag to pulse(bar based in sim) based
+        #FIXME:this steps seems has bugs. It can't tell which data to keep. Intead it it keep all data as long as one of the layer get hit. 
+
+        TBBigHit_lay0, junk=ak.broadcast_arrays(TBBigHit_lay0, self.events.layer)
+        TBBigHit_lay1, junk=ak.broadcast_arrays(TBBigHit_lay1, self.events.layer)
+        TBBigHit_lay2, junk=ak.broadcast_arrays(TBBigHit_lay2, self.events.layer)
+        TBBigHit_lay3, junk=ak.broadcast_arrays(TBBigHit_lay3, self.events.layer)
+
+
+
+
+
+        #constraintArray is to save the data from the layer where pass the cosmic muon tag or the data from the ajacent array. Or you could use layerConstraintEnable = False which return the copy array without changing anything
+        constraintArray=self.LayerContraint(TBBigHit_lay0,TBBigHit_lay1,TBBigHit_lay2,TBBigHit_lay3)
+        self.NbarsHitsCountV2(arr=constraintArray,hist=Hist1)
+
 
 #cosmic panel , top and bottom row have big hit.
 def P_TBBigHit(self,cutName = None,cut = None):
@@ -309,6 +493,8 @@ setattr(milliqanCuts, 'BarNPERatioCalculate',BarNPERatioCalculate)
 
 setattr(milliqanCuts, 'findCorrectTime',findCorrectTime)
 
+setattr(milliqanCuts,'LayerContraint',LayerContraint)
+
 
 
 
@@ -332,6 +518,11 @@ fourRowBigHitsCut = mycuts.getCut(mycuts.fourRowBigHits, "fourRowBigHitsCut",cut
 TBBigHitCut = mycuts.getCut(mycuts.TBBigHit,"TBBigHitCut", cut = True)
 P_TBBigHitCut= mycuts.getCut(mycuts.P_TBBigHit, "P_TBBigHitCut",cut = True)
 P_BBigHitCut= mycuts.getCut(mycuts.P_BBigHit, "P_BBigHitCut",cut = True)
+
+
+P_BBigHitCut= mycuts.getCut(mycuts.LayerContraint, "P_BBigHitCut",cut = True)
+
+
 #NbarsHitsCount1= mycuts.getCut(mycuts.P_BBigHit, "NBarsHits",cut = None,hist = NBarsHitTag1)#FIXME: getCut can't take hist as argument. Maybe I should remove it
 cutflow = [mycuts.MuonEvent,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,mycuts.NbarsHitsCount ,myplotter.dict['NBarsHitTag2']]
 
@@ -340,3 +531,7 @@ myschedule = milliQanScheduler(cutflow, mycuts,myplotter)
 myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts)
 
 myiterator.run()
+
+f_out = r.TFile(f"Run{numRun}TagV2_condorJob.root", "RECREATE")
+
+f_out.cd()

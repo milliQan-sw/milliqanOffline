@@ -18,6 +18,7 @@ from milliqanPlotter import *
 import awkward as ak
 
 #---------------------------------------condor job section(get the file that needs to be processed)---------------------------------
+"""
 def getFile(processNum, fileList):
 
     filelist = open(fileList)
@@ -39,10 +40,12 @@ if('.root' in filename and 'output' in filename):
 
 #filelist =['/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhotonMuontag/output_1.root:t']
 filelist =[f'{filename}:t']
+"""
 
 #-----------------------------------------------------------------------------------------------------------------------------------
 #signle file test
-#filelist =['/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhotonMuontag/output_1.root:t']
+numRun = 1
+filelist =[f'/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhotonMuontag/output_{numRun}.root:t']
 
 #multiple file test(non recommend to use due to time consuming)
 """
@@ -199,14 +202,14 @@ def adjLayerData(self,layer0Cut,layer1Cut,layer2Cut,layer3Cut):
 #barbraches in sim is bar-based variable. In offline you should choose the pulse based variable
 # I want to extract the data with layer constaint but without changing the original array
 #To do: get the adjacent array
-def LayerContraint(self,layer0Cut,layer1Cut,layer2Cut,layer3Cut, layerConstraintEnable = None,selectedBranches=barbraches,CutomizedEvents=None):
+def LayerContraint(self,layer0Cut,layer1Cut,layer2Cut,layer3Cut, layerConstraintEnable = None,selectedBranches=barbranches,CutomizedEvents=None):
 
     if CutomizedEvents:
         SpecialArr = ak.copy(CutomizedEvents)
 
         
 
-        elif layerConstraintEnable == False:
+        if layerConstraintEnable == False:
             return SpecialArr
         
     
@@ -222,7 +225,7 @@ def LayerContraint(self,layer0Cut,layer1Cut,layer2Cut,layer3Cut, layerConstraint
         layer0Cut,layer1Cut,layer2Cut,layer3Cut=adjLayerData (layer0Cut,layer1Cut,layer2Cut,layer3Cut)
         #think hard did I do it right? adjcuts?
         for b in selectedBranches:
-            specialArr[b] = specialArr[b][adjCuts]
+            specialArr[b] = specialArr[b][(specialArr.layer ==0 & layer0Cut)|(specialArr.layer ==1  & layer1Cut)  | ( specialArr.layer == 2 & layer2Cut) | (specialArr.layer == 3 & layer3Cut)]
         return specialArr
     
     for b in selectedBranches:
@@ -377,9 +380,9 @@ def CosmuonTagIntialization(self, NPEcut = 0, offline = None):
     
     if offline:
         #1320 is the average spe pulse area from bar channel. Since the calibration on panel is not being done, so NPE need to be recalculated from (pulse area / spe pulse area).
-        self.events["TopPanelHit"] = ak.any(self.events["row"]==4 & (self.events["area"]/1320) >= NPEcut ,axis =1)
+        self.events["TopPanelHit"] = ak.any(self.events["row"]==4 & (self.events["area"]/(1320*12)) >= NPEcut ,axis =1)
     else:
-        self.events["TopPanelHit"] = ak.any((self.events["row"]==4) & (self.events["nPE"] >= NPEcut), axis = 1)
+        self.events["TopPanelHit"] = ak.any((self.events["row"]==4) & (self.events["nPE"]/12 >= NPEcut), axis = 1)
 
 def fourRowBigHits(self,cutName = None, cut = None):
     self.events["fourRowBigHits"] = (ak.any(self.events.l0R0==True, axis=1) & 
@@ -399,7 +402,7 @@ def fourRowBigHits(self,cutName = None, cut = None):
     if cut:
         self.events = self.events[self.events["fourRowBigHits"]]
 #top and bottom row have big hit
-def TBBigHit(self,cutName = None,cut = None, ,Hist1 = None):
+def TBBigHit(self,cutName = None,cut = None, Hist1 = None):
     
     TBBigHit_lay0 =  (ak.any(self.events.l0R0==True, axis=1) & ak.any(self.events.l0R3==True, axis=1)) #data at layer 0 should be kept
     TBBigHit_lay1 =  (ak.any(self.events.l1R0==True, axis=1) & ak.any(self.events.l1R3==True, axis=1))
@@ -461,11 +464,13 @@ def MuonEvent(self, cutName = None, CutonBars = True):
             self.events[branch] = self.events[branch][self.events.muonHit == 1]
 
     else:
-        self.events = self.events[ak.any(self.events.muonHit == 1, axis = 1)]
+        self.events = self.events[ak.any(selTBBigHitCutf.events.muonHit == 1, axis = 1)]
 
-def countEvent(self, cut=None):
-    if cut:
-        print(f"{cut} event: {len(self.events[self.events[cut]])}")
+def countEvent(self, cutName = None, Countobject=None, debug = False):
+    if debug: 
+        print(ak.to_pandas(self.events))
+    if cutName:
+        print(f"{Countobject} event: {len(self.events[self.events[Countobject]])}")
     else:
         print(f"current available events {len(self.events['event'])}")
 
@@ -515,16 +520,29 @@ setattr(milliqanCuts,'LayerContraint',LayerContraint)
 #cutflow = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,mycuts.fourRowBigHits,mycuts.TBBigHit,mycuts.P_TBBigHit,mycuts.P_BBigHit]
 
 fourRowBigHitsCut = mycuts.getCut(mycuts.fourRowBigHits, "fourRowBigHitsCut",cut=True)
-TBBigHitCut = mycuts.getCut(mycuts.TBBigHit,"TBBigHitCut", cut = True)
+TBBigHitCut = mycuts.getCut(mycuts.TBBigHit,"placeholder", cut = True)
 P_TBBigHitCut= mycuts.getCut(mycuts.P_TBBigHit, "P_TBBigHitCut",cut = True)
 P_BBigHitCut= mycuts.getCut(mycuts.P_BBigHit, "P_BBigHitCut",cut = True)
 
-
-P_BBigHitCut= mycuts.getCut(mycuts.LayerContraint, "P_BBigHitCut",cut = True)
-
-
+TBBigHitCutCount= mycuts.getCut(mycuts.countEvent, "placeholder" ,Countobject = "TBBigHit")
+fourRowBigHitsCutCount= mycuts.getCut(mycuts.countEvent, "placeholder" ,Countobject = "fourRowBigHits")
+P_TBBigHitCutCount= mycuts.getCut(mycuts.countEvent,"placeholder"  ,Countobject = "P_TBBigHit")
+P_BBigHitCutCount= mycuts.getCut(mycuts.countEvent, "placeholder" ,Countobject = "P_BBigHit")
 #NbarsHitsCount1= mycuts.getCut(mycuts.P_BBigHit, "NBarsHits",cut = None,hist = NBarsHitTag1)#FIXME: getCut can't take hist as argument. Maybe I should remove it
-cutflow = [mycuts.MuonEvent,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,mycuts.NbarsHitsCount ,myplotter.dict['NBarsHitTag2']]
+#cutflow = [mycuts.MuonEvent,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,mycuts.NbarsHitsCount ,myplotter.dict['NBarsHitTag2']] #default analysis cutflow
+
+
+
+#Cut flow 1. This one is for testing the cut efficiency of different tags. TB big hits - > TB + panel big hits 
+cutflow1 = [mycuts.MuonEvent,mycuts.EmptyListFilter,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,P_TBBigHitCut,P_TBBigHitCutCount]
+
+#Cut flow 2. This one is for testing the cut efficiency of different tags. TB big hits - > 4 rows big hits
+cutflow2 = [mycuts.MuonEvent,mycuts.EmptyListFilter,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,fourRowBigHitsCut,fourRowBigHitsCutCount]
+
+#cut flow 3. This one is for testing the cut efficiency of different tags. B + panel big hits  - > TB + panel big hits 
+cutflow3 = [mycuts.MuonEvent,mycuts.EmptyListFilter,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,P_BBigHitCut,P_BBigHitCutCount,TBBigHitCut,P_TBBigHitCut,P_TBBigHitCutCount]
+
+cutflow = cutflow3
 
 myschedule = milliQanScheduler(cutflow, mycuts,myplotter)
 
@@ -532,6 +550,11 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts)
 
 myiterator.run()
 
-f_out = r.TFile(f"Run{numRun}TagV2_condorJob.root", "RECREATE")
+
+
+"""
+#f_out = r.TFile(f"Run{numRun}TagV2_condorJob.root", "RECREATE")
+f_out = r.TFile(f"Run{numRun}TagV2_testOnly.root", "RECREATE")
 
 f_out.cd()
+"""

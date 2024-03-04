@@ -8,6 +8,8 @@ import math
 
 import os
 import sys
+import time
+import json
 
 sys.path.append("/home/czheng/scratch0/SIManalysisDEV/milliqanOffline/Run3Detector/analysis/utilities")
 
@@ -18,7 +20,7 @@ from milliqanPlotter import *
 import awkward as ak
 
 #---------------------------------------condor job section(get the file that needs to be processed)---------------------------------
-"""
+#"""
 def getFile(processNum, fileList):
 
     filelist = open(fileList)
@@ -40,12 +42,12 @@ if('.root' in filename and 'output' in filename):
 
 #filelist =['/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhotonMuontag/output_1.root:t']
 filelist =[f'{filename}:t']
-"""
+#"""
 
 #-----------------------------------------------------------------------------------------------------------------------------------
 #signle file test
-numRun = 1
-filelist =[f'/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhotonMuontag/output_{numRun}.root:t']
+#numRun = 1
+#filelist =[f'/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhotonMuontag/output_{numRun}.root:t']
 
 #multiple file test(non recommend to use due to time consuming)
 """
@@ -472,7 +474,7 @@ def countEvent(self, cutName = None, Countobject=None, debug = False):
     if cutName:
         print(f"{Countobject} event: {len(self.events[self.events[Countobject]])}")
     else:
-        print(f"current available events {len(self.events['event'])}")
+        print(f"current available events : {len(self.events['event'])}")
 
 
 
@@ -540,7 +542,7 @@ cutflow1 = [mycuts.MuonEvent,mycuts.EmptyListFilter,mycuts.barCut,mycuts.panelCu
 cutflow2 = [mycuts.MuonEvent,mycuts.EmptyListFilter,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,fourRowBigHitsCut,fourRowBigHitsCutCount]
 
 #cut flow 3. This one is for testing the cut efficiency of different tags. B + panel big hits  - > TB + panel big hits 
-cutflow3 = [mycuts.MuonEvent,mycuts.EmptyListFilter,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,P_BBigHitCut,P_BBigHitCutCount,TBBigHitCut,P_TBBigHitCut,P_TBBigHitCutCount]
+cutflow3 = [mycuts.MuonEvent,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,P_BBigHitCut,P_BBigHitCutCount,TBBigHitCut,P_TBBigHitCut,P_TBBigHitCutCount]
 
 cutflow = cutflow3
 
@@ -567,7 +569,6 @@ sys.stdout = sys.__stdout__
 
 """
 #f_out = r.TFile(f"Run{numRun}TagV2_condorJob.root", "RECREATE")
-f_out = r.TFile(f"Run{numRun}TagV2_testOnly.root", "RECREATE")
-
-f_out.cd()
+#f_out = r.TFile(f"Run{numRun}TagV2_testOnly.root", "RECREATE")
+#f_out.cd()
 """

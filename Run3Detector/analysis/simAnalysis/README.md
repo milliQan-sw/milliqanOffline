@@ -34,12 +34,17 @@ for test
 
 python3 SIMCondor.py -i /mnt/hadoop/se/store/user/czheng/SimFlattree/withPhotonMuontag/ -o /home/czheng/scratch0/SIManalysisDEV/milliqanOffline/Run3Detector/analysis/simAnalysis/condorTest/ -s layerConstrainDemo_job.py -t
 
- bash condor_wrapper.sh layerConstrainDemo_job.py 0 filelist.json locationForsavingFile
+use the first file and test if the script is running as expected
+bash condor_wrapper.sh layerConstrainDemo_job.py 0 filelist.json locationForsavingFile
 
 if thing is working fine then 
 python3 SIMCondor.py -i /mnt/hadoop/se/store/user/czheng/SimFlattree/withPhotonMuontag/ -o /home/czheng/scratch0/SIManalysisDEV/milliqanOffline/Run3Detector/analysis/simAnalysis/condorTest/ -s layerConstrainDemo_job.py
 
-------------------------sample for using bsub job(TBD ----------------
+
+When doing the cut efficiency test, I save the out to txt files. So Condor_wrapper.sh requires an new script "mv *.txt $4" and comment out the mv *.root $4.
+I save the txt file location at /home/czheng/scratch0/SIManalysisDEV/milliqanOffline/Run3Detector/analysis/simAnalysis/CutEffCheck
+
+------------------------sample for using bsub job(TBD) ----------------
 UCSB cluster doesn't come with uproot now
 python3 
 

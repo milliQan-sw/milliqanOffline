@@ -548,9 +548,22 @@ myschedule = milliQanScheduler(cutflow, mycuts,myplotter)
 
 myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts)
 
-myiterator.run()
+#myiterator.run() # comment this out when checking cut efficiency
+
+#--------------section for using to check cut efficiency-----------------------------
+
+with open(f'Run{numRun}CutFlow3.txt', 'w') as cfFile:
+    sys.stdout = cfFile  # Change the standard output to the file
+    myiterator.run() #output from counting function will be saved in the txt file above.
 
 
+
+# After the block, stdout will return to its default (usually the console)
+# You may want to reset stdout to its original state
+sys.stdout = sys.__stdout__
+
+
+#-------------------------------------------------------------------------------------
 
 """
 #f_out = r.TFile(f"Run{numRun}TagV2_condorJob.root", "RECREATE")

@@ -531,7 +531,7 @@ fourRowBigHitsCutCount= mycuts.getCut(mycuts.countEvent, "placeholder" ,Countobj
 P_TBBigHitCutCount= mycuts.getCut(mycuts.countEvent,"placeholder"  ,Countobject = "P_TBBigHit")
 P_BBigHitCutCount= mycuts.getCut(mycuts.countEvent, "placeholder" ,Countobject = "P_BBigHit")
 #NbarsHitsCount1= mycuts.getCut(mycuts.P_BBigHit, "NBarsHits",cut = None,hist = NBarsHitTag1)#FIXME: getCut can't take hist as argument. Maybe I should remove it
-#cutflow = [mycuts.MuonEvent,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,mycuts.NbarsHitsCount ,myplotter.dict['NBarsHitTag2']] #default analysis cutflow
+#cutflowSTD = [mycuts.MuonEvent,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,mycuts.NbarsHitsCount ,myplotter.dict['NBarsHitTag2']] #default analysis cutflow
 
 
 
@@ -554,15 +554,18 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts)
 
 #--------------section for using to check cut efficiency-----------------------------
 
-with open(f'Run{numRun}CutFlow3.txt', 'w') as cfFile:
-    sys.stdout = cfFile  # Change the standard output to the file
-    myiterator.run() #output from counting function will be saved in the txt file above.
+print("before run")
+
+#with open(f'Run{numRun}CutFlow3.txt', 'w') as cfFile:
+#sys.stdout = cfFile  # Change the standard output to the file
+myiterator.run() #output from counting function will be saved in the txt file above.
 
 
 
 # After the block, stdout will return to its default (usually the console)
 # You may want to reset stdout to its original state
-sys.stdout = sys.__stdout__
+#sys.stdout = sys.__stdout__
+
 
 
 #-------------------------------------------------------------------------------------

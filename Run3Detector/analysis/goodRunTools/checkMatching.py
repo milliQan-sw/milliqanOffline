@@ -226,7 +226,7 @@ class fileChecker():
             fileNum = events[0, 'eventNum']/1000 + 1
             
             #ToDo sometimes the first event has no start time, need to check a few other events 
-            #self.runInfos['startTime'].loc[(self.runInfos['run'] == events[0, 'runNum']) & (self.runInfos['file'] == fileNum)] = events[0, 'startTime']
+            self.runInfos['startTime'].loc[(self.runInfos['run'] == events[0, 'runNum']) & (self.runInfos['file'] == fileNum)] = events[0, 'startTime'] 
             
             self.runInfos['totalEvents'].loc[(self.runInfos['run'] == events[0, 'runNum']) & (self.runInfos['file'] == fileNum)] += len(events)
             self.runInfos['unmatchedEvents'].loc[(self.runInfos['run'] == events[0, 'runNum']) & (self.runInfos['file'] == fileNum)] += len(unmatched)

@@ -7,9 +7,11 @@ import uproot
 import logging
 from ROOT import TSpectrum, TFile, TH1
 import tensorflow as tf
-from tensorflow.keras import layers
+from tensorflow.keras import layers, Model
+from keras.models import Sequential
+from keras.layers import Dense
 
-logging.basicConfig(level="DEBUG")
+logging.basicConfig(level="WARNING")
 
 
 class WaveformProcessor():
@@ -56,6 +58,7 @@ class WaveformProcessor():
 
                 self.noise_dict[key.GetName()] = np.mean(background_array)
 
+    # TODO make way to set bounds manually 
     def find_waveform_bounds(self) -> None:
         self.peak_dictionary = {}
         for key, value in self.histogram_dict.items():
@@ -91,10 +94,11 @@ class WaveformProcessor():
         logging.debug(f"Peaks: {self.peak_dictionary}")
 
     def isolate_waveforms(self):
+            
         number_of_waves: int = sum([len(peak) for peak in
                                     self.peak_dictionary.values()])
 
-        input_data = np.zeros((number_of_waves, 1024))
+        input_data = np.zeros((number_of_waves, 100))
 
         index = 0
         for key, value in self.peak_dictionary.items():
@@ -107,6 +111,8 @@ class WaveformProcessor():
                 sliced_histogram_values = (self.histogram_dict[key]
                                            [int(waveform[0]):int(waveform[1]+1)])
 
+                if len(sliced_histogram_values) > 100: continue
+                    
                 input_data[index][:len(sliced_histogram_values)
                                   ] = sliced_histogram_values
                 index += 1
@@ -119,122 +125,99 @@ class WaveformProcessor():
     def plot_waveforms(self, plotDirectory: str) -> None:
         if not os.path.exists(plotDirectory):
             os.mkdir(plotDirectory)
-
         for key, value in self.histogram_dict.items():
-            plt.clf()
-            plt.plot(self.times, value)
-            for peak in self.peak_dictionary[key]:
-                plt.axvline(peak[0])
-                plt.axvline(peak[1])
+            try :
+                plt.clf()
+                plt.plot(self.times, value)
+                for peak in self.peak_dictionary[key]:
+                    plt.axvline(self.times[int(peak[0])], color='r')
+                    plt.axvline(self.times[int(peak[1])], color='r')
+            
+                plt.savefig("{0}/{1}.png".format(plotDirectory, key))
+            except KeyError: 
+                continue
 
-            plt.savefig("{0}/{1}.png".format(plotDirectory, key))
+def define_discriminator(n_inputs=100, optimizer='adam'):
+    model = Sequential()
+    model.add(Dense(25, activation='relu', kernel_initializer='he_uniform', input_dim=n_inputs))
+    model.add(Dense(1, activation='sigmoid'))
+    model.compile(loss='binary_crossentropy', optimizer=optimizer, metrics=['accuracy'])
+    return model
 
+def define_generator(latent_dim, n_outputs=100):
+    model = Sequential()
+    model.add(Dense(500, activation = 'relu', kernel_initializer='he_uniform', input_dim=latent_dim))
+    model.add(Dense(n_outputs, activation='linear'))
+    return model
 
-def build_waveform_generator(latent_dim, num_classes):
-    model = tf.keras.Sequential()
-    model.add(layers.InputLayer(input_shape = (1024, 1)))
-    model.add(layers.Dense(4096, use_bias=False, input_shape=(100,)))
-    model.add(layers.BatchNormalization())
-    model.add(layers.LeakyReLU())
+def define_gan(generator, discriminator):
+    discriminator.trainable = False
+    model = Sequential()
+    model.add(generator)
+    model.add(discriminator)
+    # This will compile the generator as well
+    model.compile(loss='binary_crossentropy', optimizer='adam')
+    return model
 
-    model.add(layers.Conv1DTranspose(4096, 10, strides=1, padding='same', use_bias=False))
-    model.add(layers.BatchNormalization())
-    model.add(layers.LeakyReLU())
+def generate_real_samples(isolated_waveforms, number_of_samples: int):
+    print("ISo:", isolated_waveforms)
+    random_choices = np.random.randint(0, high=len(isolated_waveforms),
+                                       size=number_of_samples)
+    x_train = isolated_waveforms[random_choices]
+    x_train = x_train.reshape(number_of_samples, 100)
+    y = np.ones((number_of_samples, 1))
+    return x_train, y
 
-    model.add(layers.Conv1DTranspose(1024, 10, strides=1, padding='same', use_bias=False))
-    model.add(layers.BatchNormalization())
-    model.add(layers.LeakyReLU())
-    print(model.output_shape)
+def generate_latent_points(latent_dim, n):
+    x_input = np.random.randn(latent_dim, n)
+    x_input = x_input.reshape(n, latent_dim)
+    return x_input
 
+def generate_fake_samples(generator, latent_dim, n):
+    x_input = generate_latent_points(latent_dim, n)
+    gen_x = generator.predict(x_input)
+    gen_y = np.zeros((n, 1))
+    return gen_x, gen_y
 
-def build_waveform_descriminator(num_npe):
-    label = layers.Input(shape=(num_npe,))
+def summarize_performance(epoch, generator, discriminator, latent_dim, isolated_waveforms, n=100):
 
-    x = layers.Dense(512, activation='relu')(input_data)
-    x = layers.Dense(256, activation='relu')(x)
-    validity = layers.Dense(1, activation='sigmoid')(x)
-    return Model([input_data, label], validity)
+    x_real, y_real = generate_real_samples(isolated_waveforms, n)
+    _, acc_real = discriminator.evaluate(x_real, y_real, verbose=0)
+    x_fake, y_fake = generate_fake_samples(generator, latent_dim, n)
+    _, acc_fake = discriminator.evaluate(x_fake, y_fake, verbose=0)
+    print(epoch, acc_real, acc_fake)
+    plt.plot(x_real[0], color='red')
+    plt.plot(x_fake[0], color='blue')
+    plt.show()
 
-
-if __name__ == "__main__":
-    processor = WaveformProcessor(
-        "/home/ryan/Documents/Research/Data/MilliQanWaveforms/"
-        "outputWaveforms_812_2p5V.root")
-
+def train(generator, discriminator,
+          gan, latent_dim, input_file, n_epochs=10000,
+          n_batch=128, n_eval=2000):
+    
+    processor = WaveformProcessor(input_file)
     bounds = processor.find_waveform_bounds()
-    x_train = processor.isolate_waveforms()
-    plt.plot(x_train[0])
-    plt.savefig("train_waveform.png")
-    y_train = processor.calculate_npe(x_train, 480)
+    print(bounds)
+    isolated_waveforms = processor.isolate_waveforms()
+    half_batch = int(n_batch/2)
+    for i in range(n_epochs):
+        x_real, y_real = generate_real_samples(isolated_waveforms, half_batch)
+        x_fake, y_fake = generate_fake_samples(generator, latent_dim, half_batch)
+        discriminator.train_on_batch(x_real, y_real)
+        discriminator.train_on_batch(x_fake, y_fake)
+        x_gan = generate_latent_points(latent_dim, n_batch)
 
-    assert len(x_train) == len(y_train), ("There are not the same number"
-                                          "of labels and waveforms")
+        # You only train the discriminator during GAN training
+        # Therefore, you want the generator to output data that passes as
+        # real data
 
-    latent_dim = 100
-    num_classes = 2
-
-    # Build Model
-    # discriminator = build_waveform_descriminator(num_classes)
-    # discriminator.compile(optimizer='adagrad',
-    #                       loss='binary_crossentropy', metrics=['accuracy'])
-
-    generator = build_waveform_generator(latent_dim, num_classes)
-    # noise = layers.Input(shape=(latent_dim,))
-    # label = layers.Input(shape=(num_classes,))
-
-    # generated_data = generator([noise, label])
-    # validity = discriminator([generated_data, label])
-
-    # combined = Model([noise, label], validity)
-
-    # combined.compile(optimizer='adagrad',
-    #                  loss='binary_crossentropy', metrics=['accuracy'])
-    # generator = build_waveform_generator(latent_dim, num_classes)
-
-    # generator.compile(optimizer='adagrad',
-    #                   loss='binary_crossentropy', metrics=['accuracy'])
-    # # Train Model
-    # batch_size = 64
-    # epochs = 1000
-
-    # for epoch in range(epochs):
-    #     idx = np.random.randint(0, x_train.shape[0], batch_size)
-    #     real_data = x_train[idx]
-    #     labels = y_train[idx]
-
-    #     # Generate noise for generator
-    #     noise = np.random.normal(0, 1, (batch_size, latent_dim))
-    #     fake_labels = np.random.randint(0, num_classes, batch_size)
-    #     generated_data = generator.predict([noise, fake_labels])
-
-    #     real_data_with_labels = np.concatenate(
-    #         [real_data, labels.reshape(-1, 1)], axis=1)
-
-    #     generated_data_with_labels = np.concatenate(
-    #         [generated_data, fake_labels.reshape(-1, 1)], axis=1)
-
-    #     # Train discriminator
-    #     desc_loss_real = discriminator.train_on_batch(
-    #         [real_data, labels], np.ones((batch_size, 1)))
-    #     desc_loss_fake = discriminator.train_on_batch(
-    #         [generated_data, fake_labels], np.zeros((batch_size, 1)))
-
-    #     desc_loss = 0.5 * np.add(desc_loss_fake, desc_loss_real)
-
-    #     # Train generator
-    #     noise = np.random.normal(0, 1, (batch_size, latent_dim))
-    #     fake_labels = np.random.randint(0, num_classes, batch_size)
-
-    #     gen_loss = combined.train_on_batch(
-    #         [noise, fake_labels], np.ones((batch_size, 1)))
-    #     print(
-    #         f"Epoch {epoch+1}, Discriminator Loss: {desc_loss[0]},"
-    #         f"Generator Loss: {gen_loss}")
-
-    # noise = np.random.normal(0, 1, (10, latent_dim))
-    # labels = np.ones(10)
-
-    # generated_data = generator.predict([noise, labels])
-
-    # with open('gen_waveforms.pickle', 'wb') as f:
-    #     pickle.dump(generated_data, f)
+        y_gan = np.ones((n_batch, 1)) 
+        gan.train_on_batch(x_gan, y_gan)
+        if (i + 1) % n_eval == 0:
+            summarize_performance(i, generator, discriminator, latent_dim, isolated_waveforms)
+            
+input_file = "/home/ryan/Documents/Data/MilliQan/outputWaveforms_812_2p5V.root"
+latent_dim = 1000
+discriminator = define_discriminator()
+generator = define_generator(latent_dim)
+gan_model = define_gan(generator, discriminator)
+train(generator, discriminator, gan_model, latent_dim, n_epochs=10000, input_file=input_file, n_eval=2000)

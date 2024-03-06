@@ -165,7 +165,6 @@ class fileChecker():
             
             self.runInfos['unmatchedBoards'].loc[(self.runInfos['run'] == events[0, 'runNumber']) & (self.runInfos['file'] == events[0, 'fileNumber'])] += len(unmatched)
             self.runInfos['offlineTrigMatched'].loc[(self.runInfos['run'] == events[0, 'runNumber']) & (self.runInfos['file'] == events[0, 'fileNumber'])] += len(unmatchedEvents)
-            #self.runInfos['trigger'].loc[(self.runInfos['run'] == events[0, 'runNumber']) & (self.runInfos['file'] == events[0, 'fileNumber'])] = events[0]['tTrigger']
         
         for events in uproot.iterate(
 
@@ -251,7 +250,7 @@ class fileChecker():
                 passing = passing and events.deadTime == thisConfig.deadTime
 
                 singleTrigger = False if events.trigger == 0 else (math.ceil(math.log10(events.trigger)/math.log10(2)) == math.floor(math.log10(events.trigger)/math.log10(2)))
-                print("Trigger:", events.trigger, "Single Trigger Bit:", singleTrigger, "Passing", passing)
+                #print("Trigger:", events.trigger, "Single Trigger Bit:", singleTrigger, "Passing", passing)
                 singlePass = passing and singleTrigger
 
                 passing = passing and self.checkActiveTriggers(events.trigger)
@@ -275,7 +274,7 @@ class fileChecker():
             if os.path.exists(self.offlineDir+'/'+offlineFile): 
                 self.runInfos['offlineFile'].loc[(self.runInfos['run'] == pair[0]) & (self.runInfos['file'] == pair[1])] = offlineFile
                 self.runInfos['offlineDir'].loc[(self.runInfos['run'] == pair[0]) & (self.runInfos['file'] == pair[1])] = self.offlineDir
-                self.runInfos['offlineCTime'].loc[(self.runInfos['run'] == pair[0]) & (self.runInfos['file'] == pair[1])] = datetime.fromtimestamp(os.path.getctime(self.offlineDir+'/'+offlineFile))
+                self.runInfos['offlineCTime'].loc[(self.runInfos['run'] == pair[0]) & (self.runInfos['file'] == pair[1])] = datetime.fromtimestamp(os.path.getctime(self.offlineDir+'/'+offlineFile)).strftime("%Y-%m-%d%H:%M:%S")
             else:
                 print("File {0} does not exist".format(self.offlineDir+'/'+offlineFile))
 
@@ -295,15 +294,15 @@ class fileChecker():
             thisRun.file = int(fileNum)
             thisRun.daqFile = filename
             thisRun.rawDir = fullPath
-            thisRun.daqCTime = datetime.fromtimestamp(os.path.getctime(fullPath+'/'+filename))
+            thisRun.daqCTime = datetime.fromtimestamp(os.path.getctime(fullPath+'/'+filename)).strftime("%Y-%m-%d%H:%M:%S")
             trigName = "TriggerBoard_Run{0}.{1}.root".format(runNum, fileNum)
             matchName = "MatchedEvents_Run{0}.{1}_rematch.root".format(runNum, fileNum)
             if os.path.exists(fullPath+'/'+trigName): 
                 thisRun.trigFile = trigName
-                thisRun.trigCTime = datetime.fromtimestamp(os.path.getctime(fullPath+'/'+trigName))
+                thisRun.trigCTime = datetime.fromtimestamp(os.path.getctime(fullPath+'/'+trigName)).strftime("%Y-%m-%d%H:%M:%S")
             if os.path.exists(fullPath+'/'+matchName): 
                 thisRun.matchFile = matchName
-                thisRun.matchCTime = datetime.fromtimestamp(os.path.getctime(fullPath+'/'+matchName))
+                thisRun.matchCTime = datetime.fromtimestamp(os.path.getctime(fullPath+'/'+matchName)).strftime("%Y-%m-%d%H:%M:%S")
 
             self.runInfos.loc[len(self.runInfos.index)] = thisRun.__dict__
                             

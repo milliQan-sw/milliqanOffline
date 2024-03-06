@@ -29,9 +29,10 @@ SimMuon_tag.py: find the events that matches the cosmic muon characteristic and 
 
 
 ----------------------sample for using condor job------------------
+to check the progress use condor_q --allusers
 
-for test
 
+1.test the job submission script and create json file
 python3 SIMCondor.py -i /mnt/hadoop/se/store/user/czheng/SimFlattree/withPhotonMuontag/ -o /home/czheng/scratch0/SIManalysisDEV/milliqanOffline/Run3Detector/analysis/simAnalysis/condorTest/ -s layerConstrainDemo_job.py -t
 
 use the first file and test if the script is running as expected
@@ -43,6 +44,9 @@ python3 SIMCondor.py -i /mnt/hadoop/se/store/user/czheng/SimFlattree/withPhotonM
 
 When doing the cut efficiency test, I save the out to txt files. So Condor_wrapper.sh requires an new script "mv *.txt $4" and comment out the mv *.root $4.
 I save the txt file location at /home/czheng/scratch0/SIManalysisDEV/milliqanOffline/Run3Detector/analysis/simAnalysis/CutEffCheck
+
+
+python3 SimCosmicMuonTag_V2.py -i /mnt/hadoop/se/store/user/czheng/SimFlattree/withPhotonMuontag/ -o /home/czheng/scratch0/SIManalysisDEV/milliqanOffline/Run3Detector/analysis/simAnalysis/CutEffCheck/ -s SimCosmicMuonTag_V2.py -t
 
 ------------------------sample for using bsub job(TBD) ----------------
 UCSB cluster doesn't come with uproot now

@@ -2,8 +2,9 @@ import os
 import sys
 import ROOT as r
 import numpy as np
+import pandas as pd
 
-sys.path.append("/Users/jahe0/Desktop/Physics-Research/Graduate-Research/MilliQan/milliqanOffline/Run3Detector/analysis/utilities/")
+#sys.path.append("/Users/jahe0/Desktop/Physics-Research/Graduate-Research/MilliQan/milliqanOffline/Run3Detector/analysis/utilities/")
 from milliqanProcessor import *
 from milliqanScheduler import *
 from milliqanCuts import *
@@ -21,10 +22,89 @@ else:
 # 2) Looking at small pulses near the beam path
 # 3) pulse area vs pulse time plots
 
-#define a file list to run over
-#filelist = ['/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1114_default_v34.root:t']
-filelist = ['/Users/jahe0/Desktop/Physics-Research/Graduate-Research/MilliQan/milliqanOffline/Run3Detector/analysis/utilities/MilliQan_Run1035_v34.root:t',
-            '/Users/jahe0/Desktop/Physics-Research/Graduate-Research/MilliQan/milliqanOffline/Run3Detector/analysis/utilities/MilliQan_Run1114_default_v34.root:t']
+#For extracting the good runs
+def load_csv_to_dataframe(file_path):
+    df = pd.read_csv(file_path)
+    return df
+
+df = load_csv_to_dataframe('MilliQanBarRuns-checksMerged.csv')
+goodRuns = df.loc[df['goodRuns'] != False, 'run'].unique()
+print("goodRuns: ", goodRuns)
+filelist = [f'/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run{x}_default_v34.root:t' for x in goodRuns]
+'''filelist = ['/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1114_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1115_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1116_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1117_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1118_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1119_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1120_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1121_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1122_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1123_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1124_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1125_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1126_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1127_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1128_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1129_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1130_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1138_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1139_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1143_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1148_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1149_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1150_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1151_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1152_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1153_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1154_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1155_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1156_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1157_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1158_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1159_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1160_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1162_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1163_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1164_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1165_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1166_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1167_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1168_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1169_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1170_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1171_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1172_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1173_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1174_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1175_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1176_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1177_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1178_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1179_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1180_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1181_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1182_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1183_default_v34.root:t', 
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1184_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1185_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1186_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1187_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1188_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1189_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1190_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1191_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1192_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1193_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1194_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1195_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1200_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1201_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1202_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1203_default_v34.root:t',
+            '/net/cms26/cms26r0/milliqan/outputRun3Hadd/v34/MilliQan_Run1204_default_v34.root:t']'''
+#filelist = ['/Users/jahe0/Desktop/Physics-Research/Graduate-Research/MilliQan/milliqanOffline/Run3Detector/analysis/utilities/MilliQan_Run1035_v34.root:t',
+            #'/Users/jahe0/Desktop/Physics-Research/Graduate-Research/MilliQan/milliqanOffline/Run3Detector/analysis/utilities/MilliQan_Run1114_default_v34.root:t']
 
 #define the relevant branches
 branches = ['timeFit_module_calibrated', 'time', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type']
@@ -64,7 +144,7 @@ def maxPulsePerLayer(self): #This labels the maximum pulse in each layer
 def timeDiffMaxPulse(self): #This looks for the time difference between the max pulse and the other pulses
   maxPulsePerLayerMask = self.events['maxPulsePerLayer']
   timeDiffs = ak.zeros_like(self.events['height'], dtype=None)
-  noneArray = ak.nan_to_none(ak.full_like(self.events['height'], None))
+  noneArray = ak.nan_to_none(ak.full_like(self.events['height'], np.nan))
   onesArray = ak.ones_like(self.events['height'], dtype=int)
   
   for i in np.arange(4):

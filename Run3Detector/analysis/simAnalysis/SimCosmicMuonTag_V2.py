@@ -11,7 +11,7 @@ import sys
 import time
 import json
 
-sys.path.append("/home/czheng/scratch0/SIManalysisDEV/milliqanOffline/Run3Detector/analysis/utilities")
+sys.path.append("/home/czheng/milliqanOffline/Run3Detector/analysis/utilities/")
 
 from milliqanProcessor import *
 from milliqanScheduler import *
@@ -20,7 +20,7 @@ from milliqanPlotter import *
 import awkward as ak
 
 #---------------------------------------condor job section(get the file that needs to be processed)---------------------------------
-#"""
+"""
 def getFile(processNum, fileList):
 
     filelist = open(fileList)
@@ -42,12 +42,27 @@ if('.root' in filename and 'output' in filename):
 
 #filelist =['/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhotonMuontag/output_1.root:t']
 filelist =[f'{filename}:t']
-#"""
+"""
 
-#-----------------------------------------------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------------------------------------------- OSU T3
 #signle file test
 #numRun = 1
 #filelist =[f'/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhotonMuontag/output_{numRun}.root:t']
+
+
+#------------------------------------------------------------------------------------------------
+#path for the milliqan machine
+
+#print("this is numRun" + str(sys.argv[1]) )
+
+
+numRun = str(sys.argv[1])
+filelist =[f'/home/czheng/SimCosmicFlatTree/withPhotonMuontag/output_{numRun}.root:t']
+print(filelist)
+
+outputPath = str(sys.argv[2]) # the path is used at the very end for the output txt file
+print(outputPath)
+#-----------------------------------OSU T3--------------------------------------------------------
 
 #multiple file test(non recommend to use due to time consuming)
 """
@@ -104,20 +119,7 @@ NPERatioTag4 = r.TH1F("NPEratioTag4","NPE ratio;max NPE/min NPE;Events",150,0,15
 
 #----------------------------plotting preparation script----------------------
 
-"""
-#row constraint plotting script FIXME: non finished yet
-def RowbasedPlot(self,ROWs,cut):
-    interestEvents =ak.copy(self.events[self.events[cut]])
-    rowCuts = ak.Array([])
-    for ROW in ROWs:
-        rowCuts = rowCuts | sinterestEvents.row == ROW
 
-    interestEvents = interestEvents[rowCuts]
-
-    #plots
-    self.
-
-"""
 
 
 #collect the data from adjacient layer
@@ -555,16 +557,15 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts)
 #--------------section for using to check cut efficiency-----------------------------
 
 print("before run")
-
-#with open(f'Run{numRun}CutFlow3.txt', 'w') as cfFile:
-#sys.stdout = cfFile  # Change the standard output to the file
-myiterator.run() #output from counting function will be saved in the txt file above.
+with open(f'{outputPath}/Run{numRun}CutFlow3.txt', 'w') as cfFile:
+    sys.stdout = cfFile  # Change the standard output to the file
+    myiterator.run() #output from counting function will be saved in the txt file above.
 
 
 
 # After the block, stdout will return to its default (usually the console)
-# You may want to reset stdout to its original state
-#sys.stdout = sys.__stdout__
+# reset stdout to its original state
+sys.stdout = sys.__stdout__
 
 
 

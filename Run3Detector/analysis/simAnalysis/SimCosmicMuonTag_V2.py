@@ -546,7 +546,7 @@ cutflow2 = [mycuts.MuonEvent,mycuts.EmptyListFilter,mycuts.barCut,mycuts.panelCu
 #cut flow 3. This one is for testing the cut efficiency of different tags. B + panel big hits  - > TB + panel big hits 
 cutflow3 = [mycuts.MuonEvent,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,P_BBigHitCut,P_BBigHitCutCount,TBBigHitCut,P_TBBigHitCut,P_TBBigHitCutCount]
 
-cutflow = cutflow3
+cutflow = cutflow1
 
 myschedule = milliQanScheduler(cutflow, mycuts,myplotter)
 
@@ -557,7 +557,7 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts)
 #--------------section for using to check cut efficiency-----------------------------
 
 print("before run")
-with open(f'{outputPath}/Run{numRun}CutFlow3.txt', 'w') as cfFile:
+with open(f'{outputPath}/Run{numRun}CutFlow1.txt', 'w') as cfFile:
     sys.stdout = cfFile  # Change the standard output to the file
     myiterator.run() #output from counting function will be saved in the txt file above.
 

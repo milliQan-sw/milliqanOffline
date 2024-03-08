@@ -48,6 +48,18 @@ I save the txt file location at /home/czheng/scratch0/SIManalysisDEV/milliqanOff
 
 python3 SimCosmicMuonTag_V2.py -i /mnt/hadoop/se/store/user/czheng/SimFlattree/withPhotonMuontag/ -o /home/czheng/scratch0/SIManalysisDEV/milliqanOffline/Run3Detector/analysis/simAnalysis/CutEffCheck/ -s SimCosmicMuonTag_V2.py -t
 
+
+--------------------------run the analysis script on milliqan machine---------------------------------------------
+currently has a weird bug, so I move the analysis script to here.
+
+I create a bash script that can run the tagging algorism effectively at here
+
+
+
+source MQmachineRun.sh
+
+
+
 ------------------------sample for using bsub job(TBD) ----------------
 UCSB cluster doesn't come with uproot now
 python3 

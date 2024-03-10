@@ -26,7 +26,7 @@ offlineCheck1.py: check the result by applying the analysis to offline data
 SimMuon_tag.py: find the events that matches the cosmic muon characteristic and then send the eventID and file ID to muonTagPlot.py to create histograms.
 
 
-
+OLCosmicMuonTag_V2.py: offline analysis that uses the fuctions I defined in SimCosmicMuonTag_V2.py.  
 
 ----------------------sample for using condor job------------------
 to check the progress use condor_q --allusers

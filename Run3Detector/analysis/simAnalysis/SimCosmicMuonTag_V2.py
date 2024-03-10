@@ -19,69 +19,8 @@ from milliqanCuts import *
 from milliqanPlotter import *
 import awkward as ak
 
-#---------------------------------------condor job section(get the file that needs to be processed)---------------------------------
-"""
-def getFile(processNum, fileList):
-
-    filelist = open(fileList)
-    files = json.load(filelist)['filelist']
-    filelist.close()
-
-    return files[processNum]
-
-#run number, filelist
-processNum = int(sys.argv[1])
-fileList = sys.argv[2]
 
 
-#get the filename to run over
-filename = getFile(processNum, fileList)
-
-if('.root' in filename and 'output' in filename):
-    numRun = filename.split('_')[1].split('.')[0].replace('Run', '')
-
-#filelist =['/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhotonMuontag/output_1.root:t']
-filelist =[f'{filename}:t']
-"""
-
-#----------------------------------------------------------------------------------------------------------------------------------- OSU T3
-#signle file test
-#numRun = 1
-#filelist =[f'/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhotonMuontag/output_{numRun}.root:t']
-
-
-#------------------------------------------------------------------------------------------------
-#path for the milliqan machine
-
-#print("this is numRun" + str(sys.argv[1]) )
-
-
-numRun = str(sys.argv[1])
-filelist =[f'/home/czheng/SimCosmicFlatTree/withPhotonMuontag/output_{numRun}.root:t']
-print(filelist)
-
-outputPath = str(sys.argv[2]) # the path is used at the very end for the output txt file
-print(outputPath)
-#-----------------------------------OSU T3--------------------------------------------------------
-
-#multiple file test(non recommend to use due to time consuming)
-"""
-filelist = []
-
-def appendRun(filelist):
-    directory = "/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhoton/"
-    for filename in os.listdir(directory):
-        if filename.startswith("output") and filename.endswith(".root"):
-            filelist.append(directory+filename+":t")
-
-
-appendRun(filelist)
-"""
-
-
-branches = ["chan","runNumber","event","layer","nPE","type","row","muonHit"]
-
-barbranches = ["chan","layer","nPE","type","row","muonHit"]
 
 mycuts = milliqanCuts()
 
@@ -206,7 +145,7 @@ def adjLayerData(self,layer0Cut,layer1Cut,layer2Cut,layer3Cut):
 #barbraches in sim is bar-based variable. In offline you should choose the pulse based variable
 # I want to extract the data with layer constaint but without changing the original array
 #To do: get the adjacent array
-def LayerContraint(self,layer0Cut,layer1Cut,layer2Cut,layer3Cut, layerConstraintEnable = None,selectedBranches=barbranches,CutomizedEvents=None):
+def LayerContraint(self,layer0Cut,layer1Cut,layer2Cut,layer3Cut, layerConstraintEnable = None,branches = None,CutomizedEvents=None):
 
     if CutomizedEvents:
         SpecialArr = ak.copy(CutomizedEvents)
@@ -228,11 +167,13 @@ def LayerContraint(self,layer0Cut,layer1Cut,layer2Cut,layer3Cut, layerConstraint
     if layerConstraintEnable == "adjacent":
         layer0Cut,layer1Cut,layer2Cut,layer3Cut=adjLayerData (layer0Cut,layer1Cut,layer2Cut,layer3Cut)
         #think hard did I do it right? adjcuts?
-        for b in selectedBranches:
+        for b in branches:
+            if branch == 'boardsMatched' or branch == "runNumber" or branch == "fileNumber" or branch == "event": continue
             specialArr[b] = specialArr[b][(specialArr.layer ==0 & layer0Cut)|(specialArr.layer ==1  & layer1Cut)  | ( specialArr.layer == 2 & layer2Cut) | (specialArr.layer == 3 & layer3Cut)]
         return specialArr
     
-    for b in selectedBranches:
+    for b in branches:
+        if branch == 'boardsMatched' or branch == "runNumber" or branch == "fileNumber" or branch == "event": continue
         #ideally, layer0Cut should be = spcialArr.LayX == X(current layer0Cut if true for an event)
 
 
@@ -461,12 +402,14 @@ def EmptyListFilter(self,cutName=None):
 
 
 #tag muon event (sim only)
-def MuonEvent(self, cutName = None, CutonBars = True):
+def MuonEvent(self, cutName = None, CutonBars = True, branches):
 
     if CutonBars:
-        for branch in barbranches:
+        for branch in branches:
+            if branch == 'boardsMatched' or branch == "runNumber" or branch == "fileNumber" or branch == "event": continue
             self.events[branch] = self.events[branch][self.events.muonHit == 1]
 
+    #cut on events
     else:
         self.events = self.events[ak.any(selTBBigHitCutf.events.muonHit == 1, axis = 1)]
 
@@ -507,72 +450,131 @@ setattr(milliqanCuts,'LayerContraint',LayerContraint)
 
 
 
+if __name__ == "__main__":
+
+
+    #---------------------------------------condor job section(get the file that needs to be processed)---------------------------------
+    """
+    def getFile(processNum, fileList):
+
+        filelist = open(fileList)
+        files = json.load(filelist)['filelist']
+        filelist.close()
+
+        return files[processNum]
+
+    #run number, filelist
+    processNum = int(sys.argv[1])
+    fileList = sys.argv[2]
+
+
+    #get the filename to run over
+    filename = getFile(processNum, fileList)
+
+    if('.root' in filename and 'output' in filename):
+        numRun = filename.split('_')[1].split('.')[0].replace('Run', '')
+
+    #filelist =['/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhotonMuontag/output_1.root:t']
+    filelist =[f'{filename}:t']
+    """
+
+    #----------------------------------------------------------------------------------------------------------------------------------- OSU T3
+    #signle file test
+    #numRun = 1
+    #filelist =[f'/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhotonMuontag/output_{numRun}.root:t']
+
+
+    #------------------------------------------------------------------------------------------------
+    #path for the milliqan machine
+
+    #print("this is numRun" + str(sys.argv[1]) )
+
+
+    numRun = str(sys.argv[1])
+    filelist =[f'/home/czheng/SimCosmicFlatTree/withPhotonMuontag/output_{numRun}.root:t']
+    print(filelist)
+
+    outputPath = str(sys.argv[2]) # the path is used at the very end for the output txt file
+    print(outputPath)
+    #-----------------------------------OSU T3--------------------------------------------------------
+
+    #multiple file test(non recommend to use due to time consuming)
+    """
+    filelist = []
+
+    def appendRun(filelist):
+        directory = "/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhoton/"
+        for filename in os.listdir(directory):
+            if filename.startswith("output") and filename.endswith(".root"):
+                filelist.append(directory+filename+":t")
+
+
+    appendRun(filelist)
+    """
+    #branch for data analysis
+    branches = ["chan","runNumber","event","layer","nPE","type","row","muonHit"]
+
+    #test cut flow. Check if the mask can be made
+    #cutflow = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,mycuts.fourRowBigHits,mycuts.TBBigHit,mycuts.P_TBBigHit,mycuts.P_BBigHit]
 
 
 
-#pulse based plot
+    #"placeholder" is use in cutName argument. This argument is useless in some of the methods but to make the "getCut" work I need to use the  
+    fourRowBigHitsCut = mycuts.getCut(mycuts.fourRowBigHits, "fourRowBigHitsCut",cut=True)
+    TBBigHitCut = mycuts.getCut(mycuts.TBBigHit,"placeholder", cut = True)
+    P_TBBigHitCut= mycuts.getCut(mycuts.P_TBBigHit, "P_TBBigHitCut",cut = True)
+    P_BBigHitCut= mycuts.getCut(mycuts.P_BBigHit, "P_BBigHitCut",cut = True)
+    MuonCut = (mycuts.MuonEvent, "placeholder",CutonBars = True, branches=branches)
+
+    TBBigHitCutCount= mycuts.getCut(mycuts.countEvent, "placeholder" ,Countobject = "TBBigHit")
+    fourRowBigHitsCutCount= mycuts.getCut(mycuts.countEvent, "placeholder" ,Countobject = "fourRowBigHits")
+    P_TBBigHitCutCount= mycuts.getCut(mycuts.countEvent,"placeholder"  ,Countobject = "P_TBBigHit")
+    P_BBigHitCutCount= mycuts.getCut(mycuts.countEvent, "placeholder" ,Countobject = "P_BBigHit")
+    #NbarsHitsCount1= mycuts.getCut(mycuts.P_BBigHit, "NBarsHits",cut = None,hist = NBarsHitTag1)#FIXME: getCut can't take hist as argument. Maybe I should remove it
+    #cutflowSTD = [mycuts.MuonEvent,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,mycuts.NbarsHitsCount ,myplotter.dict['NBarsHitTag2']] #default analysis cutflow
 
 
 
-#event based plot
+    #Cut flow 1. This one is for testing the cut efficiency of different tags. TB big hits - > TB + panel big hits 
+    cutflow1 = [MuonCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,P_TBBigHitCut,P_TBBigHitCutCount]
+
+    #Cut flow 2. This one is for testing the cut efficiency of different tags. TB big hits - > 4 rows big hits
+    cutflow2 = [MuonCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,fourRowBigHitsCut,fourRowBigHitsCutCount]
+
+    #cut flow 3. This one is for testing the cut efficiency of different tags. B + panel big hits  - > TB + panel big hits 
+    cutflow3 = [MuonCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,P_BBigHitCut,P_BBigHitCutCount,TBBigHitCut,P_TBBigHitCut,P_TBBigHitCutCount]
+
+    cutflow = cutflow1
+
+    myschedule = milliQanScheduler(cutflow, mycuts,myplotter)
+
+    myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts)
+
+    
+
+    #--------------section for using to check cut efficiency-----------------------------
+
+    if outputPath == '':
+        myiterator.run()
+
+    #output result to txt file
+    else:
+        with open(f'{outputPath}/Run{numRun}CutFlow1.txt', 'w') as cfFile:
+            sys.stdout = cfFile  # Change the standard output to the file
+            myiterator.run() #output from counting function will be saved in the txt file above.
 
 
 
-
-
-#test cut flow. Check if the mask can be made
-#cutflow = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,mycuts.fourRowBigHits,mycuts.TBBigHit,mycuts.P_TBBigHit,mycuts.P_BBigHit]
-
-fourRowBigHitsCut = mycuts.getCut(mycuts.fourRowBigHits, "fourRowBigHitsCut",cut=True)
-TBBigHitCut = mycuts.getCut(mycuts.TBBigHit,"placeholder", cut = True)
-P_TBBigHitCut= mycuts.getCut(mycuts.P_TBBigHit, "P_TBBigHitCut",cut = True)
-P_BBigHitCut= mycuts.getCut(mycuts.P_BBigHit, "P_BBigHitCut",cut = True)
-
-TBBigHitCutCount= mycuts.getCut(mycuts.countEvent, "placeholder" ,Countobject = "TBBigHit")
-fourRowBigHitsCutCount= mycuts.getCut(mycuts.countEvent, "placeholder" ,Countobject = "fourRowBigHits")
-P_TBBigHitCutCount= mycuts.getCut(mycuts.countEvent,"placeholder"  ,Countobject = "P_TBBigHit")
-P_BBigHitCutCount= mycuts.getCut(mycuts.countEvent, "placeholder" ,Countobject = "P_BBigHit")
-#NbarsHitsCount1= mycuts.getCut(mycuts.P_BBigHit, "NBarsHits",cut = None,hist = NBarsHitTag1)#FIXME: getCut can't take hist as argument. Maybe I should remove it
-#cutflowSTD = [mycuts.MuonEvent,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,mycuts.NbarsHitsCount ,myplotter.dict['NBarsHitTag2']] #default analysis cutflow
+        # After the block, stdout will return to its default (usually the console)
+        # reset stdout to its original state
+        sys.stdout = sys.__stdout__
 
 
 
-#Cut flow 1. This one is for testing the cut efficiency of different tags. TB big hits - > TB + panel big hits 
-cutflow1 = [mycuts.MuonEvent,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,P_TBBigHitCut,P_TBBigHitCutCount]
+    #-------------------------------------output histograms and save in root file. Please comment it out if you dont need it------------------------------------------------
 
-#Cut flow 2. This one is for testing the cut efficiency of different tags. TB big hits - > 4 rows big hits
-cutflow2 = [mycuts.MuonEvent,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,fourRowBigHitsCut,fourRowBigHitsCutCount]
-
-#cut flow 3. This one is for testing the cut efficiency of different tags. B + panel big hits  - > TB + panel big hits 
-cutflow3 = [mycuts.MuonEvent,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,P_BBigHitCut,P_BBigHitCutCount,TBBigHitCut,P_TBBigHitCut,P_TBBigHitCutCount]
-
-cutflow = cutflow1
-
-myschedule = milliQanScheduler(cutflow, mycuts,myplotter)
-
-myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts)
-
-#myiterator.run() # comment this out when checking cut efficiency
-
-#--------------section for using to check cut efficiency-----------------------------
-
-print("before run")
-with open(f'{outputPath}/Run{numRun}CutFlow1.txt', 'w') as cfFile:
-    sys.stdout = cfFile  # Change the standard output to the file
-    myiterator.run() #output from counting function will be saved in the txt file above.
-
-
-
-# After the block, stdout will return to its default (usually the console)
-# reset stdout to its original state
-sys.stdout = sys.__stdout__
-
-
-
-#-------------------------------------------------------------------------------------
-
-"""
-#f_out = r.TFile(f"Run{numRun}TagV2_condorJob.root", "RECREATE")
-#f_out = r.TFile(f"Run{numRun}TagV2_testOnly.root", "RECREATE")
-#f_out.cd()
-"""
+    """
+    #f_out = r.TFile(f"Run{numRun}TagV2_condorJob.root", "RECREATE")
+    #f_out = r.TFile(f"Run{numRun}TagV2_testOnly.root", "RECREATE")
+    #f_out.cd()
+    """

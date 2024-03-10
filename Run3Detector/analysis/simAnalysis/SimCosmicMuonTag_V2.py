@@ -402,7 +402,7 @@ def EmptyListFilter(self,cutName=None):
 
 
 #tag muon event (sim only)
-def MuonEvent(self, cutName = None, CutonBars = True, branches):
+def MuonEvent(self, cutName = None, CutonBars = True, branches = None):
 
     if CutonBars:
         for branch in branches:

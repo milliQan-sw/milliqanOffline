@@ -46,17 +46,17 @@ class milliqanCuts():
     def pickupCut(self, cutName=None, cut=False, tight=False, branches=None):
         if cut and tight:
             for branch in branches:
-                self.events[branch] = self.events[branch][self.events.pickupFlag]
+                self.events[branch] = self.events[branch][~self.events.pickupFlag]
         elif cut and not tight:
             for branch in branches:
-                if branch == 'boardsMatched': continue
-                self.events[branch] = self.events[branch][self.events.pickupFlag]
+                if branch == 'boardsMatched' or branch == "runNumber" or branch == "fileNumber" or branch == "event": continue
+                self.events[branch] = self.events[branch][~self.events.pickupFlag]
 
     def boardsMatched(self, cutName=None, cut=False, branches=None):
         self.events['boardsMatched'], junk = ak.broadcast_arrays(self.events.boardsMatched, self.events.pickupFlag)
         if cut:
             for branch in branches:
-                if branch == 'boardsMatched': continue
+                if branch == 'boardsMatched' or branch == "runNumber" or branch == "fileNumber" or branch == "event": continue
                 self.events[branch] = self.events[branch][self.events.boardsMatched]
 
     #create mask for pulses in each layer

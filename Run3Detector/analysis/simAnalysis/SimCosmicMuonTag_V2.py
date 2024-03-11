@@ -524,7 +524,7 @@ if __name__ == "__main__":
     TBBigHitCut = mycuts.getCut(mycuts.TBBigHit,"placeholder", cut = True)
     P_TBBigHitCut= mycuts.getCut(mycuts.P_TBBigHit, "P_TBBigHitCut",cut = True)
     P_BBigHitCut= mycuts.getCut(mycuts.P_BBigHit, "P_BBigHitCut",cut = True)
-    MuonCut = (mycuts.MuonEvent, "placeholder",CutonBars = True, branches=branches)
+    MuonCut = mycuts.getCut(mycuts.MuonEvent, "placeholder", CutonBars =True, branches=branches) #FIXME:has bug
 
     TBBigHitCutCount= mycuts.getCut(mycuts.countEvent, "placeholder" ,Countobject = "TBBigHit")
     fourRowBigHitsCutCount= mycuts.getCut(mycuts.countEvent, "placeholder" ,Countobject = "fourRowBigHits")

@@ -109,13 +109,13 @@ if __name__ == "__main__":
     #myiterator.run() # comment this out when checking cut efficiency
 
     #--------------section for using to check cut efficiency-----------------------------
-
+    print(outputPath)
     if outputPath == '':
         myiterator.run()
 
     #output result to txt file
     else:
-        with open(f'{outputPath}/Run{numRun}CutFlow1.txt', 'w') as cfFile:
+        with open(f'{outputPath}/Run{numRun}_file{fileNum}CutFlow1.txt', 'w') as cfFile:
             sys.stdout = cfFile  # Change the standard output to the file
             myiterator.run() #output from counting function will be saved in the txt file above.
 

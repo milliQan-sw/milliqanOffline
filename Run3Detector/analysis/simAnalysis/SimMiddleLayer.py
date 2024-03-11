@@ -103,10 +103,10 @@ if __name__ == "__main__":
     h_nPEL3 = r.TH1F("h_nPEL3", "bar nPE distribution at layer 3", 10000, 0, 100000)
 
     #add root histogram to plotter
-    myplotter.addHistograms(h_height, 'h_nPEL0', 'lay0')
-    myplotter.addHistograms(h_height, 'h_nPEL1', 'lay1')
-    myplotter.addHistograms(h_height, 'h_nPEL2', 'lay2')
-    myplotter.addHistograms(h_height, 'h_nPEL3', 'lay3')
+    myplotter.addHistograms(h_nPEL0, 'h_nPEL0', 'lay0')
+    myplotter.addHistograms(h_nPEL1, 'h_nPEL1', 'lay1')
+    myplotter.addHistograms(h_nPEL2, 'h_nPEL2', 'lay2')
+    myplotter.addHistograms(h_nPEL3, 'h_nPEL3', 'lay3')
 
 
 

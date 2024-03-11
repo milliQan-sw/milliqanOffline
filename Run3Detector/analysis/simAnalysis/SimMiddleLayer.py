@@ -59,11 +59,10 @@ if __name__ == "__main__":
 
 
     numRun = str(sys.argv[1])
-    fileNum = str(sys.argv[2])
     filelist =[f'/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhotonMuontag/output_{numRun}.root:t']
     print(filelist)
 
-    outputPath = str(sys.argv[3]) # the path is used at the very end for the output txt file
+    outputPath = str(sys.argv[2]) # the path is used at the very end for the output txt file
     print(outputPath)
     #-----------------------------------OSU T3--------------------------------------------------------
     #FIXME: The offline file path need to be fixed
@@ -152,7 +151,7 @@ if __name__ == "__main__":
 
     #output result to txt file
     else:
-        with open(f'{outputPath}/Run{numRun}_file{fileNum}CutFlow1.txt', 'w') as cfFile:
+        with open(f'{outputPath}/Run{numRun}_fileCutFlow1.txt', 'w') as cfFile:
             sys.stdout = cfFile  # Change the standard output to the file
             myiterator.run() #output from counting function will be saved in the txt file above.
 

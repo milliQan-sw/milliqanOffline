@@ -12,13 +12,13 @@ collect the NPE distribution at layer 2 and 3 by remove non-muon hit bars vs wit
 
 from SimCosmicMuonTag_V2 import *
 
-  branches = ["chan","runNumber","event","layer","nPE","type","row","muonHit"]
-
 
 
 
 
 if __name__ == "__main__":
+
+    branches = ["chan","runNumber","event","layer","nPE","type","row","muonHit"]
 
     #FIXME: The offline file path need to be fixed
     """
@@ -60,7 +60,7 @@ if __name__ == "__main__":
 
     numRun = str(sys.argv[1])
     fileNum = str(sys.argv[2])
-    filelist =[f'/home/czheng/SimCosmicFlatTree/offlinefile/MilliQan_Run{numRun}.{fileNum}_v34.root:t']
+    filelist =[f'/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhotonMuontag/output_{numRun}.root:t']
     print(filelist)
 
     outputPath = str(sys.argv[3]) # the path is used at the very end for the output txt file
@@ -80,19 +80,41 @@ if __name__ == "__main__":
 
     appendRun(filelist)
     """
-    
+    #--------------------------------------plotting function --------------------------
+    def layerMask(self):
+        self.events["lay0"] = self.events.layer == 0 & self.events.type == 0
+        self.events["lay1"] = self.events.layer == 1 & self.events.type == 0
+        self.events["lay2"] = self.events.layer == 2 & self.events.type == 0
+        self.events["lay3"] = self.events.layer == 3 & self.events.type == 0
 
-    
+
+    setattr(milliqanCuts, 'layerMask', layerMask)
 
 
 
     #test cut flow. Check if the mask can be made
     #cutflow = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,mycuts.fourRowBigHits,mycuts.TBBigHit,mycuts.P_TBBigHit,mycuts.P_BBigHit]
 
-    fourRowBigHitsCut = mycuts.getCut(mycuts.fourRowBigHits, "fourRowBigHitsCut",cut=True)
+
+    #create root histogram 
+    h_nPEL0 = r.TH1F("h_nPEL0", "bar nPE distribution at layer 0", 10000, 0, 100000)
+    #create root histogram 
+    h_nPEL1 = r.TH1F("h_nPEL1", "bar nPE distribution at layer 1", 10000, 0, 100000)
+    h_nPEL2 = r.TH1F("h_nPEL2", "bar nPE distribution at layer 2", 10000, 0, 100000)
+    h_nPEL3 = r.TH1F("h_nPEL3", "bar nPE distribution at layer 3", 10000, 0, 100000)
+
+    #add root histogram to plotter
+    myplotter.addHistograms(h_height, 'h_nPEL0', 'lay0')
+    myplotter.addHistograms(h_height, 'h_nPEL1', 'lay1')
+    myplotter.addHistograms(h_height, 'h_nPEL2', 'lay2')
+    myplotter.addHistograms(h_height, 'h_nPEL3', 'lay3')
+
+
+
     TBBigHitCut = mycuts.getCut(mycuts.TBBigHit,"placeholder", cut = True)
     P_TBBigHitCut= mycuts.getCut(mycuts.P_TBBigHit, "P_TBBigHitCut",cut = True)
     P_BBigHitCut= mycuts.getCut(mycuts.P_BBigHit, "P_BBigHitCut",cut = True)
+    MuonCut = mycuts.getCut(mycuts.MuonEvent, "placeholder", CutonBars =True, branches=branches) 
 
     TBBigHitCutCount= mycuts.getCut(mycuts.countEvent, "placeholder" ,Countobject = "TBBigHit")
     fourRowBigHitsCutCount= mycuts.getCut(mycuts.countEvent, "placeholder" ,Countobject = "fourRowBigHits")
@@ -104,13 +126,16 @@ if __name__ == "__main__":
 
 
     #Cut flow 1. This one is for testing the cut efficiency of different tags. TB big hits - > TB + panel big hits 
-    cutflow1 = [,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount]
+    cutflow1 = [MuonCut,mycuts.EmptyListFilter,mycuts.layerMask,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,myplotter.dict['h_nPEL0'],myplotter.dict['h_nPEL1'],myplotter.dict['h_nPEL2'],myplotter.dict['h_nPEL3']]
 
     #Cut flow 2. This one is for testing the cut efficiency of different tags. TB big hits - > 4 rows big hits
-    cutflow2 = [,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount]
+    cutflow2 = [MuonCut,mycuts.EmptyListFilter,mycuts.layerMask,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,myplotter.dict['h_nPEL0'],myplotter.dict['h_nPEL1'],myplotter.dict['h_nPEL2'],myplotter.dict['h_nPEL3']]
 
     #cut flow 3. This one is for testing the cut efficiency of different tags. B + panel big hits  - > TB + panel big hits 
-    cutflow3 = [,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,P_BBigHitCut,P_BBigHitCutCount]
+    cutflow3 = [MuonCut,mycuts.EmptyListFilter,mycuts.layerMask,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,P_BBigHitCut,P_BBigHitCutCount,myplotter.dict['h_nPEL0'],myplotter.dict['h_nPEL1'],myplotter.dict['h_nPEL2'],myplotter.dict['h_nPEL3']]
+
+
+
 
     cutflow = cutflow1
 
@@ -138,8 +163,21 @@ if __name__ == "__main__":
         sys.stdout = sys.__stdout__
 
 
+    #-------------------------------------output file at milliqan machine--------------------
+    f_out = r.TFile(f"{outputPath}/Run{numRun}cosmicEventNPEdist.root", "RECREATE")
+    f_out.cd()
+    h_nPEL0.Write()
+    h_nPEL1.Write()
+    h_nPEL2.Write()
+    h_nPEL3.Write()
+    f_out.Close()
+
+
 
     #-------------------------------------output histograms and save in root file. Please comment it out if you dont need it------------------------------------------------
+
+    
+
 
     """
     #f_out = r.TFile(f"Run{numRun}TagV2_condorJob.root", "RECREATE")

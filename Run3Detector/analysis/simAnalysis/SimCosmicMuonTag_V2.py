@@ -544,7 +544,7 @@ if __name__ == "__main__":
     #cut flow 3. This one is for testing the cut efficiency of different tags. B + panel big hits  - > TB + panel big hits 
     cutflow3 = [MuonCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,P_BBigHitCut,P_BBigHitCutCount,TBBigHitCut,P_TBBigHitCut,P_TBBigHitCutCount]
 
-    cutflow = cutflow1
+    cutflow = cutflow2
 
     myschedule = milliQanScheduler(cutflow, mycuts,myplotter)
 
@@ -559,7 +559,7 @@ if __name__ == "__main__":
 
     #output result to txt file
     else:
-        with open(f'{outputPath}/Run{numRun}CutFlow1.txt', 'w') as cfFile:
+        with open(f'{outputPath}/Run{numRun}CutFlow2.txt', 'w') as cfFile:
             sys.stdout = cfFile  # Change the standard output to the file
             myiterator.run() #output from counting function will be saved in the txt file above.
 

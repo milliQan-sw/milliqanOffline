@@ -59,7 +59,7 @@ if __name__ == "__main__":
 
 
     numRun = str(sys.argv[1])
-    filelist =[f'/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhotonMuontag/output_{numRun}.root:t']
+    filelist =[f'/home/czheng/SimCosmicFlatTree/withPhotonMuontag/output_{numRun}.root:t']
     print(filelist)
 
     outputPath = str(sys.argv[2]) # the path is used at the very end for the output txt file

@@ -80,11 +80,14 @@ if __name__ == "__main__":
     appendRun(filelist)
     """
     #--------------------------------------plotting function --------------------------
+   
+    
     def layerMask(self):
-        self.events["lay0"] = self.events.layer == 0 & self.events.type == 0
-        self.events["lay1"] = self.events.layer == 1 & self.events.type == 0
-        self.events["lay2"] = self.events.layer == 2 & self.events.type == 0
-        self.events["lay3"] = self.events.layer == 3 & self.events.type == 0
+        
+        self.events["lay0"] = (self.events.layer == 0) & (self.events.type == 0)
+        self.events["lay1"] = (self.events.layer == 1) & (self.events.type == 0)
+        self.events["lay2"] = (self.events.layer == 2) & (self.events.type == 0)
+        self.events["lay3"] = (self.events.layer == 3) & (self.events.type == 0)
 
 
     setattr(milliqanCuts, 'layerMask', layerMask)

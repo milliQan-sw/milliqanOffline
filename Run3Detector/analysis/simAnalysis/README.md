@@ -25,6 +25,12 @@ offlineCheck1.py: check the result by applying the analysis to offline data
 
 SimMuon_tag.py: find the events that matches the cosmic muon characteristic and then send the eventID and file ID to muonTagPlot.py to create histograms.
 
+SimCosmicMuonTag_V3.py: this file is created based on SimCosmicMuonTag_V2.py. The reason for creating this file is complicated. So previously, I notice milliqan can't make a plot once I used the EmptylistFilter(). I talk to mike but he can't find any obvious issue in my script. One of the solution that he suggest is not to apply cut in EmptylistFilter() but just create the mask. see the sample file at https://github.com/milliQan-sw/milliqanOffline/commit/fdce0a1ecc9de527415523424b7d76af8bf64f28. 
+To make the SimCosmicMuonTag_V3.py work, I add two extra methods for bar and cosmic panel tagging which also check the "empty" mask. The latest result shows the the number of events that pass the cosmic event tag is zero and all of events are are non-empty (these are definitely wrong). 
+
+
+
+
 
 OLCosmicMuonTag_V2.py: offline analysis that uses the fuctions I defined in SimCosmicMuonTag_V2.py.  
 

@@ -594,7 +594,7 @@ if __name__ == "__main__":
     #cut flow 3. but the muon event cut are removed
     cutflow3B = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,P_BBigHitCut,P_BBigHitCutCount,TBBigHitCut,P_TBBigHitCut,P_TBBigHitCutCount]
 
-    cutflow = cutflow3A
+    cutflow = cutflow1
 
     myschedule = milliQanScheduler(cutflow, mycuts,myplotter)
 

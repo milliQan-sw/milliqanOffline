@@ -225,9 +225,10 @@ def NbarsHitsCount(self,cutName = "NBarsHits",cut = None, hist = None):
         bararr = ak.flatten(self.events[cutName],axis=None)
         hist.FillN(len(bararr), bararr, np.ones(len(bararr)))
 
-def NbarsHitsCountV2(self,arr, hist):
-    for b in barbraches:
-        arr[b] = arr[b][arr.type == 0]
+def NbarsHitsCountV2(self,arr, hist, branches = None):
+    for branch in branches:
+        if branch == 'boardsMatched' or branch == "runNumber" or branch == "fileNumber" or branch == "event": continue
+        arr[branch] = arr[branch][arr.type == 0]
 
     uniqueBarArr = ak.Array([np.unique(x) for x in arr.chan])
     uniqueBarArr = ak.drop_none[uniqueBarArr]
@@ -300,7 +301,7 @@ def fourRowBigHits(self,cutName = None, cut = None):
     if cut:
         self.events = self.events[self.events["fourRowBigHits"]]
 #top and bottom row have big hit
-def TBBigHit(self,cutName = None,cut = None, Hist1 = None):
+def TBBigHit(self,cutName = None,cut = None, Hist1 = None, branches = None):
     
     TBBigHit_lay0 =  (ak.any(self.events.l0R0==True, axis=1) & ak.any(self.events.l0R3==True, axis=1)) #data at layer 0 should be kept
     TBBigHit_lay1 =  (ak.any(self.events.l1R0==True, axis=1) & ak.any(self.events.l1R3==True, axis=1))
@@ -330,7 +331,7 @@ def TBBigHit(self,cutName = None,cut = None, Hist1 = None):
 
         #constraintArray is to save the data from the layer where pass the cosmic muon tag or the data from the ajacent array. Or you could use layerConstraintEnable = False which return the copy array without changing anything
         constraintArray=self.LayerContraint(TBBigHit_lay0,TBBigHit_lay1,TBBigHit_lay2,TBBigHit_lay3)
-        self.NbarsHitsCountV2(arr=constraintArray,hist=Hist1)
+        self.NbarsHitsCountV2(arr=constraintArray,hist=Hist1, branches=branches)
 
 
 #cosmic panel , top and bottom row have big hit.
@@ -556,14 +557,16 @@ if __name__ == "__main__":
 
     myplotter.addHistograms(CorrectTimeDtTag4, 'DT_CorrectTime', 'P_BBigHit')
     """
-    #it seems currently creating a combined mask can retrieve the data
+
+    """
+    #FIXME:it seems currently creating a combined mask can retrieve the data based on Mike's sample code, but they are not implemented yet
     mask0 = mycuts.getCut(mycuts.combineCuts, 'mask0', ['fourRowBigHits'])
     mask1 = mycuts.getCut(mycuts.combineCuts, 'mask1', ['TBBigHit'])
     mask2 = mycuts.getCut(mycuts.combineCuts, 'mask2', ['P_TBBigHit'])
     mask3 = mycuts.getCut(mycuts.combineCuts, 'mask3', ['P_BBigHit'])
-    
+    """
 
-    #-------------------------cutflows-----------------------------------------------------------
+    #-------------------------start of cut efficiency analysis cutflows-----------------------------------------------------------
 
     #Cut flow 1. This one is for testing the cut efficiency of different tags. TB big hits - > TB + panel big hits 
     cutflow1 = [MuonCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,P_TBBigHitCut,P_TBBigHitCutCount]
@@ -594,9 +597,22 @@ if __name__ == "__main__":
     #cut flow 3. but the muon event cut are removed
     cutflow3B = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,P_BBigHitCut,P_BBigHitCutCount,TBBigHitCut,P_TBBigHitCut,P_TBBigHitCutCount]
 
-    cutflow = cutflow1
 
-    myschedule = milliQanScheduler(cutflow, mycuts,myplotter)
+    #--------------------end of cut efficiency analysis cutflows----------------------
+    
+
+    #-------------------cut flows for study the NPE distribution and plotting---------
+    TBBigHitCutPlot = mycuts.getCut(mycuts.TBBigHit,"placeholder", cut = True,hist = NBarsHitTag1,branches= branches)
+    cutflow4 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCutPlot]
+
+
+
+    #-----------------------start of analysis---------------------------------------
+    #note cutflow 1-3 are checked
+    
+    cutflow = cutflow4 
+
+    myschedule = milliQanScheduler(cutflow, mycuts)
 
     myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts)
 

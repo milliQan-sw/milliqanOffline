@@ -149,12 +149,18 @@ def LayerContraint(self,layer0Cut,layer1Cut,layer2Cut,layer3Cut, layerConstraint
             specialArr[b] = specialArr[b][(specialArr.layer ==0 & layer0Cut)|(specialArr.layer ==1  & layer1Cut)  | ( specialArr.layer == 2 & layer2Cut) | (specialArr.layer == 3 & layer3Cut)]
         return specialArr
     
-    for b in branches:
+
+
+    print(branches) #debug
+    print("spcialArr debug")
+    print(ak.to_list(specialArr)) #debug    
+    for branch in branches:
+        print(branch) #debug
         if branch == 'boardsMatched' or branch == "runNumber" or branch == "fileNumber" or branch == "event": continue
         #ideally, layer0Cut should be = spcialArr.LayX == X(current layer0Cut if true for an event)
 
 
-        specialArr[b] = specialArr[b][(specialArr.layer ==0 & layer0Cut)|(specialArr.layer ==1  & layer1Cut)  | ( specialArr.layer == 2 & layer2Cut) | (specialArr.layer == 3 & layer3Cut)]
+        specialArr[branch] = specialArr[branch][(specialArr.layer ==0 & layer0Cut)|(specialArr.layer ==1  & layer1Cut)  | ( specialArr.layer == 2 & layer2Cut) | (specialArr.layer == 3 & layer3Cut)]
     
     return specialArr
 
@@ -226,14 +232,17 @@ def NbarsHitsCount(self,cutName = "NBarsHits",cut = None, hist = None):
         hist.FillN(len(bararr), bararr, np.ones(len(bararr)))
 
 def NbarsHitsCountV2(self,arr, hist, branches = None):
+    print(ak.to_list(arr)) #debug
+    print(f"branches in NbarsHitsCountV2 are {branches}")
     for branch in branches:
         if branch == 'boardsMatched' or branch == "runNumber" or branch == "fileNumber" or branch == "event": continue
-        arr[branch] = arr[branch][arr.type == 0]
+        arr[branch] = arr[branch][arr["type"] == 0]
 
     uniqueBarArr = ak.Array([np.unique(x) for x in arr.chan])
-    uniqueBarArr = ak.drop_none[uniqueBarArr]
-    uniqueBarArr = ak.flatten(uniqueBarArr,axis=None)
-    hist.FillN(len(uniqueBarArr), uniqueBarArr, np.ones(len(uniqueBarArr)))
+    NumberOfBarHits = ak.count(uniqueBarArr, axis = 1)
+    
+    for num in NumberOfBarHits:
+        hist.Fill(num)
 
 
 
@@ -271,7 +280,7 @@ def findCorrectTime(self,cutName = "DT_CorrectTime",cut = None):
 #----------------------------------cosmic muon tagging script-------------------------------------------
 
 
-def CosmuonTagIntialization(self, NPEcut = 0, offline = None):
+def CosmuonTagIntialization(self, NPEcut = 2500, offline = None):
     for R in range(4):
         for l in range(4):
             self.events[f"l{l}R{R}"] = (self.events.layer == l) & (self.events.row == R) & (self.events.barCut) & (self.events.nPE >= NPEcut)
@@ -314,7 +323,23 @@ def TBBigHit(self,cutName = None,cut = None, Hist1 = None, branches = None):
 
     print(f"before apply the cut. size of events:{len(self.events)}")
     print(f"before apply the cut:{len(self.events.layer)}")
-    if cut: self.events = self.events[self.events["TBBigHit"]]
+    if cut: 
+        
+        TBBigHit_lay0, junk=ak.broadcast_arrays(TBBigHit_lay0, self.events.layer)
+        TBBigHit_lay1, junk=ak.broadcast_arrays(TBBigHit_lay1, self.events.layer)
+        TBBigHit_lay2, junk=ak.broadcast_arrays(TBBigHit_lay2, self.events.layer)
+        TBBigHit_lay3, junk=ak.broadcast_arrays(TBBigHit_lay3, self.events.layer)
+        
+        TBBigHit_lay0 = TBBigHit_lay0[self.events["TBBigHit"]]
+        TBBigHit_lay1 = TBBigHit_lay1[self.events["TBBigHit"]]
+        TBBigHit_lay2 = TBBigHit_lay2[self.events["TBBigHit"]]
+        TBBigHit_lay3 = TBBigHit_lay3[self.events["TBBigHit"]]
+
+
+        self.events = self.events[self.events["TBBigHit"]]
+
+
+    print(f"event ID that pass TBBigHit cut {self.events['event'][self.events['TBBigHit']]}")
     print(f"after apply the cut. size of events:{len(self.events)}") #it stuck at 68 just like before using the cut. how come?
     print(f"after apply the cut:{len(self.events.layer)}") #change from 68 to 4. it seem the "if cut" has no effect on the event based data
     #plot section
@@ -323,17 +348,16 @@ def TBBigHit(self,cutName = None,cut = None, Hist1 = None, branches = None):
         #FIXME:this steps seems has bugs. It can't tell which data to keep. Intead it it keep all data as long as one of the layer get hit. 
         print(ak.to_list(self.events.layer))
         print(ak.to_list(TBBigHit_lay0))
-        TBBigHit_lay0, junk=ak.broadcast_arrays(TBBigHit_lay0, self.events.layer)
-        TBBigHit_lay1, junk=ak.broadcast_arrays(TBBigHit_lay1, self.events.layer)
-        TBBigHit_lay2, junk=ak.broadcast_arrays(TBBigHit_lay2, self.events.layer)
-        TBBigHit_lay3, junk=ak.broadcast_arrays(TBBigHit_lay3, self.events.layer)
+        #the broadcast result should all be true
+        #FIXME: the broad case should be done before apply the event based cut
+       
 
 
 
 
 
         #constraintArray is to save the data from the layer where pass the cosmic muon tag or the data from the ajacent array. Or you could use layerConstraintEnable = False which return the copy array without changing anything
-        constraintArray=self.LayerContraint(TBBigHit_lay0,TBBigHit_lay1,TBBigHit_lay2,TBBigHit_lay3)
+        constraintArray=self.LayerContraint(TBBigHit_lay0,TBBigHit_lay1,TBBigHit_lay2,TBBigHit_lay3,branches = branches)
         self.NbarsHitsCountV2(arr=constraintArray,hist=Hist1, branches=branches)
 
 
@@ -419,7 +443,7 @@ setattr(milliqanCuts, 'findCorrectTime',findCorrectTime)
 
 setattr(milliqanCuts,'LayerContraint',LayerContraint)
 
-
+setattr(milliqanCuts, 'NbarsHitsCountV2', NbarsHitsCountV2)
 
 
 if __name__ == "__main__":

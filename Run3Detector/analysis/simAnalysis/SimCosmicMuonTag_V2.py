@@ -153,13 +153,24 @@ def LayerContraint(self,layer0Cut,layer1Cut,layer2Cut,layer3Cut, layerConstraint
 
     print(branches) #debug
     print("spcialArr debug")
-    print(ak.to_list(specialArr)) #debug    
+    print(ak.to_list(specialArr)) #debug 
+    print("spcialArr layer debug")
+    print(ak.to_list(specialArr.layer))
+    print("specialArr type debug")
+    print(specialArr.layer)
+
+    print("layerCut debug")
+    print(layer3Cut)
+    print(layer2Cut)
+    print(layer1Cut)
+    print(layer0Cut)   
     for branch in branches:
         print(branch) #debug
         if branch == 'boardsMatched' or branch == "runNumber" or branch == "fileNumber" or branch == "event": continue
         #ideally, layer0Cut should be = spcialArr.LayX == X(current layer0Cut if true for an event)
-
-
+        print(specialArr["layer"] == 2) #FIXME: empty array wth?
+        #specialArr[branch] = specialArr[branch][ ( specialArr.layer == 2 & layer2Cut)]
+        #standard cut
         specialArr[branch] = specialArr[branch][(specialArr.layer ==0 & layer0Cut)|(specialArr.layer ==1  & layer1Cut)  | ( specialArr.layer == 2 & layer2Cut) | (specialArr.layer == 3 & layer3Cut)]
     
     return specialArr
@@ -344,6 +355,9 @@ def TBBigHit(self,cutName = None,cut = None, Hist1 = None, branches = None):
     print(f"after apply the cut:{len(self.events.layer)}") #change from 68 to 4. it seem the "if cut" has no effect on the event based data
     #plot section
     if Hist1:
+        if len(self.events) == 0: return #skip the empty event
+
+
         #convert the events based tag to pulse(bar based in sim) based
         #FIXME:this steps seems has bugs. It can't tell which data to keep. Intead it it keep all data as long as one of the layer get hit. 
         print(ak.to_list(self.events.layer))

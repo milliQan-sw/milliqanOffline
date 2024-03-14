@@ -32,11 +32,11 @@ class GAN():
         return model
 
     def generate_real_samples(self, isolated_waveforms, number_of_samples: int):
-        print("ISo:", isolated_waveforms)
         random_choices = np.random.randint(0, high=len(isolated_waveforms),
                                         size=number_of_samples)
         x_train = isolated_waveforms[random_choices]
-        x_train = x_train.reshape(number_of_samples, 100)
+        print(len(isolated_waveforms[0]))
+        x_train = x_train.reshape(number_of_samples, len(isolated_waveforms[0]))
         y = np.ones((number_of_samples, 1))
         return x_train, y
 
@@ -64,7 +64,7 @@ class GAN():
 
     def train(self, generator, discriminator,
               gan, latent_dim, input_data: Dict[str, npt.NDArray], n_epochs=10000,
-            n_batch=128, n_eval=2000):
+            n_batch=32, n_eval=2000):
 
         half_batch = int(n_batch/2)
         for i in range(n_epochs):

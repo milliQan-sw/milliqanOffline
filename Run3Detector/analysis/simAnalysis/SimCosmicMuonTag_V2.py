@@ -312,14 +312,17 @@ def TBBigHit(self,cutName = None,cut = None, Hist1 = None, branches = None):
 
     self.events["TBBigHit"] = (TBBigHit_lay0 | TBBigHit_lay1 | TBBigHit_lay2 | TBBigHit_lay3) 
 
-    
+    print(f"before apply the cut. size of events:{len(self.events)}")
+    print(f"before apply the cut:{len(self.events.layer)}")
     if cut: self.events = self.events[self.events["TBBigHit"]]
-
+    print(f"after apply the cut. size of events:{len(self.events)}") #it stuck at 68 just like before using the cut. how come?
+    print(f"after apply the cut:{len(self.events.layer)}") #change from 68 to 4. it seem the "if cut" has no effect on the event based data
     #plot section
     if Hist1:
         #convert the events based tag to pulse(bar based in sim) based
         #FIXME:this steps seems has bugs. It can't tell which data to keep. Intead it it keep all data as long as one of the layer get hit. 
-
+        print(ak.to_list(self.events.layer))
+        print(ak.to_list(TBBigHit_lay0))
         TBBigHit_lay0, junk=ak.broadcast_arrays(TBBigHit_lay0, self.events.layer)
         TBBigHit_lay1, junk=ak.broadcast_arrays(TBBigHit_lay1, self.events.layer)
         TBBigHit_lay2, junk=ak.broadcast_arrays(TBBigHit_lay2, self.events.layer)
@@ -483,7 +486,7 @@ if __name__ == "__main__":
     #---------------------------------------------------------------------------------------------
     #branch for data analysis
     branches = ["chan","runNumber","event","layer","nPE","type","row","muonHit"]
-
+    
     #test cut flow. Check if the mask can be made
     #cutflow = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,mycuts.fourRowBigHits,mycuts.TBBigHit,mycuts.P_TBBigHit,mycuts.P_BBigHit]
 
@@ -602,7 +605,7 @@ if __name__ == "__main__":
     
 
     #-------------------cut flows for study the NPE distribution and plotting---------
-    TBBigHitCutPlot = mycuts.getCut(mycuts.TBBigHit,"placeholder", cut = True,hist = NBarsHitTag1,branches= branches)
+    TBBigHitCutPlot = mycuts.getCut(mycuts.TBBigHit,"placeholder", cut = True,Hist1 = NBarsHitTag1,branches= branches)
     cutflow4 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCutPlot]
 
 

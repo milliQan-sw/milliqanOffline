@@ -163,15 +163,17 @@ def LayerContraint(self,layer0Cut,layer1Cut,layer2Cut,layer3Cut, layerConstraint
     print(layer3Cut)
     print(layer2Cut)
     print(layer1Cut)
-    print(layer0Cut)   
+    print(layer0Cut)
+    print("print(specialArr['layer'] == 2) outside of the for loop")
+    print(print(specialArr["layer"] == 2))  #looks fine at here 
+    specialArrCut = (specialArr.layer ==0 & layer0Cut)|(specialArr.layer ==1  & layer1Cut)  | ( specialArr.layer == 2 & layer2Cut) | (specialArr.layer == 3 & layer3Cut)
     for branch in branches:
         print(branch) #debug
-        if branch == 'boardsMatched' or branch == "runNumber" or branch == "fileNumber" or branch == "event": continue
+        if branch == 'boardsMatched' or branch == "runNumber" or branch == "fileNumber" or branch == "event" : continue
         #ideally, layer0Cut should be = spcialArr.LayX == X(current layer0Cut if true for an event)
-        print(specialArr["layer"] == 2) #FIXME: empty array wth?
         #specialArr[branch] = specialArr[branch][ ( specialArr.layer == 2 & layer2Cut)]
         #standard cut
-        specialArr[branch] = specialArr[branch][(specialArr.layer ==0 & layer0Cut)|(specialArr.layer ==1  & layer1Cut)  | ( specialArr.layer == 2 & layer2Cut) | (specialArr.layer == 3 & layer3Cut)]
+        specialArr[branch] = specialArr[branch][specialArrCut]
     
     return specialArr
 

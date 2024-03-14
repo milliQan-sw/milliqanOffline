@@ -2,6 +2,7 @@ from ROOT import TSpectrum, TFile, TString, TH1, TCanvas, TLine, kRed, TH1F, TF1
 import ROOT 
 from typing import Union, Callable
 from array import array
+import numpy as np
 
 
 def peak_finding ( input_file:TFile):
@@ -73,15 +74,16 @@ if __name__ == "__main__":
     no_led_waveform_dir = output_file.mkdir("no_led_waveforms")
     area_dir = output_file.mkdir("area")
     
-
     led_areas = []
     led_area_hist = TH1F("led_hist", "LED Area Histogram",
                             200, 0, 2000)
     led_waveform_dir.cd()
+    led_area = [] 
     for i, key in enumerate(led_file.GetListOfKeys()):
         hist = key.ReadObj()
         
         if isinstance(hist, TH1):
+            led_area.append(get_area(hist, 1200, 1600))
             led_area_hist.Fill(get_area(hist, 1200, 1600))
             canvas = TCanvas(f"canvas_{i}")
             hist.Draw()
@@ -97,6 +99,13 @@ if __name__ == "__main__":
 
             canvas.Write()
     led_area_hist.Scale(1/led_area_hist.Integral())
+
+    SPE_AREA = 480
+    SPE_TOLERANCE = 5.14921
+    area_array = np.array(led_area)
+    print(area_array[(area_array < SPE_AREA + SPE_TOLERANCE) &
+                     (area_array > SPE_AREA - SPE_TOLERANCE)])
+
     par = array( 'd', 9*[0.] )
     g1 = TF1("g1", "gaus", 0, 2000)
     g2 = TF1("g2", "gaus", 0, 2000)
@@ -129,6 +138,7 @@ if __name__ == "__main__":
     for i, key in enumerate(no_led_file.GetListOfKeys()):
         hist = key.ReadObj()
         if isinstance(hist, TH1):
+            
             no_led_area_hist.Fill(get_area(hist, no_led_peaks[i] - PEAK_WIDTH,
                                       no_led_peaks[i] + PEAK_WIDTH))
             canvas = TCanvas(f"canvas_{i}")
@@ -158,6 +168,6 @@ if __name__ == "__main__":
     area_dir.cd()
     area_canvas.Write()
     output_file.Close()
-    
+    print("Finished")
 
 

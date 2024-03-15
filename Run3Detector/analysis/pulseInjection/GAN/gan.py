@@ -1,14 +1,12 @@
 from typing import Dict
-
-from keras.models import Sequential
+from tensorflow.keras.models import Sequential
 import matplotlib.pyplot as plt
-from keras.layers import Dense
+from tensorflow.keras.layers import Dense
 import numpy as np
 import numpy.typing as npt
 
 
 class GAN():
-
     def define_discriminator(self, n_inputs=100, optimizer='adam'):
         model = Sequential()
         model.add(Dense(25, activation='relu', kernel_initializer='he_uniform', input_dim=n_inputs))
@@ -64,9 +62,10 @@ class GAN():
 
     def train(self, generator, discriminator,
               gan, latent_dim, input_data: Dict[str, npt.NDArray], n_epochs=10000,
-            n_batch=32, n_eval=2000):
+            n_batch=32, n_eval=2000) -> list[float]:
 
         half_batch = int(n_batch/2)
+        loss = []
         for i in range(n_epochs):
             x_real, y_real = self.generate_real_samples(input_data, half_batch)
             x_fake, y_fake = self.generate_fake_samples(generator, latent_dim, half_batch)
@@ -79,6 +78,7 @@ class GAN():
             # real data
 
             y_gan = np.ones((n_batch, 1)) 
-            gan.train_on_batch(x_gan, y_gan)
+            loss.append(gan.train_on_batch(x_gan, y_gan))
             if (i + 1) % n_eval == 0:
                 self.summarize_performance(i, generator, discriminator, latent_dim, input_data)
+        return loss

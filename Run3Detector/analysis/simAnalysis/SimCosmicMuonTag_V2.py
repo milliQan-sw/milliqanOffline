@@ -151,26 +151,26 @@ def LayerContraint(self,layer0Cut,layer1Cut,layer2Cut,layer3Cut, layerConstraint
     
 
     #debug for NPE array data missing
-    print("NPE arr before special cut")
+    #print("NPE arr before special cut")
     #print(ak.to_list(specialArr["nPE"]))
     #print(ak.to_list(layer0Cut))
     #print(ak.to_list(layer1Cut))
     #print(ak.to_list(layer2Cut))
-    print(f"ak.to_list(layer3Cut) {ak.to_list(layer3Cut)}") #FIXME: look at file 1 event 6329
+    #print(f"ak.to_list(layer3Cut) {ak.to_list(layer3Cut)}") #FIXME: look at file 1 event 6329
     
-    print(f"specialArr['layer'] == 3  {ak.to_list(specialArr['layer'] == 3)}") #FIXME: look at file 1 event 6329
-    print(f"(specialArr['layer'] == 3 & layer3Cut {ak.to_list((specialArr['layer'] == 3) & (layer3Cut))} ")
+    #print(f"specialArr['layer'] == 3  {ak.to_list(specialArr['layer'] == 3)}") #FIXME: look at file 1 event 6329
+    #print(f"(specialArr['layer'] == 3 & layer3Cut {ak.to_list((specialArr['layer'] == 3) & (layer3Cut))} ")
     specialArrCut = ((specialArr["layer"] ==0) & (layer0Cut)) | ((specialArr["layer"] ==1)  & (layer1Cut))  | ((specialArr["layer"] == 2) & (layer2Cut)) | ((specialArr["layer"] == 3) & (layer3Cut))
-    print(f"particl special cut debug {ak.to_list(specialArr['layer'] == 3 & layer3Cut)}") #returns [[True, True, True, True, True, True, True, True], [False, False, False, False, False, False, False, False, False]] but the last array should contain true
-    print(f"specialCut debug {ak.to_list(specialArrCut)}")
-    print(f"layer debug {ak.to_list(specialArr.layer)}")
+    #print(f"particl special cut debug {ak.to_list(specialArr['layer'] == 3 & layer3Cut)}") #returns [[True, True, True, True, True, True, True, True], [False, False, False, False, False, False, False, False, False]] but the last array should contain true
+    #print(f"specialCut debug {ak.to_list(specialArrCut)}")
+    #print(f"layer debug {ak.to_list(specialArr.layer)}")
     for branch in branches:
       
         if branch == 'boardsMatched' or branch == "runNumber" or branch == "fileNumber" or branch == "event" : continue
         
         specialArr[branch] = specialArr[branch][specialArrCut]
-    print("NPE arr after special cut")
-    print(specialArr["nPE"])
+    #print("NPE arr after special cut")
+    #print(specialArr["nPE"])
     return specialArr
 
     
@@ -689,12 +689,12 @@ if __name__ == "__main__":
 
 
 
-    #-------------------------------------output histograms and save in root file. Please comment it out if you dont need it------------------------------------------------
+        #-------------------------------------output histograms and save in root file. Please comment it out if you dont need it------------------------------------------------
 
-    #"""
+        #"""
 
-    f_out = r.TFile(f"{outputPath}/Run{numRun}CutFlow4.root", "RECREATE")
-    f_out.cd()
-    Hist1.Write
-    f_out.Close()
-    #"""
+        f_out = r.TFile(f"{outputPath}/Run{numRun}CutFlow4.root", "RECREATE")
+        f_out.cd()
+        NBarsHitTag1.Write
+        f_out.Close()
+        #"""

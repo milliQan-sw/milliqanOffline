@@ -295,9 +295,9 @@ def CosmuonTagIntialization(self, NPEcut = 2500, offline = None):
     
     if offline:
         #1320 is the average spe pulse area from bar channel. Since the calibration on panel is not being done, so NPE need to be recalculated from (pulse area / spe pulse area).
-        self.events["TopPanelHit"] = ak.any(self.events["row"]==4 & (self.events["area"]/(1320*12)) >= NPEcut ,axis =1)
+        self.events["TopPanelHit"] = ak.any((self.events["row"]==4) & ((self.events["area"]/(1320)) >= (NPEcut/12))  ,axis =1)
     else:
-        self.events["TopPanelHit"] = ak.any((self.events["row"]==4) & (self.events["nPE"]/12 >= NPEcut), axis = 1)
+        self.events["TopPanelHit"] = ak.any((self.events["row"]==4) & (self.events["nPE"]>= (NPEcut/12) ), axis = 1)
 
 def fourRowBigHits(self,cutName = None, cut = None):
     self.events["fourRowBigHits"] = (ak.any(self.events.l0R0==True, axis=1) & 

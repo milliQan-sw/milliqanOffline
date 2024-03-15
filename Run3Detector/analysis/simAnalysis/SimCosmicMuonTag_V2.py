@@ -216,6 +216,18 @@ def ChannelNPEDist(self,cutName = None, cut = None, hist=None):
     if (hist != None) & (len(nPEarray) == len(Chanarray)):
         hist.FillN(len(nPEarray), Chanarray, nPEarray, np.ones(len(nPEarray)))
 
+def ChannelNPEDistV2(self,arr, hist, branches = None):
+    npeList = ak.flatten(arr.nPE,axis=None)
+    chanList = ak.flatten(arr.chan,axis=None)
+    nPEarray = array('d', npeList)
+    Chanarray = array('d', chanList)
+
+    if len(nPEarray) == 0: return
+
+    if (hist != None) & (len(nPEarray) == len(Chanarray)):
+        hist.FillN(len(nPEarray), Chanarray, nPEarray, np.ones(len(nPEarray)))
+
+
 
 #bar trim should be used prior using this one
 #FIXME: remove the hist arguemtn if I can't make the histogram with milliqanCut
@@ -320,7 +332,7 @@ def fourRowBigHits(self,cutName = None, cut = None):
     if cut:
         self.events = self.events[self.events["fourRowBigHits"]]
 #top and bottom row have big hit
-def TBBigHit(self,cutName = None,cut = None, Hist1 = None, branches = None):
+def TBBigHit(self,cutName = None,cut = None, Hist1 = None, branches = None, Hist2 = None):
     
     TBBigHit_lay0 =  (ak.any(self.events.l0R0==True, axis=1) & ak.any(self.events.l0R3==True, axis=1)) #data at layer 0 should be kept
     TBBigHit_lay1 =  (ak.any(self.events.l1R0==True, axis=1) & ak.any(self.events.l1R3==True, axis=1))
@@ -372,7 +384,7 @@ def TBBigHit(self,cutName = None,cut = None, Hist1 = None, branches = None):
         #constraintArray is to save the data from the layer where pass the cosmic muon tag or the data from the ajacent array. Or you could use layerConstraintEnable = False which return the copy array without changing anything
         constraintArray=self.LayerContraint(TBBigHit_lay0,TBBigHit_lay1,TBBigHit_lay2,TBBigHit_lay3,branches = branches)
         self.NbarsHitsCountV2(arr=constraintArray,hist=Hist1, branches=branches)
-
+        #self.ChannelNPEDistV2(arr=constraintArray,hist=Hist2, branches=branches)
 
 #cosmic panel , top and bottom row have big hit.
 def P_TBBigHit(self,cutName = None,cut = None):
@@ -665,7 +677,7 @@ if __name__ == "__main__":
 
     #output result to txt file
     else:
-        with open(f'{outputPath}/Run{numRun}CutFlow3A.txt', 'w') as cfFile:
+        with open(f'{outputPath}/Run{numRun}CutFlow4.txt', 'w') as cfFile:
             sys.stdout = cfFile  # Change the standard output to the file
             myiterator.run() #output from counting function will be saved in the txt file above.
 
@@ -681,6 +693,6 @@ if __name__ == "__main__":
 
     """
     #f_out = r.TFile(f"Run{numRun}TagV2_condorJob.root", "RECREATE")
-    #f_out = r.TFile(f"Run{numRun}TagV2_testOnly.root", "RECREATE")
+    #f_out = r.TFile(f"{outputPath}/Run{numRun}CutFlow4.root", "RECREATE")
     #f_out.cd()
     """

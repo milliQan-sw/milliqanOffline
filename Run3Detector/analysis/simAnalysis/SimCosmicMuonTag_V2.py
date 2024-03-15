@@ -150,27 +150,14 @@ def LayerContraint(self,layer0Cut,layer1Cut,layer2Cut,layer3Cut, layerConstraint
         return specialArr
     
 
-    #debug for NPE array data missing
-    #print("NPE arr before special cut")
-    #print(ak.to_list(specialArr["nPE"]))
-    #print(ak.to_list(layer0Cut))
-    #print(ak.to_list(layer1Cut))
-    #print(ak.to_list(layer2Cut))
-    #print(f"ak.to_list(layer3Cut) {ak.to_list(layer3Cut)}") #FIXME: look at file 1 event 6329
-    
-    #print(f"specialArr['layer'] == 3  {ak.to_list(specialArr['layer'] == 3)}") #FIXME: look at file 1 event 6329
-    #print(f"(specialArr['layer'] == 3 & layer3Cut {ak.to_list((specialArr['layer'] == 3) & (layer3Cut))} ")
     specialArrCut = ((specialArr["layer"] ==0) & (layer0Cut)) | ((specialArr["layer"] ==1)  & (layer1Cut))  | ((specialArr["layer"] == 2) & (layer2Cut)) | ((specialArr["layer"] == 3) & (layer3Cut))
-    #print(f"particl special cut debug {ak.to_list(specialArr['layer'] == 3 & layer3Cut)}") #returns [[True, True, True, True, True, True, True, True], [False, False, False, False, False, False, False, False, False]] but the last array should contain true
-    #print(f"specialCut debug {ak.to_list(specialArrCut)}")
-    #print(f"layer debug {ak.to_list(specialArr.layer)}")
+
     for branch in branches:
       
         if branch == 'boardsMatched' or branch == "runNumber" or branch == "fileNumber" or branch == "event" : continue
         
         specialArr[branch] = specialArr[branch][specialArrCut]
-    #print("NPE arr after special cut")
-    #print(specialArr["nPE"])
+
     return specialArr
 
     
@@ -253,9 +240,7 @@ def NbarsHitsCount(self,cutName = "NBarsHits",cut = None, hist = None):
         hist.FillN(len(bararr), bararr, np.ones(len(bararr)))
 
 def NbarsHitsCountV2(self,arr, hist, branches = None):
-    print("here is the array from NbarsHitsCountV2")
-    print(ak.to_list(arr)) #FiXME: I notice some of the events doesn't have any data in NPE branch. does layer contarin has issue?
-    print(f"branches in NbarsHitsCountV2 are {branches}")
+
     for branch in branches:
         if branch == 'boardsMatched' or branch == "runNumber" or branch == "fileNumber" or branch == "event": continue
         arr[branch] = arr[branch][arr["type"] == 0]
@@ -343,8 +328,7 @@ def TBBigHit(self,cutName = None,cut = None, Hist1 = None, branches = None, Hist
 
     self.events["TBBigHit"] = (TBBigHit_lay0 | TBBigHit_lay1 | TBBigHit_lay2 | TBBigHit_lay3) 
 
-    print(f"before apply the cut. size of events:{len(self.events)}")
-    print(f"before apply the cut:{len(self.events.layer)}")
+
     if cut: 
         
         TBBigHit_lay0, junk=ak.broadcast_arrays(TBBigHit_lay0, self.events.layer)
@@ -361,30 +345,17 @@ def TBBigHit(self,cutName = None,cut = None, Hist1 = None, branches = None, Hist
         self.events = self.events[self.events["TBBigHit"]]
 
 
-    print(f"event ID that pass TBBigHit cut {self.events['event'][self.events['TBBigHit']]}")
-    print(f"after apply the cut. size of events:{len(self.events)}") #it stuck at 68 just like before using the cut. how come?
-    print(f"after apply the cut:{len(self.events.layer)}") #change from 68 to 4. it seem the "if cut" has no effect on the event based data
+
     #plot section
     if Hist1:
         if len(self.events) == 0: return #skip the empty event
 
 
         #convert the events based tag to pulse(bar based in sim) based
-        #FIXME:this steps seems has bugs. It can't tell which data to keep. Intead it it keep all data as long as one of the layer get hit. 
-        print(ak.to_list(self.events.layer))
-        print(ak.to_list(TBBigHit_lay0))
-        #the broadcast result should all be true
-        #FIXME: the broad case should be done before apply the event based cut
-       
-
-
-
-
-
         #constraintArray is to save the data from the layer where pass the cosmic muon tag or the data from the ajacent array. Or you could use layerConstraintEnable = False which return the copy array without changing anything
         constraintArray=self.LayerContraint(TBBigHit_lay0,TBBigHit_lay1,TBBigHit_lay2,TBBigHit_lay3,branches = branches)
         self.NbarsHitsCountV2(arr=constraintArray,hist=Hist1, branches=branches)
-        #self.ChannelNPEDistV2(arr=constraintArray,hist=Hist2, branches=branches)
+        #self.ChannelNPEDistV2(arr=constraintArray,hist=Hist2, branches=branches)  #temporary comment this one. I realize if I need to use milliqan cut to make the cut then I need 5 argument in each cutting method to save the histogram
 
 #cosmic panel , top and bottom row have big hit.
 def P_TBBigHit(self,cutName = None,cut = None):

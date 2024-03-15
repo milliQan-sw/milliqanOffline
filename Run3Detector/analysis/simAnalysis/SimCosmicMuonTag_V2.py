@@ -146,35 +146,31 @@ def LayerContraint(self,layer0Cut,layer1Cut,layer2Cut,layer3Cut, layerConstraint
         #think hard did I do it right? adjcuts?
         for b in branches:
             if branch == 'boardsMatched' or branch == "runNumber" or branch == "fileNumber" or branch == "event": continue
-            specialArr[b] = specialArr[b][(specialArr.layer ==0 & layer0Cut)|(specialArr.layer ==1  & layer1Cut)  | ( specialArr.layer == 2 & layer2Cut) | (specialArr.layer == 3 & layer3Cut)]
+            specialArr[b] = specialArr[b][((specialArr["layer"] ==0) & (layer0Cut)) | ((specialArr["layer"] ==1)  & (layer1Cut))  | ((specialArr["layer"] == 2) & (layer2Cut)) | ((specialArr["layer"] == 3) & (layer3Cut))]
         return specialArr
     
 
-
-    print(branches) #debug
-    print("spcialArr debug")
-    print(ak.to_list(specialArr)) #debug 
-    print("spcialArr layer debug")
-    print(ak.to_list(specialArr.layer))
-    print("specialArr type debug")
-    print(specialArr.layer)
-
-    print("layerCut debug")
-    print(layer3Cut)
-    print(layer2Cut)
-    print(layer1Cut)
-    print(layer0Cut)
-    print("print(specialArr['layer'] == 2) outside of the for loop")
-    print(print(specialArr["layer"] == 2))  #looks fine at here 
-    specialArrCut = (specialArr.layer ==0 & layer0Cut)|(specialArr.layer ==1  & layer1Cut)  | ( specialArr.layer == 2 & layer2Cut) | (specialArr.layer == 3 & layer3Cut)
-    for branch in branches:
-        print(branch) #debug
-        if branch == 'boardsMatched' or branch == "runNumber" or branch == "fileNumber" or branch == "event" : continue
-        #ideally, layer0Cut should be = spcialArr.LayX == X(current layer0Cut if true for an event)
-        #specialArr[branch] = specialArr[branch][ ( specialArr.layer == 2 & layer2Cut)]
-        #standard cut
-        specialArr[branch] = specialArr[branch][specialArrCut]
+    #debug for NPE array data missing
+    print("NPE arr before special cut")
+    #print(ak.to_list(specialArr["nPE"]))
+    #print(ak.to_list(layer0Cut))
+    #print(ak.to_list(layer1Cut))
+    #print(ak.to_list(layer2Cut))
+    print(f"ak.to_list(layer3Cut) {ak.to_list(layer3Cut)}") #FIXME: look at file 1 event 6329
     
+    print(f"specialArr['layer'] == 3  {ak.to_list(specialArr['layer'] == 3)}") #FIXME: look at file 1 event 6329
+    print(f"(specialArr['layer'] == 3 & layer3Cut {ak.to_list((specialArr['layer'] == 3) & (layer3Cut))} ")
+    specialArrCut = ((specialArr["layer"] ==0) & (layer0Cut)) | ((specialArr["layer"] ==1)  & (layer1Cut))  | ((specialArr["layer"] == 2) & (layer2Cut)) | ((specialArr["layer"] == 3) & (layer3Cut))
+    print(f"particl special cut debug {ak.to_list(specialArr['layer'] == 3 & layer3Cut)}") #returns [[True, True, True, True, True, True, True, True], [False, False, False, False, False, False, False, False, False]] but the last array should contain true
+    print(f"specialCut debug {ak.to_list(specialArrCut)}")
+    print(f"layer debug {ak.to_list(specialArr.layer)}")
+    for branch in branches:
+      
+        if branch == 'boardsMatched' or branch == "runNumber" or branch == "fileNumber" or branch == "event" : continue
+        
+        specialArr[branch] = specialArr[branch][specialArrCut]
+    print("NPE arr after special cut")
+    print(specialArr["nPE"])
     return specialArr
 
     
@@ -245,7 +241,8 @@ def NbarsHitsCount(self,cutName = "NBarsHits",cut = None, hist = None):
         hist.FillN(len(bararr), bararr, np.ones(len(bararr)))
 
 def NbarsHitsCountV2(self,arr, hist, branches = None):
-    print(ak.to_list(arr)) #debug
+    print("here is the array from NbarsHitsCountV2")
+    print(ak.to_list(arr)) #FiXME: I notice some of the events doesn't have any data in NPE branch. does layer contarin has issue?
     print(f"branches in NbarsHitsCountV2 are {branches}")
     for branch in branches:
         if branch == 'boardsMatched' or branch == "runNumber" or branch == "fileNumber" or branch == "event": continue

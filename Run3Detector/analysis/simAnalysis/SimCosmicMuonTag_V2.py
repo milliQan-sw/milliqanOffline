@@ -666,6 +666,6 @@ if __name__ == "__main__":
 
         f_out = r.TFile(f"{outputPath}/Run{numRun}CutFlow4.root", "RECREATE")
         f_out.cd()
-        NBarsHitTag1.Write
+        NBarsHitTag1.Write()
         f_out.Close()
         #"""

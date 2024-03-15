@@ -628,12 +628,12 @@ if __name__ == "__main__":
     TBBigHitCutPlot = mycuts.getCut(mycuts.TBBigHit,"placeholder", cut = True,Hist1 = NBarsHitTag1,branches= branches)
     cutflow4 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCutPlot]
 
-
+    cutflow5 = [MuonCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCutPlot]
 
     #-----------------------start of analysis---------------------------------------
     #note cutflow 1-3 are checked
     
-    cutflow = cutflow4 
+    cutflow = cutflow5
 
     myschedule = milliQanScheduler(cutflow, mycuts)
 
@@ -648,7 +648,7 @@ if __name__ == "__main__":
 
     #output result to txt file
     else:
-        with open(f'{outputPath}/Run{numRun}CutFlow4.txt', 'w') as cfFile:
+        with open(f'{outputPath}/Run{numRun}CutFlow5.txt', 'w') as cfFile:
             sys.stdout = cfFile  # Change the standard output to the file
             myiterator.run() #output from counting function will be saved in the txt file above.
 
@@ -664,7 +664,7 @@ if __name__ == "__main__":
 
         #"""
 
-        f_out = r.TFile(f"{outputPath}/Run{numRun}CutFlow4.root", "RECREATE")
+        f_out = r.TFile(f"{outputPath}/Run{numRun}CutFlow5.root", "RECREATE")
         f_out.cd()
         NBarsHitTag1.Write()
         f_out.Close()

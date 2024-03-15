@@ -633,7 +633,7 @@ if __name__ == "__main__":
     #-----------------------start of analysis---------------------------------------
     #note cutflow 1-3 are checked
     
-    cutflow = cutflow4 
+    cutflow = cutflow1 
 
     myschedule = milliQanScheduler(cutflow, mycuts)
 
@@ -648,7 +648,7 @@ if __name__ == "__main__":
 
     #output result to txt file
     else:
-        with open(f'{outputPath}/Run{numRun}CutFlow4.txt', 'w') as cfFile:
+        with open(f'{outputPath}/Run{numRun}CutFlow1.txt', 'w') as cfFile:
             sys.stdout = cfFile  # Change the standard output to the file
             myiterator.run() #output from counting function will be saved in the txt file above.
 
@@ -662,10 +662,10 @@ if __name__ == "__main__":
 
         #-------------------------------------output histograms and save in root file. Please comment it out if you dont need it------------------------------------------------
 
-        #"""
+        """
 
         f_out = r.TFile(f"{outputPath}/Run{numRun}CutFlow4.root", "RECREATE")
         f_out.cd()
         NBarsHitTag1.Write()
         f_out.Close()
-        #"""
+        """

@@ -691,8 +691,10 @@ if __name__ == "__main__":
 
     #-------------------------------------output histograms and save in root file. Please comment it out if you dont need it------------------------------------------------
 
-    """
-    #f_out = r.TFile(f"Run{numRun}TagV2_condorJob.root", "RECREATE")
-    #f_out = r.TFile(f"{outputPath}/Run{numRun}CutFlow4.root", "RECREATE")
-    #f_out.cd()
-    """
+    #"""
+
+    f_out = r.TFile(f"{outputPath}/Run{numRun}CutFlow4.root", "RECREATE")
+    f_out.cd()
+    Hist1.Write
+    f_out.Close()
+    #"""

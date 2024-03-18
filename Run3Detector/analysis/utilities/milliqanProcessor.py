@@ -1,22 +1,68 @@
 #!/usr/bin/python3
 
+import os
 import ROOT as r
 import uproot
 import matplotlib.pyplot as plt
 import awkward as ak
+import pathlib
 import numpy as np
 import array as arr
 from milliqanPlotter import *
 
 class milliqanProcessor():
 
-    def __init__(self, filelist, branches, schedule=None, cuts=None, plotter=None, max_events=None):
+    def __init__(self, filelist, branches, schedule=None, cuts=None, plotter=None, max_events=None, runQualityOverride=False, qualityLevel="loose"):
         self.filelist = filelist
         self.branches = branches
         self.mqSchedule = schedule
         #self.mqCuts = cuts
         #self.plotter = plotter
         self.max_events = max_events
+        self.runQualityOverride = runQualityOverride
+        self.qualityLevel = qualityLevel
+
+    def fileChecker(self):
+        goodJson_array = ak.from_json(pathlib.Path("goodRuns.json"))
+        columns = ak.Array(goodJson_array['columns'])
+        data = ak.Array(goodJson_array['data'])
+        goodJson = ak.zip({
+            'run': data[:, 0],
+            'file': data[:, 1],
+            'loose': data[:, 2],
+            'medium': data[:, 3],
+            'tight': data[:, 4]
+        }, depth_limit=1)
+        
+        print(goodJson)
+        
+        for filepath in self.filelist:
+            filename = os.path.basename(filepath)
+            parts = filename.split('_')
+            run_number, file_number = parts[1].replace("Run","").split('.')
+            print(run_number, file_number)
+            matching_goodJson = goodJson[(goodJson['run'] == int(run_number)) & (goodJson['file'] == int(file_number))]
+            print(matching_goodJson)
+
+            if len(matching_goodJson) == 0:
+                #print("File {0} is not in goodRuns.json. Please consult goodRuns.json :)".format(filename))
+                if self.runQualityOverride:
+                    print("File {0} is not in goodRuns.json, but we are overriding the quality check".format(filename))
+                else:
+                    raise Exception("File {0} is not in goodRuns.json. Please consult goodRuns.json :)".format(filename))
+
+            if len(matching_goodJson) == 1:
+                if matching_goodJson['tight'] & ((self.qualityLevel == "tight") | (self.qualityLevel == "medium") | (self.qualityLevel == "loose")):
+                    print("File {0} is good run (tight)".format(filename))
+                elif matching_goodJson['medium'] & ((self.qualityLevel == "medium") | (self.qualityLevel == "loose")):
+                    print("File {0} is good run (medium)".format(filename))
+                elif matching_goodJson['loose'] & (self.qualityLevel == "loose"):
+                    print("File {0} is good run (loose)".format(filename))
+                elif self.runQualityOverride:
+                    print("File {0} is not in goodRuns.json, but we are overriding the quality check".format(filename))
+                else:
+                    #print("File {0} is not a good run. Please consult goodRuns.json :)".format(filename))
+                    raise Exception("File {0} is not a good run. Please consult goodRuns.json :)".format(filename))
 
     def setBranches(self, branches):
         self.schedule = branches

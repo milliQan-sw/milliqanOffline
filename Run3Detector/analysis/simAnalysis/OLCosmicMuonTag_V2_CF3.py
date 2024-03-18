@@ -116,7 +116,7 @@ if __name__ == "__main__":
 
     #output result to txt file
     else:
-        with open(f'{outputPath}/Run{numRun}_file{fileNum}CutFlow1.txt', 'w') as cfFile:
+        with open(f'{outputPath}/Run{numRun}_file{fileNum}CutFlow3.txt', 'w') as cfFile:
             sys.stdout = cfFile  # Change the standard output to the file
             myiterator.run() #output from counting function will be saved in the txt file above.
 

@@ -195,9 +195,14 @@ h_heights = r.TH1F("h_heights", "Heights [mV]", 140, 0, 1400)
 h_heights.GetXaxis().SetTitle("Height [mV]")
 
 #EventCut timeWalk plot (All channels)
-h_timeWalk = r.TH2F("h_timeWalk", "Areas [mV] vs Time Difference from Max-in-Layer [ns]", 140, 0, 500000, 100, -100, 100)
+h_timeWalk = r.TH2F("h_timeWalk", "Areas [pVs] vs Time Difference from Max-in-Layer [ns]", 140, 0, 500000, 100, -100, 100)
 h_timeWalk.GetXaxis().SetTitle("Area [pVs]")
 h_timeWalk.GetYaxis().SetTitle("timeDiff [ns]")
+
+#EventCut timeWalk plot in HEIGHT (All channels)
+h_timeWalkHeight = r.TH2F("h_timeWalkHeight", "Height [mV] vs Time Difference from Max-in-Layer [ns]", 140, 0, 1400, 100, -100, 100)
+h_timeWalkHeight.GetXaxis().SetTitle("Height [mV]")
+h_timeWalkHeight.GetYaxis().SetTitle("timeDiff [ns]")
 
 #For looking at the slab cut verification
 h_slabCutVerify = r.TH1F("h_slabCutVerify", "Slab Cut Verification", 100, 0, 1500)
@@ -225,6 +230,11 @@ h_timeWalkSingleChannel = r.TH2F("h_timeWalkSingleChannel", "Areas [mV] vs Time 
 h_timeWalkSingleChannel.GetXaxis().SetTitle("Area [pVs]")
 h_timeWalkSingleChannel.GetYaxis().SetTitle("timeDiff [ns]")
 
+#For looking at timeWalk pulses that deviate from our expected shapes
+h_heightArea = r.TH2D("h_heightArea", "Height vs Area for timeWalk Pulses",140,0,1400,140,0,500000)
+h_heightArea.GetXaxis().SetTitle("Height [mV]")
+h_heightArea.GetYaxis().SetTitle("Area [pVs]")
+
 #add root histogram to plotter
 myplotter.addHistograms(h_heights, 'height', 'eventCuts')
 myplotter.addHistograms(h_timeWalk, ['area', 'timeDiffMaxPulse'], 'eventCuts')
@@ -234,9 +244,11 @@ myplotter.addHistograms(h_timeDiffMaxPulse, 'timeDiffMaxPulse', 'eventCuts')
 myplotter.addHistograms(h_posn, ['column', 'row'], 'eventCuts')
 myplotter.addHistograms(h_panelArea, 'area', 'panelVerifyCut')
 myplotter.addHistograms(h_timeWalkSingleChannel, ['area', 'timeDiffMaxPulse'], 'eventCutsSingleChannel')
+myplotter.addHistograms(h_heightArea, ['height', 'area'], 'eventCuts')
+myplotter.addHistograms(h_timeWalkHeight, ['height', 'timeDiffMaxPulse'], 'eventCuts')
 
 #defining the cutflow
-cutflow = [mycuts.singleChannelOnly, mycuts.fourLayerCut, mycuts.slabIncludedCut, mycuts.maxPulsePerLayer, mycuts.notMaxPulseBool, mycuts.timeDiffMaxPulse, mycuts.timeDiffMaxPulseCut, eventCuts, eventCutsSingleChannel, mycuts.slabsOnly, slabVerifyCut, panelVerifyCut, myplotter.dict['h_heights'], myplotter.dict['h_timeWalk'], myplotter.dict['h_posn'], myplotter.dict['h_layers'], myplotter.dict['h_slabCutVerify'], myplotter.dict['h_timeDiffMaxPulse'], myplotter.dict['h_panelArea'], myplotter.dict['h_timeWalkSingleChannel']]
+cutflow = [mycuts.singleChannelOnly, mycuts.fourLayerCut, mycuts.slabIncludedCut, mycuts.maxPulsePerLayer, mycuts.notMaxPulseBool, mycuts.timeDiffMaxPulse, mycuts.timeDiffMaxPulseCut, eventCuts, eventCutsSingleChannel, mycuts.slabsOnly, slabVerifyCut, panelVerifyCut, myplotter.dict['h_heights'], myplotter.dict['h_timeWalk'], myplotter.dict['h_posn'], myplotter.dict['h_layers'], myplotter.dict['h_slabCutVerify'], myplotter.dict['h_timeDiffMaxPulse'], myplotter.dict['h_panelArea'], myplotter.dict['h_timeWalkSingleChannel'], myplotter.dict['h_heightArea'], myplotter.dict['h_timeWalkHeight']]
 
 #create a schedule of the cuts
 myschedule = milliQanScheduler(cutflow, mycuts, myplotter)
@@ -262,6 +274,8 @@ h_slabCutVerify.Write()
 h_timeDiffMaxPulse.Write()
 h_panelArea.Write()
 h_timeWalkSingleChannel.Write()
+h_heightArea.Write()
+h_timeWalkHeight.Write()
 
 # Close the file
 f.Close()

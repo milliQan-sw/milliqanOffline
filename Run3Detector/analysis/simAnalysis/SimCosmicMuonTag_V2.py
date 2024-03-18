@@ -287,7 +287,7 @@ def findCorrectTime(self,cutName = "DT_CorrectTime",cut = None):
 #----------------------------------cosmic muon tagging script-------------------------------------------
 
 
-def CosmuonTagIntialization(self, cutName = None, cut = None, NPEcut = 2500, offline = None):
+def CosmuonTagIntialization(self, cutName = None, cut = None, NPEcut = 20, offline = None):
     for R in range(4):
         for l in range(4):
             self.events[f"l{l}R{R}"] = (self.events.layer == l) & (self.events.row == R) & (self.events.barCut) & (self.events.nPE >= NPEcut)

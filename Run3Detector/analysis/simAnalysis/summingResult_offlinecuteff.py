@@ -6,12 +6,12 @@ event_sums = {}
 
 input_files = []
 
-directory= "/home/czheng/SimCosmicFlatTree/cutEffcheckOffline/"
+directory= "/home/czheng/SimCosmicFlatTree/cutEffCheckResult_OffL_20NPEcut/"
 
-base_name = "Run1163"
+base_name = "Run1190"
 
 for filename in os.listdir(directory):
-    if filename.startswith(base_name) and filename.endswith("Flow3.txt"):
+    if filename.startswith(base_name) and filename.endswith("Flow1.txt"):
         input_files.append(directory+filename)
 
 interestFile = list()

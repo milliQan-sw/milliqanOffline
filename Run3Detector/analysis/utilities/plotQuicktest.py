@@ -38,13 +38,13 @@ def EmptyListFilter(self,cutName=None):
 def layerMask(self):
         
     #self.events["lay0"] = (self.events.layer == 0) & (self.events.type == 0) #FIXME:TypeError: __eq__(): incompatible function arguments. The following argument types are supported:(self: awkward._ext.Type, arg0: awkward._ext.Type) -> bool
-    self.events["lay0"] = (self.events.layer == 0)
+    self.events["lay0"] = (self.events["layer"] == 0)
     #self.events["lay1"] = (self.events.layer == 1) & (self.events.type == 0)
-    self.events["lay1"] = (self.events.layer == 1)
+    self.events["lay1"] = (self.events["layer"] == 1)
     #self.events["lay2"] = (self.events.layer == 2) & (self.events.type == 0)
-    self.events["lay2"] = (self.events.layer == 2)
+    self.events["lay2"] = (self.events["layer"] == 2)
     #self.events["lay3"] = (self.events.layer == 3) & (self.events.type == 0)
-    self.events["lay3"] = (self.events.layer == 3)
+    self.events["lay3"] = (self.events["layer"] == 3)
 
 
 #create root histogram 

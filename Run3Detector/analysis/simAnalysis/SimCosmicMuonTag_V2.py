@@ -56,7 +56,7 @@ def adjLayerData(self,layer0Cut,layer1Cut,layer2Cut,layer3Cut):
     adjLayArrL3= []
     for L0, L1, L2, L3 in zip(layer0Cut,layer1Cut,layer2Cut,layer3Cut):
         innerArr = []
-        adjlay = []
+        adjLay = []
         if L0:
             innerArr.append(0)
         if L1:

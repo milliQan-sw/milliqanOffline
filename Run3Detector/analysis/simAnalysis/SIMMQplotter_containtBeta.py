@@ -334,6 +334,7 @@ def TBBigHit(self,cutName = None,cut = None, LayerContraint = False, adjLayer = 
     self.events["TBBigHit"] = (TBBigHit_lay0 | TBBigHit_lay1 | TBBigHit_lay2 | TBBigHit_lay3) 
 
     #apply the cut and pick out which layer should be kept when using layer contraint
+    # if the event cut is applied then milliqan plotter unable to work properly.
     if cut: 
         
         TBBigHit_lay0, junk=ak.broadcast_arrays(TBBigHit_lay0, self.events.layer)
@@ -380,13 +381,13 @@ def P_BBigHit(self, cutName = None,cut = None):
     
     if cut:
         self.events=self.events[self.events["P_BBigHit"]]
-
+"""
 #remove the empty events
 def EmptyListFilter(self,cutName=None):
 
     self.events['None_empty_event'] = ak.num(self.events['layer']) > 0 #create a event-based mask that check if the event is empty
     self.events=self.events[self.events.None_empty_event]#this one can cause milliqanplotter unable to work. I haven't figure out the cuase yet.
-
+"""
 
 #tag muon event (sim only)
 def MuonEvent(self, cutName = None, CutonBars = True, branches = None):
@@ -420,6 +421,19 @@ def SimBarCut(self):
     barCutdefault=self.events['type'] == 0
     self.events['barCut'] = barCutdefault & self.events["None_empty_event"]
 
+
+def CheckFieldName(self):
+    print(self.events.fields)
+
+
+
+def EmptyListFilter(self,cutName=None):
+    self.events['None_empty_event'] = ak.num(self.events['layer']) > 0
+    
+
+
+
+setattr(milliqanCuts, 'CheckFieldName' , CheckFieldName)
 
 setattr(milliqanCuts, 'SimPanelCut', SimPanelCut)
 
@@ -524,21 +538,33 @@ if __name__ == "__main__":
 
     #"placeholder" is use in cutName argument. This argument is useless in some of the methods but to make the "getCut" work I need to use the  
 
-    TBBigHitCut = mycuts.getCut(mycuts.TBBigHit,"placeholder", cut = True)
+    #TBBigHitCut = mycuts.getCut(mycuts.TBBigHit,"placeholder", cut = True , LayerContraint = True)
+ 
+    #if I turn off the cut for the TBBig, does the bug still exist?YES
+    TBBigHitCut = mycuts.getCut(mycuts.TBBigHit,"placeholder", cut = False , LayerContraint = True)
+
+
 
     TBBigHitCutCount= mycuts.getCut(mycuts.countEvent, "placeholder" ,Countobject = "TBBigHit")
 
     #NbarsHitsCount1= mycuts.getCut(mycuts.P_BBigHit, "NBarsHits",cut = None,hist = NBarsHitTag1)#FIXME: getCut can't take hist as argument. Maybe I should remove it
     #cutflowSTD = [mycuts.MuonEvent,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,mycuts.NbarsHitsCount ,myplotter.dict['NBarsHitTag2']] #default analysis cutflow
+    
 
 
 
+    nPEPlot = r.TH1F("nPEPlot", "nPE", 4000, 0, 40000)
+    
+    eventCuts = mycuts.getCut(mycuts.combineCuts, 'eventCuts', ["layerContraint","None_empty_event"])
+    myplotter.addHistograms(nPEPlot, 'nPE', 'eventCuts')
 
 
     #-------------------------start of cut efficiency analysis cutflows-----------------------------------------------------------
 
     #Cut flow 1. This one is for testing the cut efficiency of different tags. TB big hits - > TB + panel big hits 
-    cutflow1 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount]
+    cutflow1 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,eventCuts,mycuts.CheckFieldName,myplotter.dict['nPEPlot']] 
+
+    #cutflow1 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,eventCuts,mycuts.CheckFieldName,myplotter.dict['nPEPlot']]
     
 
     #-----------------------start of analysis---------------------------------------
@@ -573,10 +599,10 @@ if __name__ == "__main__":
 
         #-------------------------------------output histograms and save in root file. Please comment it out if you dont need it------------------------------------------------
 
-        """
+        #"""
 
         f_out = r.TFile(f"{outputPath}/Run{numRun}CutFlow4.root", "RECREATE")
         f_out.cd()
-        NBarsHitTag1.Write()
+        nPEPlot.Write()
         f_out.Close()
-        """
+        #"""

@@ -72,6 +72,17 @@ python3
 
 
 
+----------------------------3-18 new files update-------------------
+
+simCosmicMuonTag_*.py : the "*" is for cutflow I defined in the  simCosmicMuonTag_V2.py
+I create multiple files of this kind so I can process multiple cutflow at the same time.
+
+I also craete multiple OLCosmicMuonTag_V2_*.py for same reason.
+
+
+
+
+
 
 
 

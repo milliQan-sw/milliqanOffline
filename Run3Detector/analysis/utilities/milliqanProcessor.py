@@ -14,6 +14,8 @@ class milliqanProcessor():
 
     def __init__(self, filelist, branches, schedule=None, cuts=None, plotter=None, max_events=None, runQualityOverride=False, qualityLevel="loose"):
         self.filelist = filelist
+        self.fileChecker() #Checks the filelist against goodRuns.json
+        
         self.branches = branches
         self.mqSchedule = schedule
         #self.mqCuts = cuts
@@ -34,15 +36,11 @@ class milliqanProcessor():
             'tight': data[:, 4]
         }, depth_limit=1)
         
-        print(goodJson)
-        
         for filepath in self.filelist:
             filename = os.path.basename(filepath)
             parts = filename.split('_')
             run_number, file_number = parts[1].replace("Run","").split('.')
-            print(run_number, file_number)
             matching_goodJson = goodJson[(goodJson['run'] == int(run_number)) & (goodJson['file'] == int(file_number))]
-            print(matching_goodJson)
 
             if len(matching_goodJson) == 0:
                 #print("File {0} is not in goodRuns.json. Please consult goodRuns.json :)".format(filename))

@@ -330,7 +330,7 @@ def TBBigHit(self,cutName = None,cut = None, LayerContraint = False, adjLayer = 
     TBBigHit_lay3 =  (ak.any(self.events.l3R0==True, axis=1) & ak.any(self.events.l3R3==True, axis=1))
     
 
-
+    #this mask is only useful when doing the counting
     self.events["TBBigHit"] = (TBBigHit_lay0 | TBBigHit_lay1 | TBBigHit_lay2 | TBBigHit_lay3) 
 
     #apply the cut and pick out which layer should be kept when using layer contraint
@@ -365,7 +365,7 @@ def TBBigHit(self,cutName = None,cut = None, LayerContraint = False, adjLayer = 
 
     if adjLayer:
         adjLayArrL0,adjLayArrL1,adjLayArrL2,adjLayArrL3 = self.adjLayerData(TBBigHit_lay0,TBBigHit_lay1,TBBigHit_lay2,TBBigHit_lay3)
-        self.events["layerContraint"] = ((self.events["layer"] ==0) & (TBBigHit_lay0)) | ((self.events["layer"] ==1)  & (TBBigHit_lay1))  | ((self.events["layer"] == 2) & (TBBigHit_lay2)) | ((self.events["layer"] == 3) & (TBBigHit_lay3))
+        self.events["layerContraint"] = ((self.events["layer"] ==0) & (adjLayArrL0)) | ((self.events["layer"] ==1)  & (adjLayArrL1))  | ((self.events["layer"] == 2) & (adjLayArrL2)) | ((self.events["layer"] == 3) & (adjLayArrL3))
 
 
 #cosmic panel , top and bottom row have big hit.
@@ -429,9 +429,13 @@ def CheckFieldName(self):
 
 def EmptyListFilter(self,cutName=None):
     self.events['None_empty_event'] = ak.num(self.events['layer']) > 0
+
+def MiddleLay(self):
+    self.events["MiddleLay"] = ak.any( ( (self.events["layer"]== 1) | (self.events["layer"]== 2) ), axis = 1)
     
 
 
+setattr(milliqanCuts, 'MiddleLay', MiddleLay)
 
 setattr(milliqanCuts, 'CheckFieldName' , CheckFieldName)
 
@@ -554,15 +558,20 @@ if __name__ == "__main__":
 
 
     nPEPlot = r.TH1F("nPEPlot", "nPE", 4000, 0, 40000)
+    middleLayNPE = r.TH1F("middleLayNPE", "nPE", 4000, 0, 40000)
     
-    eventCuts = mycuts.getCut(mycuts.combineCuts, 'eventCuts', ["layerContraint","None_empty_event"])
+    eventCuts = mycuts.getCut(mycuts.combineCuts, 'eventCuts', ["layerContraint","None_empty_event","TBBigHit"])
+    eventCuts2 = mycuts.getCut(mycuts.combineCuts, 'eventCuts2', ["layerContraint","None_empty_event","TBBigHit", "MiddleLay"])
     myplotter.addHistograms(nPEPlot, 'nPE', 'eventCuts')
+    myplotter.addHistograms(middleLayNPE, 'nPE', 'eventCuts2')
+
+
 
 
     #-------------------------start of cut efficiency analysis cutflows-----------------------------------------------------------
 
     #Cut flow 1. This one is for testing the cut efficiency of different tags. TB big hits - > TB + panel big hits 
-    cutflow1 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,eventCuts,mycuts.CheckFieldName,myplotter.dict['nPEPlot']] 
+    cutflow1 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,eventCuts,eventCuts2,mycuts.CheckFieldName,myplotter.dict['nPEPlot'],myplotter.dict['middleLayNPE']] 
 
     #cutflow1 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,eventCuts,mycuts.CheckFieldName,myplotter.dict['nPEPlot']]
     
@@ -604,5 +613,6 @@ if __name__ == "__main__":
         f_out = r.TFile(f"{outputPath}/Run{numRun}CutFlow4.root", "RECREATE")
         f_out.cd()
         nPEPlot.Write()
+        middleLayNPE.Write()
         f_out.Close()
         #"""

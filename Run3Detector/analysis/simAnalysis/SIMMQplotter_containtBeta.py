@@ -433,7 +433,7 @@ def MiddleRow(self):
     
 
 
-setattr(milliqanCuts, 'MiddleLay', MiddleLay)
+setattr(milliqanCuts, 'MiddleRow', MiddleRow)
 
 setattr(milliqanCuts, 'CheckFieldName' , CheckFieldName)
 
@@ -560,7 +560,7 @@ if __name__ == "__main__":
     
     
     eventCuts = mycuts.getCut(mycuts.combineCuts, 'eventCuts', ["layerContraint","None_empty_event","TBBigHit", "barCut"])
-    eventCuts2 = mycuts.getCut(mycuts.combineCuts, 'eventCuts2', ["layerContraint","None_empty_event","TBBigHit", "MiddleLay", "barCut"])
+    eventCuts2 = mycuts.getCut(mycuts.combineCuts, 'eventCuts2', ["layerContraint","None_empty_event","TBBigHit", "MiddleRow", "barCut"])
     myplotter.addHistograms(nPEPlot, 'nPE', 'eventCuts')
     myplotter.addHistograms(middleRowNPE, 'nPE', 'eventCuts2')
 
@@ -570,7 +570,7 @@ if __name__ == "__main__":
     #-------------------------start of cut efficiency analysis cutflows-----------------------------------------------------------
 
     #Cut flow 1. This one is for testing the cut efficiency of different tags. TB big hits - > TB + panel big hits 
-    cutflow1 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,mycuts.MiddleLay,eventCuts,eventCuts2,mycuts.CheckFieldName,myplotter.dict['nPEPlot'],myplotter.dict['middleRowNPE']] 
+    cutflow1 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,mycuts.MiddleRow,eventCuts,eventCuts2,mycuts.CheckFieldName,myplotter.dict['nPEPlot'],myplotter.dict['middleRowNPE']] 
 
     #cutflow1 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,eventCuts,mycuts.CheckFieldName,myplotter.dict['nPEPlot']]
     

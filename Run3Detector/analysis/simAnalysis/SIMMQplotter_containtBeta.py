@@ -570,6 +570,9 @@ if __name__ == "__main__":
     middleRowNPE = r.TH1F("middleRowNPE", "nPE", 4000, 0, 40000)
     ChanVsbarNpeB = r.TH2F("ChanVsbarNpeB","bar chanvsmpe tag1;chan; bar NPE", 80,0,80,200,0,100000)
     CorrectTimeDist =  r.TH1F("CorrectTimeDist" , "D_t Max with correction w;D_t Max; Events",40,-15,25)
+    NuniqueBar = r.TH1F("NuniqueBar" , "NuniqueBar;number of unique bar;events",50,0,50)  
+
+
     
     eventCuts = mycuts.getCut(mycuts.combineCuts, 'eventCuts', ["layerContraint","None_empty_event","TBBigHit", "barCut"])
     eventCuts2 = mycuts.getCut(mycuts.combineCuts, 'eventCuts2', ["layerContraint","None_empty_event","TBBigHit", "MiddleRow", "barCut"])
@@ -580,18 +583,18 @@ if __name__ == "__main__":
     myplotter.addHistograms(nPEPlot, 'nPE', 'eventCuts')
     myplotter.addHistograms(middleRowNPE, 'nPE', 'eventCuts2') #bar NPE
     myplotter.addHistograms(ChanVsbarNpeB, ['chan','nPE'], 'eventCuts4') #general NPE vs chan distribution
-    myplotter.addHistograms(CorrectTimeDist, 'DT_CorrectTime', 'eventCuts5') #general NPE vs chan distribution
+    myplotter.addHistograms(CorrectTimeDist, 'DT_CorrectTime', 'eventCuts5') #FIXME: this is not being used now. general NPE vs chan distribution.
+    myplotter.addHistograms(NuniqueBar, 'NBarsHits', 'eventCuts4')
 
 
-
-
+ 
 
 
 
     #-------------------------start of cut efficiency analysis cutflows-----------------------------------------------------------
 
     #Cut flow 1. This one is for testing the cut efficiency of different tags. TB big hits - > TB + panel big hits 
-    cutflow1 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,mycuts.MiddleRow,eventCuts,eventCuts2,eventCuts3, eventCuts4, mycuts.CheckFieldName,myplotter.dict['nPEPlot'],myplotter.dict['middleRowNPE'],myplotter.dict['ChanVsbarNpeB']] 
+    cutflow1 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,mycuts.MiddleRow,eventCuts,eventCuts2,eventCuts3, eventCuts4,mycuts.NbarsHitsCount ,eventCuts5,mycuts.CheckFieldName,myplotter.dict['nPEPlot'],myplotter.dict['middleRowNPE'],myplotter.dict['ChanVsbarNpeB']] 
 
     #cutflow1 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,eventCuts,mycuts.CheckFieldName,myplotter.dict['nPEPlot']]
     

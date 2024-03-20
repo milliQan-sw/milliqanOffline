@@ -408,7 +408,7 @@ def countEvent(self, cutName = None, Countobject='None_empty_event', debug = Fal
     if cutName:
         print(f"{Countobject} event: {len(self.events[self.events[Countobject]])}")
     else:
-        print(f"current available events : {len(self.events['event'])}")
+        print(f"current available events : {ak.count_nonzero(self.events['None_empty_event'])}")
 
 
 #the EmptyListFilter() has a weird bug that can cause the milliqanplotter unable to work. So the current solution for doing analysis without looping over the empty 
@@ -425,13 +425,11 @@ def SimBarCut(self):
 def CheckFieldName(self):
     print(self.events.fields)
 
-
-
 def EmptyListFilter(self,cutName=None):
     self.events['None_empty_event'] = ak.num(self.events['layer']) > 0
 
-def MiddleLay(self):
-    self.events["MiddleLay"] = ak.any( ( (self.events["layer"]== 1) | (self.events["layer"]== 2) ), axis = 1)
+def MiddleRow(self):
+    self.events["MiddleRow"] = ak.any( ( (self.events["row"]== 1) | (self.events["row"]== 2) )   , axis = 1)
     
 
 
@@ -558,12 +556,13 @@ if __name__ == "__main__":
 
 
     nPEPlot = r.TH1F("nPEPlot", "nPE", 4000, 0, 40000)
-    middleLayNPE = r.TH1F("middleLayNPE", "nPE", 4000, 0, 40000)
+    middleRowNPE = r.TH1F("middleRowNPE", "nPE", 4000, 0, 40000)
     
-    eventCuts = mycuts.getCut(mycuts.combineCuts, 'eventCuts', ["layerContraint","None_empty_event","TBBigHit"])
-    eventCuts2 = mycuts.getCut(mycuts.combineCuts, 'eventCuts2', ["layerContraint","None_empty_event","TBBigHit", "MiddleLay"])
+    
+    eventCuts = mycuts.getCut(mycuts.combineCuts, 'eventCuts', ["layerContraint","None_empty_event","TBBigHit", "barCut"])
+    eventCuts2 = mycuts.getCut(mycuts.combineCuts, 'eventCuts2', ["layerContraint","None_empty_event","TBBigHit", "MiddleLay", "barCut"])
     myplotter.addHistograms(nPEPlot, 'nPE', 'eventCuts')
-    myplotter.addHistograms(middleLayNPE, 'nPE', 'eventCuts2')
+    myplotter.addHistograms(middleRowNPE, 'nPE', 'eventCuts2')
 
 
 
@@ -571,7 +570,7 @@ if __name__ == "__main__":
     #-------------------------start of cut efficiency analysis cutflows-----------------------------------------------------------
 
     #Cut flow 1. This one is for testing the cut efficiency of different tags. TB big hits - > TB + panel big hits 
-    cutflow1 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,mycuts.MiddleLay,eventCuts,eventCuts2,mycuts.CheckFieldName,myplotter.dict['nPEPlot'],myplotter.dict['middleLayNPE']] 
+    cutflow1 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,mycuts.MiddleLay,eventCuts,eventCuts2,mycuts.CheckFieldName,myplotter.dict['nPEPlot'],myplotter.dict['middleRowNPE']] 
 
     #cutflow1 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,eventCuts,mycuts.CheckFieldName,myplotter.dict['nPEPlot']]
     
@@ -613,6 +612,6 @@ if __name__ == "__main__":
         f_out = r.TFile(f"{outputPath}/Run{numRun}CutFlow4.root", "RECREATE")
         f_out.cd()
         nPEPlot.Write()
-        middleLayNPE.Write()
+        middleRowNPE.Write()
         f_out.Close()
         #"""

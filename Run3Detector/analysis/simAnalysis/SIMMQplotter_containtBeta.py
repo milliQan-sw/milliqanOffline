@@ -273,13 +273,13 @@ def findCorrectTime(self,cutName = "DT_CorrectTime",cut = None):
         
         
     else:
-        TimeArrayL0 = slef.events["time"][self.events.layer==0]
-        TimeArrayL1 = slef.events["time"][self.events.layer==1]
-        TimeArrayL2 = slef.events["time"][self.events.layer==2]
-        TimeArrayL3 = slef.events["time"][self.events.layer==3]
+        TimeArrayL0 = slef.events["time"][self.events.layer==0] 
+        TimeArrayL1 = slef.events["time"][self.events.layer==1] - (3.96 * 1)
+        TimeArrayL2 = slef.events["time"][self.events.layer==2] - (3.96 * 2)
+        TimeArrayL3 = slef.events["time"][self.events.layer==3] - (3.96 * 3)
         
     
-    CorretTimeArray = np.concatenate((Lay0Time, Lay1Time,Lay2Time,Lay3Time), axis=1)
+    CorretTimeArray = np.concatenate((TimeArrayL0, TimeArrayL1,TimeArrayL2,TimeArrayL3), axis=1)
     self.events[cutName] = (np.max(CorretTimeArray,axis=1)-np.min(CorretTimeArray,axis=1)).tolist()
 
 
@@ -558,17 +558,18 @@ if __name__ == "__main__":
     nPEPlot = r.TH1F("nPEPlot", "nPE", 4000, 0, 40000)
     middleRowNPE = r.TH1F("middleRowNPE", "nPE", 4000, 0, 40000)
     ChanVsbarNpeB = r.TH2F("ChanVsbarNpeB","bar chanvsmpe tag1;chan; bar NPE", 80,0,80,200,0,100000)
-    
+    CorrectTimeDist =  r.TH1F("CorrectTimeDist" , "D_t Max with correction w;D_t Max; Events",40,-15,25)
     
     eventCuts = mycuts.getCut(mycuts.combineCuts, 'eventCuts', ["layerContraint","None_empty_event","TBBigHit", "barCut"])
     eventCuts2 = mycuts.getCut(mycuts.combineCuts, 'eventCuts2', ["layerContraint","None_empty_event","TBBigHit", "MiddleRow", "barCut"])
     eventCuts3 = mycuts.getCut(mycuts.combineCuts, 'eventCuts3', ["layerContraint","None_empty_event","TBBigHit"]) #debug only. I use this one on NPE vs chan distribution to check if the layer contraints is applied corretly
     eventCuts4 = mycuts.getCut(mycuts.combineCuts, 'eventCuts4', ["None_empty_event","TBBigHit"]) #debug only. same like above
+    eventCuts5 = mycuts.getCut(mycuts.combineCuts, 'eventCuts5', ["None_empty_event","TBBigHit","barCut"]) #for the time distribution
 
     myplotter.addHistograms(nPEPlot, 'nPE', 'eventCuts')
     myplotter.addHistograms(middleRowNPE, 'nPE', 'eventCuts2') #bar NPE
     myplotter.addHistograms(ChanVsbarNpeB, ['chan','nPE'], 'eventCuts4') #general NPE vs chan distribution
-
+    myplotter.addHistograms(CorrectTimeDist, 'DT_CorrectTime', 'eventCuts5') #general NPE vs chan distribution
 
 
 
@@ -579,7 +580,7 @@ if __name__ == "__main__":
     #-------------------------start of cut efficiency analysis cutflows-----------------------------------------------------------
 
     #Cut flow 1. This one is for testing the cut efficiency of different tags. TB big hits - > TB + panel big hits 
-    cutflow1 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,mycuts.MiddleRow,eventCuts,eventCuts2,eventCuts3, eventCuts4, mycuts.CheckFieldName,myplotter.dict['nPEPlot'],myplotter.dict['middleRowNPE'],myplotter.dict['ChanVsbarNpeB']] 
+    cutflow1 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,mycuts.MiddleRow,eventCuts,eventCuts2,eventCuts3, eventCuts4, mycuts.CheckFieldName,myplotter.dict['nPEPlot'],myplotter.dict['middleRowNPE'],myplotter.dict['ChanVsbarNpeB'], findCorrectTime, myplotter.dict['CorrectTimeDist']] 
 
     #cutflow1 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,eventCuts,mycuts.CheckFieldName,myplotter.dict['nPEPlot']]
     

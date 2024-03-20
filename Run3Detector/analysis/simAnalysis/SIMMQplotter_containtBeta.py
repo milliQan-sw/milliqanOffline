@@ -263,6 +263,11 @@ def BarNPERatioCalculate(self,cutName = "BarNPERatio",cut = None):
 
 #bar trim should be used prior using this function
 #introduce correction factor such that time for paricle travel from IP to bar channel is same for time at different layer
+#3-20 update: I just notice an issue regarding to find the correct time distribution.
+#right now to the milliqanPlotter work, all of the event based cut should not applied(event = event[mask] is not allowed) 
+#but this can cause an issue when np.max/min reach those empty. And then the script crash
+#FIXME:need some extra solution for it
+
 def findCorrectTime(self,cutName = "DT_CorrectTime",cut = None):
     if cut:
         cutMask, junk = ak.broadcast_arrays(self.events.cut, self.events.layer)
@@ -273,14 +278,20 @@ def findCorrectTime(self,cutName = "DT_CorrectTime",cut = None):
         
         
     else:
-        TimeArrayL0 = slef.events["time"][self.events.layer==0] 
-        TimeArrayL1 = slef.events["time"][self.events.layer==1] - (3.96 * 1)
-        TimeArrayL2 = slef.events["time"][self.events.layer==2] - (3.96 * 2)
-        TimeArrayL3 = slef.events["time"][self.events.layer==3] - (3.96 * 3)
+        TimeArrayL0 = self.events["time"][self.events.layer==0] 
+        TimeArrayL1 = self.events["time"][self.events.layer==1] - (3.96 * 1)
+        TimeArrayL2 = self.events["time"][self.events.layer==2] - (3.96 * 2)
+        TimeArrayL3 = self.events["time"][self.events.layer==3] - (3.96 * 3)
         
     
     CorretTimeArray = np.concatenate((TimeArrayL0, TimeArrayL1,TimeArrayL2,TimeArrayL3), axis=1)
-    self.events[cutName] = (np.max(CorretTimeArray,axis=1)-np.min(CorretTimeArray,axis=1)).tolist()
+    print(CorretTimeArray )
+
+
+    print((np.max(CorretTimeArray,axis=1)-np.min(CorretTimeArray,axis=1)))
+
+    self.events[cutName] =ak.Array((np.max(CorretTimeArray,axis=1)-np.min(CorretTimeArray,axis=1)) )
+    print(ak.to_list(self.events[cutName]))
 
 
 
@@ -531,7 +542,7 @@ if __name__ == "__main__":
     """
     #---------------------------------------------------------------------------------------------
     #branch for data analysis
-    branches = ["chan","runNumber","event","layer","nPE","type","row","muonHit"]
+    branches = ["time","chan","runNumber","event","layer","nPE","type","row","muonHit"]
     
     #test cut flow. Check if the mask can be made
     #cutflow = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,mycuts.fourRowBigHits,mycuts.TBBigHit,mycuts.P_TBBigHit,mycuts.P_BBigHit]
@@ -580,7 +591,7 @@ if __name__ == "__main__":
     #-------------------------start of cut efficiency analysis cutflows-----------------------------------------------------------
 
     #Cut flow 1. This one is for testing the cut efficiency of different tags. TB big hits - > TB + panel big hits 
-    cutflow1 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,mycuts.MiddleRow,eventCuts,eventCuts2,eventCuts3, eventCuts4, mycuts.CheckFieldName,myplotter.dict['nPEPlot'],myplotter.dict['middleRowNPE'],myplotter.dict['ChanVsbarNpeB'], mycuts.findCorrectTime, myplotter.dict['CorrectTimeDist']] 
+    cutflow1 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,mycuts.MiddleRow,eventCuts,eventCuts2,eventCuts3, eventCuts4, mycuts.CheckFieldName,myplotter.dict['nPEPlot'],myplotter.dict['middleRowNPE'],myplotter.dict['ChanVsbarNpeB']] 
 
     #cutflow1 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,eventCuts,mycuts.CheckFieldName,myplotter.dict['nPEPlot']]
     

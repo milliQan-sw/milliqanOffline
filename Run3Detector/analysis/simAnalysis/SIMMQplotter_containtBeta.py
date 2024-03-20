@@ -557,7 +557,7 @@ if __name__ == "__main__":
 
     nPEPlot = r.TH1F("nPEPlot", "nPE", 4000, 0, 40000)
     middleRowNPE = r.TH1F("middleRowNPE", "nPE", 4000, 0, 40000)
-    ChanVsbarNpeB = r.TH2F("B ChanvsNPE tag 1","bar chanvsmpe tag1;chan; bar NPE", 80,0,80,200,0,100000)
+    ChanVsbarNpeB = r.TH2F("ChanVsbarNpeB","bar chanvsmpe tag1;chan; bar NPE", 80,0,80,200,0,100000)
     
     
     eventCuts = mycuts.getCut(mycuts.combineCuts, 'eventCuts', ["layerContraint","None_empty_event","TBBigHit", "barCut"])

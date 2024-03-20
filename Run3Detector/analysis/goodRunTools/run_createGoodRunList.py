@@ -8,6 +8,7 @@ import subprocess
 import numpy as np
 import datetime
 import argparse
+import tarfile
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -38,7 +39,7 @@ def singleRun(mainDir, subDir, logDir):
     error                   = {2}error_$(PROCESS).txt
     should_transfer_files   = Yes
     when_to_transfer_output = ON_EXIT
-    transfer_input_files = goodRun_wrapper.sh, checkMatching.py
+    transfer_input_files = goodRun_wrapper.sh, checkMatching.py, configurations.tar.gz
     getenv = true
     queue 1
     """.format(mainDir,subDir,logDir)
@@ -70,7 +71,7 @@ def allRuns():
     error                   = {1}error_$(PROCESS).txt
     should_transfer_files   = Yes
     when_to_transfer_output = ON_EXIT
-    transfer_input_files = goodRun_wrapper.sh, checkMatching.py, directoryList.txt
+    transfer_input_files = goodRun_wrapper.sh, checkMatching.py, directoryList.txt, configurations.tar.gz
     getenv = true
     queue {0}
     """.format(size, logDir)
@@ -110,9 +111,13 @@ if __name__=="__main__":
     if args.runDir: mainDir = args.runDir
     if args.subDir: subDir = args.subDir
 
-    logDir = '/data/users/mcarrigan/log/goodRunLists/' + d.strftime('%m_%d_%H')
+    #logDir = '/data/users/mcarrigan/log/goodRunLists/' + d.strftime('%m_%d_%H')
+    logDir = '/abyss/users/mcarrigan/'
 
     condorFile = 'goodRunCondor.sub'
+
+    with tarfile.open('configurations.tar.gz', 'w:gz') as tar:
+        tar.add('../../configuration', arcname=os.path.basename('../../configuration'))
 
     if(not os.path.isdir(logDir)): os.mkdir(logDir)
     else:
@@ -126,7 +131,7 @@ if __name__=="__main__":
     if not logDir.endswith('/'): logDir += '/'
 
     if args.runDir and args.subDir:
-        singleRun(args,runDir, args.subDir, logDir)
+        singleRun(args.runDir, args.subDir, logDir)
     elif args.all:
         allRuns()
     else:

@@ -3,13 +3,15 @@
 source ~/root_condor.sh
 echo "Running on computer $(hostname)"
 
+tar -xzf configurations.tar.gz
+
 if [ "$#" -gt 2 ]; then
 
-  echo "Running on Directories: $1 $2"
+  echo "Running on Directories: $2 $3"
 
-  python3 checkMatching.py -d $1 -s $2
+  python3 checkMatching.py -d $2 -s $3 -c configuration/barConfigs/
   
-  mv *.json $3
+  mv *.json $4
 
 else
 
@@ -33,7 +35,7 @@ else
   # Print the values of the variables
   echo "Running on Directories: $first_num $second_num" 
 
-  python3 checkMatching.py -d $first_num -s $second_num --debug
+  python3 checkMatching.py -d $first_num -s $second_num -c configuration/barConfigs/
 
   mv *.json $2
 

@@ -577,7 +577,7 @@ if __name__ == "__main__":
     eventCuts = mycuts.getCut(mycuts.combineCuts, 'eventCuts', ["layerContraint","None_empty_event","TBBigHit", "barCut"])
     eventCuts2 = mycuts.getCut(mycuts.combineCuts, 'eventCuts2', ["layerContraint","None_empty_event","TBBigHit", "MiddleRow", "barCut"])
     eventCuts3 = mycuts.getCut(mycuts.combineCuts, 'eventCuts3', ["layerContraint","None_empty_event","TBBigHit"]) #debug only. I use this one on NPE vs chan distribution to check if the layer contraints is applied corretly
-    eventCuts4 = mycuts.getCut(mycuts.combineCuts, 'eventCuts4', ["None_empty_event","TBBigHit"]) #debug only. same like above
+    eventCuts4 = mycuts.getCut(mycuts.combineCuts, 'eventCuts4', ["TBBigHit"]) #debug only. same like above
     eventCuts5 = mycuts.getCut(mycuts.combineCuts, 'eventCuts5', ["None_empty_event","TBBigHit","barCut"]) #for the time distribution
 
     myplotter.addHistograms(nPEPlot, 'nPE', 'eventCuts')

@@ -85,6 +85,7 @@ struct offline_tree_{
     ulong fillEnd; //milliseconds since unix epoch
 
     //pulse vectors
+    vector<int> v_pulseIndex;
     vector<int> v_npulses;
     vector<int> v_ipulse;
     vector<int> v_chan;
@@ -259,7 +260,10 @@ private:
     TTree * inTree;
     TFile * inFile;
     TFile * outFile;
+    TFile * matchedFile;
     TTree * outTree;
+    TTree * trigMetaData;
+    TTree * trigMetaDataCopy;
     offline_tree_ outputTreeContents;
     bool triggerFileMatched;
     vector<TColor *> palette;
@@ -274,6 +278,7 @@ private:
     int tEvtNum = 0;
     int tRunNum = 0;
     int tTBEvent = 0;
+    int totalPulseCount = 0;
 
     Long64_t firstTDC_time=10e15;
     Long64_t lastTDC_time=-1;

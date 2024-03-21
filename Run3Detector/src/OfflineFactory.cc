@@ -62,6 +62,16 @@ void OfflineFactory::addFriendTree(){
     inTree->SetBranchAddress("eventNum", &tEvtNum);
     inTree->SetBranchAddress("runNum", &tRunNum);
     inTree->SetBranchAddress("tbEvent", &tTBEvent);
+
+    //Add trigger board meta data
+    matchedFile = TFile::Open(friendFileName, "read");
+    if (matchedFile->GetListOfKeys()->Contains("MetaData")){
+        trigMetaData = (TTree*) matchedFile->Get("MetaData");
+        trigMetaDataCopy = trigMetaData->CloneTree();
+        trigMetaDataCopy->SetDirectory(0);
+    }
+    matchedFile->Close();
+
 }
 
 // OfflineFactory::~OfflineFactory() {
@@ -454,6 +464,7 @@ void OfflineFactory::prepareOutBranches(){
     outTree->Branch("fallSamples",&outputTreeContents.v_fallSamples);
     outTree->Branch("ipulse",&outputTreeContents.v_ipulse);
     outTree->Branch("npulses",&outputTreeContents.v_npulses);
+    outTree->Branch("pulseIndex",&outputTreeContents.v_pulseIndex);
     outTree->Branch("time",&outputTreeContents.v_time);
     outTree->Branch("timeFit",&outputTreeContents.v_timeFit);
     outTree->Branch("time_module_calibrated",&outputTreeContents.v_time_module_calibrated);
@@ -512,6 +523,7 @@ void OfflineFactory::resetOutBranches(){
     outputTreeContents.v_fallSamples.clear();
     outputTreeContents.v_ipulse.clear();
     outputTreeContents.v_npulses.clear();
+    outputTreeContents.v_pulseIndex.clear();
     outputTreeContents.v_time.clear();
     outputTreeContents.v_time_module_calibrated.clear();
     outputTreeContents.v_timeFit.clear();
@@ -1398,6 +1410,7 @@ vector<vector<pair<float,float>>> OfflineFactory::readWaveDataPerEvent(int i){
             break;
         }
     }
+    totalPulseCount = 0;
     for(int ic=0;ic<numChan;ic++){
         //Pulse finding
         allPulseBounds.push_back(processChannel(ic));
@@ -1497,6 +1510,7 @@ void OfflineFactory::readWaveData(){
 void OfflineFactory::writeOutputTree(){
     outFile->cd();
     outTree->Write();
+    trigMetaDataCopy->Write();
     writeVersion();
     outFile->Close();
     if (inFile) inFile->Close();
@@ -1717,6 +1731,7 @@ vector< pair<float,float> > OfflineFactory::processChannel(int ic){
         outputTreeContents.v_nPE.push_back((waves[ic]->Integral()/(speAreas[ic]))*(0.4/sampleRate));
         outputTreeContents.v_ipulse.push_back(ipulse);
         outputTreeContents.v_npulses.push_back(npulses);
+        outputTreeContents.v_pulseIndex.push_back(totalPulseCount+ipulse);
         float duration = pulseBounds[ipulse].second - pulseBounds[ipulse].first;
         outputTreeContents.v_duration.push_back(duration);
         if(ipulse>0) outputTreeContents.v_delay.push_back(pulseBounds[ipulse].first - pulseBounds[ipulse-1].second);
@@ -1735,6 +1750,8 @@ vector< pair<float,float> > OfflineFactory::processChannel(int ic){
         outputTreeContents.v_pickupFlag.push_back(!qual);
         outputTreeContents.v_pickupFlagTight.push_back(qual_tight);
     }
+
+    totalPulseCount += npulses;
 
     return pulseBounds;
 }

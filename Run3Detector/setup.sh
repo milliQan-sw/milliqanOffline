@@ -3,7 +3,9 @@
 #get hostname to figure out OSU, UCSB, or other
 name=$(hostname)
 
-host_osu='interactive'
+echo $name
+
+host_osu='ohio-state'
 host_ucsb='cms'
 
 if [[ "$name" == *"$host_osu"* ]]; then

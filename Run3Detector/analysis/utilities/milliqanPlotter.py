@@ -16,7 +16,8 @@ class milliqanPlot():
             if self.cut:
                 output = [ak.flatten(events[x][events[self.cut]],axis=None) for x in self.variables]
                 if self.cut == "eventCuts4":
-                    print("attempt to retrieve the event based variables")
+                   
+                    print(f"attempt to retrieve the event based variables{self.variables}")
                     print(output)
             else:
                 output = [ak.drop_none(events[x]) for x in self.variables]

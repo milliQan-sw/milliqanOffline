@@ -130,8 +130,4 @@ if __name__ == "__main__":
     source = "/home/milliqan/data/"
     logFile = "/home/milliqan/MilliDAQ_FileTransfers.log"
 
-    #destinations = {"DAQ-00":"milliqan@128.141.91.73:/home/milliqan/run3Data/", "OSU":"milliqan@cms-t3.mps.ohio-state.edu:/store/user/milliqan/run3/"} #temporary change to OSU ip address
-    #destinations = {"UCSB":"milliqan@cms3.physics.ucsb.edu:/net/cms26/cms26r0/milliqan/run3_v2/"," DAQ-00":"milliqan@128.141.91.73:/home/milliqan/run3Data/"} 
-    destinations = {"UCSB":"milliqan@cms3.physics.ucsb.edu:/net/cms18/cms18r0/milliqan/run3/", "OSU":"milliqan@cms-t3.mps.ohio-state.edu:/store/user/milliqan/run3/", "lxplus":"/eos/experiment/milliqan/run3/bar/"} #temporary change to OSU ip address
-
     transferFiles(source,destinations,logFile,force=False)

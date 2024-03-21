@@ -21,7 +21,10 @@ class milliQanScheduler():
     def setEvents(self, events):
         self.events = events
         self.cuts.events = self.events
-        self.plotter.events = self.events
+        if (self.plotter  != None):
+            self.plotter.events = self.events
+        else:
+            print("please be aware that plotter is not being used now")
 
     def addToSchedule(self, input):
         name = None

@@ -131,8 +131,10 @@ def transferFiles(source,destinations,logFile,force=False):
     os.system("echo 'Transferred {0:.2f} MB in {1} file(s).' >> {2}".format(mbytesTransferred, nTransferred, logFile))
 
 if __name__ == "__main__":
-    source = "/store/user/milliqan/run3/bar/1300/0007/"
-    logFile = "~/scratch0/milliqanTools/MilliDAQ_FileTransfers.log"
 
-    destinations = {"UCSB":"milliqan@cms3.physics.ucsb.edu:/net/cms26/cms26r0/milliqan/Run3/"}#, "OSU":"milliqan@128.146.39.20:/store/user/milliqan/run3/"} #temporary change to OSU ip address
+    source = "/home/milliqan/data/"
+    logFile = "/home/milliqan/MilliDAQ_FileTransfers.log"
+    
+    destinations = {"UCSB":"milliqan@cms3.physics.ucsb.edu:/net/cms18/cms18r0/milliqan/run3/", "OSU":"milliqan@128.146.39.20:/store/user/milliqan/run3/", "lxplus":"/eos/experiment/milliqan/run3/bar/"}
+
     transferFiles(source,destinations,logFile,force=False)

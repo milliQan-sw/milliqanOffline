@@ -24,6 +24,8 @@ class milliqanProcessor():
         self.runQualityOverride = runQualityOverride
         self.qualityLevel = qualityLevel
 
+    #Get rid of the strings and make a dictionary so that it's easier to debug
+    #Fix the goodJson path
     def fileChecker(self):
         goodJson_array = ak.from_json(pathlib.Path("goodRuns.json"))
         columns = ak.Array(goodJson_array['columns'])

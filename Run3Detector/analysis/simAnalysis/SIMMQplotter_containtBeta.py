@@ -440,7 +440,7 @@ def EmptyListFilter(self,cutName=None):
     self.events['None_empty_event'] = ak.num(self.events['layer']) > 0
 
 def MiddleRow(self):
-    self.events["MiddleRow"] = ak.any( ( (self.events["row"]== 1) | (self.events["row"]== 2) )   , axis = 1)
+    self.events["MiddleRow"] = ( (self.events["row"]== 1) | (self.events["row"]== 2) )
     
 
 
@@ -633,9 +633,13 @@ if __name__ == "__main__":
 
         #"""
 
-        f_out = r.TFile(f"{outputPath}/Run{numRun}CutFlow4.root", "RECREATE")
+        f_out = r.TFile(f"{outputPath}/Run{numRun}demo.root", "RECREATE")
         f_out.cd()
         nPEPlot.Write()
         middleRowNPE.Write()
+        ChanVsbarNpeB.Write()
+        CorrectTimeDist.Write()
+        NuniqueBar.Write()
+        NPERatio.Write()
         f_out.Close()
         #"""

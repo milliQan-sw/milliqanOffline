@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+import os
+import pathlib
 import ROOT as r
 import uproot
 import matplotlib.pyplot as plt
@@ -10,13 +12,77 @@ from milliqanPlotter import *
 
 class milliqanProcessor():
 
-    def __init__(self, filelist, branches, schedule=None, cuts=None, plotter=None, max_events=None):
+    def __init__(self, filelist, branches, schedule=None, cuts=None, plotter=None, max_events=None, runQualityOverride=False, qualityLevel="tight"):
+        self.qualityLevelString = qualityLevel
+        self.runQualityOverride = runQualityOverride
+        
+        #Converting the quality level to an integer
+        self.qualityDict = {"loose": 0, "medium": 1, "tight": 2}
+        if self.qualityLevelString not in self.qualityDict.keys():
+            raise Exception("Quality level '{0}' not recognized".format(self.qualityLevelString))
+        print("Chosen quality level: ", self.qualityLevelString)
+        self.qualityLevel = self.qualityDict[self.qualityLevelString]
+        
+        #Checks the filelist against goodRuns.json
         self.filelist = filelist
+        self.fileChecker() 
+        
         self.branches = branches
         self.mqSchedule = schedule
         #self.mqCuts = cuts
         #self.plotter = plotter
         self.max_events = max_events
+
+    #Get rid of the strings and make a dictionary so that it's easier to debug
+    def fileChecker(self):
+        goodJson_array = ak.from_json(pathlib.Path("../goodRunTools/goodRunsMerged.json"))
+        data = ak.Array(goodJson_array['data'])
+        goodJson = ak.zip({
+            'run': data[:, 0],
+            'file': data[:, 1],
+            'loose': data[:, 2],
+            'medium': data[:, 3],
+            'tight': data[:, 4]
+        }, depth_limit=1)
+        
+        for filepath in self.filelist:
+            filename = os.path.basename(filepath)
+            parts = filename.split('_')
+            run_number, file_number = parts[1].replace("Run","").split('.')
+            matching_goodJson = goodJson[(goodJson['run'] == int(run_number)) & (goodJson['file'] == int(file_number))]
+            
+            #Establishes the quality level of the run
+            runQualityLevel = -1
+            if len(matching_goodJson) == 0:
+                pass
+            elif (matching_goodJson['tight'] == True) and (matching_goodJson['medium'] == True) and (matching_goodJson['loose'] == True):
+                runQualityLevel = 2
+            elif (matching_goodJson['tight'] == False) and (matching_goodJson['medium'] == True) and (matching_goodJson['loose'] == True):
+                runQualityLevel = 1
+            elif (matching_goodJson['tight'] == False) and (matching_goodJson['medium'] == False) and (matching_goodJson['loose'] == True):
+                runQualityLevel = 0
+
+            #Determines if the file was found
+            if len(matching_goodJson) == 0:
+                if self.runQualityOverride:
+                    print("File {0} is not in goodRuns.json, but we are overriding the quality check".format(filename))
+                else:
+                    raise Exception("File {0} is not in goodRuns.json. Please consult goodRuns.json :)".format(filename))
+
+            #Determines if it's a good run
+            if len(matching_goodJson) == 1:
+                if runQualityLevel == -1:
+                    print("File {0} has a quality level that cannot be determined. Please consult goodRuns.json :)".format(filename))
+                elif runQualityLevel==2 and (self.qualityLevel <= runQualityLevel):
+                    print("File {0} is good run (tight)".format(filename))
+                elif runQualityLevel==1 and (self.qualityLevel <= runQualityLevel):
+                    print("File {0} is good run (medium)".format(filename))
+                elif runQualityLevel==0 and (self.qualityLevel <= runQualityLevel):
+                    print("File {0} is good run (loose)".format(filename))
+                elif self.runQualityOverride:
+                    print("File {0} is not a good run at the quality level '{1}', but we are overriding the quality check".format(filename, self.qualityLevelString))
+                else:
+                    raise Exception("File {0} is not a good run at the level '{1}'. Please consult goodRuns.json :)".format(filename, self.qualityLevelString))
 
     def setBranches(self, branches):
         self.schedule = branches

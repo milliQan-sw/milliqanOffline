@@ -378,9 +378,7 @@ class fileChecker():
         goodRuns = self.runInfos
 
         #criteria for good runs
-        #goodRuns = goodRuns.drop(goodRuns.loc[(goodRuns['goodRunLoose']==False) & (goodRuns['goodSingleTrigger']==False)].index)
-        goodRuns = goodRuns.drop(goodRuns.loc[(goodRuns['goodRunLoose']==False)].index)
-
+        goodRuns = goodRuns.drop(goodRuns.loc[(goodRuns['goodRunLoose']==False) & (goodRuns['goodSingleTrigger']==False)].index)
         
         goodRuns = goodRuns[['run', 'file', 'goodRunLoose', 'goodRunMedium', 'goodRunTight', 'goodSingleTrigger']]
         

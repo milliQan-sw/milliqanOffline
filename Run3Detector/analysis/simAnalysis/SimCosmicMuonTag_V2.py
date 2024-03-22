@@ -11,7 +11,7 @@ import sys
 import time
 import json
 
-sys.path.append("/home/czheng/milliqanOffline/Run3Detector/analysis/utilities/")
+sys.path.append("/share/scratch0/czheng/SIManalysisDEV/milliqanOffline/Run3Detector/analysis/utilities")
 
 from milliqanProcessor import *
 from milliqanScheduler import *
@@ -446,7 +446,7 @@ if __name__ == "__main__":
 
 
     #---------------------------------------condor job section(get the file that needs to be processed)---------------------------------
-    """
+    #"""
     def getFile(processNum, fileList):
 
         filelist = open(fileList)
@@ -468,7 +468,7 @@ if __name__ == "__main__":
 
     #filelist =['/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhotonMuontag/output_1.root:t']
     filelist =[f'{filename}:t']
-    """
+    #"""
 
     #----------------------------------------------------------------------------------------------------------------------------------- OSU T3
     #signle file test
@@ -480,7 +480,8 @@ if __name__ == "__main__":
     #path for the milliqan machine
 
     #print("this is numRun" + str(sys.argv[1]) )
-
+    
+    """
 
     numRun = str(sys.argv[1])
     filelist =[f'/home/czheng/SimCosmicFlatTree/withPhotonMuontag/output_{numRun}.root:t']
@@ -488,6 +489,9 @@ if __name__ == "__main__":
 
     outputPath = str(sys.argv[2]) # the path is used at the very end for the output txt file
     print(outputPath)
+    
+    """
+
     #-----------------------------------OSU T3--------------------------------------------------------
 
     #multiple file test(non recommend to use due to time consuming)
@@ -639,10 +643,10 @@ if __name__ == "__main__":
 
     myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts)
 
-    
+    myiterator.run() #use for testing the codor job only for debugging purpose
 
-    #--------------section for using to check cut efficiency-----------------------------
-
+    #--------------section for using to check cut efficiency(please use this one by default)-----------------------------
+    """
     if outputPath == '':
         myiterator.run()
 
@@ -658,14 +662,13 @@ if __name__ == "__main__":
         # reset stdout to its original state
         sys.stdout = sys.__stdout__
 
-
-
+   
         #-------------------------------------output histograms and save in root file. Please comment it out if you dont need it------------------------------------------------
 
-        """
+        
 
         f_out = r.TFile(f"{outputPath}/Run{numRun}CutFlow4.root", "RECREATE")
         f_out.cd()
         NBarsHitTag1.Write()
         f_out.Close()
-        """
+    """

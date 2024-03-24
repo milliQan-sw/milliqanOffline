@@ -471,7 +471,7 @@ if __name__ == "__main__":
 
 
     #---------------------------------------condor job section(get the file that needs to be processed)---------------------------------
-    #"""
+    """
     def getFile(processNum, fileList):
 
         filelist = open(fileList)
@@ -493,12 +493,12 @@ if __name__ == "__main__":
 
     #filelist =['/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhotonMuontag/output_1.root:t']
     filelist =[f'{filename}:t']
-    #"""
+    """
 
     #----------------------------------------------------------------------------------------------------------------------------------- OSU T3
     #signle file test
-    #numRun = 1
-    #filelist =[f'/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhotonMuontag/output_{numRun}.root:t']
+    numRun = 1
+    filelist =[f'/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhotonMuontag/output_{numRun}.root:t']
 
 
     #------------------------------------------------------------------------------------------------

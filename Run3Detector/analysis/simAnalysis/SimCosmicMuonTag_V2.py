@@ -589,7 +589,7 @@ if __name__ == "__main__":
     NuniqueBar = r.TH1F("NuniqueBar" , "NuniqueBar;number of unique bar;events",50,0,50)  
     NPERatio = r.TH1F("NPERatio","NPE ratio;max NPE/min NPE;Events",150,0,150)
 
-    
+    eventCutsD = mycuts.getCut(mycuts.combineCuts, 'eventCuts', ["None_empty_event","TBBigHit", "barCut"])
     eventCuts = mycuts.getCut(mycuts.combineCuts, 'eventCuts', ["layerContraint","None_empty_event","TBBigHit", "barCut"])
     eventCuts2 = mycuts.getCut(mycuts.combineCuts, 'eventCuts2', ["layerContraint","None_empty_event","TBBigHit", "MiddleRow", "barCut"])
     eventCuts3 = mycuts.getCut(mycuts.combineCuts, 'eventCuts3', ["layerContraint","None_empty_event","TBBigHit"]) #debug only. I use this one on NPE vs chan distribution to check if the layer contraints is applied corretly
@@ -612,7 +612,8 @@ if __name__ == "__main__":
 
     #Cut flow 1. This one is for testing the cut efficiency of different tags. TB big hits - > TB + panel big hits 
     #cutflow1 = [MuonCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,P_TBBigHitCut,P_TBBigHitCutCount] #FIXME: stop applying the cut to remove events in the array
-    cutflow1 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,eventCuts]
+    #FIXME: I need to bring back MuonCut and put it into combined cut after checking the NPE cutefficiency plot
+    cutflow1 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,P_TBBigHitCut,P_TBBigHitCutCount]
     
 
 

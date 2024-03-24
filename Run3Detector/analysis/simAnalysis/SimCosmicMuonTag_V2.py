@@ -650,6 +650,34 @@ if __name__ == "__main__":
 
 
     #-----------------------start of analysis---------------------------------------
+
+    #-----------------------CustomFunction in MQprocessor---------------------------
+    CEhist = r.TH1F("hist", "CutEfficiency", 10, 0, 10) #histogram for making the cutefficiency
+    
+    def makeCuteffPlot(events):
+        Non_empty = ak.count_nonzero(events['None_empty_event'])
+        NumTBBigHit=ak.count_nonzero(events["TBBigHit"])
+        NumP_TBBigHit=ak.count_nonzero(events["P_TBBigHit"])
+        
+        
+        for i in range(Non_empty):
+            CEhist.Fill(0)
+
+        for i in range(NumTBBigHit):
+            CEhist.Fill(1)
+        
+        for i in range(NumP_TBBigHit):
+            CEhist.Fill(2)
+
+        CEhist.GetXaxis().SetBinLabel(1, "None_empty_event")
+        CEhist.GetXaxis().SetBinLabel(2, "TBBigHit")
+        CEhist.GetXaxis().SetBinLabel(3, "P_TBBigHit")
+
+        
+
+
+
+    
     #note cutflow 1-3 are checked
     
     cutflow = cutflow1 
@@ -658,8 +686,13 @@ if __name__ == "__main__":
 
     myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts)
 
-    myiterator.run() #use for testing the codor job only for debugging purpose
+    myiterator.setCustomFunction(makeCuteffPlot)
 
+    myiterator.run() #use for testing the codor job only for debugging purpose
+    
+    f_out = r.TFile("test.root", "RECREATE") #FIXME: this is use for test only!
+    CEhist.Write()
+    f_out.Close()
     #--------------section for using to check cut efficiency(please use this one by default)-----------------------------
     """
     if outputPath == '':

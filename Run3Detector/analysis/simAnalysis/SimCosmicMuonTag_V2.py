@@ -257,9 +257,9 @@ def NbarsHitsCountV2(self,arr, hist, branches = None):
 def BarNPERatioCalculate(self,cutName = "BarNPERatio",cut = None):
     if cut:
         cutMask, junk = ak.broadcast_arrays(self.events.cut, self.events.layer)
-        self.events[cutName] = ((ak.max(self.events.pmt_nPE[cutMask],axis=1)/ak.min(self.events.pmt_nPE[cutMask],axis=1)))
+        self.events[cutName] = ((ak.max(self.events.nPE[cutMask],axis=1)/ak.min(self.events.nPE[cutMask],axis=1)))
     else:
-        self.events[cutName] = ((ak.max(self.events.pmt_nPE,axis=1)/ak.min(self.events.pmt_nPE,axis=1)))
+        self.events[cutName] = ((ak.max(self.events.nPE,axis=1)/ak.min(self.events.nPE,axis=1)))
 
 #bar trim should be used prior using this function
 #introduce correction factor such that time for paricle travel from IP to bar channel is same for time at different layer
@@ -273,14 +273,20 @@ def findCorrectTime(self,cutName = "DT_CorrectTime",cut = None):
         
         
     else:
-        TimeArrayL0 = slef.events["time"][self.events.layer==0]
-        TimeArrayL1 = slef.events["time"][self.events.layer==1]
-        TimeArrayL2 = slef.events["time"][self.events.layer==2]
-        TimeArrayL3 = slef.events["time"][self.events.layer==3]
+        TimeArrayL0 = self.events["time"][self.events.layer==0] 
+        TimeArrayL1 = self.events["time"][self.events.layer==1] - (3.96 * 1)
+        TimeArrayL2 = self.events["time"][self.events.layer==2] - (3.96 * 2)
+        TimeArrayL3 = self.events["time"][self.events.layer==3] - (3.96 * 3)
         
     
-    CorretTimeArray = np.concatenate((Lay0Time, Lay1Time,Lay2Time,Lay3Time), axis=1)
-    self.events[cutName] = (np.max(CorretTimeArray,axis=1)-np.min(CorretTimeArray,axis=1)).tolist()
+    CorretTimeArray = np.concatenate((TimeArrayL0, TimeArrayL1,TimeArrayL2,TimeArrayL3), axis=1)
+    print(CorretTimeArray )
+
+
+    print((np.max(CorretTimeArray,axis=1)-np.min(CorretTimeArray,axis=1)))
+
+    self.events[cutName] =ak.Array((np.max(CorretTimeArray,axis=1)-np.min(CorretTimeArray,axis=1)) )
+    print(ak.to_list(self.events[cutName]))
 
 
 
@@ -317,7 +323,7 @@ def fourRowBigHits(self,cutName = None, cut = None):
     if cut:
         self.events = self.events[self.events["fourRowBigHits"]]
 #top and bottom row have big hit
-def TBBigHit(self,cutName = None,cut = None, Hist1 = None, branches = None, Hist2 = None):
+def TBBigHit(self,cutName = None,cut = None, LayerContraint = False, adjLayer = False):
     
     TBBigHit_lay0 =  (ak.any(self.events.l0R0==True, axis=1) & ak.any(self.events.l0R3==True, axis=1)) #data at layer 0 should be kept
     TBBigHit_lay1 =  (ak.any(self.events.l1R0==True, axis=1) & ak.any(self.events.l1R3==True, axis=1))
@@ -325,10 +331,11 @@ def TBBigHit(self,cutName = None,cut = None, Hist1 = None, branches = None, Hist
     TBBigHit_lay3 =  (ak.any(self.events.l3R0==True, axis=1) & ak.any(self.events.l3R3==True, axis=1))
     
 
-
+    #this mask is only useful when doing the counting
     self.events["TBBigHit"] = (TBBigHit_lay0 | TBBigHit_lay1 | TBBigHit_lay2 | TBBigHit_lay3) 
 
-
+    #apply the cut and pick out which layer should be kept when using layer contraint
+    # if the event cut is applied then milliqan plotter unable to work properly.
     if cut: 
         
         TBBigHit_lay0, junk=ak.broadcast_arrays(TBBigHit_lay0, self.events.layer)
@@ -346,16 +353,21 @@ def TBBigHit(self,cutName = None,cut = None, Hist1 = None, branches = None, Hist
 
 
 
-    #plot section
-    if Hist1:
-        if len(self.events) == 0: return #skip the empty event
+    #LayerContraint
+    #there is need to create special array when doing the layer constaint to avoid changing array significantly
+    #to get those containt data I need to edit the plotter directly. instead of here
+    # create combine cut
+        
+    #combine cut 
+        
 
+    if LayerContraint:
+        self.events["layerContraint"] = ((self.events["layer"] ==0) & (TBBigHit_lay0)) | ((self.events["layer"] ==1)  & (TBBigHit_lay1))  | ((self.events["layer"] == 2) & (TBBigHit_lay2)) | ((self.events["layer"] == 3) & (TBBigHit_lay3))
 
-        #convert the events based tag to pulse(bar based in sim) based
-        #constraintArray is to save the data from the layer where pass the cosmic muon tag or the data from the ajacent array. Or you could use layerConstraintEnable = False which return the copy array without changing anything
-        constraintArray=self.LayerContraint(TBBigHit_lay0,TBBigHit_lay1,TBBigHit_lay2,TBBigHit_lay3,branches = branches)
-        self.NbarsHitsCountV2(arr=constraintArray,hist=Hist1, branches=branches)
-        #self.ChannelNPEDistV2(arr=constraintArray,hist=Hist2, branches=branches)  #temporary comment this one. I realize if I need to use milliqan cut to make the cut then I need 5 argument in each cutting method to save the histogram
+    if adjLayer:
+        adjLayArrL0,adjLayArrL1,adjLayArrL2,adjLayArrL3 = self.adjLayerData(TBBigHit_lay0,TBBigHit_lay1,TBBigHit_lay2,TBBigHit_lay3)
+        self.events["layerContraint"] = ((self.events["layer"] ==0) & (adjLayArrL0)) | ((self.events["layer"] ==1)  & (adjLayArrL1))  | ((self.events["layer"] == 2) & (adjLayArrL2)) | ((self.events["layer"] == 3) & (adjLayArrL3))
+
 
 #cosmic panel , top and bottom row have big hit.
 def P_TBBigHit(self,cutName = None,cut = None):
@@ -375,7 +387,7 @@ def P_BBigHit(self, cutName = None,cut = None):
 def EmptyListFilter(self,cutName=None):
 
     self.events['None_empty_event'] = ak.num(self.events['layer']) > 0 #create a event-based mask that check if the event is empty
-    self.events=self.events[self.events.None_empty_event]#this one can cause milliqanplotter unable to work. I haven't figure out the cuase yet.
+    #self.events=self.events[self.events.None_empty_event]#this one can cause milliqanplotter unable to work. I haven't figure out the cuase yet.
 
 
 #tag muon event (sim only)
@@ -397,7 +409,7 @@ def countEvent(self, cutName = None, Countobject='None_empty_event', debug = Fal
     if cutName:
         print(f"{Countobject} event: {len(self.events[self.events[Countobject]])}")
     else:
-        print(f"current available events : {len(self.events['event'])}")
+        print(f"current available events : {ak.count_nonzero(self.events['None_empty_event'])}")
 
 
 #the EmptyListFilter() has a weird bug that can cause the milliqanplotter unable to work. So the current solution for doing analysis without looping over the empty 
@@ -410,6 +422,19 @@ def SimBarCut(self):
     barCutdefault=self.events['type'] == 0
     self.events['barCut'] = barCutdefault & self.events["None_empty_event"]
 
+
+def CheckFieldName(self):
+    print(self.events.fields)
+
+
+def MiddleRow(self):
+    self.events["MiddleRow"] = ( (self.events["row"]== 1) | (self.events["row"]== 2) )
+    
+
+
+setattr(milliqanCuts, 'MiddleRow', MiddleRow)
+
+setattr(milliqanCuts, 'CheckFieldName' , CheckFieldName)
 
 setattr(milliqanCuts, 'SimPanelCut', SimPanelCut)
 
@@ -509,7 +534,7 @@ if __name__ == "__main__":
     """
     #---------------------------------------------------------------------------------------------
     #branch for data analysis
-    branches = ["chan","runNumber","event","layer","nPE","type","row","muonHit"]
+    branches = ["time","chan","runNumber","event","layer","nPE","type","row","muonHit"]
     
     #test cut flow. Check if the mask can be made
     #cutflow = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,mycuts.fourRowBigHits,mycuts.TBBigHit,mycuts.P_TBBigHit,mycuts.P_BBigHit]
@@ -557,41 +582,31 @@ if __name__ == "__main__":
     CorrectTimeDtTag4 =  r.TH1F("CorrectTimeDtTag4" , "D_t Max with correction w;D_t Max; Events",40,-15,25)
     NPERatioTag4 = r.TH1F("NPEratioTag4","NPE ratio;max NPE/min NPE;Events",150,0,150)
 
-    #FIXME: for some unknow reason the code at below unable to work, since the mask I created can't be accessed by milliqan for some unknown reason. If I can't figure out the solution, then they should be deleted.
-    """
-    myplotter.addHistograms(NBarsHitTag1, 'NBarsHits', 'fourRowBigHits')
+    nPEPlot = r.TH1F("nPEPlot", "nPE", 4000, 0, 40000)
+    middleRowNPE = r.TH1F("middleRowNPE", "nPE", 4000, 0, 40000)
+    ChanVsbarNpeB = r.TH2F("ChanVsbarNpeB","bar chanvsmpe tag1;chan; bar NPE", 80,0,80,200,0,100000)
+    CorrectTimeDist =  r.TH1F("CorrectTimeDist" , "D_t Max with correction w;D_t Max; Events",40,-15,25)
+    NuniqueBar = r.TH1F("NuniqueBar" , "NuniqueBar;number of unique bar;events",50,0,50)  
+    NPERatio = r.TH1F("NPERatio","NPE ratio;max NPE/min NPE;Events",150,0,150)
 
-    myplotter.addHistograms(NBarsHitTag2, 'NBarsHits', 'TBBigHit')
+    
+    eventCuts = mycuts.getCut(mycuts.combineCuts, 'eventCuts', ["layerContraint","None_empty_event","TBBigHit", "barCut"])
+    eventCuts2 = mycuts.getCut(mycuts.combineCuts, 'eventCuts2', ["layerContraint","None_empty_event","TBBigHit", "MiddleRow", "barCut"])
+    eventCuts3 = mycuts.getCut(mycuts.combineCuts, 'eventCuts3', ["layerContraint","None_empty_event","TBBigHit"]) #debug only. I use this one on NPE vs chan distribution to check if the layer contraints is applied corretly
+    eventCuts4 = mycuts.getCut(mycuts.combineCuts, 'eventCuts4', ["TBBigHit"]) #debug only. same like above
+    eventCuts5 = mycuts.getCut(mycuts.combineCuts, 'eventCuts5', ["None_empty_event","TBBigHit","barCut"]) #for the time distribution
 
-    myplotter.addHistograms(NBarsHitTag3, 'NBarsHits', 'P_TBBigHit')
+    #add histogram
+    myplotter.addHistograms(nPEPlot, 'nPE', 'eventCuts')
+    myplotter.addHistograms(middleRowNPE, 'nPE', 'eventCuts2') #bar NPE
+    myplotter.addHistograms(ChanVsbarNpeB, ['chan','nPE'], 'eventCuts4') #general NPE vs chan distribution
+    myplotter.addHistograms(CorrectTimeDist, 'DT_CorrectTime', 'eventCuts5') #FIXME: this is not being used now. general NPE vs chan distribution.
+    myplotter.addHistograms(NuniqueBar, 'NBarsHits', 'eventCuts4')
+    myplotter.addHistograms(NPERatio, 'BarNPERatio', 'eventCuts4')
 
-    myplotter.addHistograms(NBarsHitTag4, 'NBarsHits', 'P_BBigHit')
-
-    myplotter.addHistograms(NPERatioTag1, 'BarNPERatio', 'fourRowBigHits')
-
-    myplotter.addHistograms(NPERatioTag2, 'BarNPERatio', 'TBBigHit')
-
-    myplotter.addHistograms(NPERatioTag3, 'BarNPERatio', 'P_TBBigHit')
-
-    myplotter.addHistograms(NPERatioTag4, 'BarNPERatio', 'P_BBigHit')
+ 
 
 
-    myplotter.addHistograms(CorrectTimeDtTag1, 'DT_CorrectTime', 'fourRowBigHits')
-
-    myplotter.addHistograms(CorrectTimeDtTag2, 'DT_CorrectTime', 'TBBigHit')
-
-    myplotter.addHistograms(CorrectTimeDtTag3, 'DT_CorrectTime', 'P_TBBigHit')
-
-    myplotter.addHistograms(CorrectTimeDtTag4, 'DT_CorrectTime', 'P_BBigHit')
-    """
-
-    """
-    #FIXME:it seems currently creating a combined mask can retrieve the data based on Mike's sample code, but they are not implemented yet
-    mask0 = mycuts.getCut(mycuts.combineCuts, 'mask0', ['fourRowBigHits'])
-    mask1 = mycuts.getCut(mycuts.combineCuts, 'mask1', ['TBBigHit'])
-    mask2 = mycuts.getCut(mycuts.combineCuts, 'mask2', ['P_TBBigHit'])
-    mask3 = mycuts.getCut(mycuts.combineCuts, 'mask3', ['P_BBigHit'])
-    """
 
     #-------------------------start of cut efficiency analysis cutflows-----------------------------------------------------------
 

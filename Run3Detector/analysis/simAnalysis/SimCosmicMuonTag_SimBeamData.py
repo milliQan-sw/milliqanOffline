@@ -26,18 +26,64 @@ if __name__ == "__main__":
     P_TBBigHitCutCount= mycuts.getCut(mycuts.countEvent,"placeholder"  ,Countobject = "P_TBBigHit")
     P_BBigHitCutCount= mycuts.getCut(mycuts.countEvent, "placeholder" ,Countobject = "P_BBigHit")
 
+    #when the intial mask is MuonEventCut in the cutflow, then use the combined cut(mask) at below to do the counting and making polt.
+    TBBigHit_M = mycuts.getCut(mycuts.combineCuts, 'TBBigHit_M', ["TBBigHit", "muonEvent"])
+    fourRowBigHits_M = mycuts.getCut(mycuts.combineCuts, 'fourRowBigHits_M', ["fourRowBigHits", "muonEvent"])
+    P_TBBigHit_M = mycuts.getCut(mycuts.combineCuts, 'P_TBBigHit_M', ["P_TBBigHit", "muonEvent"])
+    P_BBigHit_M = mycuts.getCut(mycuts.combineCuts, 'P_BBigHit_M', ["P_BBigHit", "muonEvent"])
+
+
+    TBBigHitCutCount_m = mycuts.getCut(mycuts.countEvent, "placeholder" ,Countobject = "TBBigHit_M")
+    fourRowBigHitsCutCount_m = mycuts.getCut(mycuts.countEvent, "placeholder" ,Countobject = "fourRowBigHits_M")
+    P_TBBigHitCutCount_m = mycuts.getCut(mycuts.countEvent,"placeholder"  ,Countobject = "P_TBBigHit_M")
+    P_BBigHitCutCount_m = mycuts.getCut(mycuts.countEvent, "placeholder" ,Countobject = "P_BBigHit_M")
+
+
 
     #-------------------------section for making histograms---------------------------------------
-    ChanVsbarNpe_TBBigHit = r.TH2F("ChanVsbarNpe_TBBigHit","bar chanvsmpe tag1;chan; bar NPE", 80,0,80,200,0,100000)
-    ChanVsbarNpe_P_TBBigHit = r.TH2F("ChanVsbarNpe_P_TBBigHit","bar chanvsmpe tag1;chan; bar NPE", 80,0,80,200,0,100000)
+    
+    #plot for cutflow 1_default
+    ChanVsbarNpe_TBBigHit_1D = r.TH2F("ChanVsbarNpe_TBBigHit_1D","bar chanvsmpe tag1;chan; bar NPE", 80,0,80,200,0,100000)
+    ChanVsbarNpe_P_TBBigHit_1D = r.TH2F("ChanVsbarNpe_P_TBBigHit_1D","bar chanvsmpe tag1;chan; bar NPE", 80,0,80,200,0,100000)
 
-    myplotter.addHistograms(ChanVsbarNpe_TBBigHit, ['chan','nPE'], 'TBBigHit')
-    myplotter.addHistograms(ChanVsbarNpe_P_TBBigHit, ['chan','nPE'], 'P_TBBigHit')
+    myplotter.addHistograms(ChanVsbarNpe_TBBigHit_1D, ['chan','nPE'], 'TBBigHit')
+    myplotter.addHistograms(ChanVsbarNpe_P_TBBigHit_1D, ['chan','nPE'], 'P_TBBigHit')
+
+    #plot for cutflow 1_A
+    ChanVsbarNpe_TBBigHit_1A = r.TH2F("ChanVsbarNpe_TBBigHit_1A","bar chanvsmpe tag1;chan; bar NPE", 80,0,80,200,0,100000)
+    ChanVsbarNpe_P_TBBigHit_1A = r.TH2F("ChanVsbarNpe_P_TBBigHit_1A","bar chanvsmpe tag1;chan; bar NPE", 80,0,80,200,0,100000)
+
+    myplotter.addHistograms(ChanVsbarNpe_TBBigHit_1A, ['chan','nPE'], 'TBBigHit_M')
+    myplotter.addHistograms(ChanVsbarNpe_P_TBBigHit_1A, ['chan','nPE'], 'P_TBBigHit_M')
+
+    #plot for cutflow 1_B
+    ChanVsbarNpe_TBBigHit_1B = r.TH2F("ChanVsbarNpe_TBBigHit_1B","bar chanvsmpe tag1;chan; bar NPE", 80,0,80,200,0,100000)
+    ChanVsbarNpe_P_TBBigHit_1B = r.TH2F("ChanVsbarNpe_P_TBBigHit_1B","bar chanvsmpe tag1;chan; bar NPE", 80,0,80,200,0,100000)
+
+    myplotter.addHistograms(ChanVsbarNpe_TBBigHit_1B, ['chan','nPE'], 'TBBigHit')
+    myplotter.addHistograms(ChanVsbarNpe_P_TBBigHit_1B, ['chan','nPE'], 'P_TBBigHit')
+    
+
+
+
+    
+
+
 
     #muon pdg number cut is not being used
-    cutflow1 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,P_TBBigHitCut,P_TBBigHitCutCount,myplotter.dict['ChanVsbarNpe_TBBigHit'],myplotter.dict['ChanVsbarNpe_P_TBBigHit']]
+
+    #muonCut remove the non-muon data. There is no need to change the counting script and tag for making the plot compared with cutflow3
+    cutflow1_D = [MuonCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,P_TBBigHitCut,P_TBBigHitCutCount,myplotter.dict['ChanVsbarNpe_TBBigHit_1D'],myplotter.dict['ChanVsbarNpe_P_TBBigHit_1D']]
     
-    cutflow1_dict = {'cutflow1': cutflow1}
+    #counting script and drawing tag need to check if the current event is muon event.
+    cutflow1_A = [MuonEventCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHit_M,TBBigHitCutCount_m,P_TBBigHitCut,P_TBBigHit_M,P_TBBigHitCutCount_m,myplotter.dict['ChanVsbarNpe_TBBigHit_1A'],myplotter.dict['ChanVsbarNpe_P_TBBigHit_1A']]
+
+    cutflow1_B = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,P_TBBigHitCut,P_TBBigHitCutCount,myplotter.dict['ChanVsbarNpe_TBBigHit_1B'],myplotter.dict['ChanVsbarNpe_P_TBBigHit_1B']]
+
+
+    cutflow1_D_dict = {'cutflow1_D': cutflow1_D}
+    cutflow1_A_dict = {'cutflow1_A': cutflow1_D}
+    cutflow1_B_dict = {'cutflow1_B': cutflow1_D}
 
     def analysis(cutflow_dict,fileName):
 
@@ -45,6 +91,9 @@ if __name__ == "__main__":
         
         cutflow=cutflow_dict[cutflowName]
         
+        print(f"the current cutflow is {cutflowName} with file {fileName}")
+
+
         myschedule = milliQanScheduler(cutflow, mycuts)
 
         filelist = [f'/mnt/hadoop/se/store/user/czheng/SimFlattree/beamSimFlat/{fileName}.root:t']
@@ -64,8 +113,13 @@ if __name__ == "__main__":
         f_out.Close()
 
 
+    file = fileName1
 
-    analysis(cutflow1_dict,fileName1)
+
+
+    analysis(cutflow1_D_dict,file)
+    analysis(cutflow1_A_dict,file)
+    analysis(cutflow1_B_dict,file)
 
 
 

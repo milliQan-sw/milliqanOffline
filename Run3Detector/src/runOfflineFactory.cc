@@ -86,9 +86,17 @@ int main(int argc, char **argv){
     offlineFactory.setFriendFile(mergedTriggerFile);
 
     std::string lumiFile;
-    if (isSlab) lumiFile = TString(offlineDir) + "/configuration/slabConfigs/mqLumisSlab.json";
-    else lumiFile = TString(offlineDir) + "/configuration/barConfigs/mqLumis.json";
+    std::string goodRunList;
+    if (isSlab) {
+        lumiFile = TString(offlineDir) + "/configuration/slabConfigs/mqLumisSlab.json";
+        goodRunList = TString(offlineDir) + "/configuration/slabConfigs/goodRunsListSlab.json";
+    }
+    else {
+        lumiFile = TString(offlineDir) + "/configuration/barConfigs/mqLumis.json";
+        goodRunList = TString(offlineDir) + "/configuration/barConfigs/goodRunsList.json";
+    }
     offlineFactory.getLumis(lumiFile);
+    offlineFactory.checkGoodRunList(goodRunList);
 
     if (displayMode) {
 	if (isDRSdata){

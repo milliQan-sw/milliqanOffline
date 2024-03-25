@@ -186,6 +186,43 @@ std::vector<std::string> OfflineFactory::splitLumiContents(std::string input){
     return output;
 }
 
+//Function to load good runs list and check if this file is "good"
+void OfflineFactory::checkGoodRunList(std::string goodRunList){
+    std::string json;
+    if (goodRunList.find("{") != std::string::npos){
+        json = goodRunList;
+    }
+    else{
+        std::ifstream t(goodRunList);
+        std::stringstream buffer;
+        buffer << t.rdbuf();
+        json = buffer.str();
+    }
+
+    Json::Reader reader;
+    Json::Value jsonRoot;
+    bool parseSuccess = reader.parse(json, jsonRoot, false);
+    if (parseSuccess){
+
+        if(json.find("data") != std::string::npos){
+            std::cout << "Got data" << std::endl;
+            const Json::Value data = jsonRoot["data"];
+            for (int index = 0; index < data.size(); index ++){
+                if ( data[index][0].asInt() == runNumber && stoi(data[index][1].asString()) == fileNumber){
+                    goodRunLoose = data[index][2].asBool();
+                    goodRunMedium = data[index][3].asBool();
+                    goodRunTight = data[index][4].asBool();
+                    goodSingleTrigger = data[index][5].asBool();
+                    break;
+                }
+            }
+        }
+    }
+    else{
+        throw invalid_argument(goodRunList);
+    }
+}
+
 //Function to load lumis json file
 void OfflineFactory::getLumis(std::string lumiFile){
     std::string json;
@@ -260,6 +297,13 @@ void OfflineFactory::getLumis(std::string lumiFile){
     else{
         throw invalid_argument(lumiFile);
     }
+}
+
+void OfflineFactory::setGoodRuns(){
+    outputTreeContents.goodRunLoose = goodRunLoose;
+    outputTreeContents.goodRunMedium = goodRunMedium;
+    outputTreeContents.goodRunTight = goodRunTight;
+    outputTreeContents.goodSingleTrigger = goodSingleTrigger;
 }
 
 void OfflineFactory::getEventLumis(){
@@ -487,6 +531,11 @@ void OfflineFactory::prepareOutBranches(){
     outTree->Branch("beamOn",&outputTreeContents.beamOn);
     outTree->Branch("fillStart",&outputTreeContents.fillStart);
     outTree->Branch("fillEnd",&outputTreeContents.fillEnd);
+
+    outTree->Branch("goodRunLoose", &outputTreeContents.goodRunLoose);
+    outTree->Branch("goodRunMedium", &outputTreeContents.goodRunMedium);
+    outTree->Branch("goodRunTight", &outputTreeContents.goodRunTight);
+    outTree->Branch("goodSingleTrigger", &outputTreeContents.goodSingleTrigger);    
 
     // May need to change for DRS input
     outTree->Branch("triggerThreshold",&outputTreeContents.v_triggerThresholds);
@@ -1534,6 +1583,8 @@ void OfflineFactory::readWaveData(){
         findExtrema();
 
         getEventLumis();
+
+        setGoodRuns();
 
         if (outputTreeContents.event_time_fromTDC*1e3 < firstTDC_time) firstTDC_time = outputTreeContents.event_time_fromTDC*1e3; 
         if (outputTreeContents.event_time_fromTDC*1e3 > lastTDC_time) lastTDC_time = outputTreeContents.event_time_fromTDC*1e3;

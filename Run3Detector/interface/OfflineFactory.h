@@ -74,6 +74,10 @@ struct offline_tree_{
     bool boardsMatched;
     int DAQEventNumber;
     int maxPulseIndex;
+    bool goodRunLoose=false;
+    bool goodRunMedium=false;
+    bool goodRunTight=false;
+    bool goodSingleTrigger=false;
 
     //Luminosity Info
     float lumi;
@@ -168,7 +172,9 @@ public:
     void makeOutputTree();
     void loadJsonConfig(string);
     void getLumis(string);
+    void checkGoodRunList(string);
     void getEventLumis();
+    void setGoodRuns();
     void readMetaData();
     vector<vector<pair<float,float> > > readWaveDataPerEvent(int);
     //        void defineColors(vector<int>, vector<TColor*>, vector<float>, vector<float>, vector<float>);
@@ -237,6 +243,11 @@ private:
     int dynamicPedestalTotalSamples = 400;
     int dynamicPedestalConsecutiveSamples = 16;
     float dynamicPedestalGranularity = 0.25;
+
+    bool goodRunLoose;
+    bool goodRunMedium;
+    bool goodRunTight;
+    bool goodSingleTrigger;
 
     //file Lumi info
     vector<float> v_lumi;

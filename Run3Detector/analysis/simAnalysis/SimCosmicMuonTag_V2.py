@@ -378,7 +378,7 @@ def P_TBBigHit(self,cutName = None,cut = None):
 #cosmic panel & bottom row have big hits.
 
 def P_BBigHit(self, cutName = None,cut = None):
-    elf.events[f"l{l}R{R}"]elf.events["P_BBigHit"] = ak.any(self.events.l0R0 | self.events.l0R1 | self.events.l0R2 | self.events.l0R3) & self.events["TopPanelHit"]
+    self.events["P_BBigHit"] = ak.any(self.events.l0R0 | self.events.l0R1 | self.events.l0R2 | self.events.l0R3) & self.events["TopPanelHit"]
     
     if cut:
         self.events=self.events[self.events["P_BBigHit"]]

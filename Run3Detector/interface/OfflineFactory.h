@@ -73,6 +73,7 @@ struct offline_tree_{
     string event_t_string;
     bool boardsMatched;
     int DAQEventNumber;
+    int maxPulseIndex;
 
     //Luminosity Info
     float lumi;
@@ -132,11 +133,11 @@ struct offline_tree_{
     vector<Long64_t> v_groupTDC_g5;
     vector<Long64_t> v_groupTDC_g6;
     vector<Long64_t> v_groupTDC_g7;
-    vector<float> v_bx;
-    vector<float> v_by;
-    vector<float> v_bz;
+    //vector<float> v_bx;
+    //vector<float> v_by;
+    //vector<float> v_bz;
     vector<float> v_max;
-    vector<float> v_min;
+    //vector<float> v_min;
     vector<float> v_max_afterFilter;
     vector<float> v_max_threeConsec;
     vector<float> v_triggerThresholds;
@@ -144,6 +145,8 @@ struct offline_tree_{
     vector<int> v_triggerLogic;
     vector<int> v_triggerMajority;
     vector<float> v_min_afterFilter;
+    vector<int> v_iMaxPulseLayer;
+    vector<float> v_maxPulseTime;
 
     ulong tClockCycles;
     float tTime;
@@ -201,6 +204,7 @@ private:
     void writeVersion();
     ulong getUnixTime(TString&);
     void setTotalLumi();
+    void findExtrema();
 
 
     float sideband_range[2] = {0,50};
@@ -282,6 +286,8 @@ private:
 
     Long64_t firstTDC_time=10e15;
     Long64_t lastTDC_time=-1;
+
+    bool firstWarning = true;
     
 };
 #endif

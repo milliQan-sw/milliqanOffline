@@ -265,9 +265,45 @@ void OfflineFactory::getLumis(std::string lumiFile){
 void OfflineFactory::getEventLumis(){
     Long64_t event_time = outputTreeContents.event_time_fromTDC;
 
+    auto maxFillEnd = std::max_element(v_fillEnd.begin(), v_fillEnd.end());
+    auto minFillBegin = std::min_element(v_fillStart.begin(), v_fillStart.end());
+    
+    if (event_time > *maxFillEnd){
+        outputTreeContents.beamOn=false;
+        outputTreeContents.lumi = -1;
+        outputTreeContents.fillId = -1;
+        outputTreeContents.beamType = TString("None");
+        outputTreeContents.beamEnergy = -1;
+        outputTreeContents.betaStar = -1;
+        outputTreeContents.fillStart = 0;
+        outputTreeContents.fillEnd = 0;
+        if(firstWarning) {
+            cout << "Warning some events occured after last fill time in mqLumis" << endl;
+            firstWarning=false;
+        }
+        return;
+    }
+
+    if (event_time < *minFillBegin){
+        outputTreeContents.beamOn=false;
+        outputTreeContents.lumi = -1;
+        outputTreeContents.fillId = -1;
+        outputTreeContents.beamType = TString("None");
+        outputTreeContents.beamEnergy = -1;
+        outputTreeContents.betaStar = -1;
+        outputTreeContents.fillStart = 0;
+        outputTreeContents.fillEnd = 0;        
+        if(firstWarning){
+            cout << "Warning some event occured before first fill time in mqLumis" << endl;
+            firstWarning=false;
+        }
+        return;
+    }
+
     for(int ifill=0; ifill < v_fillId.size(); ifill++){
         //cout << "event time: " << event_time << ", fill start: " << v_fillStart[ifill]/long(1e3) << ", fill end: " << v_fillEnd[ifill]/long(1e3) << endl;
         if (event_time >= v_fillStart[ifill]/1e3 && event_time <= v_fillEnd[ifill]/1e3){
+            cout << "Found good fill" << endl;
             outputTreeContents.lumi = v_lumi[ifill];
             outputTreeContents.fillId = v_fillId[ifill];
             outputTreeContents.beamType = v_beamType[ifill];
@@ -280,7 +316,19 @@ void OfflineFactory::getEventLumis(){
             return;
         }
     }
-    cout << "Error did not find matching fill time for this event" << endl;
+    outputTreeContents.beamOn=false;
+    outputTreeContents.lumi = -1;
+    outputTreeContents.fillId = -1;
+    outputTreeContents.beamType = TString("None");
+    outputTreeContents.beamEnergy = -1;
+    outputTreeContents.betaStar = -1;
+    outputTreeContents.fillStart = 0;
+    outputTreeContents.fillEnd = 0;    
+    if(firstWarning){
+        cout << "Warning did not find matching fill time for some events" << endl;
+        firstWarning=false;
+    }
+    return;
 }
 
 void OfflineFactory::setTotalLumi(){
@@ -429,6 +477,7 @@ void OfflineFactory::prepareOutBranches(){
     outTree->Branch("DAQEventNumber", &outputTreeContents.DAQEventNumber);
     outTree->Branch("daqFileOpen", &outputTreeContents.daqFileOpen);
     outTree->Branch("daqFileClose", &outputTreeContents.daqFileClose);
+    outTree->Branch("maxPulseIndex", &outputTreeContents.maxPulseIndex);
 
     outTree->Branch("totalFillLumi",&outputTreeContents.lumi);
     outTree->Branch("fillId",&outputTreeContents.fillId);
@@ -472,6 +521,8 @@ void OfflineFactory::prepareOutBranches(){
     outTree->Branch("duration",&outputTreeContents.v_duration);
     outTree->Branch("delay",&outputTreeContents.v_delay);
     outTree->Branch("max",&outputTreeContents.v_max);
+    outTree->Branch("iMaxPulseLayer",&outputTreeContents.v_iMaxPulseLayer);
+    outTree->Branch("maxPulseTime",&outputTreeContents.v_maxPulseTime);
 
     outTree->Branch("present",&outputTreeContents.present);
     outTree->Branch("event_trigger_time_tag",&outputTreeContents.event_trigger_time_tag);
@@ -531,6 +582,8 @@ void OfflineFactory::resetOutBranches(){
     outputTreeContents.v_duration.clear();
     outputTreeContents.v_delay.clear();
     outputTreeContents.v_max.clear();
+    outputTreeContents.v_maxPulseTime.clear();
+    outputTreeContents.v_iMaxPulseLayer.clear();
     outputTreeContents.present.clear();
     outputTreeContents.event_trigger_time_tag.clear();
     outputTreeContents.event_time.clear();
@@ -1478,6 +1531,8 @@ void OfflineFactory::readWaveData(){
         outputTreeContents.tRunNum = tRunNum;
         outputTreeContents.tTBEvent = tTBEvent;
 
+        findExtrema();
+
         getEventLumis();
 
         if (outputTreeContents.event_time_fromTDC*1e3 < firstTDC_time) firstTDC_time = outputTreeContents.event_time_fromTDC*1e3; 
@@ -1648,6 +1703,7 @@ vector< pair<float,float> > OfflineFactory::processChannel(int ic){
 
     }
     outputTreeContents.v_max.push_back(waves[ic]->GetMaximum());
+    outputTreeContents.v_maxPulseTime.push_back(waves[ic]->GetBinLowEdge(waves[ic]->GetMaximumBin()));
     outputTreeContents.v_max_threeConsec.push_back(maxThreeConsec);
     //FIXME Need to add low pass filter option back
     outputTreeContents.v_max_afterFilter.push_back(waves[ic]->GetMaximum());
@@ -1811,4 +1867,26 @@ void OfflineFactory::writeVersion(){
 }
 TString OfflineFactory::getVersion(){
     return versionLong;
+}
+
+void OfflineFactory::findExtrema(){
+    
+    //find the max pulse in a given layer and the index of the max pulse in event
+    outputTreeContents.v_iMaxPulseLayer = {-1, -1, -1, -1};
+    std::vector<float> v_maxPulseHeight = {-1, -1, -1, -1};
+    outputTreeContents.maxPulseIndex = 0;
+    float maxPulseHeight = -1;
+
+    for (int ipulse=0; ipulse < outputTreeContents.v_height.size(); ++ipulse){
+        if (outputTreeContents.v_layer[ipulse] < 0 || outputTreeContents.v_layer[ipulse] > 3) continue;
+        if (outputTreeContents.v_height[ipulse] > v_maxPulseHeight[outputTreeContents.v_layer[ipulse]]){
+            outputTreeContents.v_iMaxPulseLayer[outputTreeContents.v_layer[ipulse]] = ipulse;
+            v_maxPulseHeight[outputTreeContents.v_layer[ipulse]] = outputTreeContents.v_height[ipulse];
+        }
+        if (outputTreeContents.v_height[ipulse] > maxPulseHeight){
+            outputTreeContents.maxPulseIndex = ipulse;
+            maxPulseHeight = outputTreeContents.v_height[ipulse];
+        }
+    }
+
 }

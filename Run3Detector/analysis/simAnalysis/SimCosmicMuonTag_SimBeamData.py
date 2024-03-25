@@ -83,7 +83,7 @@ if __name__ == "__main__":
 
     cutflow1_D_dict = {'cutflow1_D': cutflow1_D}
     cutflow1_A_dict = {'cutflow1_A': cutflow1_D}
-    cutflow1_B_dict = {'cutflow1_B': cutflow1_D}
+    cutflow1_B_dict = {'cutflow1_B': cutflow1_B}
 
     def analysis(cutflow_dict,fileName):
 
@@ -122,8 +122,8 @@ if __name__ == "__main__":
 
 
     #analysis(cutflow1_A_dict,fileName2)
-    #analysis(cutflow1_B_dict,fileName1)
-    #analysis(cutflow1_B_dict,fileName2)
+    analysis(cutflow1_B_dict,fileName1)
+    analysis(cutflow1_B_dict,fileName2)
     analysis(cutflow1_B_dict,fileName3)
 
 

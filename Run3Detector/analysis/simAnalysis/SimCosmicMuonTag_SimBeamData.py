@@ -9,7 +9,7 @@ if __name__ == "__main__":
     fileName2 = "BeamsimFlat_qcd_nophoton"
     fileName3 = "BeamsimFlat_w_nophoton"
 
-    filelist = [f'/mnt/hadoop/se/store/user/czheng/SimFlattree/beamSimFlat/{fileName1}.root:t']
+    
 
     branches = ["time","chan","runNumber","event","layer","nPE","type","row","muonHit"]
 
@@ -37,19 +37,34 @@ if __name__ == "__main__":
     #muon pdg number cut is not being used
     cutflow1 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,P_TBBigHitCut,P_TBBigHitCutCount,myplotter.dict['ChanVsbarNpe_TBBigHit'],myplotter.dict['ChanVsbarNpe_P_TBBigHit']]
 
-    cutflow = cutflow1
+    cutflow1_dict = {'cutflow1': cutflow1}
 
-    myschedule = milliQanScheduler(cutflow, mycuts)
+    def analysis(cutflow_dict,fileName):
 
-    myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts)
+        cutflowName=cutflow_dict.keys
+        cutflow=cutflow_dict.values()
+
+        myschedule = milliQanScheduler(cutflow, mycuts)
+
+        filelist = [f'/mnt/hadoop/se/store/user/czheng/SimFlattree/beamSimFlat/{fileName}.root:t']
+
+        myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts)
 
 
-    myiterator.run()
-    f_out = r.TFile(f"BeamDatademo.root", "RECREATE")
-    f_out.cd()
-    ChanVsbarNpe_TBBigHit.Write()
-    ChanVsbarNpe_P_TBBigHit.Write()
-    f_out.Close()
+        myiterator.run()
+        f_out = r.TFile(f"BeamDatademo.root", "RECREATE")
+        f_out.cd()
+        if cutflowName == cutflow1:
+            ChanVsbarNpe_TBBigHit.Write()
+            ChanVsbarNpe_P_TBBigHit.Write()
+        #change the else statement to other cutflows
+        else:
+            pass
+        f_out.Close()
+
+
+
+    analysis(cutflow1_dict,fileName1)
 
 
 

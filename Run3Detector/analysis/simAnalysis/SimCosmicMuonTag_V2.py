@@ -378,7 +378,7 @@ def P_TBBigHit(self,cutName = None,cut = None):
 #cosmic panel & bottom row have big hits.
 
 def P_BBigHit(self, cutName = None,cut = None):
-    self.events["P_BBigHit"] = ak.any(self.events.l0R0 | self.events.l0R1 | self.events.l0R2 | self.events.l0R3) & self.events["TopPanelHit"]
+    elf.events[f"l{l}R{R}"]elf.events["P_BBigHit"] = ak.any(self.events.l0R0 | self.events.l0R1 | self.events.l0R2 | self.events.l0R3) & self.events["TopPanelHit"]
     
     if cut:
         self.events=self.events[self.events["P_BBigHit"]]
@@ -392,13 +392,14 @@ def EmptyListFilter(self,cutName=None):
 
 #tag muon event (sim only)
 def MuonEvent(self, cutName = None, CutonBars = True, branches = None):
-
+    
+    #create a mask for each hit anc check whether it is hit by muon
     if CutonBars:
         for branch in branches:
             if branch == 'boardsMatched' or branch == "runNumber" or branch == "fileNumber" or branch == "event": continue
             self.events[branch] = self.events[branch][self.events.muonHit == 1]
 
-    #cut on events
+    #create a mask for event that contain muon hit
     else:
         self.events["muonEvent"] = ak.any(self.events.muonHit == 1, axis = 1) 
 

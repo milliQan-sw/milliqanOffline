@@ -590,6 +590,7 @@ if __name__ == "__main__":
     NuniqueBar = r.TH1F("NuniqueBar" , "NuniqueBar;number of unique bar;events",50,0,50)  
     NPERatio = r.TH1F("NPERatio","NPE ratio;max NPE/min NPE;Events",150,0,150)
 
+    #eventCuts at below is used while making plot
     eventCutsD = mycuts.getCut(mycuts.combineCuts, 'eventCuts', ["None_empty_event","TBBigHit", "barCut"])
     eventCuts = mycuts.getCut(mycuts.combineCuts, 'eventCuts', ["layerContraint","None_empty_event","TBBigHit", "barCut"])
     eventCuts2 = mycuts.getCut(mycuts.combineCuts, 'eventCuts2', ["layerContraint","None_empty_event","TBBigHit", "MiddleRow", "barCut"])

@@ -87,7 +87,7 @@ if __name__ == "__main__":
 
     def analysis(cutflow_dict,fileName):
 
-        cutflowName=next(iter(cutflow1_dict.keys())) #retrieve the first key from the iterator returned by cutflow1_dict.keys()
+        cutflowName=next(iter(cutflow_dict.keys())) #retrieve the first key from the iterator returned by cutflow1_dict.keys()
         
         cutflow=cutflow_dict[cutflowName]
         
@@ -104,22 +104,27 @@ if __name__ == "__main__":
         myiterator.run()
         f_out = r.TFile(f"BeamDatademo.root", "RECREATE")
         f_out.cd()
-        if cutflowName == cutflow1:
-            ChanVsbarNpe_TBBigHit.Write()
-            ChanVsbarNpe_P_TBBigHit.Write()
+        if cutflowName == "cutflow1_D":
+            ChanVsbarNpe_TBBigHit_1D.Write()
+            ChanVsbarNpe_P_TBBigHit_1D.Write()
         #change the else statement to other cutflows
         else:
             pass
         f_out.Close()
 
 
-    file = fileName1
+   
+
+    #analysis(cutflow1_D_dict,fileName1)
+    #analysis(cutflow1_D_dict,fileName2)
+    #analysis(cutflow1_D_dict,fileName3)
 
 
 
-    analysis(cutflow1_D_dict,file)
-    analysis(cutflow1_A_dict,file)
-    analysis(cutflow1_B_dict,file)
+    #analysis(cutflow1_A_dict,fileName2)
+    #analysis(cutflow1_B_dict,fileName1)
+    #analysis(cutflow1_B_dict,fileName2)
+    analysis(cutflow1_B_dict,fileName3)
 
 
 

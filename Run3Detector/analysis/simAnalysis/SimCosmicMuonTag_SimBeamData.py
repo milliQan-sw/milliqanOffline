@@ -36,14 +36,15 @@ if __name__ == "__main__":
 
     #muon pdg number cut is not being used
     cutflow1 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,P_TBBigHitCut,P_TBBigHitCutCount,myplotter.dict['ChanVsbarNpe_TBBigHit'],myplotter.dict['ChanVsbarNpe_P_TBBigHit']]
-
+    
     cutflow1_dict = {'cutflow1': cutflow1}
 
     def analysis(cutflow_dict,fileName):
 
-        cutflowName=cutflow_dict.keys
-        cutflow=cutflow_dict.values()
-
+        cutflowName=next(iter(cutflow1_dict.keys())) #retrieve the first key from the iterator returned by cutflow1_dict.keys()
+        
+        cutflow=cutflow_dict[cutflowName]
+        
         myschedule = milliQanScheduler(cutflow, mycuts)
 
         filelist = [f'/mnt/hadoop/se/store/user/czheng/SimFlattree/beamSimFlat/{fileName}.root:t']

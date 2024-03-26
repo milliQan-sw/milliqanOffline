@@ -36,7 +36,7 @@ class milliqanProcessor():
     #Get rid of the strings and make a dictionary so that it's easier to debug
     def fileChecker(self):
         #goodJson_array = ak.from_json(pathlib.Path("../goodRunTools/goodRunsMerged.json"))
-        goodJson_array = ak.from_json(pathlib.Path("../../configuration/barConfigs/checksMerged.json"))
+        goodJson_array = ak.from_json(pathlib.Path("goodRuns.json"))
         data = ak.Array(goodJson_array['data'])
         goodJson = ak.zip({
             'run': data[:, 0],

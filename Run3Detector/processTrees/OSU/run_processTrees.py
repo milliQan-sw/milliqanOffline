@@ -41,7 +41,7 @@ def singleRun():
     if args.outputDir:
         outDir = args.outputDir
     else:
-        outDir = '/store/user/milliqan/trees/' + 'v' + args.version + '/'
+        outDir = '/store/user/milliqan/trees/v{}/{}/'.format(args.version, args.runDir)
     logDir = '/data/users/milliqan/log/trees/v{0}/logs_v{0}_{1}_{2}-{3}/'.format(args.version, args.runDir, args.subDir, now.strftime("%m-%d"))
 
     if(not os.path.isdir(outDir)): os.mkdir(outDir)
@@ -61,7 +61,7 @@ def singleRun():
     +IsLocalJob = true
     Rank = TARGET.IsLocalSlot
     request_disk = 2000MB
-    request_memory = 250MB
+    request_memory = 500MB
     request_cpus = 1
     executable              = wrapper.sh
     arguments               = $(PROCESS) {1} {2} {3} {5} {7} {8}
@@ -122,7 +122,7 @@ def main(runNum, subRun, swVersion, reprocessAllFiles=False):
     if args.outputDir:
         outDir = args.outputDir
     else:
-        outDir = '/store/user/milliqan/trees/' + 'v' + swVersion + '/'
+        outDir = '/store/user/milliqan/trees/v{}/{}/'.format(swVersion, runNum)
     logDir = '/data/users/milliqan/log/trees/v{0}/logs_v{0}_{1}_{2}-{3}/'.format(swVersion, runNum, subRun, now.strftime("%m-%d-%H-%M-%S"))
 
     if(not os.path.isdir(outDir)): os.mkdir(outDir)
@@ -171,7 +171,7 @@ def main(runNum, subRun, swVersion, reprocessAllFiles=False):
     +IsLocalJob = true
     Rank = TARGET.IsLocalSlot
     request_disk = 2000MB
-    request_memory = 350MB
+    request_memory = 500MB
     request_cpus = 1
     executable              = wrapper.sh
     arguments               = $(PROCESS) {1} {2} {3} {5} {7}

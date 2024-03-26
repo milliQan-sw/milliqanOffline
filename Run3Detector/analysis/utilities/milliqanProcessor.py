@@ -17,7 +17,7 @@ class milliqanProcessor():
         self.runQualityOverride = runQualityOverride
         
         #Converting the quality level to an integer
-        self.qualityDict = {"loose": 0, "medium": 1, "tight": 2}
+        self.qualityDict = {"single_trigger": -1, "loose": 0, "medium": 1, "tight": 2}
         if self.qualityLevelString not in self.qualityDict.keys():
             raise Exception("Quality level '{0}' not recognized".format(self.qualityLevelString))
         print("Chosen quality level: ", self.qualityLevelString)
@@ -35,14 +35,16 @@ class milliqanProcessor():
 
     #Get rid of the strings and make a dictionary so that it's easier to debug
     def fileChecker(self):
-        goodJson_array = ak.from_json(pathlib.Path("../goodRunTools/goodRunsMerged.json"))
+        #goodJson_array = ak.from_json(pathlib.Path("../goodRunTools/goodRunsMerged.json"))
+        goodJson_array = ak.from_json(pathlib.Path("goodRuns.json"))
         data = ak.Array(goodJson_array['data'])
         goodJson = ak.zip({
             'run': data[:, 0],
             'file': data[:, 1],
             'loose': data[:, 2],
             'medium': data[:, 3],
-            'tight': data[:, 4]
+            'tight': data[:, 4],
+            'single_trigger': data[:, 5]
         }, depth_limit=1)
         
         for filepath in self.filelist:
@@ -61,6 +63,13 @@ class milliqanProcessor():
                 runQualityLevel = 1
             elif (matching_goodJson['tight'] == False) and (matching_goodJson['medium'] == False) and (matching_goodJson['loose'] == True):
                 runQualityLevel = 0
+                
+            #Establishes whether the run is a single trigger run
+            singleTriggerBool = False
+            if len(matching_goodJson) == 0:
+                pass
+            elif matching_goodJson['single_trigger']:
+                singleTriggerBool = True
 
             #Determines if the file was found
             if len(matching_goodJson) == 0:
@@ -69,9 +78,9 @@ class milliqanProcessor():
                 else:
                     raise Exception("File {0} is not in goodRuns.json. Please consult goodRuns.json :)".format(filename))
 
-            #Determines if it's a good run
-            if len(matching_goodJson) == 1:
-                if runQualityLevel == -1:
+            #Determines if it's a good run (for non-single-trigger runs)
+            if len(matching_goodJson) == 1 and self.qualityLevel>=0:
+                if runQualityLevel == -1 and not singleTriggerBool:
                     print("File {0} has a quality level that cannot be determined. Please consult goodRuns.json :)".format(filename))
                 elif runQualityLevel==2 and (self.qualityLevel <= runQualityLevel):
                     print("File {0} is good run (tight)".format(filename))
@@ -83,6 +92,15 @@ class milliqanProcessor():
                     print("File {0} is not a good run at the quality level '{1}', but we are overriding the quality check".format(filename, self.qualityLevelString))
                 else:
                     raise Exception("File {0} is not a good run at the level '{1}'. Please consult goodRuns.json :)".format(filename, self.qualityLevelString))
+                
+            #Determines if it's a good run (for single-trigger runs)
+            if len(matching_goodJson) == 1 and self.qualityLevel==-1:
+                if singleTriggerBool:
+                    print("File {0} is a single trigger run".format(filename))
+                elif self.runQualityOverride:
+                    print("File {0} is not a single trigger run, but we are overriding the quality check".format(filename))
+                else:
+                    raise Exception("File {0} is not a single trigger run. Please consult goodRuns.json :)".format(filename))
 
     def setBranches(self, branches):
         self.schedule = branches

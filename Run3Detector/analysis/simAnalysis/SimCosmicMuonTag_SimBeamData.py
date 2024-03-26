@@ -85,14 +85,13 @@ if __name__ == "__main__":
     cutflow1_A_dict = {'cutflow1_A': cutflow1_A}
     cutflow1_B_dict = {'cutflow1_B': cutflow1_B}
 
-    def analysis(cutflow_dict,fileName,*args):
+    def analysis(cutflow_dict,fileName,Out_fileName="demo",*args):
 
         cutflowName=next(iter(cutflow_dict.keys())) #retrieve the first key from the iterator returned by cutflow1_dict.keys()
         
         cutflow=cutflow_dict[cutflowName]
         
         print(f"the current cutflow is {cutflowName} with file {fileName}")
-
 
         myschedule = milliQanScheduler(cutflow, mycuts)
 
@@ -102,23 +101,24 @@ if __name__ == "__main__":
 
 
         myiterator.run()
-        f_out = r.TFile(f"BeamDatademo.root", "RECREATE")
+        f_out = r.TFile(f"{Out_fileName}_{cutflowName}.root", "RECREATE")
         f_out.cd()
         for hist in args:
             hist.Write()
+            hist.Reset() # clear the histograms and prepare for the next cutflow
         f_out.Close()
 
 
    
 
-    analysis(cutflow1_D_dict,fileName1,ChanVsbarNpe_TBBigHit_1D,ChanVsbarNpe_P_TBBigHit_1D)
-    analysis(cutflow1_D_dict,fileName2)
+    analysis(cutflow1_D_dict,fileName1,fileName1,ChanVsbarNpe_TBBigHit_1D,ChanVsbarNpe_P_TBBigHit_1D)
+    analysis(cutflow1_D_dict,fileName2,fileName2,ChanVsbarNpe_TBBigHit_1D,ChanVsbarNpe_P_TBBigHit_1D)
     analysis(cutflow1_D_dict,fileName3)
     analysis(cutflow1_A_dict,fileName1)
     analysis(cutflow1_A_dict,fileName2)
     analysis(cutflow1_A_dict,fileName3)
-    analysis(cutflow1_B_dict,fileName1)
-    analysis(cutflow1_B_dict,fileName2)
+    analysis(cutflow1_B_dict,fileName1,fileName1,ChanVsbarNpe_TBBigHit_1B,ChanVsbarNpe_P_TBBigHit_1B)
+    analysis(cutflow1_B_dict,fileName2,fileName2,ChanVsbarNpe_TBBigHit_1B,ChanVsbarNpe_P_TBBigHit_1B)
     analysis(cutflow1_B_dict,fileName3)
 
 

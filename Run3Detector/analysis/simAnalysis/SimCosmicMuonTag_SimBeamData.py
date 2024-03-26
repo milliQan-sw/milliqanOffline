@@ -82,10 +82,10 @@ if __name__ == "__main__":
 
 
     cutflow1_D_dict = {'cutflow1_D': cutflow1_D}
-    cutflow1_A_dict = {'cutflow1_A': cutflow1_D}
+    cutflow1_A_dict = {'cutflow1_A': cutflow1_A}
     cutflow1_B_dict = {'cutflow1_B': cutflow1_B}
 
-    def analysis(cutflow_dict,fileName):
+    def analysis(cutflow_dict,fileName,*args):
 
         cutflowName=next(iter(cutflow_dict.keys())) #retrieve the first key from the iterator returned by cutflow1_dict.keys()
         
@@ -104,24 +104,19 @@ if __name__ == "__main__":
         myiterator.run()
         f_out = r.TFile(f"BeamDatademo.root", "RECREATE")
         f_out.cd()
-        if cutflowName == "cutflow1_D":
-            ChanVsbarNpe_TBBigHit_1D.Write()
-            ChanVsbarNpe_P_TBBigHit_1D.Write()
-        #change the else statement to other cutflows
-        else:
-            pass
+        for hist in args:
+            hist.Write()
         f_out.Close()
 
 
    
 
-    #analysis(cutflow1_D_dict,fileName1)
-    #analysis(cutflow1_D_dict,fileName2)
-    #analysis(cutflow1_D_dict,fileName3)
-
-
-
-    #analysis(cutflow1_A_dict,fileName2)
+    analysis(cutflow1_D_dict,fileName1,ChanVsbarNpe_TBBigHit_1D,ChanVsbarNpe_P_TBBigHit_1D)
+    analysis(cutflow1_D_dict,fileName2)
+    analysis(cutflow1_D_dict,fileName3)
+    analysis(cutflow1_A_dict,fileName1)
+    analysis(cutflow1_A_dict,fileName2)
+    analysis(cutflow1_A_dict,fileName3)
     analysis(cutflow1_B_dict,fileName1)
     analysis(cutflow1_B_dict,fileName2)
     analysis(cutflow1_B_dict,fileName3)

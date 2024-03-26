@@ -1,15 +1,25 @@
+import tensorflow as tf
+from tensorflow.keras.layers import (Input, Dense, LeakyReLU, Embedding, Flatten,
+                                     Concatenate, Reshape, Activation)
+from tensorflow.keras.models import Model
 
 def build_generator(latent_dim, output_shape, embed_dim, num_classes):
     noise = Input((latent_dim), name="noise_input")
-    x = Dense(512)(noise)
-    x = LeakyReLU(0.2)(x)
+    x = Dense(256, name="gen_dense0")(noise)
+    x = LeakyReLU(0.2, name="gen_relu0")(x)
 
     label = Input((1), name="label")
-    l = Embedding(num_classes, embed_dim)(label)
-    l = Flatten(l)
+    l = Embedding(num_classes, embed_dim, input_length=1)(label)
+    l = Flatten()(l)
 
     x = Concatenate()([x, l])
-    output = Dense(output_shape)(x)
+    x = Dense(256, name="gen_dense1")(x)
+    x = LeakyReLU(0.2, name="gen_relu1")(x)
+    # x = dense(output_shape)(x)
+    # x = leakyrelu(0.2)(x)
+
+    output = Activation("tanh")(x)
+    output = Dense(output_shape, name="gen_dense2")(x)
     return Model([noise, label], output, name="generator")
 
 def build_discriminator(embed_dim, input_shape, num_classes):
@@ -19,11 +29,11 @@ def build_discriminator(embed_dim, input_shape, num_classes):
 
     label = Input((1), name="class_label")
     l = Embedding(num_classes, embed_dim)(label)
-    l = Flatten(l)
+    l = Flatten()(l)
 
     x = Concatenate()([x, l])
-    x = Dense(1)(x)
-    output = Sigmoid()(x)
+    output = Dense(1)(x)
+
     return Model([waveform, label], output, name="discriminator")
 
 @tf.function
@@ -35,7 +45,7 @@ def train_step (real_waveforms, real_labels, latent_dim, num_classes, generator,
 
     for _ in range(3):
         # Gradient tape keeps track of the forward pass so that you can back-propagate the errors
-        with tf.GradienTape() as dtape:
+        with tf.GradientTape() as dtape:
             # Generate waveforms
             generated_waveforms = generator([noise, real_labels], training=True)
 

@@ -113,16 +113,11 @@ if __name__ == "__main__":
 
     analysis(cutflow1_D_dict,fileName1,fileName1,ChanVsbarNpe_TBBigHit_1D,ChanVsbarNpe_P_TBBigHit_1D)
     analysis(cutflow1_D_dict,fileName2,fileName2,ChanVsbarNpe_TBBigHit_1D,ChanVsbarNpe_P_TBBigHit_1D)
-    analysis(cutflow1_D_dict,fileName3)
-    analysis(cutflow1_A_dict,fileName1)
-    analysis(cutflow1_A_dict,fileName2)
-    analysis(cutflow1_A_dict,fileName3)
+    analysis(cutflow1_D_dict,fileName3,fileName3,ChanVsbarNpe_TBBigHit_1D,ChanVsbarNpe_P_TBBigHit_1D)
+    analysis(cutflow1_A_dict,fileName1,fileName1,ChanVsbarNpe_TBBigHit_1A,ChanVsbarNpe_P_TBBigHit_1A)
+    analysis(cutflow1_A_dict,fileName2,fileName2,ChanVsbarNpe_TBBigHit_1A,ChanVsbarNpe_P_TBBigHit_1A)
+    analysis(cutflow1_A_dict,fileName3,fileName3,ChanVsbarNpe_TBBigHit_1A,ChanVsbarNpe_P_TBBigHit_1A)
     analysis(cutflow1_B_dict,fileName1,fileName1,ChanVsbarNpe_TBBigHit_1B,ChanVsbarNpe_P_TBBigHit_1B)
     analysis(cutflow1_B_dict,fileName2,fileName2,ChanVsbarNpe_TBBigHit_1B,ChanVsbarNpe_P_TBBigHit_1B)
-    analysis(cutflow1_B_dict,fileName3)
-
-
-
-
-
+    analysis(cutflow1_B_dict,fileName3,fileName3,ChanVsbarNpe_TBBigHit_1B,ChanVsbarNpe_P_TBBigHit_1B)
 

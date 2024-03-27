@@ -87,10 +87,10 @@ if __name__ == "__main__":
 
 
     #plot for cutflow 3_default
-    ChanVsbarNpe_TBBigHit_3D = r.TH2F("ChanVsbarNpe_TBBigHit_3D","bar chanvsmpe tag 3D;chan; bar NPE", 80,0,80,200,0,100000)
+    ChanVsbarNpe_P_BBigHit_3D = r.TH2F("ChanVsbarNpe_P_BBigHit_3D","bar chanvsmpe tag 3D;chan; bar NPE", 80,0,80,200,0,100000)
     ChanVsbarNpe_P_TBBigHit_3D = r.TH2F("ChanVsbarNpe_P_TBBigHit_3D","bar chanvsmpe tag 3D;chan; bar NPE", 80,0,80,200,0,100000)
 
-    myplotter.addHistograms(ChanVsbarNpe_TBBigHit_3D, ['chan','nPE'], 'P_BBigHit')
+    myplotter.addHistograms(ChanVsbarNpe_P_BBigHit_3D, ['chan','nPE'], 'P_BBigHit')
     myplotter.addHistograms(ChanVsbarNpe_P_TBBigHit_3D, ['chan','nPE'], 'P_TBBigHit')
 
     #plot for cutflow 3_A
@@ -126,18 +126,18 @@ if __name__ == "__main__":
     cutflow1_B = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,P_TBBigHitCut,P_TBBigHitCutCount,myplotter.dict['ChanVsbarNpe_TBBigHit_1B'],myplotter.dict['ChanVsbarNpe_P_TBBigHit_1B']]
 
 
-    cutflow2_D = [MuonCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,fourRowBigHitsCut,fourRowBigHitsCutCount,myplotter.dict['ChanVsbarNpe_TBBigHit_2D'],myplotter.dict['ChanVsbarNpe_P_TBBigHit_2D']]
+    cutflow2_D = [MuonCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,fourRowBigHitsCut,fourRowBigHitsCutCount,myplotter.dict['ChanVsbarNpe_TBBigHit_2D'],myplotter.dict['ChanVsbarNpe_fourRowBigHits_2D']]
 
-    cutflow2_A = [MuonEventCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHit_M,TBBigHitCutCount_m,fourRowBigHitsCut,fourRowBigHits_M,fourRowBigHitsCutCount_m,myplotter.dict['ChanVsbarNpe_TBBigHit_2A'],myplotter.dict['ChanVsbarNpe_P_TBBigHit_2A']]
+    cutflow2_A = [MuonEventCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHit_M,TBBigHitCutCount_m,fourRowBigHitsCut,fourRowBigHits_M,fourRowBigHitsCutCount_m,myplotter.dict['ChanVsbarNpe_TBBigHit_2A'],myplotter.dict['ChanVsbarNpe_fourRowBigHits_2A']]
 
-    cutflow2_B = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,fourRowBigHitsCut,fourRowBigHitsCutCount,myplotter.dict['ChanVsbarNpe_TBBigHit_2B'],myplotter.dict['ChanVsbarNpe_P_TBBigHit_2B']]
+    cutflow2_B = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,fourRowBigHitsCut,fourRowBigHitsCutCount,myplotter.dict['ChanVsbarNpe_TBBigHit_2B'],myplotter.dict['ChanVsbarNpe_fourRowBigHits_2B']]
 
 
-    cutflow3_D = [MuonCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,P_BBigHitCut,P_BBigHitCutCount,P_TBBigHitCut,P_TBBigHitCutCount,myplotter.dict['ChanVsbarNpe_TBBigHit_3D'],myplotter.dict['ChanVsbarNpe_P_TBBigHit_3D']]
+    cutflow3_D = [MuonCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,P_BBigHitCut,P_BBigHitCutCount,P_TBBigHitCut,P_TBBigHitCutCount,myplotter.dict['ChanVsbarNpe_P_BBigHit_3D'],myplotter.dict['ChanVsbarNpe_P_TBBigHit_3D']]
 
-    cutflow3_A = [MuonEventCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,P_BBigHitCut,P_BBigHit_M,P_BBigHitCutCount_m,P_TBBigHitCut,P_TBBigHit_M,P_TBBigHitCutCount_m ,myplotter.dict['ChanVsbarNpe_TBBigHit_3A'],myplotter.dict['ChanVsbarNpe_P_TBBigHit_3A']]
+    cutflow3_A = [MuonEventCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,P_BBigHitCut,P_BBigHit_M,P_BBigHitCutCount_m,P_TBBigHitCut,P_TBBigHit_M,P_TBBigHitCutCount_m ,myplotter.dict['ChanVsbarNpe_P_BBigHit_3A'],myplotter.dict['ChanVsbarNpe_P_TBBigHit_3A']]
 
-    cutflow3_B = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,P_BBigHitCut,P_BBigHitCutCount,P_TBBigHitCut,P_TBBigHitCutCount,myplotter.dict['ChanVsbarNpe_TBBigHit_3B'],myplotter.dict['ChanVsbarNpe_P_TBBigHit_3B']]
+    cutflow3_B = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,P_BBigHitCut,P_BBigHitCutCount,P_TBBigHitCut,P_TBBigHitCutCount,myplotter.dict['ChanVsbarNpe_P_BBigHit_3B'],myplotter.dict['ChanVsbarNpe_P_TBBigHit_3B']]
 
     
 

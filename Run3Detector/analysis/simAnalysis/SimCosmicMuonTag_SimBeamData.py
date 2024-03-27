@@ -133,11 +133,11 @@ if __name__ == "__main__":
     cutflow2_B = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,fourRowBigHitsCut,fourRowBigHitsCutCount,myplotter.dict['ChanVsbarNpe_TBBigHit_2B'],myplotter.dict['ChanVsbarNpe_fourRowBigHits_2B']]
 
 
-    cutflow3_D = [MuonCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,P_BBigHitCut,P_BBigHitCutCount,P_TBBigHitCut,P_TBBigHitCutCount,myplotter.dict['ChanVsbarNpe_P_BBigHit_3D'],myplotter.dict['ChanVsbarNpe_P_TBBigHit_3D']]
+    cutflow3_D = [MuonCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,P_BBigHitCut,P_BBigHitCutCount,TBBigHitCut,P_TBBigHitCut,P_TBBigHitCutCount,myplotter.dict['ChanVsbarNpe_P_BBigHit_3D'],myplotter.dict['ChanVsbarNpe_P_TBBigHit_3D']]
 
     cutflow3_A = [MuonEventCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,P_BBigHitCut,P_BBigHit_M,P_BBigHitCutCount_m,P_TBBigHitCut,P_TBBigHit_M,P_TBBigHitCutCount_m ,myplotter.dict['ChanVsbarNpe_P_BBigHit_3A'],myplotter.dict['ChanVsbarNpe_P_TBBigHit_3A']]
 
-    cutflow3_B = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,P_BBigHitCut,P_BBigHitCutCount,P_TBBigHitCut,P_TBBigHitCutCount,myplotter.dict['ChanVsbarNpe_P_BBigHit_3B'],myplotter.dict['ChanVsbarNpe_P_TBBigHit_3B']]
+    cutflow3_B = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,P_BBigHitCut,P_BBigHitCutCount,TBBigHitCut,P_TBBigHitCut,P_TBBigHitCutCount,myplotter.dict['ChanVsbarNpe_P_BBigHit_3B'],myplotter.dict['ChanVsbarNpe_P_TBBigHit_3B']]
 
     
 

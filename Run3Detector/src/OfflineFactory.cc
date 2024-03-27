@@ -205,7 +205,6 @@ void OfflineFactory::checkGoodRunList(std::string goodRunList){
     if (parseSuccess){
 
         if(json.find("data") != std::string::npos){
-            std::cout << "Got data" << std::endl;
             const Json::Value data = jsonRoot["data"];
             for (int index = 0; index < data.size(); index ++){
                 if ( data[index][0].asInt() == runNumber && stoi(data[index][1].asString()) == fileNumber){
@@ -213,6 +212,7 @@ void OfflineFactory::checkGoodRunList(std::string goodRunList){
                     goodRunMedium = data[index][3].asBool();
                     goodRunTight = data[index][4].asBool();
                     goodSingleTrigger = data[index][5].asBool();
+                    goodRunTag = data[index][6].asString();
                     break;
                 }
             }
@@ -240,20 +240,11 @@ void OfflineFactory::getLumis(std::string lumiFile){
     Json::Value jsonRoot;
     bool parseSuccess = reader.parse(json, jsonRoot, false);
     if (parseSuccess){
-        /*if (json.find("columns") != std::string::npos){
-            continue;
-        }
-        if (json.find("index") != std::string::npos){
-            continue;
-        }*/
         if(json.find("data") != std::string::npos){
-            std::cout << "Got data" << std::endl;
             const Json::Value data = jsonRoot["data"];
             for (int index = 0; index < data.size(); index ++){
                 //TODO fix it so that the filenumber is an int
                 if ( data[index][0].asInt() == runNumber && stoi(data[index][1].asString()) == fileNumber){
-                    std::cout << "found this event" << std::endl;
-                    //if (data[index][11].size() > 1){ //} != std::string::npos){
                     if (data[index][11].isArray()){
                         std::cout << "Run split among multiple fills" << std::endl;
 
@@ -1833,9 +1824,9 @@ vector< pair<float,float> > OfflineFactory::processChannel(int ic){
         outputTreeContents.v_timeFit.push_back(timeFit);
         outputTreeContents.v_time_module_calibrated.push_back(pulseBounds[ipulse].first+timingCalibrations[ic]);
         outputTreeContents.v_timeFit_module_calibrated.push_back(timeFit+timingCalibrations[ic]);
-        float area = waves[ic]->Integral();
+        float area = waves[ic]->Integral("width");
         outputTreeContents.v_area.push_back(area);
-        outputTreeContents.v_nPE.push_back((waves[ic]->Integral()/(speAreas[ic]))*(0.4/sampleRate));
+        outputTreeContents.v_nPE.push_back((waves[ic]->Integral("width")/(speAreas[ic]))*(0.4/sampleRate));
         outputTreeContents.v_ipulse.push_back(ipulse);
         outputTreeContents.v_npulses.push_back(npulses);
         outputTreeContents.v_pulseIndex.push_back(totalPulseCount+ipulse);
@@ -1915,6 +1906,10 @@ void OfflineFactory::writeVersion(){
     if (triggerFileMatched) triggerString = "true";
     TNamed v2("triggerMatched_"+triggerString,"triggerMatched_"+triggerString);
     v2.Write();
+
+    TString goodRunName("goodRunList_"+goodRunTag);
+    TNamed v3(goodRunName, goodRunName);
+    v3.Write();
 }
 TString OfflineFactory::getVersion(){
     return versionLong;

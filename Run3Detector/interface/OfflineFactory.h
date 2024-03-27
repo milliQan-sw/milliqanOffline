@@ -216,6 +216,7 @@ private:
     float sideband_range[2] = {0,50};
     TString versionShort;
     TString versionLong = "asddsf";
+    std::string goodRunTag;
     float sampleRate = 1.6; //Dummy value here, actual value read in from MetaData
     bool applyLPFilter = false;
     TString inFileName;

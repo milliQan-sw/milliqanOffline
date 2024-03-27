@@ -111,8 +111,8 @@ if __name__=="__main__":
     if args.runDir: mainDir = args.runDir
     if args.subDir: subDir = args.subDir
 
-    #logDir = '/data/users/mcarrigan/log/goodRunLists/' + d.strftime('%m_%d_%H')
-    logDir = '/abyss/users/mcarrigan/'
+    logDir = '/data/users/mcarrigan/log/goodRunLists/' + d.strftime('%m_%d_%H')
+    #logDir = '/abyss/users/mcarrigan/'
 
     condorFile = 'goodRunCondor.sub'
 

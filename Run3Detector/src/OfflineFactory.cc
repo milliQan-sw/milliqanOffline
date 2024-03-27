@@ -1423,6 +1423,7 @@ void OfflineFactory::displayEvents(std::vector<int> & eventsToDisplay,TString di
         resetOutBranches();
         vector<vector<pair<float,float> > > allPulseBounds;
         allPulseBounds = readWaveDataPerEvent(iEvent);
+	std::cout << allPulseBounds.size() << std::endl;
         displayEvent(iEvent,allPulseBounds,displayDirectoryForRun);
         //displaychannelEvent(iEvent,allPulseBounds,displayDirectoryForRun1);
     }
@@ -1465,8 +1466,8 @@ void OfflineFactory::readWaveData(){
         outputTreeContents.tEvtNum = tEvtNum;
         outputTreeContents.tRunNum = tRunNum;
         outputTreeContents.tTBEvent = tTBEvent;
-
-        getEventLumis();
+	//TODO: fix this for FORMOSA
+        //getEventLumis();
 
         if (outputTreeContents.event_time_fromTDC*1e3 < firstTDC_time) firstTDC_time = outputTreeContents.event_time_fromTDC*1e3; 
         if (outputTreeContents.event_time_fromTDC*1e3 > lastTDC_time) lastTDC_time = outputTreeContents.event_time_fromTDC*1e3;
@@ -1508,7 +1509,7 @@ void OfflineFactory::prepareWave(int ic){
     // waves[ic]->ResetStats();
     //subtract calibrated mean
     for(int ibin = 1; ibin <= waves[ic]->GetNbinsX(); ibin++){
-        waves[ic]->SetBinContent(ibin,waves[ic]->GetBinContent(ibin)-pedestals[ic]);        
+        waves[ic]->SetBinContent(ibin,-(waves[ic]->GetBinContent(ibin)-pedestals[ic]));        
     }
 
     //Get dynamical pedestal per channel in a particular event

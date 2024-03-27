@@ -65,46 +65,46 @@ if __name__ == "__main__":
 
 
     #plot for cutflow 2_default
-    ChanVsbarNpe_TBBigHit_2D = r.TH2F("ChanVsbarNpe_TBBigHit_2D","bar chanvsmpe tag1;chan; bar NPE", 80,0,80,200,0,100000)
-    ChanVsbarNpe_P_TBBigHit_2D = r.TH2F("ChanVsbarNpe_P_TBBigHit_2D","bar chanvsmpe tag1;chan; bar NPE", 80,0,80,200,0,100000)
+    ChanVsbarNpe_TBBigHit_2D = r.TH2F("ChanVsbarNpe_TBBigHit_2D","bar chanvsmpe tag 2D;chan; bar NPE", 80,0,80,200,0,100000)
+    ChanVsbarNpe_fourRowBigHits_2D = r.TH2F("ChanVsbarNpe_fourRowBigHits_2D","bar chanvsmpe tag2D;chan; bar NPE", 80,0,80,200,0,100000)
 
     myplotter.addHistograms(ChanVsbarNpe_TBBigHit_2D, ['chan','nPE'], 'TBBigHit')
-    myplotter.addHistograms(ChanVsbarNpe_P_TBBigHit_2D, ['chan','nPE'], 'P_TBBigHit')
+    myplotter.addHistograms(ChanVsbarNpe_fourRowBigHits_2D, ['chan','nPE'], 'fourRowBigHits')
 
     #plot for cutflow 2_A
-    ChanVsbarNpe_TBBigHit_2A = r.TH2F("ChanVsbarNpe_TBBigHit_2A","bar chanvsmpe tag1;chan; bar NPE", 80,0,80,200,0,100000)
-    ChanVsbarNpe_P_TBBigHit_2A = r.TH2F("ChanVsbarNpe_P_TBBigHit_2A","bar chanvsmpe tag1;chan; bar NPE", 80,0,80,200,0,100000)
+    ChanVsbarNpe_TBBigHit_2A = r.TH2F("ChanVsbarNpe_TBBigHit_2A","bar chanvsmpe tag 2A;chan; bar NPE", 80,0,80,200,0,100000)
+    ChanVsbarNpe_fourRowBigHits_2A = r.TH2F("ChanVsbarNpe_fourRowBigHits_2A","bar chanvsmpe tag 2A;chan; bar NPE", 80,0,80,200,0,100000)
 
     myplotter.addHistograms(ChanVsbarNpe_TBBigHit_2A, ['chan','nPE'], 'TBBigHit_M')
-    myplotter.addHistograms(ChanVsbarNpe_P_TBBigHit_2A, ['chan','nPE'], 'P_TBBigHit_M')
+    myplotter.addHistograms(ChanVsbarNpe_fourRowBigHits_2A, ['chan','nPE'], 'fourRowBigHits_M')
 
     #plot for cutflow 2_B
-    ChanVsbarNpe_TBBigHit_2B = r.TH2F("ChanVsbarNpe_TBBigHit_2B","bar chanvsmpe tag1;chan; bar NPE", 80,0,80,200,0,100000)
-    ChanVsbarNpe_P_TBBigHit_2B = r.TH2F("ChanVsbarNpe_P_TBBigHit_2B","bar chanvsmpe tag1;chan; bar NPE", 80,0,80,200,0,100000)
+    ChanVsbarNpe_TBBigHit_2B = r.TH2F("ChanVsbarNpe_TBBigHit_2B","bar chanvsmpe tag 2A;chan; bar NPE", 80,0,80,200,0,100000)
+    ChanVsbarNpe_fourRowBigHits_2B = r.TH2F("ChanVsbarNpe_fourRowBigHits_2B","bar chanvsmpe tag 2A;chan; bar NPE", 80,0,80,200,0,100000)
 
     myplotter.addHistograms(ChanVsbarNpe_TBBigHit_2B, ['chan','nPE'], 'TBBigHit')
-    myplotter.addHistograms(ChanVsbarNpe_P_TBBigHit_2B, ['chan','nPE'], 'P_TBBigHit')
+    myplotter.addHistograms(ChanVsbarNpe_fourRowBigHits_2B, ['chan','nPE'], 'fourRowBigHits')
 
 
     #plot for cutflow 3_default
-    ChanVsbarNpe_TBBigHit_3D = r.TH2F("ChanVsbarNpe_TBBigHit_3D","bar chanvsmpe tag1;chan; bar NPE", 80,0,80,200,0,100000)
-    ChanVsbarNpe_P_TBBigHit_3D = r.TH2F("ChanVsbarNpe_P_TBBigHit_3D","bar chanvsmpe tag1;chan; bar NPE", 80,0,80,200,0,100000)
+    ChanVsbarNpe_TBBigHit_3D = r.TH2F("ChanVsbarNpe_TBBigHit_3D","bar chanvsmpe tag 3D;chan; bar NPE", 80,0,80,200,0,100000)
+    ChanVsbarNpe_P_TBBigHit_3D = r.TH2F("ChanVsbarNpe_P_TBBigHit_3D","bar chanvsmpe tag 3D;chan; bar NPE", 80,0,80,200,0,100000)
 
-    myplotter.addHistograms(ChanVsbarNpe_TBBigHit_3D, ['chan','nPE'], 'TBBigHit')
+    myplotter.addHistograms(ChanVsbarNpe_TBBigHit_3D, ['chan','nPE'], 'P_BBigHit')
     myplotter.addHistograms(ChanVsbarNpe_P_TBBigHit_3D, ['chan','nPE'], 'P_TBBigHit')
 
     #plot for cutflow 3_A
-    ChanVsbarNpe_TBBigHit_3A = r.TH2F("ChanVsbarNpe_TBBigHit_3A","bar chanvsmpe tag1;chan; bar NPE", 80,0,80,200,0,100000)
-    ChanVsbarNpe_P_TBBigHit_3A = r.TH2F("ChanVsbarNpe_P_TBBigHit_3A","bar chanvsmpe tag1;chan; bar NPE", 80,0,80,200,0,100000)
+    ChanVsbarNpe_P_BBigHit_3A = r.TH2F("ChanVsbarNpe_P_BBigHit_3A","bar chanvsmpe tag 3A;chan; bar NPE", 80,0,80,200,0,100000)
+    ChanVsbarNpe_P_TBBigHit_3A = r.TH2F("ChanVsbarNpe_P_TBBigHit_3A","bar chanvsmpe tag 3A;chan; bar NPE", 80,0,80,200,0,100000)
 
-    myplotter.addHistograms(ChanVsbarNpe_TBBigHit_3A, ['chan','nPE'], 'TBBigHit_M')
+    myplotter.addHistograms(ChanVsbarNpe_P_BBigHit_3A, ['chan','nPE'], 'P_BBigHit_M')
     myplotter.addHistograms(ChanVsbarNpe_P_TBBigHit_3A, ['chan','nPE'], 'P_TBBigHit_M')
 
     #plot for cutflow 3_B
-    ChanVsbarNpe_TBBigHit_3B = r.TH2F("ChanVsbarNpe_TBBigHit_3B","bar chanvsmpe tag1;chan; bar NPE", 80,0,80,200,0,100000)
-    ChanVsbarNpe_P_TBBigHit_3B = r.TH2F("ChanVsbarNpe_P_TBBigHit_3B","bar chanvsmpe tag1;chan; bar NPE", 80,0,80,200,0,100000)
+    ChanVsbarNpe_P_BBigHit_3B = r.TH2F("ChanVsbarNpe_P_BBigHit_3B","bar chanvsmpe tag 3B;chan; bar NPE", 80,0,80,200,0,100000)
+    ChanVsbarNpe_P_TBBigHit_3B = r.TH2F("ChanVsbarNpe_P_TBBigHit_3B","bar chanvsmpe tag 3B;chan; bar NPE", 80,0,80,200,0,100000)
 
-    myplotter.addHistograms(ChanVsbarNpe_TBBigHit_3B, ['chan','nPE'], 'TBBigHit')
+    myplotter.addHistograms(ChanVsbarNpe_P_BBigHit_3B, ['chan','nPE'], 'P_BBigHit')
     myplotter.addHistograms(ChanVsbarNpe_P_TBBigHit_3B, ['chan','nPE'], 'P_TBBigHit')
     
     

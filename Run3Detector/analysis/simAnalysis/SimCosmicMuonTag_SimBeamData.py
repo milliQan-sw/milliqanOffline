@@ -193,27 +193,27 @@ if __name__ == "__main__":
     """
 
 
-    analysis(cutflow2_D_dict,fileName1,fileName1,ChanVsbarNpe_TBBigHit_2D,ChanVsbarNpe_P_TBBigHit_2D)
-    analysis(cutflow2_D_dict,fileName2,fileName2,ChanVsbarNpe_TBBigHit_2D,ChanVsbarNpe_P_TBBigHit_2D)
-    analysis(cutflow2_D_dict,fileName3,fileName3,ChanVsbarNpe_TBBigHit_2D,ChanVsbarNpe_P_TBBigHit_2D)
-    analysis(cutflow2_A_dict,fileName1,fileName1,ChanVsbarNpe_TBBigHit_2A,ChanVsbarNpe_P_TBBigHit_2A)
-    analysis(cutflow2_A_dict,fileName2,fileName2,ChanVsbarNpe_TBBigHit_2A,ChanVsbarNpe_P_TBBigHit_2A)
-    analysis(cutflow2_A_dict,fileName3,fileName3,ChanVsbarNpe_TBBigHit_2A,ChanVsbarNpe_P_TBBigHit_2A)
-    analysis(cutflow2_B_dict,fileName1,fileName1,ChanVsbarNpe_TBBigHit_2B,ChanVsbarNpe_P_TBBigHit_2B)
-    analysis(cutflow2_B_dict,fileName2,fileName2,ChanVsbarNpe_TBBigHit_2B,ChanVsbarNpe_P_TBBigHit_2B)
-    analysis(cutflow2_B_dict,fileName3,fileName3,ChanVsbarNpe_TBBigHit_2B,ChanVsbarNpe_P_TBBigHit_2B)
+    analysis(cutflow2_D_dict,fileName1,fileName1,ChanVsbarNpe_TBBigHit_2D,ChanVsbarNpe_fourRowBigHits_2D)
+    analysis(cutflow2_D_dict,fileName2,fileName2,ChanVsbarNpe_TBBigHit_2D,ChanVsbarNpe_fourRowBigHits_2D)
+    analysis(cutflow2_D_dict,fileName3,fileName3,ChanVsbarNpe_TBBigHit_2D,ChanVsbarNpe_fourRowBigHits_2D)
+    analysis(cutflow2_A_dict,fileName1,fileName1,ChanVsbarNpe_TBBigHit_2A,ChanVsbarNpe_fourRowBigHits_2A)
+    analysis(cutflow2_A_dict,fileName2,fileName2,ChanVsbarNpe_TBBigHit_2A,ChanVsbarNpe_fourRowBigHits_2A)
+    analysis(cutflow2_A_dict,fileName3,fileName3,ChanVsbarNpe_TBBigHit_2A,ChanVsbarNpe_fourRowBigHits_2A)
+    analysis(cutflow2_B_dict,fileName1,fileName1,ChanVsbarNpe_TBBigHit_2B,ChanVsbarNpe_fourRowBigHits_2B)
+    analysis(cutflow2_B_dict,fileName2,fileName2,ChanVsbarNpe_TBBigHit_2B,ChanVsbarNpe_fourRowBigHits_2B)
+    analysis(cutflow2_B_dict,fileName3,fileName3,ChanVsbarNpe_TBBigHit_2B,ChanVsbarNpe_fourRowBigHits_2B)
 
 
 
-    analysis(cutflow3_D_dict,fileName1,fileName1,ChanVsbarNpe_TBBigHit_3D,ChanVsbarNpe_P_TBBigHit_3D)
-    analysis(cutflow3_D_dict,fileName2,fileName2,ChanVsbarNpe_TBBigHit_3D,ChanVsbarNpe_P_TBBigHit_3D)
-    analysis(cutflow3_D_dict,fileName3,fileName3,ChanVsbarNpe_TBBigHit_3D,ChanVsbarNpe_P_TBBigHit_3D)
-    analysis(cutflow3_A_dict,fileName1,fileName1,ChanVsbarNpe_TBBigHit_3A,ChanVsbarNpe_P_TBBigHit_3A)
-    analysis(cutflow3_A_dict,fileName2,fileName2,ChanVsbarNpe_TBBigHit_3A,ChanVsbarNpe_P_TBBigHit_3A)
-    analysis(cutflow3_A_dict,fileName3,fileName3,ChanVsbarNpe_TBBigHit_3A,ChanVsbarNpe_P_TBBigHit_3A)
-    analysis(cutflow3_B_dict,fileName1,fileName1,ChanVsbarNpe_TBBigHit_3B,ChanVsbarNpe_P_TBBigHit_3B)
-    analysis(cutflow3_B_dict,fileName2,fileName2,ChanVsbarNpe_TBBigHit_3B,ChanVsbarNpe_P_TBBigHit_3B)
-    analysis(cutflow3_B_dict,fileName3,fileName3,ChanVsbarNpe_TBBigHit_3B,ChanVsbarNpe_P_TBBigHit_3B)
+    analysis(cutflow3_D_dict,fileName1,fileName1,ChanVsbarNpe_P_BBigHit_3D,ChanVsbarNpe_P_TBBigHit_3D)
+    analysis(cutflow3_D_dict,fileName2,fileName2,ChanVsbarNpe_P_BBigHit_3D,ChanVsbarNpe_P_TBBigHit_3D)
+    analysis(cutflow3_D_dict,fileName3,fileName3,ChanVsbarNpe_P_BBigHit_3D,ChanVsbarNpe_P_TBBigHit_3D)
+    analysis(cutflow3_A_dict,fileName1,fileName1,ChanVsbarNpe_P_BBigHit_3A,ChanVsbarNpe_P_TBBigHit_3A)
+    analysis(cutflow3_A_dict,fileName2,fileName2,ChanVsbarNpe_P_BBigHit_3A,ChanVsbarNpe_P_TBBigHit_3A)
+    analysis(cutflow3_A_dict,fileName3,fileName3,ChanVsbarNpe_P_BBigHit_3A,ChanVsbarNpe_P_TBBigHit_3A)
+    analysis(cutflow3_B_dict,fileName1,fileName1,ChanVsbarNpe_P_BBigHit_3B,ChanVsbarNpe_P_TBBigHit_3B)
+    analysis(cutflow3_B_dict,fileName2,fileName2,ChanVsbarNpe_P_BBigHit_3B,ChanVsbarNpe_P_TBBigHit_3B)
+    analysis(cutflow3_B_dict,fileName3,fileName3,ChanVsbarNpe_P_BBigHit_3B,ChanVsbarNpe_P_TBBigHit_3B)
 
 
 

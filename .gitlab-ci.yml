@@ -18,7 +18,7 @@ setup:
     script:
         - echo $Starting tests
         - which root
-        - git submodule add ../MilliDAQ.git
+        - git submodule add ../MilliDAQ.git --force
         - cd MilliDAQ/
         - make clean && make shared
         - cd ../

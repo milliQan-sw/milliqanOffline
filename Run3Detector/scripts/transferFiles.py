@@ -33,7 +33,7 @@ def FileIsGood(path):
     except:
         return False
 
-def checkMongoDB(db,allIds,allInputs,force,offline=False):
+def checkMongoDB(db,allIds,allInputs,force,offline=False,formosa=False):
     nX = 0
     #Check for existing entry 
     idsOut = []
@@ -42,10 +42,16 @@ def checkMongoDB(db,allIds,allInputs,force,offline=False):
     entriesInDB = []
     locationInDb = []
     currentLocation = []
-    if offline:
-        mongoDB = db.milliQanOfflineDatasets
+    if formosa:
+        if offline:
+            mongoDB = db.formosaOfflineDatasets
+        else:
+            mongoDB = db.formosaRawDatasets
     else:
-        mongoDB = db.milliQanRawDatasets
+        if offline:
+            mongoDB = db.milliQanOfflineDatasets
+        else:
+            mongoDB = db.milliQanRawDatasets
     for x in (mongoDB.find({"_id" :{"$in": allIds}})):
         indexInDb = allIds.index(x["_id"])
         indicesToSkip.append(indexInDb)

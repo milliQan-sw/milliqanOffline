@@ -1,9 +1,9 @@
 from pymongo import MongoClient
 
-def mongoConnect():
+def mongoConnect(datasetName="formosa"):
     try:
         client = MongoClient("mongodb.physics.ucdavis.edu",port=27017,username='mcitron',password='!!!Phys-2024-Mongo-Citron!!!', authSource='admin', authMechanism='SCRAM-SHA-256')
-        db=client['milliQanRawDatasets']
+        db=client[datasetName]
     except:
         print ("Could not publish as failed to connect to mongo server")
         return;
@@ -15,3 +15,4 @@ if __name__ == "__main__":
 
     collection_stats = db.command("collstats", "milliQanRawDatasets")
     print(collection_stats)
+

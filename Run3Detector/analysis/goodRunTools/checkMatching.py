@@ -9,6 +9,7 @@ import numpy as np
 import json
 from IPython.display import display
 import awkward as ak
+import math
 
 class runInfo:
     
@@ -32,7 +33,10 @@ class runInfo:
         self.offlineCTime = None
         self.offlineTrigMatched = 0
         self.triggerConfigPassing = False
+        self.singleTriggerPassing = False
         self.activeChannels = np.full(80, False)
+        self.runConfig = None
+        self.trigger = None
     
     def __str__(self):
         out = 'run: {0} file: {1}\n\t\
@@ -41,40 +45,41 @@ class runInfo:
                matchFile: {4}\n\t\
                offlineFile: {5}'.format(self.run, self.file, self.daqFile, self.trigFile, self.matchFile, self.offlineFile)
         return out
+
+class runConfig:
+
+    def __init__(self, name, dict):
+        self.name = name
+        self.startRun = dict['triggerConfig']['startRun']
+        self.endRun = dict['triggerConfig']['endRun']
+        self.fwVersion = dict['triggerConfig']['fwVersion']
+        self.coincidenceTime = dict['triggerConfig']['coincidenceTime']
+        self.deadTime = dict['triggerConfig']['deadTime']
+        self.trigger = dict['triggerConfig']['trigger']
+        self.channels = [ix for ix, x in enumerate(dict['chanMap']) if x[3] != -1]
         
         
 rawDirectories = ['1000', '1100', '1200', '1300', '1400']
 rawSubDirectories = ['0000', '0001', '0002', '0003', '0004', '0005', '0006', '0007', '0008', '0009']
 
-usedChannels = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-                11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 
-                21, 22, 23, 26, 27, 28, 29, 30, 
-                31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 
-                41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 
-                51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 
-                61, 62, 63, 68, 69, 70, 
-                71, 72, 73, 74, 75, 78, 79]
-
 def parse_args():
     parser=argparse.ArgumentParser()
-    parser.add_argument('-d', "--dir", help='Main directory to check files in', type=str, required=True)
+    parser.add_argument('-d', '--dir', help='Main directory to check files in', type=str, required=True)
     parser.add_argument('-s', '--subdir', help='Subdirectory to check for files', type=str, required=True)
     parser.add_argument('-n', '--outputName', help='Name of the output json files', type=str)
+    parser.add_argument('-c', '--configDir', help='Path to config dir', type=str, default='../../configuration/barConfigs/')
     parser.add_argument('--debug', help='Option to run in debug mode', action='store_true')
     args = parser.parse_args()
     return args
 
 class fileChecker():
     
-    def __init__(self):
+    def __init__(self, rawDir='/store/user/milliqan/run3/bar/', offlineDir='/store/user/milliqan/trees/v34/', configDir='../../configuration/barConfigs/'):
         self.min_run = 1200
         self.max_run = 1300
-        self.rawDir = ''
-        self.offlineDir = ''        
-        
-        self.parse_args()
-        if self.args.rawDir: self.rawDir = self.args.rawDir
-        if self.args.offlineDir: self.offlineDir = self.args.offlineDir
+        self.rawDir = rawDir
+        self.offlineDir = offlineDir       
+        self.configDir = configDir
             
         self.initializePlots()
 
@@ -86,18 +91,15 @@ class fileChecker():
         self.runInfos = pd.DataFrame(columns=['run', 'file', 'rawDir', 'offlineDir', 'daqFile', 'trigFile',
                                   'matchFile', 'offlineFile', 'totalEvents', 'unmatchedEvents', 
                                   'startTime', 'unmatchedBoards', 'daqCTime', 'trigCTime', 'matchCTime',
-                                  'offlineCTime', 'offlineTrigMatched', 'triggerConfigPassing', 'activeChannels'])
+                                  'offlineCTime', 'offlineTrigMatched', 'triggerConfigPassing', 'singleTriggerPassing', 
+                                  'activeChannels', 'runConfig', 'trigger'])
         
         self.debug = False
         
         self.rawDirs = rawDirectories = ['1000', '1100', '1200', '1300', '1400']
         self.subRawDirs = ['0000', '0001', '0002', '0003', '0004', '0005', '0006', '0007', '0008', '0009']
-        
-    def parse_args(self):
-        parser=argparse.ArgumentParser()
-        parser.add_argument("-r", "--rawDir", type=str, default = '/store/user/milliqan/run3/bar/', help="Raw data directory")
-        parser.add_argument("-o", "--offlineDir", type=str, default = '/store/user/milliqan/trees/v34/', help="Offline data directory")
-        self.args = parser.parse_args(args=[])
+
+        self.configList = self.getConfigList()
 
     def initializePlots(self):
 
@@ -108,6 +110,26 @@ class fileChecker():
         self.h_boardUnmatched = r.TH1F("h_boardUnmatched", "Number of Boards Unmatched", bins, self.min_run, self.max_run)
 
         self.c1  = r.TCanvas("c1", "c1", 800,800)
+
+    def getConfigList(self):
+        configs = {}
+        #TODO add ability to do this for slab
+        for filename in os.listdir(self.configDir):
+            if filename.startswith('configRun') and filename.endswith('.json'):
+                fin = open(self.configDir+filename)
+                info = json.load(fin)
+                configs[filename] = runConfig(filename, info)
+                fin.close()
+        return configs
+
+    def getTriggerConfig(self, run):
+        for cfg in self.configList.values():
+            if cfg.startRun > run: continue
+            elif cfg.startRun <= run and cfg.endRun >= run:
+                return cfg.name
+            elif cfg.endRun == -1 and cfg.startRun < run:
+                return cfg.name
+        return None
 
     def checkActiveTriggers(self, trigger):
         t_bin = trigger & 0b0000000001011111 #check only first 8 triggers
@@ -206,31 +228,57 @@ class fileChecker():
             fileNum = events[0, 'eventNum']/1000 + 1
             
             #ToDo sometimes the first event has no start time, need to check a few other events 
-            #self.runInfos['startTime'].loc[(self.runInfos['run'] == events[0, 'runNum']) & (self.runInfos['file'] == fileNum)] = events[0, 'startTime']
+            self.runInfos['startTime'].loc[(self.runInfos['run'] == events[0, 'runNum']) & (self.runInfos['file'] == fileNum)] = events[0, 'startTime'] 
             
             self.runInfos['totalEvents'].loc[(self.runInfos['run'] == events[0, 'runNum']) & (self.runInfos['file'] == fileNum)] += len(events)
             self.runInfos['unmatchedEvents'].loc[(self.runInfos['run'] == events[0, 'runNum']) & (self.runInfos['file'] == fileNum)] += len(unmatched)
     
         #TODO temporary hack to get trigger board meta data, eventually move these checks to offline checks
         fileListMeta = [x.split(':')[0] for x in fileList]
-
+        print(fileListMeta)
         for file in fileListMeta:
+            runNum, fileNum = self.getRunFile(file)
             myfile = r.TFile.Open(file, 'read')
+            if not myfile.GetListOfKeys().Contains("MetaData"): 
+                if int(runNum) < 1059:
+                    self.runInfos.loc[(self.runInfos['run'] == int(runNum)) & (self.runInfos['file'] == int(fileNum)), 'triggerConfigPassing'] = True
+                    self.runInfos.loc[(self.runInfos['run'] == int(runNum)) & (self.runInfos['file'] == int(fileNum)), 'trigger'] = 95
+                    self.runInfos.loc[(self.runInfos['run'] == int(runNum)) & (self.runInfos['file'] == int(fileNum)), 'singleTriggerPassing'] = False
+                continue
             metadata = myfile.Get("MetaData")
             passing = True
-            runNum, fileNum = self.getRunFile(file)
+            thisTrigger = None
+            configName = self.runInfos.loc[(self.runInfos['run'] == int(runNum)) & (self.runInfos['file'] == int(fileNum)), 'runConfig']
+            configName = configName.iloc[0]
+            thisConfig = self.configList[configName]
             for events in metadata:
-                passing = passing and events.fwVersion >= 11
+                #print("Run: {}, FW: {}, Trigger: {}, Coincidence: {}, Dead Time: {}".format(runNum, events.fwVersion, events.trigger, events.coincidenceTime, events.deadTime))
+                passing = passing and events.fwVersion == thisConfig.fwVersion
+                passing = passing and events.coincidenceTime == thisConfig.coincidenceTime
+                passing = passing and events.deadTime == thisConfig.deadTime
+
+                singleTrigger = False if events.trigger == 0 else (math.ceil(math.log10(events.trigger)/math.log10(2)) == math.floor(math.log10(events.trigger)/math.log10(2)))
+                #print("Trigger:", events.trigger, "Single Trigger Bit:", singleTrigger, "Passing", passing)
+                singlePass = passing and singleTrigger
+
                 passing = passing and self.checkActiveTriggers(events.trigger)
-                passing = passing and (events.coincidenceTime == 10 or events.coincidenceTime == 20) #This also changed
-                passing = passing and events.deadTime >= 100 #TODO changed to 142 in later runs
+
+                thisTrigger = events.trigger
             self.runInfos.loc[(self.runInfos['run'] == int(runNum)) & (self.runInfos['file'] == int(fileNum)), 'triggerConfigPassing'] = passing
+            self.runInfos.loc[(self.runInfos['run'] == int(runNum)) & (self.runInfos['file'] == int(fileNum)), 'trigger'] = thisTrigger
+            self.runInfos.loc[(self.runInfos['run'] == int(runNum)) & (self.runInfos['file'] == int(fileNum)), 'singleTriggerPassing'] = singlePass
+
     
     def getOfflineInfo(self):
         #add loc statement to only get those that haven't been updated yet
         rawFiles = self.runInfos[['run', 'file']].loc[~pd.notnull(self.runInfos['offlineFile'])].to_numpy()
         for pair in rawFiles:
-            offlineFile = 'MilliQan_Run{0}.{1}_v34.root'.format(pair[0], pair[1])
+            thisConfig = self.getTriggerConfig(pair[0])
+            self.runInfos['runConfig'].loc[(self.runInfos['run'] == pair[0]) & (self.runInfos['file'] == pair[1])] = thisConfig
+
+            subdir = int(math.floor(pair[0] / 100.0)) * 100
+            offlineFile = '{0}/MilliQan_Run{1}.{2}_v34.root'.format(subdir, pair[0], pair[1])
+            print(offlineFile)
             if os.path.exists(self.offlineDir+'/'+offlineFile): 
                 self.runInfos['offlineFile'].loc[(self.runInfos['run'] == pair[0]) & (self.runInfos['file'] == pair[1])] = offlineFile
                 self.runInfos['offlineDir'].loc[(self.runInfos['run'] == pair[0]) & (self.runInfos['file'] == pair[1])] = self.offlineDir
@@ -304,20 +352,37 @@ class fileChecker():
         self.runInfos['TriggersMatched'] = self.runInfos['unmatchedEvents'].apply(lambda x: True if x < 10 else False)
         self.runInfos['OfflineFilesTrigMatched'] = self.runInfos.apply(lambda x: True if (x['totalEvents'] > 0 and (x['offlineTrigMatched'] / x['totalEvents']) > 0.99) else False, axis=1)
         self.runInfos['passBoardMatching'] = self.runInfos.apply(lambda x: True if (x['totalEvents'] > 0 and (x['unmatchedBoards'] / x['totalEvents']) < 0.01) else False, axis=1)
-        self.runInfos['passActiveChannels'] = self.runInfos.apply(lambda x: False if np.any(x['activeChannels'][usedChannels]==False) else True, axis=1)
-        self.runInfos['inactiveChannels'] = self.runInfos.apply(lambda x: np.intersect1d(np.where(x['activeChannels']==False), usedChannels), axis=1)
+        self.runInfos['passActiveChannels'] = self.runInfos.apply(lambda x: False if np.any(x['activeChannels'][self.configList[x['runConfig']].channels]==False) else True, axis=1)
+        self.runInfos['inactiveChannels'] = self.runInfos.apply(lambda x: np.intersect1d(np.where(x['activeChannels']==False), self.configList[x['runConfig']].channels), axis=1)
+        self.runInfos['lvdsSwapVeto'] = self.runInfos.apply(lambda x: True if ((x['daqCTime'] >= datetime(2023, 7, 6)) & (x['daqCTime'] <= datetime(2023, 11, 10))) else False, axis=1)
 
-        self.runInfos['goodRuns'] = self.runInfos['TriggersMatched'] & self.runInfos['OfflineFilesTrigMatched'] & \
-                                    self.runInfos['passBoardMatching'] & self.runInfos['triggerConfigPassing'] #& \
-                                    #self.runInfos['passActiveChannels'] #remove condition for now to create era appropriate missing channels
+        self.runInfos['goodRunLoose'] = (self.runInfos['TriggersMatched']) & \
+                                    (self.runInfos['passBoardMatching']) & \
+                                    (self.runInfos['triggerConfigPassing']) & \
+                                    (self.runInfos['OfflineFilesTrigMatched'])
+        self.runInfos['goodRunMedium'] = (self.runInfos['goodRunLoose']) & (self.runInfos['inactiveChannels'].str.len() <= 2)
+        self.runInfos['goodRunTight'] = (self.runInfos['goodRunLoose']) & (self.runInfos['passActiveChannels']) & (~self.runInfos['lvdsSwapVeto'])
+
+        self.runInfos['goodSingleTrigger'] = (self.runInfos['TriggersMatched']) & \
+                                    (self.runInfos['passBoardMatching']) & \
+                                    (self.runInfos['singleTriggerPassing']) & \
+                                    (self.runInfos['OfflineFilesTrigMatched'])
+
+        self.runInfos['daqCTime'] = self.runInfos['daqCTime'].apply(lambda x: x.strftime("%Y-%m-%d%H:%M:%S") if x != None else None)
+        self.runInfos['trigCTime'] = self.runInfos['trigCTime'].apply(lambda x: x.strftime("%Y-%m-%d%H:%M:%S") if x != None else None)
+        self.runInfos['matchCTime'] = self.runInfos['matchCTime'].apply(lambda x: x.strftime("%Y-%m-%d%H:%M:%S") if x != None else None)
+        self.runInfos['offlineCTime'] = self.runInfos['offlineCTime'].apply(lambda x: x.strftime("%Y-%m-%d%H:%M:%S") if x != None else None)
+
     def makeGoodRunList(self, outName='goodRunList.json'):
                 
         goodRuns = self.runInfos
 
         #criteria for good runs
-        goodRuns = goodRuns.drop(goodRuns.loc[goodRuns['goodRuns']==False].index)
+        #goodRuns = goodRuns.drop(goodRuns.loc[(goodRuns['goodRunLoose']==False) & (goodRuns['goodSingleTrigger']==False)].index)
+        goodRuns = goodRuns.drop(goodRuns.loc[(goodRuns['goodRunLoose']==False)].index)
+
         
-        goodRuns = goodRuns[['run', 'file']]
+        goodRuns = goodRuns[['run', 'file', 'goodRunLoose', 'goodRunMedium', 'goodRunTight', 'goodSingleTrigger']]
         
         if os.path.exists(outName):
             goodRunList = pd.read_json(outName, orient='split')
@@ -375,8 +440,10 @@ if __name__ == "__main__":
 
     if not jsonName.endswith('.json'): jsonName += '.json'
     if not goodRunListName.endswith('.json'): goodRunListName += '.json'
+
+    print("Running on", args.dir, args.subdir)
     
-    myfileChecker = fileChecker()
+    myfileChecker = fileChecker(configDir=args.configDir)
     
     myfileChecker.debug = args.debug
     

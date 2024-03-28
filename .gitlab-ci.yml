@@ -60,8 +60,6 @@ analysis:
 build image:
     image: $DOCKER_IMAGE
     stage: setup
-    tags:
-        - docker
     services:
         - name: docker:dind
     rules:

@@ -36,6 +36,10 @@ def build_discriminator(embed_dim, input_shape, num_classes):
 
     return Model([waveform, label], output, name="discriminator")
 
+# The discriminator loss is defined as the combination of how well it is able
+# discriminate against real and fake data. The generator loss measures
+# how often the generated data is caught by the discriminator. Even ideally,
+# the loss should not go to 0, it will meet in the middle somewhere
 @tf.function
 def train_step (real_waveforms, real_labels, latent_dim, num_classes, generator, discriminator, g_opt, d_opt):
     batch_size = tf.shape(real_waveforms)[0]

@@ -6,7 +6,9 @@ import tensorflow as tf
 
 import ganv2
 from preprocessing import WaveformProcessor
+from utilities import plot_loss
 
+tf.compat.v1.disable_eager_execution()
 # Data Preprocessing Constants
 WAVEFORM_BOUNDS = (1200, 1600)
 SPE_AREA = 500
@@ -15,8 +17,8 @@ NS_PER_MEASUREMENT = 2.5
 # Model Constants
 LATENT_DIM = 500
 BATCH_SIZE = 128
-EPOCHS = 10000
-EVAL_EPOCH = 1000  # How often you should get output during training
+EPOCHS = 1000
+EVAL_EPOCH = 5000  # How often you should get output during training
 
 PLOT = False
 
@@ -25,7 +27,7 @@ INPUT_FILE = "/home/ryan/Documents/Data/MilliQan/outputWaveforms_812_2p5V.root"
 processor = WaveformProcessor(INPUT_FILE)
 
 
-# # Set static bounds for LED datset
+# Set static bounds for LED datset
 static_bounds = {key: np.array([[np.where(processor.times == WAVEFORM_BOUNDS[0])[0],
                                  np.where(processor.times == WAVEFORM_BOUNDS[1])[0]]])
                  for key in processor.histogram_dict}
@@ -34,12 +36,13 @@ static_bounds = {key: np.array([[np.where(processor.times == WAVEFORM_BOUNDS[0])
 isolated_peaks = processor.isolate_waveforms(static_bounds)
 
 npe = np.round(np.divide(np.trapz(isolated_peaks), SPE_AREA))
-num_classes = len(tf.unique(npe)[0])
-# Currently the model needs to use just normal label, not one-hot encoded
-# one_hot_encoded_labels = tf.one_hot(npe, depth=num_classes)
+num_classes = 12
+#num_classes = len(tf.unique(npe)[0])
 
 dataset = tf.data.Dataset.from_tensor_slices((isolated_peaks,
                                               npe))
+
+dataset = dataset.filter(lambda data, label: tf.logical_and(label >=0, label <12))
 dataset = dataset.shuffle(buffer_size=200)
 dataset = dataset.batch(BATCH_SIZE).prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
 
@@ -64,14 +67,19 @@ print(generator.summary())
 generator_opt = tf.keras.optimizers.Adam()
 disc_opt = tf.keras.optimizers.Adam()
 
+d_loss_values = []
+g_loss_values = [] 
+
 start = time.time()
 for epoch in range(EPOCHS):
+    if (epoch % 100) == 0:
+        print(f"On epoch {epoch}")
     d_loss = 0.0
     g_loss = 0.0
 
+    i = 0
     for waveform_batch, label_batch in dataset:
-        print(waveform_batch)
-        print(label_batch)
+        i+=1
         d_batch_loss, g_batch_loss = ganv2.train_step(waveform_batch, label_batch,
                                                       LATENT_DIM, num_classes,
                                                       generator, discriminator,
@@ -79,9 +87,14 @@ for epoch in range(EPOCHS):
         d_loss += d_batch_loss
         g_loss += g_batch_loss
 
-    d_loss /= len(dataset)
-    g_loss /= len(dataset)
+    d_loss /= i
+    g_loss /= i
+    d_loss_values.append(d_loss)
+    g_loss_values.append(g_loss)
 end = time.time()
+
+plot_loss(d_loss_values, g_loss_values, save_location="Plots/loss.png")
+
 print(f"Training took {end - start} seconds to complete.")
 discriminator.save("TrainedModels/discriminator.keras")
 generator.save("TrainedModels/generator.keras")

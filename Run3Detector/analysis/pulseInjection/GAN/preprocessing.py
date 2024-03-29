@@ -132,7 +132,7 @@ class WaveformProcessor():
         return input_data
 
     def calculate_npe(self, waveforms: np.ndarray, area_per_spe: float) -> int:
-        waveform_area = np.trapz(waveforms, dx=self.ns_per_measurement)
+        waveform_area = np.trapz(waveforms)
         return np.round(np.divide(waveform_area, area_per_spe))
 
     def plot_waveforms(self, plotDirectory: str) -> None:
@@ -149,3 +149,10 @@ class WaveformProcessor():
                 plt.savefig("{0}/{1}.png".format(plotDirectory, key))
             except KeyError:
                 continue
+
+    def get_npe_distribution(self) -> None:
+        """
+        Create a area distribution histogram to determine where the SPE peak is
+        """
+
+        

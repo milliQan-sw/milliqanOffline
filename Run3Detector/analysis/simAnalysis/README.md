@@ -81,6 +81,11 @@ I also craete multiple OLCosmicMuonTag_V2_*.py for same reason.
 
 
 
+----------------------------3-30 new file update---------------------
+SimCosmicMuonTag_SimBeamData.py: I apply the cosmic muon event tag on the beam sim files
+SIMMQplotter_containtBeta.py: my first demo that don't use self.events = self.events[eventCut], so the MQPlotter can work properly.
+
+
 
 
 

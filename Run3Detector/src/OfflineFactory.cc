@@ -119,15 +119,19 @@ void OfflineFactory::loadJsonConfig(string configFileName){
                 const Json::Value lowThreshJson = pulseParams["lowThresh"];
                 for (int index = 0; index < nConsecSamplesJson.size(); index ++){
                     nConsecSamples.push_back(nConsecSamplesJson[index].asInt());
+                    outputTreeContents.nConsecSamples_ = nConsecSamplesJson[index].asInt();
                 }
                 for (int index = 0; index < nConsecSamplesEndJson.size(); index ++){
                     nConsecSamplesEnd.push_back(nConsecSamplesEndJson[index].asInt());
+                    outputTreeContents.nConsecSamplesEnd_ = nConsecSamplesEndJson[index].asInt();
                 }
                 for (int index = 0; index < highThreshJson.size(); index ++){
                     highThresh.push_back(highThreshJson[index].asFloat());
+                    outputTreeContents.highThreshold_ = highThreshJson[index].asFloat();
                 }
                 for (int index = 0; index < lowThreshJson.size(); index ++){
                     lowThresh.push_back(lowThreshJson[index].asFloat());
+                    outputTreeContents.lowThreshold_ = lowThreshJson[index].asFloat();
                 }
                 std::cout << "Loaded pulse finding params" << std::endl;
             }
@@ -513,6 +517,11 @@ void OfflineFactory::prepareOutBranches(){
     outTree->Branch("daqFileOpen", &outputTreeContents.daqFileOpen);
     outTree->Branch("daqFileClose", &outputTreeContents.daqFileClose);
     outTree->Branch("maxPulseIndex", &outputTreeContents.maxPulseIndex);
+
+    outTree->Branch("nConsecSamples", &outputTreeContents.nConsecSamples_);
+    outTree->Branch("nConsecSamplesEnd", &outputTreeContents.nConsecSamplesEnd_);
+    outTree->Branch("highThreshold", &outputTreeContents.highThreshold_);
+    outTree->Branch("lowThreshold", &outputTreeContents.lowThreshold_);
 
     outTree->Branch("totalFillLumi",&outputTreeContents.lumi);
     outTree->Branch("fillId",&outputTreeContents.fillId);

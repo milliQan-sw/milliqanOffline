@@ -79,6 +79,12 @@ struct offline_tree_{
     bool goodRunTight=false;
     bool goodSingleTrigger=false;
 
+    //Pulse Finding Info
+    int nConsecSamples_;
+    int nConsecSamplesEnd_;
+    int highThreshold_;
+    int lowThreshold_;
+
     //Luminosity Info
     float lumi;
     int fillId;
@@ -231,7 +237,7 @@ private:
     mdaq::DemonstratorConfiguration * cfg = new mdaq::DemonstratorConfiguration();
     TString* fileOpenTime;
     TString* fileCloseTime;
-    vector<float> highThresh = {15.};
+    vector<float> highThresh = {15.}; //TODO: do these need to be vectors? They are the same for all channels currently
     vector<float> lowThresh = {5.};
     vector<int> nConsecSamples = {3};
     vector<int> nConsecSamplesEnd = {1};

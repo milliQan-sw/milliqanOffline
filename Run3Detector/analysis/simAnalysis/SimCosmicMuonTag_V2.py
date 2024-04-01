@@ -430,6 +430,16 @@ def CheckFieldName(self):
 
 def MiddleRow(self):
     self.events["MiddleRow"] = ( (self.events["row"]== 1) | (self.events["row"]== 2) )
+
+
+def sudo_straight(self):
+    #layer 0 pass the staight line cut
+    layer0data = self.events[self.events["layer"]] == 0
+    L0R=layer0data["row"]==0
+
+
+
+
     
 
 

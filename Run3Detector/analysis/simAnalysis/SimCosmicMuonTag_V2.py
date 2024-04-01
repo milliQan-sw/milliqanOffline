@@ -441,7 +441,7 @@ def sudo_straight(self):
     L0Max=ak.max(L0Ends,axix=1)
     L0Min=ak.min(L0Ends,axix=1)
     L0Mid = self.events[self.events["l0R1"] | self.events["l0R2"]]
-    check2 = (L0Mid =< L0Max) | (L0Mid >= L0Min)
+    check2 = (L0Mid <= L0Max) | (L0Mid >= L0Min)
     print(check2)
     #middle layer row number is between the min and max value
 

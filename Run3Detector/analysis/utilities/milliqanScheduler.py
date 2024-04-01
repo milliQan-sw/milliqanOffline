@@ -28,14 +28,13 @@ class milliQanScheduler():
 
     def addToSchedule(self, input):
         name = None
-
         if isinstance(input, milliqanPlot):
             self.schedule.append(input)
             return
         
         if isinstance(input, partial):
             name = input.func.__name__
-        elif input.__code__.co_name == '<lambda>':
+        elif hasattr(input, '__code__') and input.__code__.co_name == '<lambda>':
             #print("Lambda:", input)
             name = input.__parent__
         else:
@@ -43,8 +42,10 @@ class milliQanScheduler():
             name = input.__name__
         
         if name in globals() or name in locals():
+            #input = hello_decorator(input)
             self.schedule.append(input)
         elif name in dir(milliqanCuts):
+            #input = hello_decorator(input)
             self.schedule.append(input)
         else:
             print("Function {0} does not exist".format(name))

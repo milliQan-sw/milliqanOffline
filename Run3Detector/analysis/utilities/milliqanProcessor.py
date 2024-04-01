@@ -10,25 +10,20 @@ from milliqanPlotter import *
 
 class milliqanProcessor():
 
-    def __init__(self, filelist, branches, schedule=None, cuts=None, plotter=None, max_events=None):
+    def __init__(self, filelist, branches, schedule=None, max_events=None, step_size=10000):
         self.filelist = filelist
         self.branches = branches
         self.mqSchedule = schedule
-        #self.mqCuts = cuts
-        #self.plotter = plotter
         self.max_events = max_events
-
-    def setBranches(self, branches):
-        self.schedule = branches
-
-    '''def setCuts(self, cuts):
-        self.cuts = cuts'''
+        self.step_size = step_size
 
     def makeBranches(self, events):
-        #self.mqCuts.events = events
-        #self.plotter.events = events
+
         self.mqSchedule.setEvents(events)
         for branch in self.mqSchedule.schedule:
+            #if branch == 'tTrigger':
+            #    print("found trigger")
+            #    continue
             if isinstance(branch, milliqanPlot):
                 if isinstance(branch.variables, list):
                     for i in branch.variables:
@@ -73,13 +68,19 @@ class milliqanProcessor():
             #branches
             self.branches,
 
-            step_size=1000,
+            step_size=self.step_size,
 
             num_workers=8,
 
             ):
 
             total_events += len(events)
+
+            #print(events['tTrigger'][0])
+            _, events['tTrigger'] = ak.broadcast_arrays(events['pickupFlag'], events['tTrigger'])
+            _, events['event'] = ak.broadcast_arrays(events['pickupFlag'], events['event'])
+            #print(events['pickupFlag'][0])
+            #print(events['tTrigger'][0])
            
             if self.max_events and total_events >= self.max_events: break
 

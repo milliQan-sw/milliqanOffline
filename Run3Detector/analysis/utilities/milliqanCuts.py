@@ -3,21 +3,44 @@
 import awkward as ak
 import numpy as np
 
+# defining a decorator  
+def mqCut(func):  
+    
+    # inner1 is a Wrapper function in   
+    # which the argument is called  
+        
+    # inner function can access the outer local  
+    # functions like in this case "func"  
+    def inner1(self, *args, **kwargs):  
+        print("Hello, this is before function execution")  
+    
+        # calling the actual function now  
+        # inside the wrapper function.  
+        func(self, *args, **kwargs)  
+        self.cutflowCounter(func.__name__)
+        print("This is after function execution")  
+    
+    inner1.__name__ = func.__name__
+    return inner1  
+
+
 class milliqanCuts():
 
     def __init__(self):
         self.events = []
-        self.cutflow = []
+        self.cutflow = {}
         self.counter = 0
 
-    def cutflowCounter(self):
+    def cutflowCounter(self, name):
         # Increments events passing each stage of the cutflow
         # Creates each stage during the first pass
-        if len(self.cutflow) > self.counter:
-            self.cutflow[self.counter]+=len(self.events)
+        if name in self.cutflow:
+            self.cutflow[name] += len(self.events)
+        #if len(self.cutflow) > self.counter:
+        #    self.cutflow[self.counter]+=len(self.events)
         # Builds the array without knowledge of the number of cuts
         else:
-            self.cutflow.append(len(self.events))
+            self.cutflow[name]=len(self.events)
         self.counter+=1
 
     def getCutflowCounts(self):
@@ -32,6 +55,7 @@ class milliqanCuts():
         self.counter=0
 
     #function to allow multiple masks (cuts) to be combined together and saved as name
+    @mqCut
     def combineCuts(self, name, cuts):
         for cut in cuts:
             if name in ak.fields(self.events):
@@ -40,10 +64,12 @@ class milliqanCuts():
                 self.events[name] = self.events[cut]
 
     # Dummy cut for use while construcing the cutflow mechanics
+    @mqCut
     def neverCut(self, cutName=None, cut=False):
         if cut: self.events = self.events
         self.cutflowCounter()
 
+    @mqCut
     def pickupCut(self, cutName=None, cut=False, tight=False, branches=None):
         if cut and tight:
             for branch in branches:
@@ -53,6 +79,7 @@ class milliqanCuts():
                 if branch == 'boardsMatched': continue
                 self.events[branch] = self.events[branch][~self.events.pickupFlag]
 
+    @mqCut
     def boardsMatched(self, cutName=None, cut=False, branches=None):
         self.events['boardsMatched'], junk = ak.broadcast_arrays(self.events.boardsMatched, self.events.pickupFlag)
         
@@ -96,9 +123,6 @@ class milliqanCuts():
                                             (ak.count_nonzero(unique3, axis=1)==1)
                                             )
         else:
-            print(self.events.layer==0)
-            print(self.events['type']==0)
-            print((self.events.layer==0) & (self.events['type']==0))
             self.events['oneHitPerLayerCut'] = (
                                             (ak.count_nonzero((self.events.layer==0) & (self.events['type']==0), axis=1)==1) &
                                             (ak.count_nonzero((self.events.layer==1) & (self.events['type']==0), axis=1)==1) &

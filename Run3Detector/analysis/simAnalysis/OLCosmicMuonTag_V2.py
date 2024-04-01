@@ -36,8 +36,10 @@ if __name__ == "__main__":
     #----------------------------------------------------------------------------------------------------------------------------------- OSU T3
     #signle file test
     #numRun = 1190
-    #fileNum = 1
-    #filelist =[f'/home/czheng/SimCosmicFlatTree/offlinefile/MilliQan_Run{numRun}.{fileNum}_v34.root:t']
+    #fileNum = 2
+    numRun = str(sys.argv[1])
+    fileNum = str(sys.argv[2])
+    filelist =[f'/store/user/milliqan/trees/v34/1100/MilliQan_Run{numRun}.{fileNum}_v34.root:t']
 
 
     #------------------------------------------------------------------------------------------------
@@ -46,10 +48,10 @@ if __name__ == "__main__":
     #print("this is numRun" + str(sys.argv[1]) )
 
 
-    numRun = str(sys.argv[1])
-    fileNum = str(sys.argv[2])
-    filelist =[f'/home/czheng/SimCosmicFlatTree/offlinefile/MilliQan_Run{numRun}.{fileNum}_v34.root:t']
-    print(filelist)
+    #numRun = str(sys.argv[1])
+    #fileNum = str(sys.argv[2])
+    #filelist =[f'/home/czheng/SimCosmicFlatTree/offlinefile/MilliQan_Run{numRun}.{fileNum}_v34.root:t']
+    #print(filelist)
 
     outputPath = str(sys.argv[3]) # the path is used at the very end for the output txt file
     print(outputPath)
@@ -89,17 +91,19 @@ if __name__ == "__main__":
     P_BBigHitCutCount= mycuts.getCut(mycuts.countEvent, "placeholder" ,Countobject = "P_BBigHit")
     #NbarsHitsCount1= mycuts.getCut(mycuts.P_BBigHit, "NBarsHits",cut = None,hist = NBarsHitTag1)#FIXME: getCut can't take hist as argument. Maybe I should remove it
     #cutflowSTD = [mycuts.MuonEvent,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,mycuts.NbarsHitsCount ,myplotter.dict['NBarsHitTag2']] #default analysis cutflow
-
-
+    
 
     #Cut flow 1. This one is for testing the cut efficiency of different tags. TB big hits - > TB + panel big hits 
-    cutflow1 = [mycuts.boardsMatched,mycuts.pickupCut,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,P_TBBigHitCut,P_TBBigHitCutCount]
+    
+    cutflow1 = [mycuts.boardsMatched,mycuts.pickupCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,P_TBBigHitCut,P_TBBigHitCutCount,mycuts.sudo_straight]
+  
+
 
     #Cut flow 2. This one is for testing the cut efficiency of different tags. TB big hits - > 4 rows big hits
-    cutflow2 = [mycuts.boardsMatched,mycuts.pickupCut,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,fourRowBigHitsCut,fourRowBigHitsCutCount]
+    cutflow2 = [mycuts.boardsMatched,mycuts.pickupCut,mycuts.mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,fourRowBigHitsCut,fourRowBigHitsCutCount]
 
     #cut flow 3. This one is for testing the cut efficiency of different tags. B + panel big hits  - > TB + panel big hits 
-    cutflow3 = [mycuts.boardsMatched,mycuts.pickupCut,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,CosmuonTagIntialization,P_BBigHitCut,P_BBigHitCutCount,TBBigHitCut,P_TBBigHitCut,P_TBBigHitCutCount]
+    cutflow3 = [mycuts.boardsMatched,mycuts.pickupCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,CosmuonTagIntialization,P_BBigHitCut,P_BBigHitCutCount,TBBigHitCut,P_TBBigHitCut,P_TBBigHitCutCount]
 
     cutflow = cutflow1
 

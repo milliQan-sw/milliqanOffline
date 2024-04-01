@@ -436,10 +436,6 @@ def sudo_straight(self):
     #required big hit at the top row and top pane
     #0 and 3th row must have big hit
     Check1=self.events["P_TBBigHit"]
-    
-
-
-
     #layer 0 pass the staight line cut
     L0Ends = self.events[self.events["l0R0"] | self.events["l0R3"]]
     L0Max=ak.max(L0Ends,axix=1)
@@ -451,15 +447,7 @@ def sudo_straight(self):
 
 
 
-
-
-
-    
-
-
-
-
-    
+setattr(milliqanCuts, 'sudo_straight',sudo_straight)    
 
 
 setattr(milliqanCuts, 'MiddleRow', MiddleRow)

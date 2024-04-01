@@ -433,9 +433,28 @@ def MiddleRow(self):
 
 
 def sudo_straight(self):
+    #required big hit at the top row and top pane
+    #0 and 3th row must have big hit
+    Check1=self.events["P_TBBigHit"]
+    
+
+
+
     #layer 0 pass the staight line cut
-    layer0data = self.events[self.events["layer"]] == 0
-    L0R=layer0data["row"]==0
+    L0Ends = self.events[self.events["l0R0"] | self.events["l0R3"]]
+    L0Max=ak.max(L0Ends,axix=1)
+    L0Min=ak.min(L0Ends,axix=1)
+    L0Mid = self.events[self.events["l0R1"] | self.events["l0R2"]]
+    check2 = (L0Mid =< L0Max) | (L0Mid >= L0Min)
+    print(check2)
+    #middle layer row number is between the min and max value
+
+
+
+
+
+
+    
 
 
 

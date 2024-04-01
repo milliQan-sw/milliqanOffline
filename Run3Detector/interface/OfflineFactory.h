@@ -80,10 +80,10 @@ struct offline_tree_{
     bool goodSingleTrigger=false;
 
     //Pulse Finding Info
-    int nConsecSamples_;
-    int nConsecSamplesEnd_;
-    int highThreshold_;
-    int lowThreshold_;
+    std::vector<int> nConsecSamples_;
+    std::vector<int> nConsecSamplesEnd_;
+    std::vector<float> highThreshold_;
+    std::vector<float> lowThreshold_;
 
     //Luminosity Info
     float lumi;
@@ -154,6 +154,7 @@ struct offline_tree_{
     vector<bool> v_triggerEnable;
     vector<int> v_triggerLogic;
     vector<int> v_triggerMajority;
+    vector<int> v_triggerPolarity;
     vector<float> v_min_afterFilter;
     vector<int> v_iMaxPulseLayer;
     vector<float> v_maxPulseTime;
@@ -223,7 +224,7 @@ private:
     TString versionShort;
     TString versionLong = "asddsf";
     std::string goodRunTag;
-    float sampleRate = 1.6; //Dummy value here, actual value read in from MetaData
+    float sampleRate = 1.6;
     bool applyLPFilter = false;
     TString inFileName;
     TString outFileName;

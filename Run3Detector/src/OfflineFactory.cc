@@ -119,19 +119,15 @@ void OfflineFactory::loadJsonConfig(string configFileName){
                 const Json::Value lowThreshJson = pulseParams["lowThresh"];
                 for (int index = 0; index < nConsecSamplesJson.size(); index ++){
                     nConsecSamples.push_back(nConsecSamplesJson[index].asInt());
-                    outputTreeContents.nConsecSamples_ = nConsecSamplesJson[index].asInt();
                 }
                 for (int index = 0; index < nConsecSamplesEndJson.size(); index ++){
                     nConsecSamplesEnd.push_back(nConsecSamplesEndJson[index].asInt());
-                    outputTreeContents.nConsecSamplesEnd_ = nConsecSamplesEndJson[index].asInt();
                 }
                 for (int index = 0; index < highThreshJson.size(); index ++){
                     highThresh.push_back(highThreshJson[index].asFloat());
-                    outputTreeContents.highThreshold_ = highThreshJson[index].asFloat();
                 }
                 for (int index = 0; index < lowThreshJson.size(); index ++){
                     lowThresh.push_back(lowThreshJson[index].asFloat());
-                    outputTreeContents.lowThreshold_ = lowThreshJson[index].asFloat();
                 }
                 std::cout << "Loaded pulse finding params" << std::endl;
             }
@@ -419,24 +415,35 @@ void OfflineFactory::validateInput(){
     }
     else{ 
         for (int ic = 0; ic < numChan-1; ic++) nConsecSamples.push_back(nConsecSamples.at(0));
+        outputTreeContents.nConsecSamples_ = nConsecSamples;
+
     }
     if (nConsecSamplesEnd.size() > 1){
         if (nConsecSamplesEnd.size() != numChan) throw length_error("nConsecSamplesEnd should be length "+std::to_string(numChan) + "or 1");
     }
     else{ 
         for (int ic = 0; ic < numChan-1; ic++) nConsecSamplesEnd.push_back(nConsecSamplesEnd.at(0));
+        outputTreeContents.nConsecSamplesEnd_ = nConsecSamplesEnd;
     }
     if (lowThresh.size() > 1){
         if (lowThresh.size() != numChan) throw length_error("lowThresh should be length "+std::to_string(numChan) + "or 1");
     }
     else{ 
         for (int ic = 0; ic < numChan-1; ic++) lowThresh.push_back(lowThresh.at(0));
+        outputTreeContents.lowThreshold_ = lowThresh;
     }
     if (highThresh.size() > 1){
         if (highThresh.size() != numChan) throw length_error("highThresh should be length "+std::to_string(numChan) + "or 1");
     }
     else{ 
         for (int ic = 0; ic < numChan-1; ic++) highThresh.push_back(highThresh.at(0));
+        if(true){
+            for (int ic = 0; ic < numChan; ic++){
+                if (outputTreeContents.v_triggerThresholds[ic]*10e3 > 50) continue; //if pannel keep default
+                highThresh[ic] = outputTreeContents.v_triggerThresholds[ic]*10e3 - 5;
+            }
+        }
+        outputTreeContents.highThreshold_ = highThresh;
     }
     ////Calibrations
     if (timingCalibrations.size() > 0){
@@ -541,6 +548,7 @@ void OfflineFactory::prepareOutBranches(){
     outTree->Branch("triggerThreshold",&outputTreeContents.v_triggerThresholds);
     outTree->Branch("triggerEnable",&outputTreeContents.v_triggerEnable);
     outTree->Branch("triggerMajority",&outputTreeContents.v_triggerMajority);
+    outTree->Branch("triggerPolarity",&outputTreeContents.v_triggerPolarity);
     outTree->Branch("triggerLogic",&outputTreeContents.v_triggerLogic);
     outTree->Branch("dynamicPedestal",&outputTreeContents.v_dynamicPedestal);
     outTree->Branch("sidebandMean",&outputTreeContents.v_sideband_mean);
@@ -599,10 +607,6 @@ void OfflineFactory::prepareOutBranches(){
 //Clear vectors and reset 
 void OfflineFactory::resetOutBranches(){
     // May need to change for DRS input
-    outputTreeContents.v_triggerThresholds.clear();
-    outputTreeContents.v_triggerEnable.clear();
-    outputTreeContents.v_triggerMajority.clear();
-    outputTreeContents.v_triggerLogic.clear();
     outputTreeContents.v_dynamicPedestal.clear();
     outputTreeContents.v_sideband_mean.clear();
     outputTreeContents.v_sideband_RMS.clear();
@@ -697,12 +701,19 @@ void OfflineFactory::readMetaData(){
             boardArray->SetAt(ic/16,ic);
             float triggerThresh = cfg->digitizers[ic/16].channels[ic % 16].triggerThreshold;
             bool triggerEnable = cfg->digitizers[ic/16].channels[ic % 16].triggerEnable;
+            int triggerPolarity = cfg->digitizers[ic/16].channels[ic % 16].triggerPolarity;
             int triggerMajority = cfg->digitizers[ic/16].GroupTriggerMajorityLevel;
             int triggerLogic = cfg->digitizers[ic/16].GroupTriggerLogic;
             outputTreeContents.v_triggerThresholds.push_back(triggerThresh);
             outputTreeContents.v_triggerEnable.push_back(triggerEnable);
             outputTreeContents.v_triggerMajority.push_back(triggerMajority);
             outputTreeContents.v_triggerLogic.push_back(triggerLogic);
+            outputTreeContents.v_triggerPolarity.push_back(triggerPolarity);
+
+            /*if (true){
+                std::cout << "high thresh " << highThresh[ic] << std::endl;
+                highThresh[ic] = triggerThresh*10e3 - 5;
+            }*/
         }
     }
     else{

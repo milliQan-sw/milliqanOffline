@@ -12,6 +12,6 @@ if __name__ == '__main__':
 
     inPath = '/store/user/milliqan/trees/v34/'
 
-    cmd = 'rsync -zh {0}MilliQan_Run11??.*_v34.root {1}'.format(inPath, transferPath)
+    cmd = 'rsync -zh {0}MilliQan_Run141?.*_v34.root {1}'.format(inPath, transferPath)
     os.system(cmd)
     

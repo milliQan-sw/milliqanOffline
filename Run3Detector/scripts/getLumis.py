@@ -25,22 +25,26 @@ class mqLumiList():
     
     def __init__(self):
         self.lumi_csv = ''
-        self.rawPath = '/store/user/milliqan/run3/'
+        self.rawPath = '/store/user/milliqan/run3/bar/'
         self.mqLumis = pd.DataFrame(columns=['run', 'file', 'lumis', 'fill', 'beam', 'dir', 'filename', 'start', 'stop'])
         self.debug = False
         
     def looper(self):
-        rawDirectories = ['1000', '1100']
+        rawDirectories = ['1000', '1100', '1200', '1300', '1400']
         rawSubDirectories = ['0000', '0001', '0002', '0003', '0004', '0005', '0006', '0007', '0008', '0009']
 
         for i, d1 in enumerate(rawDirectories):
             for j, d2 in enumerate(rawSubDirectories):
                 if self.debug and j > 0: return
-                if not os.path.exists(self.rawPath+'/'+d1+'/'+d2): continue
+                if not os.path.exists(self.rawPath+'/'+d1+'/'+d2): 
+                    print("Directory: ", self.rawPath+'/'+d1+'/'+d2, "does not exist")
+                    continue
+                print("Running over directory {}/{}/{}".format(self.rawPath, d1, d2))
                 self.initializeDataframe('{0}/{1}'.format(d1, d2))
                 self.setFileTimes()
                 self.setMQLumis()
                 if not self.debug: self.saveJson()
+                else: self.saveJson(name='mqLumisDebug.json')
 
                 
     def initializeDataframe(self, path):
@@ -66,7 +70,7 @@ class mqLumiList():
         return runNum, fileNum
         
     def openLumis(self):
-        self.lumiList = pd.read_csv('../configuration/Run3Lumis.csv')
+        self.lumiList = pd.read_csv(os.path.dirname(os.path.realpath(__file__))+'/../configuration/Run3Lumis.csv')
 
     def convertDatetime(self, time):
         dt_ = datetime.strptime(time, '%Y-%m-%d_%Hh%Mm%Ss')
@@ -226,8 +230,8 @@ class mqLumiList():
     def setMQLumis(self):
         self.mqLumis[['lumis', 'fill', 'beamType', 'beamEnergy', 'betaStar', 'beam', 'fillStart', 'fillEnd', 'startStableBeam', 'endStableBeam', 'lumiEst']] = self.mqLumis.apply(lambda x: self.findLumiStart(x.start, x.stop) if x.lumis is None else (x.lumis, x.fill, x.beamType, x.beamEnergy, x.betaStar, x.beam, x.fillStart, x.fillEnd, x.startStableBeam, x.endStableBeam, x.lumiEst), axis='columns', result_type='expand')
 
-    def saveJson(self):
-        self.mqLumis.to_json('mqLumis.json', orient = 'split', compression = 'infer', index = 'true')
+    def saveJson(self, name='mqLumis.json'):
+        self.mqLumis.to_json(name, orient = 'split', compression = 'infer', index = 'true')
                 
 
 if __name__ == "__main__":

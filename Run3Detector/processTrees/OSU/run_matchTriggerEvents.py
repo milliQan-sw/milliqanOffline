@@ -44,7 +44,7 @@ if __name__=="__main__":
 
     d = datetime.datetime.now()
 
-    force = False
+    force = args.reprocess
 
     milliDAQ = 'MilliDAQ.tar.gz'
 
@@ -88,7 +88,7 @@ if __name__=="__main__":
     +IsLocalJob = true
     Rank = TARGET.IsLocalSlot
     request_disk = 5000MB
-    request_memory = 125MB
+    request_memory = 500MB
     request_cpus = 1
     executable              = matching_wrapper.py
     arguments               = $(PROCESS) {1} {2}

@@ -18,7 +18,7 @@ setup:
     script:
         - echo $Starting tests
         - which root
-        - git submodule add ../MilliDAQ.git
+        - git submodule add --force ../MilliDAQ.git
         - cd MilliDAQ/
         - make clean && make shared
         - cd ../
@@ -30,6 +30,7 @@ setup:
         - . setup.sh
         - curl -o input.root https://cernbox.cern.ch/s/4b3s7iRaaP2cVnj/download
         - ./compile.sh test.exe
+        - rm -rf ../../MilliDAQ
 
 offlineProduction:
     image: $CI_REGISTRY_IMAGE
@@ -60,8 +61,6 @@ analysis:
 build image:
     image: $DOCKER_IMAGE
     stage: setup
-    tags:
-        - docker
     services:
         - name: docker:dind
     rules:

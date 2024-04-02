@@ -9,6 +9,7 @@ import awkward as ak
 import numpy as np
 import array as arr
 from milliqanPlotter import *
+from processorConstants import *
 
 class milliqanProcessor():
 
@@ -17,11 +18,10 @@ class milliqanProcessor():
         self.runQualityOverride = runQualityOverride
         
         #Converting the quality level to an integer
-        self.qualityDict = {"single_trigger": -1, "loose": 0, "medium": 1, "tight": 2}
-        if self.qualityLevelString not in self.qualityDict.keys():
-            raise Exception("\n\nQuality level '{0}' not recognized. Please use one of the following: {1}\n".format(self.qualityLevelString, list(self.qualityDict.keys())))
+        if self.qualityLevelString not in processorConstants.qualityDict.keys():
+            raise Exception("\n\nQuality level '{0}' not recognized. Please use one of the following: {1}\n".format(self.qualityLevelString, list(processorConstants.qualityDict.keys())))
         print("Chosen quality level: ", self.qualityLevelString)
-        self.qualityLevel = self.qualityDict[self.qualityLevelString]
+        self.qualityLevel = processorConstants.qualityDict[self.qualityLevelString]
         
         #Checks the filelist against goodRuns.json
         self.filelist = filelist

@@ -19,7 +19,7 @@ class milliqanProcessor():
         #Converting the quality level to an integer
         self.qualityDict = {"single_trigger": -1, "loose": 0, "medium": 1, "tight": 2}
         if self.qualityLevelString not in self.qualityDict.keys():
-            raise Exception("Quality level '{0}' not recognized".format(self.qualityLevelString))
+            raise Exception("\n\nQuality level '{0}' not recognized. Please use one of the following: {1}\n".format(self.qualityLevelString, list(self.qualityDict.keys())))
         print("Chosen quality level: ", self.qualityLevelString)
         self.qualityLevel = self.qualityDict[self.qualityLevelString]
         
@@ -47,7 +47,8 @@ class milliqanProcessor():
             'single_trigger': data[:, 5]
         }, depth_limit=1)
         
-        for filepath in self.filelist:
+        filelist_copy = self.filelist.copy()
+        for filepath in filelist_copy:
             filename = os.path.basename(filepath)
             parts = filename.split('_')
             run_number, file_number = parts[1].replace("Run","").split('.')
@@ -56,7 +57,8 @@ class milliqanProcessor():
             #Establishes the quality level of the run
             runQualityLevel = -1
             if len(matching_goodJson) == 0:
-                pass
+                print("File {0} is not in goodRuns.json. Please consult goodRuns.json :)".format(filename))
+                continue
             elif (matching_goodJson['tight'] == True) and (matching_goodJson['medium'] == True) and (matching_goodJson['loose'] == True):
                 runQualityLevel = 2
             elif (matching_goodJson['tight'] == False) and (matching_goodJson['medium'] == True) and (matching_goodJson['loose'] == True):
@@ -67,7 +69,8 @@ class milliqanProcessor():
             #Establishes whether the run is a single trigger run
             singleTriggerBool = False
             if len(matching_goodJson) == 0:
-                pass
+                print("File {0} is not in goodRuns.json. Please consult goodRuns.json :)".format(filename))
+                continue
             elif matching_goodJson['single_trigger']:
                 singleTriggerBool = True
 
@@ -76,7 +79,9 @@ class milliqanProcessor():
                 if self.runQualityOverride:
                     print("File {0} is not in goodRuns.json, but we are overriding the quality check".format(filename))
                 else:
-                    raise Exception("File {0} is not in goodRuns.json. Please consult goodRuns.json :)".format(filename))
+                    self.filelist.remove(filepath)
+                    print("File {0} is not in goodRuns.json. Removing it from the filelist".format(filename))
+                    continue
 
             #Determines if it's a good run (for non-single-trigger runs)
             if len(matching_goodJson) == 1 and self.qualityLevel>=0:
@@ -91,7 +96,9 @@ class milliqanProcessor():
                 elif self.runQualityOverride:
                     print("File {0} is not a good run at the quality level '{1}', but we are overriding the quality check".format(filename, self.qualityLevelString))
                 else:
-                    raise Exception("File {0} is not a good run at the level '{1}'. Please consult goodRuns.json :)".format(filename, self.qualityLevelString))
+                    self.filelist.remove(filepath)
+                    print("File {0} is not a good run at the level '{1}'. Removing it from the filelist".format(filename, self.qualityLevelString))
+                    continue
                 
             #Determines if it's a good run (for single-trigger runs)
             if len(matching_goodJson) == 1 and self.qualityLevel==-1:
@@ -100,7 +107,11 @@ class milliqanProcessor():
                 elif self.runQualityOverride:
                     print("File {0} is not a single trigger run, but we are overriding the quality check".format(filename))
                 else:
-                    raise Exception("File {0} is not a single trigger run. Please consult goodRuns.json :)".format(filename))
+                    self.filelist.remove(filepath)
+                    print("File {0} is not a single trigger run. Removing it from the filelist".format(filename))
+                    continue
+                    
+        print("\nFiles that will be processed: ", self.filelist,"\n")
 
     def setBranches(self, branches):
         self.schedule = branches

@@ -433,19 +433,25 @@ def MiddleRow(self):
 
 
 def sudo_straight(self):
+    #use new cut flow?    
     #required big hit at the top row and top pane
     #0 and 3th row must have big hit
-    Check1=self.events["P_TBBigHit"]
+    #Check1=self.events["P_TBBigHit"] #I doubt if I should use this one
+    check1 = ak.any(self.events["l0R0"] == True, axis = 1)
+    check3 = ak.any(self.events["l0R3"] == True, axis = 1)
+    check4 = self.events["TopPanelHit"]
     #layer 0 pass the staight line cut
-    L0Ends = self.events[(self.events["l0R0"]) |( self.events["l0R3"])]
-    L0Max=ak.max(L0Ends,axix=1)
-    L0Min=ak.min(L0Ends,axix=1)
-    L0Mid = self.events[self.events["l0R1"] | self.events["l0R2"]]
+    print("sudo_straight debug")
+    print(len(self.events))
+    L0Ends = self.events["column"][(self.events["l0R0"]) |( self.events["l0R3"])]
+    L0Max=ak.max(L0Ends,axis=1)
+    L0Min=ak.min(L0Ends,axis=1)
+    L0Mid = self.events["column"][(self.events["l0R1"]) | (self.events["l0R2"])]
     check2 = (L0Mid <= L0Max) | (L0Mid >= L0Min)
+    check2 = ak.any(check2 == True, axis = 1)
     print(check2)
     #middle layer row number is between the min and max value
-
-
+    print(ak.to_list(self.events["event"][check2 & check1 & check3 & check4])) #event return None?
 
 setattr(milliqanCuts, 'sudo_straight',sudo_straight)    
 

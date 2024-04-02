@@ -437,10 +437,10 @@ void OfflineFactory::validateInput(){
     }
     else{ 
         for (int ic = 0; ic < numChan-1; ic++) highThresh.push_back(highThresh.at(0));
-        if(true){
+        if(variableThresholds){
             for (int ic = 0; ic < numChan; ic++){
                 if (outputTreeContents.v_triggerThresholds[ic]*10e3 > 50) continue; //if pannel keep default
-                highThresh[ic] = outputTreeContents.v_triggerThresholds[ic]*10e3 - 5;
+                highThresh[ic] = outputTreeContents.v_triggerThresholds[ic]*10e3 - thresholdDecrease;
             }
         }
         outputTreeContents.highThreshold_ = highThresh;

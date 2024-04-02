@@ -306,7 +306,12 @@ private:
     Long64_t firstTDC_time=10e15;
     Long64_t lastTDC_time=-1;
 
+    //bool to print only the first warning about file lumi
     bool firstWarning = true;
+
+    //settings to turn on variable pulse finding height based on online threshold
+    bool variableThresholds = true;
+    int thresholdDecrease = 5;
     
 };
 #endif

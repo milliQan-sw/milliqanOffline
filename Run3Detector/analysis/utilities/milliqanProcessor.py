@@ -14,9 +14,10 @@ from processorConstants import *
 
 class milliqanProcessor():
 
-    def __init__(self, filelist, branches, schedule=None, cuts=None, plotter=None, max_events=None, qualityLevel="tight"):
+    def __init__(self, filelist, branches, schedule=None, cuts=None, plotter=None, max_events=None, qualityLevel="tight", verbosity='minimal'):
         self.qualityLevelString = qualityLevel
-        self.qualityLevel = self.qualityInt()
+        self.verbosityString = verbosity
+        self.qualityLevel, self.verbosity = self.constantPuller()
         
         #Checks the filelist against goodRuns.json
         self.filelist = filelist
@@ -28,12 +29,16 @@ class milliqanProcessor():
         #self.plotter = plotter
         self.max_events = max_events
 
-    #Pulls the quality level from the processorConstants class based on the quality level input string
-    def qualityInt(self):
+    #Pulls the quality level and verbosity from the processorConstants class based on the quality level input string
+    def constantPuller(self):
         if self.qualityLevelString not in processorConstants.qualityDict.keys():
             raise Exception("\n\nQuality level '{0}' not recognized. Please use one of the following: {1}\n".format(self.qualityLevelString, list(processorConstants.qualityDict.keys())))
-        print("\nChosen quality level: \033[1;34m", self.qualityLevelString, "\n\033[0m")
-        return processorConstants.qualityDict[self.qualityLevelString]
+        if self.verbosityString not in processorConstants.verbosity.keys():
+            raise Exception("\n\nVerbosity level '{0}' not recognized. Please use one of the following: {1}\n".format(self.verbosityString, list(processorConstants.verbosity.keys())))
+        if processorConstants.verbosity[self.verbosityString] > 0:
+            print("\nChosen quality level: \033[1;34m", self.qualityLevelString, "\033[0m")
+            print("Chosen verbosity level: \033[1;34m", self.verbosityString, "\n\033[0m")
+        return processorConstants.qualityDict[self.qualityLevelString], processorConstants.verbosity[self.verbosityString]
 
     #Get rid of the strings and make a dictionary so that it's easier to debug
     def fileChecker(self):
@@ -41,8 +46,8 @@ class milliqanProcessor():
         if self.qualityLevel == -2:
             print("\n\033[1;31mQuality check is being overridden. All files will be processed.\033[0m")
             
-        #goodJson_array = ak.from_json(pathlib.Path("../goodRunTools/goodRunsMerged.json"))
-        goodJson_array = ak.from_json(pathlib.Path("../../configuration/barConfigs/goodRunsList.json"))
+        goodJson_array = ak.from_json(pathlib.Path("../goodRunTools/goodRunsMerged.json"))
+        #goodJson_array = ak.from_json(pathlib.Path("../../configuration/barConfigs/goodRunsList.json"))
         data = ak.Array(goodJson_array['data'])
         goodJson = ak.zip({
             'run': data[:, 0],
@@ -61,54 +66,21 @@ class milliqanProcessor():
             matching_goodJson = goodJson[(goodJson['run'] == int(run_number)) & (goodJson['file'] == int(file_number))]
             
             #Establishes the quality level of the run
-            runQualityLevel = -1
             if len(matching_goodJson) == 0:
                 self.filelist.remove(filepath)
                 print("File {0} is not in goodRuns.json. Removing it from the filelist".format(filename))
-            elif (matching_goodJson['tight'] == True) and (matching_goodJson['medium'] == True) and (matching_goodJson['loose'] == True):
-                runQualityLevel = 2
-            elif (matching_goodJson['tight'] == False) and (matching_goodJson['medium'] == True) and (matching_goodJson['loose'] == True):
-                runQualityLevel = 1
-            elif (matching_goodJson['tight'] == False) and (matching_goodJson['medium'] == False) and (matching_goodJson['loose'] == True):
-                runQualityLevel = 0
-                
-            #Establishes whether the run is a single trigger run
-            singleTriggerBool = False
-            if len(matching_goodJson) == 0:
-                print("File {0} is not in goodRuns.json. Please consult goodRuns.json :)".format(filename))
+            
+            elif matching_goodJson[self.qualityLevelString] != True:
+                self.filelist.remove(filepath)
+                if self.verbosity > 0:
+                    print("\033[1;31mFile {0} is not a good run at the level '{1}'. Removing it from the filelist!\033[0m".format(filename, self.qualityLevelString))
                 continue
-            elif matching_goodJson['single_trigger']:
-                singleTriggerBool = True
-
-            #Determines if it's a good run (for non-single-trigger runs)
-            if len(matching_goodJson) == 1 and self.qualityLevel>=0:
-                if runQualityLevel == -1 and not singleTriggerBool:
-                    print("File {0} has a quality level that cannot be determined. Please consult goodRuns.json :)".format(filename))
-                elif runQualityLevel==2 and (self.qualityLevel <= runQualityLevel):
-                    print("File {0} is good run (tight)".format(filename))
-                elif runQualityLevel==1 and (self.qualityLevel <= runQualityLevel):
-                    print("File {0} is good run (medium)".format(filename))
-                elif runQualityLevel==0 and (self.qualityLevel <= runQualityLevel):
-                    print("File {0} is good run (loose)".format(filename))
-                #elif self.runQualityOverride:
-                    #print("File {0} is not a good run at the quality level '{1}', but we are overriding the quality check".format(filename, self.qualityLevelString))
-                else:
-                    self.filelist.remove(filepath)
-                    print("File {0} is not a good run at the level '{1}'. Removing it from the filelist".format(filename, self.qualityLevelString))
-                    continue
-                
-            #Determines if it's a good run (for single-trigger runs)
-            if len(matching_goodJson) == 1 and self.qualityLevel==-1:
-                if singleTriggerBool:
-                    print("File {0} is a single trigger run".format(filename))
-                #elif self.runQualityOverride:
-                    #print("File {0} is not a single trigger run, but we are overriding the quality check".format(filename))
-                else:
-                    self.filelist.remove(filepath)
-                    print("File {0} is not a single trigger run. Removing it from the filelist".format(filename))
-                    continue
-                    
-        print("\n\033[1;32mFiles that will be processed: \033[0m", self.filelist,"\n")
+            
+            elif matching_goodJson[self.qualityLevelString] == True and self.verbosity > 1:
+                print("File {0} is a good run at the level '{1}'".format(filename, self.qualityLevelString))
+        
+        if self.verbosity > 0:
+            print("\n\033[1;32mFiles that will be processed: \033[0m", self.filelist,"\n")
 
     def setBranches(self, branches):
         self.schedule = branches

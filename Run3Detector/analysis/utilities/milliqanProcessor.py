@@ -8,20 +8,15 @@ import matplotlib.pyplot as plt
 import awkward as ak
 import numpy as np
 import array as arr
+import argparse
 from milliqanPlotter import *
 from processorConstants import *
 
 class milliqanProcessor():
 
-    def __init__(self, filelist, branches, schedule=None, cuts=None, plotter=None, max_events=None, runQualityOverride=False, qualityLevel="tight"):
+    def __init__(self, filelist, branches, schedule=None, cuts=None, plotter=None, max_events=None, qualityLevel="tight"):
         self.qualityLevelString = qualityLevel
-        self.runQualityOverride = runQualityOverride
-        
-        #Converting the quality level to an integer
-        if self.qualityLevelString not in processorConstants.qualityDict.keys():
-            raise Exception("\n\nQuality level '{0}' not recognized. Please use one of the following: {1}\n".format(self.qualityLevelString, list(processorConstants.qualityDict.keys())))
-        print("Chosen quality level: ", self.qualityLevelString)
-        self.qualityLevel = processorConstants.qualityDict[self.qualityLevelString]
+        self.qualityLevel = self.qualityInt()
         
         #Checks the filelist against goodRuns.json
         self.filelist = filelist
@@ -33,8 +28,19 @@ class milliqanProcessor():
         #self.plotter = plotter
         self.max_events = max_events
 
+    #Pulls the quality level from the processorConstants class based on the quality level input string
+    def qualityInt(self):
+        if self.qualityLevelString not in processorConstants.qualityDict.keys():
+            raise Exception("\n\nQuality level '{0}' not recognized. Please use one of the following: {1}\n".format(self.qualityLevelString, list(processorConstants.qualityDict.keys())))
+        print("\nChosen quality level: \033[1;34m", self.qualityLevelString, "\n\033[0m")
+        return processorConstants.qualityDict[self.qualityLevelString]
+
     #Get rid of the strings and make a dictionary so that it's easier to debug
     def fileChecker(self):
+        #If user is overriding the quality check, then we don't need to check the files against goodRuns.json
+        if self.qualityLevel == -2:
+            print("\n\033[1;31mQuality check is being overridden. All files will be processed.\033[0m")
+            
         #goodJson_array = ak.from_json(pathlib.Path("../goodRunTools/goodRunsMerged.json"))
         goodJson_array = ak.from_json(pathlib.Path("../../configuration/barConfigs/goodRunsList.json"))
         data = ak.Array(goodJson_array['data'])
@@ -57,8 +63,8 @@ class milliqanProcessor():
             #Establishes the quality level of the run
             runQualityLevel = -1
             if len(matching_goodJson) == 0:
-                print("File {0} is not in goodRuns.json. Please consult goodRuns.json :)".format(filename))
-                continue
+                self.filelist.remove(filepath)
+                print("File {0} is not in goodRuns.json. Removing it from the filelist".format(filename))
             elif (matching_goodJson['tight'] == True) and (matching_goodJson['medium'] == True) and (matching_goodJson['loose'] == True):
                 runQualityLevel = 2
             elif (matching_goodJson['tight'] == False) and (matching_goodJson['medium'] == True) and (matching_goodJson['loose'] == True):
@@ -74,15 +80,6 @@ class milliqanProcessor():
             elif matching_goodJson['single_trigger']:
                 singleTriggerBool = True
 
-            #Determines if the file was found
-            if len(matching_goodJson) == 0:
-                if self.runQualityOverride:
-                    print("File {0} is not in goodRuns.json, but we are overriding the quality check".format(filename))
-                else:
-                    self.filelist.remove(filepath)
-                    print("File {0} is not in goodRuns.json. Removing it from the filelist".format(filename))
-                    continue
-
             #Determines if it's a good run (for non-single-trigger runs)
             if len(matching_goodJson) == 1 and self.qualityLevel>=0:
                 if runQualityLevel == -1 and not singleTriggerBool:
@@ -93,8 +90,8 @@ class milliqanProcessor():
                     print("File {0} is good run (medium)".format(filename))
                 elif runQualityLevel==0 and (self.qualityLevel <= runQualityLevel):
                     print("File {0} is good run (loose)".format(filename))
-                elif self.runQualityOverride:
-                    print("File {0} is not a good run at the quality level '{1}', but we are overriding the quality check".format(filename, self.qualityLevelString))
+                #elif self.runQualityOverride:
+                    #print("File {0} is not a good run at the quality level '{1}', but we are overriding the quality check".format(filename, self.qualityLevelString))
                 else:
                     self.filelist.remove(filepath)
                     print("File {0} is not a good run at the level '{1}'. Removing it from the filelist".format(filename, self.qualityLevelString))
@@ -104,14 +101,14 @@ class milliqanProcessor():
             if len(matching_goodJson) == 1 and self.qualityLevel==-1:
                 if singleTriggerBool:
                     print("File {0} is a single trigger run".format(filename))
-                elif self.runQualityOverride:
-                    print("File {0} is not a single trigger run, but we are overriding the quality check".format(filename))
+                #elif self.runQualityOverride:
+                    #print("File {0} is not a single trigger run, but we are overriding the quality check".format(filename))
                 else:
                     self.filelist.remove(filepath)
                     print("File {0} is not a single trigger run. Removing it from the filelist".format(filename))
                     continue
                     
-        print("\nFiles that will be processed: ", self.filelist,"\n")
+        print("\n\033[1;32mFiles that will be processed: \033[0m", self.filelist,"\n")
 
     def setBranches(self, branches):
         self.schedule = branches

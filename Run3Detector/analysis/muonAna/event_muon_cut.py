@@ -34,7 +34,7 @@ boardMatchCut = mycuts.getCut(mycuts.boardsMatched, 'boardMatchCut', cut=True, b
 fourLayerCut = mycuts.getCut(mycuts.fourLayerCut, 'fourLayerCut', cut=False)
 
 #defining the cutflow
-cutflow = [boardMatchCut, pickupCut, mycuts.layerCut, fourLayerCut, mycuts.straightLineCut, mycuts.firstChanPulse, mycuts.barCut]
+cutflow = [boardMatchCut, pickupCut, mycuts.layerCut, mycuts.fourLayerCut, mycuts.straightLineCut]
 
 #create a schedule of the cuts
 myschedule = milliQanScheduler(cutflow, mycuts)
@@ -49,5 +49,13 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts)
 myiterator.run()
 
 #check the number of events remaining
-num_events_after_cuts = len(mycuts.events[mycuts.events["straightLineCut"]])
+num_events_after_cuts = len(mycuts.events[mycuts.events["straightLineCut"] & mycuts.events["fourLayerCut"]])
 print(f"Number of events after cuts: {num_events_after_cuts}")
+
+#print only events with branches that have passed cuts
+print("Events with branches that have passed cuts:")
+print(mycuts.events[mycuts.events["straightLineCut"] & mycuts.events["fourLayerCut"]])
+
+#print a boolean list to check if every events has passed cuts
+print("A boolean list to check if events have passed cuts:")
+print(ak.to_list(mycuts.events["straightLineCut"] & mycuts.events["fourLayerCut"]))

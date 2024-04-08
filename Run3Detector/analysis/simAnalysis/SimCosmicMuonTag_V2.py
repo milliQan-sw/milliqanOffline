@@ -508,6 +508,15 @@ def sudo_straight(self):
     
     #put the new tag back to arrays
     self.events["StraghtCosmic"] = passArr
+    print(self.events.fields)
+    print(len(self.events["event"]))
+    print(len(self.events["StraghtCosmic"]))
+    print(ak.to_list(self.events["StraghtCosmic"]))
+    print(ak.to_list(self.events["event"])
+    # i suspect after applying the event the array become numpy arraies, which cause failure.
+    #print(ak.type(self.events))
+    #self.events = ak.Array(self.events)
+    #print(self.events['event']['StraghtCosmic'])
     
 
 setattr(milliqanCuts, 'sudo_straight',sudo_straight)    

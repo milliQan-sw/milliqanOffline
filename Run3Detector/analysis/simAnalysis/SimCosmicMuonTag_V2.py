@@ -433,6 +433,8 @@ def MiddleRow(self):
 
 
 def sudo_straight(self):
+    """
+    #old script
     #use new cut flow?    
     #required big hit at the top row and top pane
     #0 and 3th row must have big hit
@@ -452,6 +454,60 @@ def sudo_straight(self):
     print(check2)
     #middle layer row number is between the min and max value
     print(ak.to_list(self.events["event"][check2 & check1 & check3 & check4])) #event return None?
+
+    """
+    #new script:
+    lxArr = ak.copy(self.events)
+    eventList = []
+    for layer in range(4):
+        for row in range(4):
+            for column in range(4):
+                lxArr[f"L{layer}_r{row}_c_{column}"]=lxArr[(lxArr["nPE"] >= 20) & (lxArr["layer"] == layer) & (lxArr["column"] == column) & ((lxArr["row"] == row)) & (lxArr["barCut"])]
+    
+
+    for layer in range(4):
+
+        #case 1: for muon passing straight across the detector and leave the hits along same column but different rows.
+        for c in range(4):
+            eventList.append(ak.any(lxArr[f"L{layer}_r0_c{c}"], axis = 1) & ak.any(lxArr[f"L{layer}_r1_c{c}"], axis = 1) & ak.any(lxArr[f"L{layer}_r2_c{c}"], axis = 1) & ak.any(lxArr[f"L{layer}_r3_c{c}"], axis = 1))
+        
+
+        #case 2-1: for the  first three hits(count from the layer 3 to layer 0) are at the same column
+        for c in range(3):
+            eventList.append(ak.any(lxArr[f"L{layer}_r0_c{c+1}"], axis = 1) & ak.any(lxArr[f"L{layer}_r1_c{c}"], axis = 1) & ak.any(lxArr[f"L{layer}_r2_c{c}"], axis = 1) & ak.any(lxArr[f"L{layer}_r3_c{c}"], axis = 1))
+            eventList.append(ak.any(lxArr[f"L{layer}_r0_c{c+1}"], axis = 1) & ak.any(lxArr[f"L{layer}_r1_c{c+1}"], axis = 1) & ak.any(lxArr[f"L{layer}_r2_c{c}"], axis = 1) & ak.any(lxArr[f"L{layer}_r3_c{c}"], axis = 1))
+            eventList.append(ak.any(lxArr[f"L{layer}_r0_c{c+1}"], axis = 1) & ak.any(lxArr[f"L{layer}_r1_c{c+1}"], axis = 1) & ak.any(lxArr[f"L{layer}_r2_c{c+1}"], axis = 1) & ak.any(lxArr[f"L{layer}_r3_c{c}"], axis = 1))
+        
+
+        #case 2-2: similar to case 2-1 but the hit at row 0 shift by -1
+        for c in [1,2,3]:
+            eventList.append(ak.any(lxArr[f"L{layer}_r0_c{c-1}"], axis = 1) & ak.any(lxArr[f"L{layer}_r1_c{c}"], axis = 1) & ak.any(lxArr[f"L{layer}_r2_c{c}"], axis = 1) & ak.any(lxArr[f"L{layer}_r3_c{c}"], axis = 1))
+            eventList.append(ak.any(lxArr[f"L{layer}_r0_c{c-1}"], axis = 1) & ak.any(lxArr[f"L{layer}_r1_c{c-1}"], axis = 1) & ak.any(lxArr[f"L{layer}_r2_c{c}"], axis = 1) & ak.any(lxArr[f"L{layer}_r3_c{c}"], axis = 1))
+            eventList.append(ak.any(lxArr[f"L{layer}_r0_c{c-1}"], axis = 1) & ak.any(lxArr[f"L{layer}_r1_c{c-1}"], axis = 1) & ak.any(lxArr[f"L{layer}_r2_c{c-1}"], axis = 1) & ak.any(lxArr[f"L{layer}_r3_c{c}"], axis = 1))
+
+        #path that cross three columns
+        for c in [0,1]:
+            eventList.append(ak.any(lxArr[f"L{layer}_r0_c{c}"], axis = 1) & ak.any(lxArr[f"L{layer}_r1_c{c}"], axis = 1) & ak.any(lxArr[f"L{layer}_r2_c{c+1}"], axis = 1) & ak.any(lxArr[f"L{layer}_r3_c{c+2}"], axis = 1))
+            eventList.append(ak.any(lxArr[f"L{layer}_r0_c{c}"], axis = 1) & ak.any(lxArr[f"L{layer}_r1_c{c+1}"], axis = 1) & ak.any(lxArr[f"L{layer}_r2_c{c+2}"], axis = 1) & ak.any(lxArr[f"L{layer}_r3_c{c+2}"], axis = 1))
+            eventList.append(ak.any(lxArr[f"L{layer}_r0_c{c}"], axis = 1) & ak.any(lxArr[f"L{layer}_r1_c{c+1}"], axis = 1) & ak.any(lxArr[f"L{layer}_r2_c{c+1}"], axis = 1) & ak.any(lxArr[f"L{layer}_r3_c{c+2}"], axis = 1))
+    
+        for c in [2,3]:
+            eventList.append(ak.any(lxArr[f"L{layer}_r0_c{c}"], axis = 1) & ak.any(lxArr[f"L{layer}_r1_c{c}"], axis = 1) & ak.any(lxArr[f"L{layer}_r2_c{c-1}"], axis = 1) & ak.any(lxArr[f"L{layer}_r3_c{c-2}"], axis = 1))
+            eventList.append(ak.any(lxArr[f"L{layer}_r0_c{c}"], axis = 1) & ak.any(lxArr[f"L{layer}_r1_c{c-1}"], axis = 1) & ak.any(lxArr[f"L{layer}_r2_c{c-2}"], axis = 1) & ak.any(lxArr[f"L{layer}_r3_c{c-2}"], axis = 1))
+            eventList.append(ak.any(lxArr[f"L{layer}_r0_c{c}"], axis = 1) & ak.any(lxArr[f"L{layer}_r1_c{c-1}"], axis = 1) & ak.any(lxArr[f"L{layer}_r2_c{c-1}"], axis = 1) & ak.any(lxArr[f"L{layer}_r3_c{c-2}"], axis = 1))
+            
+
+        #diaganal path
+        eventList.append(ak.any(lxArr[f"L{layer}_r0_c0"], axis = 1) & ak.any(lxArr[f"L{layer}_r1_c1"], axis = 1) & ak.any(lxArr[f"L{layer}_r2_c2"], axis = 1) & ak.any(lxArr[f"L{layer}_r3_c3"], axis = 1))
+        eventList.append(ak.any(lxArr[f"L{layer}_r3_c0"], axis = 1) & ak.any(lxArr[f"L{layer}_r2_c1"], axis = 1) & ak.any(lxArr[f"L{layer}_r1_c2"], axis = 1) & ak.any(lxArr[f"L{layer}_r0_c3"], axis = 1))
+
+    for index, path in enumerate(eventList):
+        if index == 0: passArr = path # create an intial array
+        else: passArr = passArr | path #the events that have interesting path will be saved
+    
+    #put the new tag back to arrays
+    self.events["StraghtCosmic"] = passArr
+    
 
 setattr(milliqanCuts, 'sudo_straight',sudo_straight)    
 

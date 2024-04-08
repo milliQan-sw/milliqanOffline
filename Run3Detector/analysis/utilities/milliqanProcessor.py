@@ -46,8 +46,8 @@ class milliqanProcessor():
         if self.qualityLevel == -2:
             print("\n\033[1;31mQuality check is being overridden. All files will be processed.\033[0m")
             
-        goodJson_array = ak.from_json(pathlib.Path("../goodRunTools/goodRunsMerged.json"))
-        #goodJson_array = ak.from_json(pathlib.Path("../../configuration/barConfigs/goodRunsList.json"))
+        #goodJson_array = ak.from_json(pathlib.Path("../goodRunTools/goodRunsMerged.json"))
+        goodJson_array = ak.from_json(pathlib.Path("../../configuration/barConfigs/goodRunsList.json"))
         data = ak.Array(goodJson_array['data'])
         goodJson = ak.zip({
             'run': data[:, 0],

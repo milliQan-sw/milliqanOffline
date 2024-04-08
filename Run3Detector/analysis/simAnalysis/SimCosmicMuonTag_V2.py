@@ -458,11 +458,12 @@ def sudo_straight(self):
     """
     #new script:
     lxArr = ak.copy(self.events)
+    
     eventList = []
     for layer in range(4):
         for row in range(4):
             for column in range(4):
-                lxArr[f"L{layer}_r{row}_c_{column}"]=lxArr[(lxArr["nPE"] >= 20) & (lxArr["layer"] == layer) & (lxArr["column"] == column) & ((lxArr["row"] == row)) & (lxArr["barCut"])]
+                lxArr[f"L{layer}_r{row}_c{column}"]=(lxArr["nPE"] >= 20) & (lxArr["layer"] == layer) & (lxArr["column"] == column) & (lxArr["row"] == row) & (lxArr["barCut"])
     
 
     for layer in range(4):

@@ -107,7 +107,13 @@ class milliqanCuts():
                                             )
         if cut: self.events = self.events[self.events.oneHitPerLayerCut]            
         self.cutflowCounter()
-
+    #create mask for pulses passing height cut
+    def heightCut(self, cutName='heightCut', cut=1200, branches=None):
+        self.events[cutName] = self.events.height >= int(cut)
+        if branches:
+            for branch in branches:
+                self.events[branch] = self.events[branch][self.events[cutName]]
+                
     #create mask for pulses passing area cuts
     def areaCut(self, cutName='areaCut', cut=50000):
         self.events[cutName] = self.events.area >= int(cut)

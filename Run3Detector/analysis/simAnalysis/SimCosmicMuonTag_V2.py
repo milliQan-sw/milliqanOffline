@@ -488,7 +488,7 @@ def sudo_straight(self):
     self.events["StraghtCosmic"] = passArr
     # i suspect after applying the event the array become numpy arraies, which cause failure.
     #self.events = ak.Array(self.events)
-    print(self.events['event'][self.events['StraghtCosmic']])
+    print(f"cosmic straight : {len(self.events['event'][self.events['StraghtCosmic']])}")
     
 
 setattr(milliqanCuts, 'sudo_straight',sudo_straight)    
@@ -596,7 +596,7 @@ if __name__ == "__main__":
     """
     #---------------------------------------------------------------------------------------------
     #branch for data analysis
-    branches = ["time","chan","runNumber","event","layer","nPE","type","row","muonHit"]
+    branches = ["column","time","chan","runNumber","event","layer","nPE","type","row","muonHit"]
     
     #test cut flow. Check if the mask can be made
     #cutflow = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,mycuts.fourRowBigHits,mycuts.TBBigHit,mycuts.P_TBBigHit,mycuts.P_BBigHit]
@@ -763,9 +763,9 @@ if __name__ == "__main__":
 
     myiterator.run() #use for testing the codor job only for debugging purpose
     
-    f_out = r.TFile("test.root", "RECREATE") #FIXME: this is use for test only!
-    CEhist.Write()
-    f_out.Close()
+    #f_out = r.TFile("test.root", "RECREATE") #FIXME: this is use for test only!
+    #CEhist.Write()
+    #f_out.Close()
     #--------------section for using to check cut efficiency(please use this one by default)-----------------------------
     """
     if outputPath == '':

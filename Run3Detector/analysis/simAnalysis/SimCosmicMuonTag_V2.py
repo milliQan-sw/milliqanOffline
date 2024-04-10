@@ -432,7 +432,7 @@ def MiddleRow(self):
     self.events["MiddleRow"] = ( (self.events["row"]== 1) | (self.events["row"]== 2) )
 
 
-def sudo_straight(self):
+def sudo_straight(self, cutName = "StraghtCosmic"):
     
     #new script:
     lxArr = ak.copy(self.events)
@@ -485,10 +485,10 @@ def sudo_straight(self):
         else: passArr = passArr | path #the events that have interesting path will be saved
     
     #put the new tag back to arrays
-    self.events["StraghtCosmic"] = passArr
+    self.events[cutName] = passArr
     # i suspect after applying the event the array become numpy arraies, which cause failure.
     #self.events = ak.Array(self.events)
-    print(f"cosmic straight : {len(self.events['event'][self.events['StraghtCosmic']])}")
+    print(f"cosmic straight : {len(self.events['event'][self.events[cutName]])}")
     
 
 setattr(milliqanCuts, 'sudo_straight',sudo_straight)    
@@ -674,9 +674,9 @@ if __name__ == "__main__":
     #-------------------------start of cut efficiency analysis cutflows-----------------------------------------------------------
 
     #Cut flow 1. This one is for testing the cut efficiency of different tags. TB big hits - > TB + panel big hits 
-    #cutflow1 = [MuonCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,P_TBBigHitCut,P_TBBigHitCutCount] #FIXME: stop applying the cut to remove events in the array
+    cutflow1 = [MuonCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,P_TBBigHitCut,P_TBBigHitCutCount] #FIXME: stop applying the cut to remove events in the array
     #FIXME: I need to bring back MuonCut and put it into combined cut after checking the NPE cutefficiency plot
-    cutflow1 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,P_TBBigHitCut,P_TBBigHitCutCount]
+    #cutflow1 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,P_TBBigHitCut,P_TBBigHitCutCount]
     
 
 
@@ -718,7 +718,7 @@ if __name__ == "__main__":
     #------------------cut flow5 for new new  sudo_straight ----------------------
     
     #since I am not using the cut to remove data maybe I can use the sudo_straight directly?
-    cutflow5 =[MuonEventCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,P_TBBigHitCut,P_TBBigHitCutCount,mycuts.sudo_straight]
+    cutflow5 =[MuonCut,MuonEventCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,P_TBBigHitCut,P_TBBigHitCutCount,mycuts.sudo_straight]
 
 
     #-----------------------start of analysis---------------------------------------

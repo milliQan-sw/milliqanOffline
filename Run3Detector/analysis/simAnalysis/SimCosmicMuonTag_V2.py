@@ -561,7 +561,8 @@ if __name__ == "__main__":
 
     #----------------------------------------------------------------------------------------------------------------------------------- OSU T3
     #signle file test
-    numRun = 1
+    #numRun = 1
+    numRun = str(sys.argv[1])
     filelist =[f'/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhotonMuontag/output_{numRun}.root:t']
 
 
@@ -767,13 +768,13 @@ if __name__ == "__main__":
 
     #myiterator.setCustomFunction(makeCuteffPlot) #I don't want to make the cut efficiency plot for now
 
-    myiterator.run() #use for testing the codor job only for debugging purpose
+    #myiterator.run() #use for testing the codor job only for debugging purpose
     
     #f_out = r.TFile("test.root", "RECREATE") #FIXME: this is use for test only!
     #CEhist.Write()
     #f_out.Close()
     #--------------section for using to check cut efficiency(please use this one by default)-----------------------------
-    """
+    #"""
     if outputPath == '':
         myiterator.run()
 
@@ -798,4 +799,4 @@ if __name__ == "__main__":
         f_out.cd()
         NBarsHitTag1.Write()
         f_out.Close()
-    """
+    #"""

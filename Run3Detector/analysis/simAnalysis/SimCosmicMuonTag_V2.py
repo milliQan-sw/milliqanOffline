@@ -432,7 +432,7 @@ def MiddleRow(self):
     self.events["MiddleRow"] = ( (self.events["row"]== 1) | (self.events["row"]== 2) )
 
 
-def sudo_straight(self, cutName = "StraghtCosmic",NPEcut = 2500):
+def sudo_straight(self, cutName = "StraghtCosmic",NPEcut = 20):
     
     #new script:
     lxArr = ak.copy(self.events)
@@ -719,12 +719,12 @@ if __name__ == "__main__":
 
     #------------------cut flow5 for new new  sudo_straight ----------------------
     
-    #since I am not using the cut to remove data maybe I can use the sudo_straight directly?
+    #make sure the NPE cut in sudo_straight is the same as CosmuonTagIntialization, so I can make the comparision
     cutflow5 =[MuonCut,MuonEventCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,P_TBBigHitCut,P_TBBigHitCutCount,mycuts.sudo_straight]
 
-    cutflow5 =[MuonEventCut,MuonEventCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,P_TBBigHitCut,P_TBBigHitCutCount,mycuts.sudo_straight]
+    cutflow5A =[MuonEventCut,MuonEventCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,P_TBBigHitCut,P_TBBigHitCutCount,mycuts.sudo_straight]
 
-    cutflow5 =[MuonEventCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,P_TBBigHitCut,P_TBBigHitCutCount,mycuts.sudo_straight]
+    cutflow5B =[mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,P_TBBigHitCut,P_TBBigHitCutCount,mycuts.sudo_straight]
 
 
     #-----------------------start of analysis---------------------------------------

@@ -564,7 +564,7 @@ if __name__ == "__main__":
     #numRun = 1
     numRun = str(sys.argv[1])
     filelist =[f'/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhotonMuontag/output_{numRun}.root:t']
-
+    outputPath = str(sys.argv[2]) # the path is used at the very end for the output txt file
 
     #------------------------------------------------------------------------------------------------
     #path for the milliqan machine

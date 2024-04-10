@@ -70,7 +70,32 @@ outputHist.SetDirectory(0)
 outputHist.Scale(1./((maxTime-minTime)/nBinsTime))
 drawHistVsTime(outputHist,outputDir)
 
-if True:
+nBinsTime = 100
+outputHist = r.TH1D("time4LayerCosmicIgnorePanels","rate;time",nBinsTime,minTime,maxTime)
+inputTree.Draw("event_time_fromTDC>>"+outputHist.GetName(),"event_time_fromTDC>{}&&event_time_fromTDC<{}&&Max$(layer==0)&&Max$(layer==1)&&Max$(layer==2)&&Max$(layer==3)&&MaxIf$(area,type==0&&layer==0)>80E3&&MaxIf$(area,type==0&&layer==1)>80E3&&MaxIf$(area,type==0&&layer==2)>80E3&&MaxIf$(area,type==0&&layer==3)>80E3".format(minTime,maxTime),"")
+# print (1./((maxTime-minTime)/nBinsTime))
+outputHist.SetDirectory(0)
+outputHist.Scale(1./((maxTime-minTime)/nBinsTime))
+drawHistVsTime(outputHist,outputDir)
+
+nBinsTime = 100
+outputHist = r.TH1D("time4LayerCosmicNoPanels","rate;time",nBinsTime,minTime,maxTime)
+inputTree.Draw("event_time_fromTDC>>"+outputHist.GetName(),"event_time_fromTDC>{}&&event_time_fromTDC<{}&&Max$(layer==0)&&Max$(layer==1)&&Max$(layer==2)&&Max$(layer==3)&&Max$(chan==16)<1&&Max$(chan==18)<1&&MaxIf$(area,type==0&&layer==0)>80E3&&MaxIf$(area,type==0&&layer==1)>80E3&&MaxIf$(area,type==0&&layer==2)>80E3&&MaxIf$(area,type==0&&layer==3)>80E3".format(minTime,maxTime),"")
+# print (1./((maxTime-minTime)/nBinsTime))
+outputHist.SetDirectory(0)
+outputHist.Scale(1./((maxTime-minTime)/nBinsTime))
+drawHistVsTime(outputHist,outputDir)
+
+nBinsTime = 100
+outputHist = r.TH1D("numberOfChannelsPerLayer4LayerNoPanels","rate;time",nBinsTime,minTime,maxTime)
+inputTree.Draw("layer","event_time_fromTDC>{}&&event_time_fromTDC<{}&&Max$(layer==0)&&Max$(layer==1)&&Max$(layer==2)&&Max$(layer==3)&&Max$(chan==16)<1&&Max$(chan==18)<1&&type==0".format(minTime,maxTime),"")
+# print (1./((maxTime-minTime)/nBinsTime))
+outputHist.SetDirectory(0)
+outputHist.Scale(1./outputHist.Integral(0,-1))
+drawHistVsTime(outputHist,outputDir)
+
+
+if False:
     outputHist = r.TH2D("timeVsNumChannels",";time;number of pulses",100,minTime,maxTime,10,0,20)
     inputTree.Draw("Sum$(height>20):event_time_fromTDC>>"+outputHist.GetName(),"event_time_fromTDC>{}&&event_time_fromTDC<{}".format(minTime,maxTime),"colz")
     outputHist.SetDirectory(0)

@@ -42,7 +42,7 @@ if [ ! -f "run.exe" ]; then
     singularity exec -B ../../milliqanOffline/,../../MilliDAQ ../../offline.sif bash compile.sh run.exe
 fi
 
-if [ $# -gt 6 ]; then
+if [ $# -gt 7 ]; then
     #Running single job
     echo Running single job $6 $7
     if $7; then

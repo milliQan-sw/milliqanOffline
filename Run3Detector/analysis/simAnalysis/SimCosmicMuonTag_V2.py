@@ -432,16 +432,18 @@ def MiddleRow(self):
     self.events["MiddleRow"] = ( (self.events["row"]== 1) | (self.events["row"]== 2) )
 
 
-def sudo_straight(self, cutName = "StraghtCosmic"):
+def sudo_straight(self, cutName = "StraghtCosmic",NPEcut = 2500):
     
     #new script:
     lxArr = ak.copy(self.events)
     
     eventList = []
+
+    #FIXME: move this section to initialization?
     for layer in range(4):
         for row in range(4):
             for column in range(4):
-                lxArr[f"L{layer}_r{row}_c{column}"]=(lxArr["nPE"] >= 20) & (lxArr["layer"] == layer) & (lxArr["column"] == column) & (lxArr["row"] == row) & (lxArr["barCut"])
+                lxArr[f"L{layer}_r{row}_c{column}"]=(lxArr["nPE"] >= NPEcut) & (lxArr["layer"] == layer) & (lxArr["column"] == column) & (lxArr["row"] == row) & (lxArr["barCut"])
     
 
     for layer in range(4):
@@ -719,6 +721,10 @@ if __name__ == "__main__":
     
     #since I am not using the cut to remove data maybe I can use the sudo_straight directly?
     cutflow5 =[MuonCut,MuonEventCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,P_TBBigHitCut,P_TBBigHitCutCount,mycuts.sudo_straight]
+
+    cutflow5 =[MuonEventCut,MuonEventCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,P_TBBigHitCut,P_TBBigHitCutCount,mycuts.sudo_straight]
+
+    cutflow5 =[MuonEventCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,P_TBBigHitCut,P_TBBigHitCutCount,mycuts.sudo_straight]
 
 
     #-----------------------start of analysis---------------------------------------

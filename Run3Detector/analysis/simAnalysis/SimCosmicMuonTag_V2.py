@@ -715,6 +715,10 @@ if __name__ == "__main__":
     TBBigHitCutPlot = mycuts.getCut(mycuts.TBBigHit,"placeholder", cut = True,Hist1 = NBarsHitTag1,branches= branches)
     cutflow4 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCutPlot]
 
+    #------------------cut flow5 for new new  sudo_straight ----------------------
+    
+    #since I am not using the cut to remove data maybe I can use the sudo_straight directly?
+    cutflow5 =[MuonEventCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,P_TBBigHitCut,P_TBBigHitCutCount,mycuts.sudo_straight]
 
 
     #-----------------------start of analysis---------------------------------------
@@ -722,6 +726,7 @@ if __name__ == "__main__":
     #-----------------------CustomFunction in MQprocessor---------------------------
     CEhist = r.TH1F("hist", "CutEfficiency", 10, 0, 10) #histogram for making the cutefficiency
     
+    """
     def makeCuteffPlot(events):
         Non_empty = ak.count_nonzero(events['None_empty_event'])
         NumTBBigHit=ak.count_nonzero(events["TBBigHit"])
@@ -740,7 +745,7 @@ if __name__ == "__main__":
         CEhist.GetXaxis().SetBinLabel(1, "None_empty_event")
         CEhist.GetXaxis().SetBinLabel(2, "TBBigHit")
         CEhist.GetXaxis().SetBinLabel(3, "P_TBBigHit")
-
+    """
         
 
 
@@ -748,13 +753,13 @@ if __name__ == "__main__":
     
     #note cutflow 1-3 are checked
     
-    cutflow = cutflow1 
+    cutflow = cutflow5
 
     myschedule = milliQanScheduler(cutflow, mycuts)
 
     myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts)
 
-    myiterator.setCustomFunction(makeCuteffPlot)
+    #myiterator.setCustomFunction(makeCuteffPlot) #I don't want to make the cut efficiency plot for now
 
     myiterator.run() #use for testing the codor job only for debugging purpose
     

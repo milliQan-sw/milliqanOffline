@@ -12,7 +12,7 @@
     error                   = /data/users/milliqan/log/trees/v31/logs_v31_900_0000-05-24/error_$(PROCESS).txt
     should_transfer_files   = Yes
     when_to_transfer_output = ON_EXIT
-    transfer_input_files = wrapper.sh, tree_wrapper.py, MilliDAQ.tar.gz, milliqanOffline_v31.tar.gz, offline.sif, compile.sh
+    transfer_input_files = wrapper.sh, tree_wrapper.py, MilliDAQ.tar.gz, milliqanOffline_v31.tar.gz, compile.sh
     getenv = true
     priority = 15
     queue 1

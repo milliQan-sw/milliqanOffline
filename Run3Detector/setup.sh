@@ -5,6 +5,7 @@ name=$(hostname)
 
 host_osu='interactive'
 host_ucsb='cms'
+host_eos='lxplus'
 
 if [[ "$name" == *"$host_osu"* ]]; then
   echo "Working on OSU T3"
@@ -19,11 +20,17 @@ elif [[ "$name" == *"$host_ucsb"* ]]; then
   export ROOT_INCLUDE_PATH=$MILLIDAQDIR/interface/
   export OFFLINESITE="UCSB"
   export OFFLINEDIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+elif [[ "$name" == *"$host_eos"* ]]; then
+  echo "Working on CERN cluster"
+  export MILLIDAQDIR="/afs/cern.ch/user/m/mcitron/MilliDAQ"
+  export ROOT_INCLUDE_PATH=$MILLIDAQDIR/interface/
+  export OFFLINESITE="eos"
+  export OFFLINEDIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 else
   echo "Working on a system other than OSU/UCSB, please make sure to set teh correct paths below"
   export MILLIDAQDIR="../../MilliDAQ"
   export ROOT_INCLUDE_PATH=$MILLIDAQDIR/interface/
-  export OFFLINESITE="Other"
+  export OFFLINESITE="eos"
   export OFFLINEDIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 fi
 

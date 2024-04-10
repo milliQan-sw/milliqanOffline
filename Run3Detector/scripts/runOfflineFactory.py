@@ -61,7 +61,7 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
     if force_publish:
         publish = True
     if not os.path.exists("/".join(outputFile.split("/")[:-1])):
-	os.makedirs("/".join(outputFile.split("/")[:-1]))
+        os.makedirs("/".join(outputFile.split("/")[:-1]))
     if runNumber == None:
         try:
             if drs:
@@ -152,7 +152,10 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
         if database:
             db = mongoConnect(database)
         else:
-            db = mongoConnect()
+            if formosa:
+                db = mongoConnect("formosa")
+            else:
+                db = mongoConnect("formosa")
         if tag != None:  
             if appendToTag:
                 tag += "_"+appendToTag
@@ -171,30 +174,30 @@ def getId(runNumber,fileNumber,tag,inputType,site):
 
 def publishDataset(configurationsJSON,inputFile,outputFile,fileNumber,runNumber,tag,site=site,inputType="MilliQan",matched=False,force_publish=False,db=None,quiet=False):
     _id = getId(runNumber,fileNumber,tag,inputType,site)
-    milliQanOfflineDataset = configurationsJSON
-    milliQanOfflineDataset["_id"] = "{}_{}_{}_{}_{}".format(runNumber,fileNumber,tag,inputType,site)
-    milliQanOfflineDataset["run"] = runNumber
-    milliQanOfflineDataset["file"] = fileNumber
-    milliQanOfflineDataset["version"] = tag
-    milliQanOfflineDataset["location"] = os.path.abspath(outputFile)
-    milliQanOfflineDataset["type"] = inputType
-    milliQanOfflineDataset["site"] = site
-    milliQanOfflineDataset["matched"] = matched
+    formosaOfflineDataset = configurationsJSON
+    formosaOfflineDataset["_id"] = "{}_{}_{}_{}_{}".format(runNumber,fileNumber,tag,inputType,site)
+    formosaOfflineDataset["run"] = runNumber
+    formosaOfflineDataset["file"] = fileNumber
+    formosaOfflineDataset["version"] = tag
+    formosaOfflineDataset["location"] = os.path.abspath(outputFile)
+    formosaOfflineDataset["type"] = inputType
+    formosaOfflineDataset["site"] = site
+    formosaOfflineDataset["matched"] = matched
 
     nX = 0
     #Check for existing entry
-    for x in (db.milliQanOfflineDatasets.find({"_id" : _id})):
+    for x in (db.formosaOfflineDatasets.find({"_id" : _id})):
         nX +=1
     if nX:
         if force_publish:
-            db.milliQanOfflineDatasets.replace_one({"_id": _id},milliQanOfflineDataset)
+            db.formosaOfflineDatasets.replace_one({"_id": _id},formosaOfflineDataset)
             print ("Replaced exisiting entry in database")
         else:
             print ("Entry already exists in database. To overwrite use --force_publish.")
             print("Output made successfully but not published")
             return False
     else:
-        db.milliQanOfflineDatasets.insert_one(milliQanOfflineDataset)
+        db.formosaOfflineDatasets.insert_one(formosaOfflineDataset)
         if not quiet:
             print ("Added new entry in database")
     return True

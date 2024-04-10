@@ -3,8 +3,8 @@ import subprocess
 import glob
 import os
 
-def addToMongoDB(source,force=True,maxNum=100):
-    db = mongoConnect()
+def addToMongoDB(source,force=True,maxNum=100,database="formosa"):
+    db = mongoConnect(database)
 
     nTransferred = 0
     mbytesTransferred = 0
@@ -30,7 +30,8 @@ def addToMongoDB(source,force=True,maxNum=100):
         allLocations.append(location)
         allIds.append(_id)
         allInputs.append(inputFile)
-    idsOut,inputsOut,entriesInDB, currentLocations = checkMongoDB(db,allIds,allInputs,allLocations,force,offline=False,formosa=True)
+    formosa = (database == "formosa")
+    idsOut,inputsOut,entriesInDB, currentLocations = checkMongoDB(db,allIds,allInputs,allLocations,force,offline=False,formosa=formosa)
     # print(idsOut,inputsOut,entriesInDB, currentLocations)
     # exit()
     for _id,inputFile,entryInMongo,currentLocation in zip(idsOut,inputsOut,entriesInDB, currentLocations):
@@ -98,4 +99,4 @@ if __name__ == "__main__":
 
     source = "/eos/experiment/formosa/infoForMongo"
 
-    addToMongoDB(source,force=False)
+    addToMongoDB(source,force=False,database="formosa")

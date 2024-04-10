@@ -10,32 +10,44 @@ def parse_args():
     parser.add_argument('-v', '--version', type=str, default='v31_firstPedestals', help='Set the version of offline trees')
     parser.add_argument('-s', '--singleRun', type=str, default='-1', help='Single run number if running only one job')
     parser.add_argument('--slab', action='store_true', help='Process slab data')
+    parser.add_argument('--formosa', action='store_true', help='Process formosa data')
     args = parser.parse_args()
     return args
 
 def singleJob():
     print("Running single file")
-    if args.slab:
-        inFile = args.inputDir + 'MilliQanSlab_Run{0}_default.root'.format(args.singleRun)
-        triggerFile = args.inputDir + 'MatchedEventsSlab_Run{0}_rematch.root'.format(args.singleRun)
-        outFile = 'MilliQanSlab_Run{0}_{1}.root'.format(args.singleRun, args.version)
-    else: 
-        inFile = args.inputDir + 'MilliQan_Run{0}_default.root'.format(args.singleRun)
+    if args.formosa:
+        inFile = args.inputDir + 'MilliQan_Run{0}_formosa.root'.format(args.singleRun)
         triggerFile = args.inputDir + 'MatchedEvents_Run{0}_rematch.root'.format(args.singleRun)
-        outFile = 'MilliQan_Run{0}_{1}.root'.format(args.singleRun, args.version)
+        outFile = './MilliQan_Run{0}_{1}.root'.format(args.singleRun, args.version)
+    else:
+        if args.slab:
+            inFile = args.inputDir + 'MilliQanSlab_Run{0}_formosa.root'.format(args.singleRun)
+            triggerFile = args.inputDir + 'MatchedEventsSlab_Run{0}_rematch.root'.format(args.singleRun)
+            outFile = './MilliQanSlab_Run{0}_{1}.root'.format(args.singleRun, args.version)
+        else: 
+            inFile = args.inputDir + 'MilliQan_Run{0}_formosa.root'.format(args.singleRun)
+            triggerFile = args.inputDir + 'MatchedEvents_Run{0}_rematch.root'.format(args.singleRun)
+            outFile = './MilliQan_Run{0}_{1}.root'.format(args.singleRun, args.version)
 
     print("Input file is {0}\nTrigger File is {1}\nOutput File is {2}".format(inFile, triggerFile, outFile))
 
-    cmd = 'source $PWD/setup.sh && python3 $PWD/scripts/runOfflineFactory.py --inputFile {0} --outputFile {1} --exe ./run.exe --publish'.format(inFile, outFile)
+    cmd = 'source $PWD/setup.sh && python3 $PWD/scripts/runOfflineFactory.py --inputFile {0} --outputFile {1} --exe ./run.exe --publish'.format(inFile.split("/")[-1], outFile)
+    subprocess.call("export EOS_MGM_URL=root://eosexperiment.cern.ch && cp "+inFile+" "+inFile.split("/")[-1], shell=True)
 
     if os.path.exists(triggerFile):
-        cmd = '{0} -m {1}'.format(cmd, triggerFile)
+        cmd = '{0} -m {1}'.format(cmd, triggerFile.split("/")[-1])
+        subprocess.call("export EOS_MGM_URL=root://eosexperiment.cern.ch && cp "+args.triggerFile+" "+args.triggerFile.split("/")[-1], shell=True)
     else:
         print("Trigger file {} does not exist".format(triggerFile))
 
-    if args.slab:
-        print("Processing slab detector data")
-        cmd = '{0} --slab'.format(cmd)
+    if args.formosa:
+        print("Processing formosa detector data")
+        cmd = '{0} --formosa'.format(cmd)
+    else:
+        if args.slab:
+            print("Processing slab detector data")
+            cmd = '{0} --slab'.format(cmd)
 
     subprocess.call(cmd, shell=True)
 
@@ -68,28 +80,39 @@ def main():
     runNum = str(int(float(line.split()[0])))
     fileNum = str(int(float(line.split()[1])))
     subName = str(args.version)
-
-    if args.slab:
-        inFile = args.inputDir + 'MilliQanSlab_Run{0}.{1}_default.root'.format(runNum,fileNum)
-        outFile = 'MilliQanSlab_Run{0}.{1}_{2}.root'.format(runNum,fileNum, subName)
-        triggerFile = args.inputDir + "MatchedEventsSlab_Run{0}.{1}_rematch.root".format(runNum, fileNum)
-    else:
-        inFile = args.inputDir + 'MilliQan_Run{0}.{1}_default.root'.format(runNum,fileNum)
-        outFile = 'MilliQan_Run{0}.{1}_{2}.root'.format(runNum,fileNum, subName)
+    if args.formosa:
+        inFile = args.inputDir + 'MilliQan_Run{0}.{1}_formosa.root'.format(runNum,fileNum)
+        outFile = './MilliQan_Run{0}.{1}_{2}.root'.format(runNum,fileNum, subName)
         triggerFile = args.inputDir + "MatchedEvents_Run{0}.{1}_rematch.root".format(runNum, fileNum)
+    else:
+        if args.slab:
+            inFile = args.inputDir + 'MilliQanSlab_Run{0}.{1}_formosa.root'.format(runNum,fileNum)
+            outFile = './MilliQanSlab_Run{0}.{1}_{2}.root'.format(runNum,fileNum, subName)
+            triggerFile = args.inputDir + "MatchedEventsSlab_Run{0}.{1}_rematch.root".format(runNum, fileNum)
+        else:
+            inFile = args.inputDir + 'MilliQan_Run{0}.{1}_formosa.root'.format(runNum,fileNum)
+            outFile = './MilliQan_Run{0}.{1}_{2}.root'.format(runNum,fileNum, subName)
+            triggerFile = args.inputDir + "MatchedEvents_Run{0}.{1}_rematch.root".format(runNum, fileNum)
 
     print("Input file is {0}\nTrigger File is {1}\nOutput File is {2}".format(inFile, triggerFile, outFile))
 
-    cmd = 'source $PWD/setup.sh && python3 $PWD/scripts/runOfflineFactory.py --inputFile {0} --outputFile {1} --exe ./run.exe --publish'.format(inFile, outFile)
+    cmd = 'source $PWD/setup.sh && python3 $PWD/scripts/runOfflineFactory.py --inputFile {0} --outputFile {1} --exe ./run.exe --publish'.format(inFile.split("/")[-1], outFile)
+    subprocess.call("export EOS_MGM_URL=root://eosexperiment.cern.ch && cp "+inFile+" "+inFile.split("/")[-1], shell=True)
+
 
     if os.path.exists(triggerFile):
-        cmd = '{0} -m {1}'.format(cmd, triggerFile)
+        cmd = '{0} -m {1}'.format(cmd, triggerFile.split("/")[-1])
+        subprocess.call("export EOS_MGM_URL=root://eosexperiment.cern.ch && cp "+args.triggerFile+" "+args.triggerFile.split("/")[-1], shell=True)
     else:
         print("Trigger file {} does not exist".format(triggerFile))
 
-    if args.slab:
+    if args.formosa:
         print("Processing slab detector data")
-        cmd = '{0} --slab'.format(cmd)
+        cmd = '{0} --formosa'.format(cmd)
+    else:
+        if args.slab:
+            print("Processing slab detector data")
+            cmd = '{0} --slab'.format(cmd)
 
     subprocess.call(cmd, shell=True)
 
@@ -103,6 +126,7 @@ def main():
 if __name__ == "__main__":
 
     args = parse_args()
+    os.putenv("EOS_MGM_URL","root://eosexperiment.cern.ch")
 
     if args.singleRun != "-1":
         singleJob()

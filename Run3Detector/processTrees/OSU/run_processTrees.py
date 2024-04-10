@@ -2,6 +2,7 @@ import pickle
 import os,re
 import sys
 import time
+import os 
 from decimal import Decimal
 import glob
 import subprocess
@@ -20,6 +21,7 @@ def parse_args():
     parser.add_argument('-R', '--run', type=str, help='Single run to be submitted')
     parser.add_argument('-o', '--outputDir', type=str, help='Output directory for files')
     parser.add_argument('--slab', action='store_true', help='Option to run over slab data (default is bar)')
+    parser.add_argument('--formosa', action='store_true', help='Option to run over formosa data (overrides slab)')
     #parser.add_argument('--reprocess', type=str, default='missingOfflineFiles.txt', help='reprocess files in given txt file')
     args = parser.parse_args()
     return args
@@ -27,31 +29,42 @@ def parse_args():
 def singleRun():
     subName = 'v' + args.version
 
-    runOnSlabs = 'true' if args.slab else 'false'
+    runOnFORMOSA = 'true' if args.formosa else 'false'
+    runOnSlabs = 'true' if args.slab and not args.formosa else 'false'
 
     now = datetime.datetime.now()
 
     milliqanOffline = 'milliqanOffline_v' + args.version + '.tar.gz'
 
-    if args.slab:
-        dataDir = '/store/user/milliqan/run3/slab/{0}/{1}/'.format(args.runDir, args.subDir)
+    if args.formosa:
+        dataDir = '/eos/experiment/formosa/commissioning/data/DAQ/{0}/{1}/'.format(args.runDir, args.subDir)
     else:
-        dataDir = '/store/user/milliqan/run3/bar/{0}/{1}/'.format(args.runDir, args.subDir)
+        if args.slab:
+            dataDir = '/store/user/milliqan/run3/slab/{0}/{1}/'.format(args.runDir, args.subDir)
+        else:
+            dataDir = '/store/user/milliqan/run3/bar/{0}/{1}/'.format(args.runDir, args.subDir)
 
     if args.outputDir:
         outDir = args.outputDir
     else:
-        outDir = '/store/user/milliqan/trees/v{}/{}/'.format(args.version, args.runDir)
-    logDir = '/data/users/milliqan/log/trees/v{0}/logs_v{0}_{1}_{2}-{3}/'.format(args.version, args.runDir, args.subDir, now.strftime("%m-%d"))
+        if os.getenv("OFFLINESITE") == "eos": 
+            outDir = '/eos/experiment/formosa/commissioning/data/offline/v{}/{}/{}/'.format(args.version, args.runDir,args.subDir)
+        else:
+            outDir = '/store/user/milliqan/trees/v{}/{}/'.format(args.version, args.runDir)
+    if os.getenv("OFFLINESITE") == "eos": 
+        logDir = '/afs/cern.ch/work/m/mcitron/batchOutput/log/trees/v{0}/logs_v{0}_{1}_{2}-{3}/'.format(args.version, args.runDir, args.subDir, now.strftime("%m-%d-%H-%M"))
+    else:
+        logDir = '/data/users/milliqan/log/trees/v{0}/logs_v{0}_{1}_{2}-{3}/'.format(args.version, args.runDir, args.subDir, now.strftime("%m-%d"))
 
-    if(not os.path.isdir(outDir)): os.mkdir(outDir)
-    if(not os.path.isdir(logDir)): os.mkdir(logDir)
+    if(not os.path.isdir(outDir)): os.makedirs(outDir)
+    if(not os.path.isdir(logDir)): os.makedirs(logDir)
 
     #placeholder
     filelist = 'durp'
     files = []
 
-    print('Running on slab', args.slab)
+    print('Running on slab', args.slab and not args.formosa)
+    print('Running on FORMOSA', args.formosa)
 
     condor_file = 'subs/run_trees.sub'
 
@@ -64,18 +77,17 @@ def singleRun():
     request_memory = 500MB
     request_cpus = 1
     executable              = wrapper.sh
-    arguments               = $(PROCESS) {1} {2} {3} {5} {7} {8}
+    arguments               = $(PROCESS) {1} {2} {3} {5} {7} {8} {9}
     log                     = {6}log_$(PROCESS).log
     output                  = {6}out_$(PROCESS).txt
     error                   = {6}error_$(PROCESS).txt
     should_transfer_files   = Yes
     when_to_transfer_output = ON_EXIT
-    transfer_input_files = wrapper.sh, tree_wrapper.py, MilliDAQ.tar.gz, {4}, offline.sif, compile.sh
+    transfer_input_files = wrapper.sh, tree_wrapper.py, MilliDAQ.tar.gz, {4}, compile.sh
     getenv = true
     priority = 15
     queue 1
-    """.format(len(files), dataDir, filelist, outDir, milliqanOffline, subName, logDir, args.single, runOnSlabs)
-
+    """.format(len(files), dataDir, filelist, outDir, milliqanOffline, subName, logDir, args.single, runOnSlabs,runOnFORMOSA)
     f.write(submitLines)
     f.close()
 
@@ -83,20 +95,20 @@ def singleRun():
 
 def runAll():
     print("Running over all directories")
-    dataDir = '/store/user/milliqan/run3/'
+    dataDir = '/eos/experiment/formosa/commissioning/data/DAQ/'
 
     runDirs = []
     subDirs = ['0000', '0001', '0002', '0003', '0004', '0005', '0006', '0007', '0008', '0009']
 
     for dir in os.listdir(dataDir):
         typedir = os.path.join(dataDir, dir)
+        if not os.path.exists(typedir): continue
         if not os.path.isdir(typedir): continue
         for rundir in os.listdir(typedir):
             if not os.path.isdir(os.path.join(typedir, rundir)): continue
             runDirs.append(os.path.join(dir, rundir))
 
     for runDir in runDirs:
-        if int(runDir) < 800: continue
         for subDir in subDirs:
             if not os.path.exists("{0}/{1}/{2}".format(dataDir, runDir, subDir)): continue
             print("Running main")
@@ -107,26 +119,36 @@ def main(runNum, subRun, swVersion, reprocessAllFiles=False):
 
     subName = 'v' + swVersion
   
-    runOnSlabs = 'true' if args.slab else 'false'
+    runOnFORMOSA = 'true' if args.formosa else 'false'
+    runOnSlabs = 'true' if args.slab and not args.formosa else 'false'
     
     now = datetime.datetime.now()
 
     milliqanOffline = 'milliqanOffline_v' + swVersion + '.tar.gz'
     #milliqanOffline = 'milliqanOffline_lumi.tar.gz'
 
-    if args.slab:
-        dataDir = '/store/user/milliqan/run3/slab/{0}/{1}/'.format(runNum, subRun)
+    if args.formosa:
+        dataDir = '/eos/experiment/formosa/commissioning/data/DAQ/{0}/{1}/'.format(args.runDir, args.subDir)
     else:
-        dataDir = '/store/user/milliqan/run3/bar/{0}/{1}/'.format(runNum, subRun)
+        if args.slab:
+            dataDir = '/store/user/milliqan/run3/slab/{0}/{1}/'.format(runNum, subRun)
+        else:
+            dataDir = '/store/user/milliqan/run3/bar/{0}/{1}/'.format(runNum, subRun)
 
     if args.outputDir:
         outDir = args.outputDir
     else:
-        outDir = '/store/user/milliqan/trees/v{}/{}/'.format(swVersion, runNum)
-    logDir = '/data/users/milliqan/log/trees/v{0}/logs_v{0}_{1}_{2}-{3}/'.format(swVersion, runNum, subRun, now.strftime("%m-%d-%H-%M-%S"))
+        if os.getenv("OFFLINESITE") == "eos": 
+            outDir = '/eos/experiment/formosa/commissioning/data/offline/v{}/{}/{}/'.format(args.version, args.runDir,args.subDir)
+        else:
+            outDir = '/store/user/milliqan/trees/v{}/{}/'.format(swVersion, runNum)
+    if os.getenv("OFFLINESITE") == "eos": 
+        logDir = '/afs/cern.ch/work/m/mcitron/batchOutput/log/trees/v{0}/logs_v{0}_{1}_{2}-{3}/'.format(args.version, args.runDir, args.subDir, now.strftime("%m-%d-%H-%M"))
+    else:
+        logDir = '/data/users/milliqan/log/trees/v{0}/logs_v{0}_{1}_{2}-{3}/'.format(args.version, args.runDir, args.subDir, now.strftime("%m-%d"))
 
-    if(not os.path.isdir(outDir)): os.mkdir(outDir)
-    if(not os.path.isdir(logDir)): os.mkdir(logDir)
+    if(not os.path.isdir(outDir)): os.makedirs(outDir)
+    if(not os.path.isdir(logDir)): os.makedirs(logDir)
 
     alreadyProcessedFiles = []
     print("Looking in output dir", outDir)
@@ -144,6 +166,9 @@ def main(runNum, subRun, swVersion, reprocessAllFiles=False):
     print("Already processed {0} files".format(len(alreadyProcessedFiles)))
     files = []
     print("Looking for raw files in dataDir", dataDir)
+    if not os.path.exists(dataDir):
+        print("No such directory: ",dataDir)
+        return 
     for filename in os.listdir(dataDir):
         if('.root' in filename and "MilliQan" in filename):
             index1 = filename.find("_")
@@ -174,17 +199,17 @@ def main(runNum, subRun, swVersion, reprocessAllFiles=False):
     request_memory = 500MB
     request_cpus = 1
     executable              = wrapper.sh
-    arguments               = $(PROCESS) {1} {2} {3} {5} {7}
+    arguments               = $(PROCESS) {1} {2} {3} {5} {7} {8}
     log                     = {6}log_$(PROCESS).log
     output                  = {6}out_$(PROCESS).txt
     error                   = {6}error_$(PROCESS).txt
     should_transfer_files   = Yes
     when_to_transfer_output = ON_EXIT
-    transfer_input_files = {2}, wrapper.sh, tree_wrapper.py, MilliDAQ.tar.gz, {4}, offline.sif, compile.sh
+    transfer_input_files = {2}, wrapper.sh, tree_wrapper.py, MilliDAQ.tar.gz, {4}, compile.sh
     getenv = true
     priority = 15
     queue {0}
-    """.format(len(files), dataDir, filelist, outDir, milliqanOffline, subName, logDir, runOnSlabs)
+    """.format(len(files), dataDir, filelist, outDir, milliqanOffline, subName, logDir, runOnSlabs,runOnFORMOSA)
 
     f.write(submitLines)
     f.close()
@@ -193,7 +218,8 @@ def main(runNum, subRun, swVersion, reprocessAllFiles=False):
 
 def reprocess(reprocessList):
 
-    runOnSlabs = 'true' if args.slab else 'false'
+    runOnFORMOSA = 'true' if args.formosa else 'false'
+    runOnSlabs = 'true' if args.slab and not args.formosa else 'false'
 
     print("Reprocessing files")
     files = []
@@ -204,30 +230,31 @@ def reprocess(reprocessList):
     filelist = 'fileLists/filelist_reprocess.txt'
     np.savetxt(filelist, files)
 
-    print('Running on slab', args.slab)
+    print('Running on slab', args.slab and not args.formosa)
+    print('Running on FORMOSA', args.formosa)
 
     condor_file = 'subs/run_trees.sub'
 
     f = open(condor_file, 'w')
     submitLines = """
     Universe = vanilla
-    +IsLocalJob = true
     Rank = TARGET.IsLocalSlot
     request_disk = 2000MB
     request_memory = 250MB
     request_cpus = 1
     executable              = wrapper.sh
-    arguments               = $(PROCESS) {1} {2} {3} {5} {7}
+    arguments               = $(PROCESS) {1} {2} {3} {5} {7} {8}
     log                     = {6}log_$(PROCESS).log
     output                  = {6}out_$(PROCESS).txt
     error                   = {6}error_$(PROCESS).txt
     should_transfer_files   = Yes
     when_to_transfer_output = ON_EXIT
-    transfer_input_files = {2}, wrapper.sh, tree_wrapper.py, MilliDAQ.tar.gz, {4}, offline.sif, compile.sh
+    transfer_input_files = {2}, wrapper.sh, tree_wrapper.py, MilliDAQ.tar.gz, {4}, compile.sh
     getenv = true
     priority = 15
     queue {0}
-    """.format(len(files), dataDir, filelist, outDir, milliqanOffline, subName, logDir, runOnSlabs)
+    +JobFlavour = "longlunch"
+    """.format(len(files), dataDir, filelist, outDir, milliqanOffline, subName, logDir, runOnSlabs,runOnFORMOSA)
 
     f.write(submitLines)
     f.close()
@@ -251,5 +278,6 @@ if __name__=="__main__":
         print("Error need to provide either run and subrun or option '--all'")
         sys.exit(1)
 
-    print('Running on slab', args.slab)
+    print('Running on slab', args.slab and not args.formosa)
+    print('Running on FORMOSA', args.formosa)
 

@@ -36,12 +36,12 @@ def initialize():
     shutil.copy(sys.argv[3], os.getcwd()+'/MilliDAQ/')
     os.chdir(os.getcwd()+'/MilliDAQ/')
 
-    cmd = 'singularity exec ../offline.sif ./compileAddTriggerNumber.sh'
+    cmd = 'singularity exec /cvmfs/unpacked.cern.ch/registry.hub.docker.com/carriganm95/milliqan_offline\:x86/ ./compileAddTriggerNumber.sh'
     os.system(cmd)
 
 def runCombine(runNum):
 
-    cmd = 'singularity exec -B /store/ ../offline.sif python3 test/runCombineFiles.py -r {0} -d {1} --standalone'.format(runNum, sys.argv[2])
+    cmd = 'singularity exec -B /eos,/afs,/cvmfs /cvmfs/unpacked.cern.ch/registry.hub.docker.com/carriganm95/milliqan_offline\:x86/ python3 test/runCombineFiles.py -r {0} -d {1} --standalone'.format(runNum, sys.argv[2])
     os.system(cmd)
 
 def postJob():

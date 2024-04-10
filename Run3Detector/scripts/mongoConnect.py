@@ -1,6 +1,6 @@
 from pymongo import MongoClient
 
-def mongoConnect(datasetName="formosa"):
+def mongoConnect(datasetName="milliQan"):
     try:
         client = MongoClient("mongodb.physics.ucdavis.edu",port=27017,username='mcitron',password='!!!Phys-2024-Mongo-Citron!!!', authSource='admin', authMechanism='SCRAM-SHA-256')
         db=client[datasetName]

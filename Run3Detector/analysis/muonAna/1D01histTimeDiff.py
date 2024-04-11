@@ -17,8 +17,6 @@ from milliqanPlotter import *
 
 #define function to get the time difference between pulses in layer0 and layer1
 def getPulseDiff(self):
-      print(type(self.events))
-      print(self.events)
       #assuming self.events is a dictionary containing awkward arrays
       times = self.events['timeFit_module_calibrated']
       layer = self.events['layer']
@@ -44,12 +42,14 @@ def getPulseDiff(self):
       t_out = times1-times0
       self.events['timeDiff'] = t_out
 
+#add our custom function
+setattr(milliqanCuts, 'getPulseDiff', getPulseDiff)
 
 #define a file list to run over
 filelist = ['/mnt/hadoop/se/store/user/milliqan/trees/v34/1000/MilliQan_Run1006.4_v34.root:t']
 
 #define the necessary branches to run over
-branches = ['pickupFlag', 'boardsMatched', 'time_module_calibrated', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type']
+branches = ['pickupFlag', 'boardsMatched', 'timeFit_module_calibrated', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type']
 
 #define the milliqan cuts object
 mycuts = milliqanCuts()
@@ -63,18 +63,15 @@ boardMatchCut = mycuts.getCut(mycuts.boardsMatched, 'boardMatchCut', cut=True, b
 #add four layer cut
 fourLayerCut = mycuts.getCut(mycuts.fourLayerCut, 'fourLayerCut', cut=False)
 
-#add our custom function
-setattr(milliqanCuts, 'getPulseDiff', getPulseDiff)
-
-#call custom function to create timeDiff branch
-mycuts.getPulseDiff()
-
 #define milliqan plotter
 myplotter = milliqanPlotter()
 
 #create a 1D root histogram
 h_1d = r.TH1F("h_1d", "1d Histogram", 80, -40, 40)
 h_1d.GetXaxis().SetTitle("layer0-1 time diff")
+
+#call custom function to create timeDiff branch
+mycuts.getPulseDiff()
 
 #add root histogram to plotter
 myplotter.addHistograms(h_1d, 'timeDiff')

@@ -49,13 +49,13 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts)
 myiterator.run()
 
 #check the number of events remaining
-num_events_after_cuts = len(mycuts.events[mycuts.events["straightLineCut"] & mycuts.events["fourLayerCut"]])
+num_events_after_cuts = len(mycuts.events[mycuts.events["straightLineCut"]])
 print(f"Number of events after cuts: {num_events_after_cuts}")
 
 #print only events with branches that have passed cuts
 print("Events with branches that have passed cuts:")
-print(mycuts.events[mycuts.events["straightLineCut"] & mycuts.events["fourLayerCut"]])
+print(mycuts.events[mycuts.events["straightLineCut"]])
 
 #print a boolean list to check if every events has passed cuts
 print("A boolean list to check if events have passed cuts:")
-print(ak.to_list(mycuts.events["straightLineCut"] & mycuts.events["fourLayerCut"]))
+print(ak.to_list(mycuts.events["straightLineCut"]))

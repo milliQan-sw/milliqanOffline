@@ -17,6 +17,8 @@ from milliqanPlotter import *
 
 #define function to get the time difference between pulses in layer0 and layer1
 def getPulseDiff(self):
+      print(type(self.events))
+      print(self.events)
       #assuming self.events is a dictionary containing awkward arrays
       times = self.events['timeFit_module_calibrated']
       layer = self.events['layer']
@@ -41,8 +43,6 @@ def getPulseDiff(self):
       #get time difference between two layers (here 1 and 0)
       t_out = times1-times0
       self.events['timeDiff'] = t_out
-      print(type(self.events))
-      print(self.events)
 
 
 #define a file list to run over

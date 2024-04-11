@@ -41,6 +41,9 @@ def getPulseDiff(self):
       #get time difference between two layers (here 1 and 0)
       t_out = times1-times0
       self.events['timeDiff'] = t_out
+      print(type(self.events))
+      print(self.events)
+
 
 #define a file list to run over
 filelist = ['/mnt/hadoop/se/store/user/milliqan/trees/v34/1000/MilliQan_Run1006.4_v34.root:t']

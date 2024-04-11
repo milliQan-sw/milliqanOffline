@@ -65,9 +65,6 @@ myplotter = milliqanPlotter()
 h_1d = r.TH1F("h_1d", "1d Histogram", 80, -40, 40)
 h_1d.GetXaxis().SetTitle("layer0-1 time diff")
 
-#call custom function to create timeDiff branch
-mycuts.getPulseDiff()
-
 #add root histogram to plotter
 myplotter.addHistograms(h_1d, 'timeDiff')
 

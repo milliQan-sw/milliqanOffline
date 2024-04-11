@@ -61,7 +61,7 @@ eventCuts = mycuts.getCut(mycuts.combineCuts, 'eventCuts', ['fourLayerCut', 'str
 setattr(milliqanCuts, 'getPulseDiff', getPulseDiff)
 
 #call custom function to create timeDiff branch
-mycuts.getPulsDiff()
+mycuts.getPulseDiff()
 
 #define milliqan plotter
 myplotter = milliqanPlotter()

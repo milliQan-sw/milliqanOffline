@@ -65,7 +65,7 @@ h_1d = r.TH1F("h_1d", "1d Histogram", 80, -40, 40)
 h_1d.GetXaxis().SetTitle("layer0-1 time diff")
 
 #add root histogram to plotter
-myplotter.addHistograms(h_1d, ['timeDiff'], 'straightLineCut')
+myplotter.addHistograms(h_1d, 'timeDiff')
 
 #defining the cutflow
 cutflow = [boardMatchCut, pickupCut, mycuts.layerCut, mycuts.straightLineCut, myplotter.dict['h_1d']]

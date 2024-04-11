@@ -59,10 +59,10 @@ analysis:
         - python3 analysisCI.py
 
 build image:
-    image: $DOCKER_IMAGE
+    image: docker:24.0.5
     stage: setup
     services:
-        - name: docker:dind
+        - name: docker:24.0.5-dind
     rules:
         - if: $CI_PIPELINE_SOURCE == "schedule"
     variables:

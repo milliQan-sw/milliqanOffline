@@ -293,7 +293,7 @@ def findCorrectTime(self,cutName = "DT_CorrectTime",cut = None):
 #----------------------------------cosmic muon tagging script-------------------------------------------
 
 
-def CosmuonTagIntialization(self, cutName = None, cut = None, NPEcut = 2500, offline = None):
+def CosmuonTagIntialization(self, cutName = None, cut = None, NPEcut = 20, offline = None):
     for R in range(4):
         for l in range(4):
             self.events[f"l{l}R{R}"] = (self.events.layer == l) & (self.events.row == R) & (self.events.barCut) & (self.events.nPE >= NPEcut)
@@ -535,7 +535,7 @@ if __name__ == "__main__":
 
 
     #---------------------------------------condor job section(get the file that needs to be processed)---------------------------------
-    """
+    #"""
     def getFile(processNum, fileList):
 
         filelist = open(fileList)
@@ -557,14 +557,14 @@ if __name__ == "__main__":
 
     #filelist =['/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhotonMuontag/output_1.root:t']
     filelist =[f'{filename}:t']
-    """
+    #"""
 
     #----------------------------------------------------------------------------------------------------------------------------------- OSU T3
     #signle file test
     #numRun = 1
-    numRun = str(sys.argv[1])
-    filelist =[f'/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhotonMuontag/output_{numRun}.root:t']
-    outputPath = str(sys.argv[2]) # the path is used at the very end for the output txt file
+    #numRun = str(sys.argv[1])
+    #filelist =[f'/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhotonMuontag/output_{numRun}.root:t']
+    #outputPath = str(sys.argv[2]) # the path is used at the very end for the output txt file
 
     #------------------------------------------------------------------------------------------------
     #path for the milliqan machine
@@ -760,7 +760,7 @@ if __name__ == "__main__":
     
     #note cutflow 1-3 are checked
     
-    cutflow = cutflow5
+    cutflow = cutflow5B
 
     myschedule = milliQanScheduler(cutflow, mycuts)
 
@@ -768,19 +768,19 @@ if __name__ == "__main__":
 
     #myiterator.setCustomFunction(makeCuteffPlot) #I don't want to make the cut efficiency plot for now
 
-    #myiterator.run() #use for testing the codor job only for debugging purpose
+    myiterator.run() #use this one in condor job
     
     #f_out = r.TFile("test.root", "RECREATE") #FIXME: this is use for test only!
     #CEhist.Write()
     #f_out.Close()
     #--------------section for using to check cut efficiency(please use this one by default)-----------------------------
-    #"""
+    """
     if outputPath == '':
         myiterator.run()
 
     #output result to txt file
     else:
-        with open(f'{outputPath}/Run{numRun}CutFlow1.txt', 'w') as cfFile:
+        with open(f'{outputPath}/Run{numRun}CutFlow5B.txt', 'w') as cfFile:
             sys.stdout = cfFile  # Change the standard output to the file
             myiterator.run() #output from counting function will be saved in the txt file above.
 
@@ -799,4 +799,4 @@ if __name__ == "__main__":
         #f_out.cd()
         #NBarsHitTag1.Write()
         #f_out.Close()
-    #"""
+    """

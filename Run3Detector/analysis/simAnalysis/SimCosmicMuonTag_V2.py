@@ -11,7 +11,7 @@ import sys
 import time
 import json
 
-sys.path.append("/share/scratch0/czheng/SIManalysisDEV/milliqanOffline/Run3Detector/analysis/utilities")
+sys.path.append("../utilities")
 
 from milliqanProcessor import *
 from milliqanScheduler import *

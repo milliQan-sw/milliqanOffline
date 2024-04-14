@@ -37,9 +37,9 @@ if __name__ == "__main__":
     #signle file test
     #numRun = 1190
     #fileNum = 2
-    numRun = str(sys.argv[1])
-    fileNum = str(sys.argv[2])
-    filelist =[f'/store/user/milliqan/trees/v34/1100/MilliQan_Run{numRun}.{fileNum}_v34.root:t']
+    #numRun = str(sys.argv[1])
+    #fileNum = str(sys.argv[2])
+    #filelist =[f'/store/user/milliqan/trees/v34/1100/MilliQan_Run{numRun}.{fileNum}_v34.root:t']
 
 
     #------------------------------------------------------------------------------------------------
@@ -48,10 +48,10 @@ if __name__ == "__main__":
     #print("this is numRun" + str(sys.argv[1]) )
 
 
-    #numRun = str(sys.argv[1])
-    #fileNum = str(sys.argv[2])
-    #filelist =[f'/home/czheng/SimCosmicFlatTree/offlinefile/MilliQan_Run{numRun}.{fileNum}_v34.root:t']
-    #print(filelist)
+    numRun = str(sys.argv[1])
+    fileNum = str(sys.argv[2])
+    filelist =[f'/home/czheng/SimCosmicFlatTree/offlinefile/MilliQan_Run{numRun}.{fileNum}_v34.root:t']
+    print(filelist)
 
     outputPath = str(sys.argv[3]) # the path is used at the very end for the output txt file
     print(outputPath)

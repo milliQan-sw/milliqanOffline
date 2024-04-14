@@ -535,7 +535,7 @@ if __name__ == "__main__":
 
 
     #---------------------------------------condor job section(get the file that needs to be processed)---------------------------------
-    #"""
+    """
     def getFile(processNum, fileList):
 
         filelist = open(fileList)
@@ -555,7 +555,7 @@ if __name__ == "__main__":
     if('.root' in filename and 'output' in filename):
         numRun = filename.split('_')[1].split('.')[0].replace('Run', '')
 
-    #filelist =['/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhotonMuontag/output_1.root:t']
+    filelist =['/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhotonMuontag/output_1.root:t']
     filelist =[f'{filename}:t']
     #"""
 
@@ -571,7 +571,7 @@ if __name__ == "__main__":
 
     #print("this is numRun" + str(sys.argv[1]) )
     
-    """
+    #"""
 
     numRun = str(sys.argv[1])
     filelist =[f'/home/czheng/SimCosmicFlatTree/withPhotonMuontag/output_{numRun}.root:t']
@@ -580,7 +580,7 @@ if __name__ == "__main__":
     outputPath = str(sys.argv[2]) # the path is used at the very end for the output txt file
     print(outputPath)
     
-    """
+    #"""
 
     #-----------------------------------OSU T3--------------------------------------------------------
 
@@ -768,13 +768,13 @@ if __name__ == "__main__":
 
     #myiterator.setCustomFunction(makeCuteffPlot) #I don't want to make the cut efficiency plot for now
 
-    myiterator.run() #use this one in condor job
+    #myiterator.run() #use this one in condor job
     
     #f_out = r.TFile("test.root", "RECREATE") #FIXME: this is use for test only!
     #CEhist.Write()
     #f_out.Close()
     #--------------section for using to check cut efficiency(please use this one by default)-----------------------------
-    """
+    #"""
     if outputPath == '':
         myiterator.run()
 
@@ -792,7 +792,7 @@ if __name__ == "__main__":
 
    
         #-------------------------------------output histograms and save in root file. Please comment it out if you dont need it------------------------------------------------
-
+    """
         
 
         #f_out = r.TFile(f"{outputPath}/Run{numRun}CutFlow4.root", "RECREATE")

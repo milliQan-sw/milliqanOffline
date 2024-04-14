@@ -485,7 +485,19 @@ def sudo_straight(self, cutName = "StraghtCosmic",NPEcut = 20):
     for index, path in enumerate(eventList):
         if index == 0: passArr = path # create an intial array
         else: passArr = passArr | path #the events that have interesting path will be saved
-    
+        #do the muon layer taggin here, layer can be found in index
+        #there should be 28 path per layer, meaning, size of eventlist can be 72(double check). so layer "round down(index / 28)""
+
+        #I need 4 muon layer tag
+        #psudo code
+        """
+        if (index / 28) == 0:
+            if index == 0(first index(start from 0) for each layer):
+                lay0Muon = path
+            else: lay0Muon = lay0Muon | path
+        self.events.["muonLay0"] = lay0Muon
+
+        """
     #put the new tag back to arrays
     self.events[cutName] = passArr
     # i suspect after applying the event the array become numpy arraies, which cause failure.

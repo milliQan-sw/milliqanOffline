@@ -115,10 +115,11 @@ if __name__ == "__main__":
 
     #-----------------------------muon straight line cut-------------------
     M_NPE = r.TH1F("M_NPE", "nPE muon event layer", 100, 0, 100)
-    M_adj_NPE = r.TH1F("M_NPE", "nPE muon event adjacnet layer", 100, 0, 100)
+    M_adj_NPE = r.TH1F("M_adj_NPE", "nPE muon event adjacnet layer", 100, 0, 100)
     myplotter.addHistograms(M_NPE, 'nPE', 'MuonLayers')
     myplotter.addHistograms(M_adj_NPE, 'nPE', 'MuonADJLayers')
-    cutflow6 = [mycuts.boardsMatched,mycuts.pickupCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.sudo_straight,myplotter.dict['M_NPE'], myplotter.dict['M_adj_NPE']]
+    
+    cutflow6 = [mycuts.boardsMatched,mycuts.pickupCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.sudo_straight,myplotter.dict['M_NPE'],myplotter.dict['M_adj_NPE']]
 
 
     cutflow = cutflow6

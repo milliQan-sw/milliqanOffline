@@ -17,29 +17,28 @@ from milliqanPlotter import *
 
 #define function to get the time difference between pulses in layer0 and layer1
 def getPulseDiff(self):
-      times = self.events['timeFit_module_calibrated'][self.events['straightLineCut']]
-      layer = self.events['layer'][self.events['straightLineCut']]
+    times = self.events['timeFit_module_calibrated'][self.events['straightLineCut']]
+    layer = self.events['layer'][self.events['straightLineCut']]
 
-      #require only 4 pulses in the event
-      count = ak.count(times, keepdims=True, axis=1)
-      count = count == 4
+    # Require only 4 pulses in the event
+    count = ak.count(times, axis=1) == 4  # Directly make this a boolean array
 
-      #expand count to a 2d array like times for manipulation
-      count, times = ak.broadcast_arrays(count, times)
+    # Filter times and layers only where there are exactly 4 pulses
+    times = times[count]
+    layer = layer[count]
 
-      #make the cut of 4 pulses
-      times = times[count]
-      layer = layer[count]
+    # Assuming times and layer are now correctly filtered and aligned
+    # Filter to get times at each specific layer
+    times0 = times[layer == 0]
+    times1 = times[layer == 1]
 
-      #get time at each layer
-      times0 = times[layer == 0]
-      times1 = times[layer == 1]
-      times2 = times[layer == 2]
-      times3 = times[layer == 3]
+    # Get time difference between two layers (here 1 and 0)
+    if len(times0) and len(times1):
+        t_out = times1 - times0  # Ensure arrays are not empty
+        self.events['timeDiff'] = t_out
+    else:
+        self.events['timeDiff'] = None  # Handle cases where no valid data exists
 
-      #get time difference between two layers (here 1 and 0)
-      t_out = times1-times0
-      self.events['timeDiff'] = t_out
 
 #add our custom function
 setattr(milliqanCuts, 'getPulseDiff', getPulseDiff)

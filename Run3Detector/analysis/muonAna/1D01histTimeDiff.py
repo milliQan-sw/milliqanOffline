@@ -17,17 +17,18 @@ from milliqanPlotter import *
 
 #define function to get the time difference between pulses in layer0 and layer1
 def getPulseDiff(self):
-      #assuming self.events is a dictionary containing awkward arrays
       times = self.events['timeFit_module_calibrated'][self.events['straightLineCut']]
       layer = self.events['layer'][self.events['straightLineCut']]
 
-      #require only 4 pulses in the event (possible multiple straight line paths were found)
+      #require only 4 pulses in the event
       count = ak.count(times, keepdims=True, axis=1)
       count = count == 4
-      count, times = ak.broadcast_arrays(count, times)
+
+      #make the cut of 4 pulses
       times = times[count]
       layer = layer[count]
 
+      #get time at each layer
       times0 = times[layer == 0]
       times1 = times[layer == 1]
       times2 = times[layer == 2]

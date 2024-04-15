@@ -232,8 +232,7 @@ def NbarsHitsCount(self,cutName = "NBarsHits",cut = None, hist = None):
     else:
         uniqueBarArr = ak.Array([np.unique(x) for x in bararr.chan])
         self.events[cutName] = ak.count(uniqueBarArr, axis = 1)
-        print(self.events[cutName])
-        print(self.events.fields)
+        
     
     if hist:
         bararr = ak.flatten(self.events[cutName],axis=None)
@@ -281,7 +280,7 @@ def findCorrectTime(self,cutName = "DT_CorrectTime",cut = None,timeData = "time"
     
     CorretTimeArray = np.concatenate((TimeArrayL0, TimeArrayL1,TimeArrayL2,TimeArrayL3), axis=1)
     self.events[cutName] =ak.Array((ak.max(CorretTimeArray,axis=1)-ak.min(CorretTimeArray,axis=1)) )
-    print(ak.to_list(self.events[cutName]))
+    
 
 
 

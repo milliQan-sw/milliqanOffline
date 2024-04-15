@@ -1,6 +1,6 @@
 from SimCosmicMuonTag_V2 import *
 
-branches = ["chan","runNumber","column","event","fileNumber",'boardsMatched',"pickupFlag","layer","nPE","type","row","area"]
+branches = ["height","chan","runNumber","column","event","fileNumber",'boardsMatched',"pickupFlag","layer","nPE","type","row","area"]
 
 
 

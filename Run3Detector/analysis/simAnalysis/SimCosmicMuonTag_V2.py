@@ -528,8 +528,18 @@ def sudo_straight(self, cutName = "StraghtCosmic",NPEcut = 20):
     print(self.events["height"][(self.events["muonLay3"]) & (self.events["layer"]==3)]) #use this one to find the NPE at muon layer
     #print(ak.to_list(self.events["muonLay0"]))
     #print(ak.to_list(self.events["layer"]))             
-                
-
+    
+    #pulse based layer constraint
+    l0Arr = (self.events["muonLay0"]) & (self.events["layer"]==0)
+    l1Arr = (self.events["muonLay1"]) & (self.events["layer"]==1)
+    l2Arr = (self.events["muonLay2"]) & (self.events["layer"]==2)
+    l3Arr = (self.events["muonLay3"]) & (self.events["layer"]==3)
+    
+   
+    #get the adjacent layer adj* (evet based brocast to pulse based)
+    adj0,adj1,adj2,adj3=self.adjLayerData(l0Arr,l1Arr,l2Arr,l3Arr) 
+    print((self.events["layer"]==0) & (adj0))
+    #use this one to find the adajacent layer    
 
         
     #put the new tag back to arrays
@@ -541,7 +551,7 @@ def sudo_straight(self, cutName = "StraghtCosmic",NPEcut = 20):
 
 setattr(milliqanCuts, 'sudo_straight',sudo_straight)    
 
-
+setattr(milliqanCuts, 'adjLayerData' , adjLayerData)
 setattr(milliqanCuts, 'MiddleRow', MiddleRow)
 
 setattr(milliqanCuts, 'CheckFieldName' , CheckFieldName)

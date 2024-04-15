@@ -24,6 +24,9 @@ def getPulseDiff(self):
       count = ak.count(times, keepdims=True, axis=1)
       count = count == 4
 
+      #expand count to a 2d array like times for manipulation
+      count, times = ak.broadcast_arrays(count, times)
+
       #make the cut of 4 pulses
       times = times[count]
       layer = layer[count]

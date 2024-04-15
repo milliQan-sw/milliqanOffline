@@ -481,23 +481,57 @@ def sudo_straight(self, cutName = "StraghtCosmic",NPEcut = 20):
         #diaganal path
         eventList.append(ak.any(lxArr[f"L{layer}_r0_c0"], axis = 1) & ak.any(lxArr[f"L{layer}_r1_c1"], axis = 1) & ak.any(lxArr[f"L{layer}_r2_c2"], axis = 1) & ak.any(lxArr[f"L{layer}_r3_c3"], axis = 1))
         eventList.append(ak.any(lxArr[f"L{layer}_r3_c0"], axis = 1) & ak.any(lxArr[f"L{layer}_r2_c1"], axis = 1) & ak.any(lxArr[f"L{layer}_r1_c2"], axis = 1) & ak.any(lxArr[f"L{layer}_r0_c3"], axis = 1))
+   
+
+    lay0Muon = []
+    lay1Muon = []
+    lay2Muon = []
+    lay3Muon = []
+
 
     for index, path in enumerate(eventList):
         if index == 0: passArr = path # create an intial array
         else: passArr = passArr | path #the events that have interesting path will be saved
         #do the muon layer taggin here, layer can be found in index
-        #there should be 28 path per layer, meaning, size of eventlist can be 72(double check). so layer "round down(index / 28)""
+        #there should be 36 path per layer, meaning, size of eventlist can be 72(double check). so layer "round down(index / 28)""
 
         #I need 4 muon layer tag
-        #psudo code
-        """
-        if (index / 28) == 0:
-            if index == 0(first index(start from 0) for each layer):
+        
+        if (index // 36) == 0: #// : division with round down
+            if index == 0:
                 lay0Muon = path
             else: lay0Muon = lay0Muon | path
-        self.events.["muonLay0"] = lay0Muon
+        elif (index // 36) == 1:
+            if index == 36:
+                lay1Muon = path
+            else: lay1Muon = lay1Muon | path
+        elif (index // 36) == 2:
+            if index == 72:
+                lay2Muon = path
+            else: lay2Muon = lay2Muon | path
+        elif (index // 36) == 3:
+            if index == 108:
+                lay3Muon = path
+            else: lay3Muon = lay3Muon | path
 
-        """
+    self.events["muonLay0"] = lay0Muon
+    self.events["muonLay1"] = lay1Muon
+    self.events["muonLay2"] = lay2Muon
+    self.events["muonLay3"] = lay3Muon
+    print(len(lay0Muon))
+    print(lay0Muon)
+    print(len(self.events["event"]))
+    print(self.events["event"][self.events["muonLay0"]])
+    print(self.events["event"][self.events["muonLay1"]])
+    print(self.events["event"][self.events["muonLay2"]])
+    print(self.events["event"][self.events["muonLay3"]])
+    print(self.events["height"][(self.events["muonLay3"]) & (self.events["layer"]==3)]) #use this one to find the NPE at muon layer
+    #print(ak.to_list(self.events["muonLay0"]))
+    #print(ak.to_list(self.events["layer"]))             
+                
+
+
+        
     #put the new tag back to arrays
     self.events[cutName] = passArr
     # i suspect after applying the event the array become numpy arraies, which cause failure.

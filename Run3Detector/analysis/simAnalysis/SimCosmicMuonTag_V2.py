@@ -263,20 +263,20 @@ def BarNPERatioCalculate(self,cutName = "BarNPERatio",cut = None):
 
 #bar trim should be used prior using this function
 #introduce correction factor such that time for paricle travel from IP to bar channel is same for time at different layer
-def findCorrectTime(self,cutName = "DT_CorrectTime",cut = None):
+def findCorrectTime(self,cutName = "DT_CorrectTime",cut = None,timeData = "time"):
     if cut:
         cutMask, junk = ak.broadcast_arrays(self.events.cut, self.events.layer)
-        TimeArrayL0 = slef.events["time"][cutMask & self.events.layer==0]
-        TimeArrayL1 = slef.events["time"][cutMask & self.events.layer==1]
-        TimeArrayL2 = slef.events["time"][cutMask & self.events.layer==2]
-        TimeArrayL3 = slef.events["time"][cutMask & self.events.layer==3]
+        TimeArrayL0 = slef.events[timeData][cutMask & self.events.layer==0]
+        TimeArrayL1 = slef.events[timeData][cutMask & self.events.layer==1]
+        TimeArrayL2 = slef.events[timeData][cutMask & self.events.layer==2]
+        TimeArrayL3 = slef.events[timeData][cutMask & self.events.layer==3]
         
         
     else:
-        TimeArrayL0 = self.events["time"][self.events.layer==0] 
-        TimeArrayL1 = self.events["time"][self.events.layer==1] - (3.96 * 1)
-        TimeArrayL2 = self.events["time"][self.events.layer==2] - (3.96 * 2)
-        TimeArrayL3 = self.events["time"][self.events.layer==3] - (3.96 * 3)
+        TimeArrayL0 = self.events[timeData][self.events.layer==0] 
+        TimeArrayL1 = self.events[timeData][self.events.layer==1] - (3.96 * 1)
+        TimeArrayL2 = self.events[timeData][self.events.layer==2] - (3.96 * 2)
+        TimeArrayL3 = self.events[timeData][self.events.layer==3] - (3.96 * 3)
         
     
     CorretTimeArray = np.concatenate((TimeArrayL0, TimeArrayL1,TimeArrayL2,TimeArrayL3), axis=1)
@@ -388,7 +388,7 @@ def P_BBigHit(self, cutName = None,cut = None):
 def EmptyListFilter(self,cutName=None):
 
     self.events['None_empty_event'] = ak.num(self.events['layer']) > 0 #create a event-based mask that check if the event is empty
-    #self.events=self.events[self.events.None_empty_event]#this one can cause milliqanplotter unable to work. I haven't figure out the cuase yet.
+    #
 
 
 #tag muon event (sim only)

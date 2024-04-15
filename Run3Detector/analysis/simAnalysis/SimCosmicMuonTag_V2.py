@@ -280,12 +280,7 @@ def findCorrectTime(self,cutName = "DT_CorrectTime",cut = None,timeData = "time"
         
     
     CorretTimeArray = np.concatenate((TimeArrayL0, TimeArrayL1,TimeArrayL2,TimeArrayL3), axis=1)
-    print(CorretTimeArray )
-
-
-    print((np.max(CorretTimeArray,axis=1)-np.min(CorretTimeArray,axis=1)))
-
-    self.events[cutName] =ak.Array((np.max(CorretTimeArray,axis=1)-np.min(CorretTimeArray,axis=1)) )
+    self.events[cutName] =ak.Array((ak.max(CorretTimeArray,axis=1)-ak.min(CorretTimeArray,axis=1)) )
     print(ak.to_list(self.events[cutName]))
 
 

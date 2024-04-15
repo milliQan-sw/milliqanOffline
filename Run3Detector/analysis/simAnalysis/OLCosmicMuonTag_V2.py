@@ -78,6 +78,11 @@ if __name__ == "__main__":
 
     #test cut flow. Check if the mask can be made
     #cutflow = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,mycuts.fourRowBigHits,mycuts.TBBigHit,mycuts.P_TBBigHit,mycuts.P_BBigHit]
+    
+    """
+    #FIXME: removing entired events in array leads to MQplotter failure to work. I comment this out temporaly.
+    #based on prior research, we concluded that we should use the muon straight line to tag muon event instead of the the following cuts.
+
 
     fourRowBigHitsCut = mycuts.getCut(mycuts.fourRowBigHits, "fourRowBigHitsCut",cut=True)
     TBBigHitCut = mycuts.getCut(mycuts.TBBigHit,"placeholder", cut = True)
@@ -93,6 +98,8 @@ if __name__ == "__main__":
     #cutflowSTD = [mycuts.MuonEvent,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,mycuts.NbarsHitsCount ,myplotter.dict['NBarsHitTag2']] #default analysis cutflow
     
 
+
+
     #Cut flow 1. This one is for testing the cut efficiency of different tags. TB big hits - > TB + panel big hits 
     
     cutflow1 = [mycuts.boardsMatched,mycuts.pickupCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,P_TBBigHitCut,P_TBBigHitCutCount,mycuts.sudo_straight]
@@ -104,8 +111,17 @@ if __name__ == "__main__":
 
     #cut flow 3. This one is for testing the cut efficiency of different tags. B + panel big hits  - > TB + panel big hits 
     cutflow3 = [mycuts.boardsMatched,mycuts.pickupCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,CosmuonTagIntialization,P_BBigHitCut,P_BBigHitCutCount,TBBigHitCut,P_TBBigHitCut,P_TBBigHitCutCount]
+    """
 
-    cutflow = cutflow1
+    #-----------------------------muon straight line cut-------------------
+    M_NPE = r.TH1F("M_NPE", "nPE muon event layer", 100, 0, 100)
+    M_adj_NPE = r.TH1F("M_NPE", "nPE muon event adjacnet layer", 100, 0, 100)
+    myplotter.addHistograms(M_NPE, 'nPE', 'MuonLayers')
+    myplotter.addHistograms(M_adj_NPE, 'nPE', 'MuonADJLayers')
+    cutflow6 = [mycuts.boardsMatched,mycuts.pickupCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.sudo_straight,myplotter.dict['M_NPE'], myplotter.dict['M_adj_NPE']]
+
+
+    cutflow = cutflow6
 
     myschedule = milliQanScheduler(cutflow, mycuts,myplotter)
 
@@ -120,7 +136,7 @@ if __name__ == "__main__":
 
     #output result to txt file
     else:
-        with open(f'{outputPath}/Run{numRun}_file{fileNum}CutFlow1.txt', 'w') as cfFile:
+        with open(f'{outputPath}/Run{numRun}_file{fileNum}CutFlow6.txt', 'w') as cfFile:
             sys.stdout = cfFile  # Change the standard output to the file
             myiterator.run() #output from counting function will be saved in the txt file above.
 
@@ -129,6 +145,10 @@ if __name__ == "__main__":
         # After the block, stdout will return to its default (usually the console)
         # reset stdout to its original state
         sys.stdout = sys.__stdout__
+        f_out = r.TFile(f"{outputPath}/Run{numRun}_muonStraight.root", "RECREATE")
+        M_adj_NPE.Write()
+        M_NPE.Write()
+        f_out.Close()
 
 
 

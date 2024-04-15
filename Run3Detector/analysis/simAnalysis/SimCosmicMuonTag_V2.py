@@ -513,39 +513,33 @@ def sudo_straight(self, cutName = "StraghtCosmic",NPEcut = 20):
             if index == 108:
                 lay3Muon = path
             else: lay3Muon = lay3Muon | path
-
-    self.events["muonLay0"] = lay0Muon
-    self.events["muonLay1"] = lay1Muon
-    self.events["muonLay2"] = lay2Muon
-    self.events["muonLay3"] = lay3Muon
-    print(len(lay0Muon))
-    print(lay0Muon)
-    print(len(self.events["event"]))
-    print(self.events["event"][self.events["muonLay0"]])
-    print(self.events["event"][self.events["muonLay1"]])
-    print(self.events["event"][self.events["muonLay2"]])
-    print(self.events["event"][self.events["muonLay3"]])
-    print(self.events["height"][(self.events["muonLay3"]) & (self.events["layer"]==3)]) #use this one to find the NPE at muon layer
-    #print(ak.to_list(self.events["muonLay0"]))
-    #print(ak.to_list(self.events["layer"]))             
+            
     
-    #pulse based layer constraint
-    l0Arr = (self.events["muonLay0"]) & (self.events["layer"]==0)
-    l1Arr = (self.events["muonLay1"]) & (self.events["layer"]==1)
-    l2Arr = (self.events["muonLay2"]) & (self.events["layer"]==2)
-    l3Arr = (self.events["muonLay3"]) & (self.events["layer"]==3)
+    #tag the pulses that has is the layer where muon event can be found
+    l0Arr = (lay0Muon) & (self.events["layer"]==0)
+    l1Arr = (lay1Muon) & (self.events["layer"]==1)
+    l2Arr = (lay2Muon) & (self.events["layer"]==2)
+    l3Arr = (lay3Muon) & (self.events["layer"]==3)
     
    
-    #get the adjacent layer adj* (evet based brocast to pulse based)
+    #tag the pulses that is at the adjacent layers where muon event can be found
     adj0,adj1,adj2,adj3=self.adjLayerData(l0Arr,l1Arr,l2Arr,l3Arr) 
-    print((self.events["layer"]==0) & (adj0))
-    #use this one to find the adajacent layer    
 
-        
-    #put the new tag back to arrays
+    #put the layer constraint tags back to the array
+    self.events["MuonL0"] = l0Arr
+    self.events["MuonL1"] = l1Arr      
+    self.events["MuonL2"] = l2Arr      
+    self.events["MuonL3"] = l3Arr
+    self.events["MuonLayers"] = l0Arr | l1Arr | l2Arr | l3Arr
+    self.events["MuonADJL0"] = (self.events["layer"]==0) & (adj0)
+    self.events["MuonADJL1"] = (self.events["layer"]==1) & (adj1)      
+    self.events["MuonADJL2"] = (self.events["layer"]==2) & (adj2)      
+    self.events["MuonADJL3"] = (self.events["layer"]==3) & (adj3)
+    self.events["MuonADJLayers"] = self.events["MuonADJL0"] | self.events["MuonADJL1"] | self.events["MuonADJL2"] | self.events["MuonADJL3"]
+
+    #put the new straight muon tag back to arrays
     self.events[cutName] = passArr
-    # i suspect after applying the event the array become numpy arraies, which cause failure.
-    #self.events = ak.Array(self.events)
+    #check the number of events that can pass the cosmic straight cut
     print(f"cosmic straight : {len(self.events['event'][self.events[cutName]])}")
     
 
@@ -726,6 +720,16 @@ if __name__ == "__main__":
     myplotter.addHistograms(NuniqueBar, 'NBarsHits', 'eventCuts4')
     myplotter.addHistograms(NPERatio, 'BarNPERatio', 'eventCuts4')
 
+
+
+    #------------new plots for straight muon events--------------------------------
+    #The direct comparision for sim and offline is only meaningful before pulse reach saturation value(20 Npe). I use the range 0-100 nPE just like the deomonstrator.
+    M_NPE = r.TH1F("M_NPE", "nPE muon event layer", 100, 0, 100)
+    M_adj_NPE = r.TH1F("M_NPE", "nPE muon event adjacnet layer", 100, 0, 100)
+    myplotter.addHistograms(M_NPE, 'nPE', 'MuonLayers')
+    myplotter.addHistograms(M_adj_NPE, 'nPE', 'MuonADJLayers')
+
+
  
 
 
@@ -774,7 +778,7 @@ if __name__ == "__main__":
     TBBigHitCutPlot = mycuts.getCut(mycuts.TBBigHit,"placeholder", cut = True,Hist1 = NBarsHitTag1,branches= branches)
     cutflow4 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCutPlot]
 
-    #------------------cut flow5 for new new  sudo_straight ----------------------
+    #------------------cut flow5 for new  sudo_straight ----------------------
     
     #make sure the NPE cut in sudo_straight is the same as CosmuonTagIntialization, so I can make the comparision
     cutflow5 =[MuonCut,MuonEventCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,P_TBBigHitCut,P_TBBigHitCutCount,mycuts.sudo_straight]
@@ -782,6 +786,11 @@ if __name__ == "__main__":
     cutflow5A =[MuonEventCut,MuonEventCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,P_TBBigHitCut,P_TBBigHitCutCount,mycuts.sudo_straight]
 
     cutflow5B =[mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,TBBigHitCutCount,P_TBBigHitCut,P_TBBigHitCutCount,mycuts.sudo_straight]
+
+
+    #---------------------workflow for only using the muon straight line cut------------
+    #based on prior research, we concluded that we should use the muon straight line to tag muon event.
+    cutflow6 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.sudo_straight,myplotter.dict['M_NPE'], myplotter.dict['M_adj_NPE']]
 
 
     #-----------------------start of analysis---------------------------------------

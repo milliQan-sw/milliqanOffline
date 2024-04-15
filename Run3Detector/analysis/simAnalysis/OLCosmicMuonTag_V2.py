@@ -79,7 +79,7 @@ if __name__ == "__main__":
     #test cut flow. Check if the mask can be made
     #cutflow = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,mycuts.fourRowBigHits,mycuts.TBBigHit,mycuts.P_TBBigHit,mycuts.P_BBigHit]
     
-    """
+    #"""
     #FIXME: removing entired events in array leads to MQplotter failure to work. I comment this out temporaly.
     #based on prior research, we concluded that we should use the muon straight line to tag muon event instead of the the following cuts.
 
@@ -111,18 +111,25 @@ if __name__ == "__main__":
 
     #cut flow 3. This one is for testing the cut efficiency of different tags. B + panel big hits  - > TB + panel big hits 
     cutflow3 = [mycuts.boardsMatched,mycuts.pickupCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,CosmuonTagIntialization,P_BBigHitCut,P_BBigHitCutCount,TBBigHitCut,P_TBBigHitCut,P_TBBigHitCutCount]
-    """
+    #"""
 
     #-----------------------------muon straight line cut-------------------
     M_NPE = r.TH1F("M_NPE", "nPE muon event layer", 100, 0, 100)
     M_adj_NPE = r.TH1F("M_adj_NPE", "nPE muon event adjacnet layer", 100, 0, 100)
     myplotter.addHistograms(M_NPE, 'nPE', 'MuonLayers')
     myplotter.addHistograms(M_adj_NPE, 'nPE', 'MuonADJLayers')
+    NuniqueBar = r.TH1F("NuniqueBar" , "NuniqueBar;number of unique bar;events",50,0,50)
+    myplotter.addHistograms(NuniqueBar, 'NBarsHits', 'StraghtCosmic')
+    CorrectTime =  r.TH1F("CorrectTime" , "D_t Max with correction w;D_t Max; Events",40,-15,25)
+    myplotter.addHistograms(CorrectTime, 'DT_CorrectTime', 'StraghtCosmic')
+    NPERatio = r.TH1F("NPERatio","NPE ratio;max NPE/min NPE;Events",150,0,150)
+    myplotter.addHistograms(NPERatio, 'BarNPERatio', 'StraghtCosmic')
     
-    cutflow6 = [mycuts.boardsMatched,mycuts.pickupCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.sudo_straight,myplotter.dict['M_NPE'],myplotter.dict['M_adj_NPE']]
+    #data missing occurs
+    #cutflow6 = [mycuts.boardsMatched,mycuts.pickupCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.BarNPERatioCalculate,mycuts.NbarsHitsCount,mycuts.findCorrectTime,mycuts.sudo_straight,myplotter.dict['M_NPE'],myplotter.dict['M_adj_NPE'],myplotter.dict["NuniqueBar"],myplotter.dict["NPERatio"]]
+    cutflow6 = [mycuts.boardsMatched,mycuts.pickupCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.sudo_straight,myplotter.dict['M_adj_NPE']]
 
-
-    cutflow = cutflow6
+    cutflow = cutflow1
 
     myschedule = milliQanScheduler(cutflow, mycuts,myplotter)
 
@@ -146,10 +153,14 @@ if __name__ == "__main__":
         # After the block, stdout will return to its default (usually the console)
         # reset stdout to its original state
         sys.stdout = sys.__stdout__
-        f_out = r.TFile(f"{outputPath}/Run{numRun}_muonStraight.root", "RECREATE")
+        f_out = r.TFile(f"{outputPath}/Run{numRun}_file{fileNum}_muonStraight.root", "RECREATE")
         M_adj_NPE.Write()
         M_NPE.Write()
+        NPERatio.Write()
+        CorrectTime.Write()
+        NuniqueBar.Write()
         f_out.Close()
+        
 
 
 

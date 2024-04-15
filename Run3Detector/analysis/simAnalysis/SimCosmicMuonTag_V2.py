@@ -333,6 +333,7 @@ def TBBigHit(self,cutName = None,cut = None, LayerContraint = False, adjLayer = 
 
     #this mask is only useful when doing the counting
     self.events["TBBigHit"] = (TBBigHit_lay0 | TBBigHit_lay1 | TBBigHit_lay2 | TBBigHit_lay3) 
+    
 
     #apply the cut and pick out which layer should be kept when using layer contraint
     # if the event cut is applied then milliqan plotter unable to work properly.
@@ -541,7 +542,7 @@ def sudo_straight(self, cutName = "StraghtCosmic",NPEcut = 20):
     self.events[cutName] = passArr
     #check the number of events that can pass the cosmic straight cut
     print(f"cosmic straight : {len(self.events['event'][self.events[cutName]])}")
-    
+      
 
 setattr(milliqanCuts, 'sudo_straight',sudo_straight)    
 

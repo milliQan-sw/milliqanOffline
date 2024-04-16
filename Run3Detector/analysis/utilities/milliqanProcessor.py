@@ -45,6 +45,7 @@ class milliqanProcessor():
         #If user is overriding the quality check, then we don't need to check the files against goodRuns.json
         if self.qualityLevel == -2:
             print("\n\033[1;31mQuality check is being overridden. All files will be processed.\033[0m")
+            return
             
         #goodJson_array = ak.from_json(pathlib.Path("../goodRunTools/goodRunsMerged.json"))
         goodJson_array = ak.from_json(pathlib.Path("../../configuration/barConfigs/goodRunsList.json"))
@@ -63,6 +64,7 @@ class milliqanProcessor():
             filename = os.path.basename(filepath)
             parts = filename.split('_')
             run_number, file_number = parts[1].replace("Run","").split('.')
+            print(type(goodJson['run']))
             matching_goodJson = goodJson[(goodJson['run'] == int(run_number)) & (goodJson['file'] == int(file_number))]
             
             #Establishes the quality level of the run

@@ -259,7 +259,7 @@ def BarNPERatioCalculate(self,cutName = "BarNPERatio",cut = None):
         self.events[cutName] = ((ak.max(self.events.nPE[cutMask],axis=1)/ak.min(self.events.nPE[cutMask],axis=1)))
     else:
         self.events[cutName] = ((ak.max(self.events.nPE,axis=1)/ak.min(self.events.nPE,axis=1)))
-
+        
 #bar trim should be used prior using this function
 #introduce correction factor such that time for paricle travel from IP to bar channel is same for time at different layer
 def findCorrectTime(self,cutName = "DT_CorrectTime",cut = None,timeData = "time"):
@@ -282,7 +282,7 @@ def findCorrectTime(self,cutName = "DT_CorrectTime",cut = None,timeData = "time"
     self.events[cutName] =ak.Array((ak.max(CorretTimeArray,axis=1)-ak.min(CorretTimeArray,axis=1)) )
     
 
-
+    
 
 #----------------------------------cosmic muon tagging script-------------------------------------------
 

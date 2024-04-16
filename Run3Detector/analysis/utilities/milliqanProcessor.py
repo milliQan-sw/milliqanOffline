@@ -47,6 +47,7 @@ class milliqanProcessor():
             print("\n\033[1;31mQuality check is being overridden. All files will be processed.\033[0m")
             return
             
+        #goodJson_array = ak.from_json(pathlib.Path("goodRuns.json"))
         #goodJson_array = ak.from_json(pathlib.Path("../goodRunTools/goodRunsMerged.json"))
         goodJson_array = ak.from_json(pathlib.Path("../../configuration/barConfigs/goodRunsList.json"))
         data = ak.Array(goodJson_array['data'])
@@ -59,12 +60,13 @@ class milliqanProcessor():
             'single_trigger': data[:, 5]
         }, depth_limit=1)
         
+        goodJson = ak.enforce_type(goodJson, "{run: int64, file: int64, loose: bool, medium: bool, tight: bool, single_trigger: bool}")
+        
         filelist_copy = self.filelist.copy()
         for filepath in filelist_copy:
             filename = os.path.basename(filepath)
             parts = filename.split('_')
             run_number, file_number = parts[1].replace("Run","").split('.')
-            print(type(goodJson['run']))
             matching_goodJson = goodJson[(goodJson['run'] == int(run_number)) & (goodJson['file'] == int(file_number))]
             
             #Establishes the quality level of the run

@@ -16,8 +16,7 @@ class milliqanPlot():
             if self.cut:
                 output = [ak.flatten(events[x][events[self.cut]],axis=None) for x in self.variables]
             else:
-                output = [ak.drop_none(events[x]) for x in self.variables]
-                output = [ak.flatten(y,axis=None) for y in output]
+                output = [ak.flatten(y,axis=None) for y in self.variables]
             #2D histograms
             if len(output) == 2 and len(output[0])>0:
                 myarray0 = array('d', output[0])

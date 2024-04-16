@@ -30,8 +30,8 @@ class milliqanPlot():
             if self.cut:
                 output = ak.flatten(events[self.variables][events[self.cut]],axis=None)
             else:
-                output = ak.drop_none(events[self.variables])
-                output = ak.flatten(output,axis=None)
+                #output = ak.drop_none(events[self.variables])
+                output = ak.flatten(events[self.variables],axis=None)
             myarray = array('d', output)
             #1D histograms
             if len(myarray)>0:

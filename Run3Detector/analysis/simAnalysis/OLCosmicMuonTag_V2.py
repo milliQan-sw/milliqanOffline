@@ -120,9 +120,9 @@ if __name__ == "__main__":
     myplotter.addHistograms(M_adj_NPE, 'nPE', 'MuonADJLayers')
     NuniqueBar = r.TH1F("NuniqueBar" , "NuniqueBar;number of unique bar;events",50,0,50)
     myplotter.addHistograms(NuniqueBar, 'NBarsHits', 'StraghtCosmic')
-    CorrectTime =  r.TH1F("CorrectTime" , "D_t Max with correction w;D_t Max; Events",100,-50,50)
+    CorrectTime =  r.TH1F("CorrectTime" , "D_t Max with correction w;D_t Max; Events",5000,0,5000)
     myplotter.addHistograms(CorrectTime, 'DT_CorrectTime', 'StraghtCosmic')
-    NPERatio = r.TH1F("NPERatio","NPE ratio;max NPE/min NPE;Events",150,0,150)
+    NPERatio = r.TH1F("NPERatio","NPE ratio;max NPE/min NPE;Events",5000,0,5000)
     myplotter.addHistograms(NPERatio, 'BarNPERatio', 'StraghtCosmic')
     
     findCorrectTimeOL = mycuts.getCut(mycuts.findCorrectTime,"DT_CorrectTime", cut = False, timeData = "timeFit_module_calibrated")    

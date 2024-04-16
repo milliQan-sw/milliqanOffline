@@ -785,8 +785,22 @@ if __name__ == "__main__":
 
     #---------------------workflow for only using the muon straight line cut------------
     #based on prior research, we concluded that we should use the muon straight line to tag muon event.
-    cutflow6 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.sudo_straight,myplotter.dict['M_NPE'], myplotter.dict['M_adj_NPE']]
+    #cutflow6 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.sudo_straight,myplotter.dict['M_NPE'], myplotter.dict['M_adj_NPE']]
 
+
+    M_NPE = r.TH1F("M_NPE", "nPE muon event layer", 100, 0, 100)
+    M_adj_NPE = r.TH1F("M_adj_NPE", "nPE muon event adjacnet layer", 100, 0, 100)
+    myplotter.addHistograms(M_NPE, 'nPE', 'MuonLayers')
+    myplotter.addHistograms(M_adj_NPE, 'nPE', 'MuonADJLayers')
+    NuniqueBar = r.TH1F("NuniqueBar" , "NuniqueBar;number of unique bar;events",50,0,50)
+    myplotter.addHistograms(NuniqueBar, 'NBarsHits', 'StraghtCosmic')
+    CorrectTime =  r.TH1F("CorrectTime" , "D_t Max with correction w;D_t Max; Events",5000,0,5000)
+    myplotter.addHistograms(CorrectTime, 'DT_CorrectTime', 'StraghtCosmic')
+    NPERatio = r.TH1F("NPERatio","NPE ratio;max NPE/min NPE;Events",5000,0,5000)
+    myplotter.addHistograms(NPERatio, 'BarNPERatio', 'StraghtCosmic')
+    myplotter.addHistograms(CorrectTime, 'DT_CorrectTime', 'StraghtCosmic')
+
+    cutflow6 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.BarNPERatioCalculate,mycuts.NbarsHitsCount,mycuts.findCorrectTime,mycuts.sudo_straight,myplotter.dict['CorrectTime'],myplotter.dict['M_NPE'],myplotter.dict['M_adj_NPE'],myplotter.dict["NuniqueBar"],myplotter.dict["NPERatio"]]
 
     #-----------------------start of analysis---------------------------------------
 
@@ -849,6 +863,13 @@ if __name__ == "__main__":
         # After the block, stdout will return to its default (usually the console)
         # reset stdout to its original state
         sys.stdout = sys.__stdout__
+        f_out = r.TFile(f"{outputPath}/Run{numRun}CutFlow6.root", "RECREATE")
+        M_adj_NPE.Write()
+        M_NPE.Write()
+        NPERatio.Write()
+        CorrectTime.Write()
+        NuniqueBar.Write()
+        f_out.Close()
 
    
         #-------------------------------------output histograms and save in root file. Please comment it out if you dont need it------------------------------------------------

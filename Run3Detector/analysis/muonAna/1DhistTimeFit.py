@@ -17,10 +17,11 @@ from milliqanPlotter import *
 
 #define function to get the time difference between pulses in layer0 and layer1
 def getPulseDiff(self):
+    #apply cuts to needed branches
     times = self.events['timeFit_module_calibrated'][self.events['straightLineCut']]
     layer = self.events['layer'][self.events['straightLineCut']]
 
-    #require only 4 pulses in the event
+    #boolean variable requiring only 4 pulses in the event
     count = ak.count(times, axis=1) == 4
 
     #filter times and layers only where there are exactly 4 pulses
@@ -41,7 +42,7 @@ def getPulseDiff(self):
         self.events['timeDiff'] = None
 
 
-#add our custom function
+#add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getPulseDiff', getPulseDiff)
 
 #define a file list to run over
@@ -66,8 +67,8 @@ fourLayerCut = mycuts.getCut(mycuts.fourLayerCut, 'fourLayerCut', cut=False)
 myplotter = milliqanPlotter()
 
 #create a 1D root histogram
-h_1d = r.TH1F("h_1d", "1d Histogram", 80, -40, 40)
-h_1d.GetXaxis().SetTitle("layer0-1 time diff")
+h_1d = r.TH1F("h_1d", "1D Histogram", 80, -40, 40)
+h_1d.GetXaxis().SetTitle("timeDiff between layer 0 and 1")
 
 #add root histogram to plotter
 myplotter.addHistograms(h_1d, 'timeDiff')

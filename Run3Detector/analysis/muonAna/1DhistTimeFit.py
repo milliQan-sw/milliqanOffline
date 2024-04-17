@@ -45,7 +45,7 @@ def getPulseDiff(self):
 setattr(milliqanCuts, 'getPulseDiff', getPulseDiff)
 
 #define a file list to run over
-filelist = ['/mnt/hadoop/se/store/user/milliqan/trees/v34/1000/MilliQan_Run1190_v34.root:t']
+filelist = ['/mnt/hadoop/se/store/user/milliqan/trees/v34/1000/MilliQan_Run1006.4_v34.root:t']
 
 #define the necessary branches to run over
 branches = ['pickupFlag', 'boardsMatched', 'timeFit_module_calibrated', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type']

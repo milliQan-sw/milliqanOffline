@@ -20,18 +20,21 @@ def getPulseDiff(self):
     times = self.events['timeFit_module_calibrated'][self.events['straightLineCut']]
     layer = self.events['layer'][self.events['straightLineCut']]
 
-    # Require only 4 pulses in the event
+    #require only 4 pulses in the event
     count = ak.count(times, axis=1) == 4
 
-    # Filter times and layers only where there are exactly 4 pulses
+    #filter times and layers only where there are exactly 4 pulses
     times = times[count]
     layer = layer[count]
     
-    # Filter to get times at each specific layer
+    #filter to get times at each specific layer
     times0 = times[layer == 0]
     times1 = times[layer == 1]
+    print.ak.to_list(times0)
+    print.ak.to_list(times1)
 
-    # Get time difference between two layers
+
+    #get time difference between two layers
     if len(times0) and len(times1):
         t_out = times1 - times0
         self.events['timeDiff'] = t_out

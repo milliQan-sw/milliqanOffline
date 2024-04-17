@@ -30,8 +30,6 @@ def getPulseDiff(self):
     #filter to get times at each specific layer
     times0 = times[layer == 0]
     times1 = times[layer == 1]
-    print(ak.to_list(times0))
-    print(ak.to_list(times1))
 
     #get time difference between two layers
     if len(times0) and len(times1):

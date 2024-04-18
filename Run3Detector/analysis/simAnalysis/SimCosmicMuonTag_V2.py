@@ -521,7 +521,7 @@ def sudo_straight(self, cutName = "StraghtCosmic",NPEcut = 20):
     l3Arr = (lay3Muon) & (self.events["layer"]==3)
     
     #try to find the event that only one layer has the muon events. This is an Event based tag.
-    CleanEventTags = np.concatenate((lay0Muon,lay1Muon,lay2Muon,lay3Muon),axis = 1)
+    CleanEventTags = np.concatenate((lay0Muon,lay1Muon,lay2Muon,lay3Muon))
     self.events["Clean_MuonEvent"] = ak.count_nonzero(CleanEventTags) == 1
 
 
@@ -810,10 +810,10 @@ if __name__ == "__main__":
 
     #------------------cut flow 7: finding the event that only one layer pass the cosmic muon straight tag------------
 
-    cleanMuon_count = mycuts.getCut(mycuts.countEvent,cutName = True, Countobject= 'Clean_MuonEvent')
+    cleanMuon_count = mycuts.getCut(mycuts.countEvent,'placeholder', Countobject= 'Clean_MuonEvent')
     clean_Muon_layer = mycuts.getCut(mycuts.combineCuts, 'clean_Muon_layer', ["MuonLayers","Clean_MuonEvent"])
     clean_Muon_adj_layer = mycuts.getCut(mycuts.combineCuts, 'clean_Muon_adj_layer', ["MuonADJLayers","Clean_MuonEvent"])
-    cutflow7 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.sudo_straight,clean_Muon_layer,clean_Muon_adj_layer]
+    cutflow7 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.sudo_straight,clean_Muon_layer,clean_Muon_adj_layer,cleanMuon_count]
     
     
     #-----------------------start of analysis---------------------------------------
@@ -848,7 +848,7 @@ if __name__ == "__main__":
     
     #note cutflow 1-3 are checked
     
-    cutflow = cutflow6
+    cutflow = cutflow7
 
     myschedule = milliQanScheduler(cutflow, mycuts)
 

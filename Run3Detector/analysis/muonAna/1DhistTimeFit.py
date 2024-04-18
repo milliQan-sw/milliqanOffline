@@ -37,7 +37,7 @@ fourLayerCut = mycuts.getCut(mycuts.fourLayerCut, 'fourLayerCut', cut=False)
 myplotter = milliqanPlotter()
 
 #create a 1D root histogram
-h_1d = r.TH1F("h_1d", "1D Histogram", 80, 0, 10000)
+h_1d = r.TH1F("h_1d", "1D Histogram", 80, 0, 3000)
 h_1d.GetXaxis().SetTitle("timeFit_module_calibrated")
 
 #add root histogram to plotter

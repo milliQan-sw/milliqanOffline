@@ -812,8 +812,13 @@ if __name__ == "__main__":
     cutflow6 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.BarNPERatioCalculate,mycuts.NbarsHitsCount,mycuts.findCorrectTime,mycuts.sudo_straight,myplotter.dict['CorrectTime'],myplotter.dict['M_NPE'],myplotter.dict['M_adj_NPE'],myplotter.dict["NuniqueBar"],myplotter.dict["NPERatio"]]
 
     #------------------cut flow 7: finding the event that only one layer pass the cosmic muon straight tag------------
-    
 
+    cleanMuon_count = mycuts.getCut(mycuts.countEvent,cutName = True, Countobject= 'Clean_MuonEvent')
+    clean_Muon_layer = mycuts.getCut(mycuts.combineCuts, 'clean_Muon_layer', ["MuonLayers","Clean_MuonEvent"])
+    clean_Muon_adj_layer = mycuts.getCut(mycuts.combineCuts, 'clean_Muon_adj_layer', ["MuonADJLayers","Clean_MuonEvent"])
+    cutflow7 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.sudo_straight,clean_Muon_layer,clean_Muon_adj_layer]
+    
+    
     #-----------------------start of analysis---------------------------------------
 
     #-----------------------CustomFunction in MQprocessor---------------------------

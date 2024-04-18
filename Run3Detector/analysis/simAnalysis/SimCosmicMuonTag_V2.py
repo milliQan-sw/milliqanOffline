@@ -483,15 +483,19 @@ def sudo_straight(self, cutName = "StraghtCosmic",NPEcut = 20):
     lay2Muon = []
     lay3Muon = []
 
+    
+    
+
 
     for index, path in enumerate(eventList):
+
+        #section for checking wether a event passes the muon cut
         if index == 0: passArr = path # create an intial array
         else: passArr = passArr | path #the events that have interesting path will be saved
-        #do the muon layer taggin here, layer can be found in index
-        #there should be 36 path per layer, meaning, size of eventlist can be 72(double check). so layer "round down(index / 28)""
 
-        #I need 4 muon layer tag
-        
+        #section for checking which layer passes the muon cut
+
+        #there are 36 muon paths. So the size(outtermost) of array eventList is 36 * 4. index / 36 = layer number
         if (index // 36) == 0: #// : division with round down
             if index == 0:
                 lay0Muon = path
@@ -516,6 +520,11 @@ def sudo_straight(self, cutName = "StraghtCosmic",NPEcut = 20):
     l2Arr = (lay2Muon) & (self.events["layer"]==2)
     l3Arr = (lay3Muon) & (self.events["layer"]==3)
     
+    #try to find the event that only one layer has the muon events. This is an Event based tag.
+    CleanEventTags = np.concatenate((lay0Muon,lay1Muon,lay2Muon,lay3Muon),axis = 1)
+    self.events["Clean_MuonEvent"] = ak.count_nonzero(CleanEventTags) == 1
+
+
    
     #tag the pulses that is at the adjacent layers where muon event can be found
     adj0,adj1,adj2,adj3=self.adjLayerData(l0Arr,l1Arr,l2Arr,l3Arr) 
@@ -798,6 +807,9 @@ if __name__ == "__main__":
     
 
     cutflow6 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.BarNPERatioCalculate,mycuts.NbarsHitsCount,mycuts.findCorrectTime,mycuts.sudo_straight,myplotter.dict['CorrectTime'],myplotter.dict['M_NPE'],myplotter.dict['M_adj_NPE'],myplotter.dict["NuniqueBar"],myplotter.dict["NPERatio"]]
+
+    #------------------cut flow 7: finding the event that only one layer pass the cosmic muon straight tag------------
+    
 
     #-----------------------start of analysis---------------------------------------
 

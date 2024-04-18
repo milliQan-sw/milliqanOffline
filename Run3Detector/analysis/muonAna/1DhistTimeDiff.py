@@ -20,13 +20,6 @@ def getPulseDiff(self):
     #apply cuts to needed branches
     times = self.events['timeFit_module_calibrated'][self.events['straightLineCut']]
     layer = self.events['layer'][self.events['straightLineCut']]
-
-    #boolean variable requiring only 4 pulses in the event
-    count = ak.count(times, axis=1) == 4
-
-    #filter times and layers only where there are exactly 4 pulses
-    times = times[count]
-    layer = layer[count]
     
     #filter to get times at each specific layer
     times0 = times[layer == 0]

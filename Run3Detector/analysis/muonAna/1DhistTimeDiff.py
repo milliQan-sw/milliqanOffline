@@ -15,6 +15,36 @@ from milliqanScheduler import *
 from milliqanCuts import *
 from milliqanPlotter import *
 
+#define function to get the time difference between pulses in layer0 and layer1
+def getPulseDiff(self):
+    #apply cuts to needed branches
+    times = self.events['timeFit_module_calibrated'][self.events['straightLineCut']]
+    layer = self.events['layer'][self.events['straightLineCut']]
+
+    #boolean variable requiring only 4 pulses in the event
+    count = ak.count(times, axis=1) == 4
+
+    #filter times and layers only where there are exactly 4 pulses
+    times = times[count]
+    layer = layer[count]
+    
+    #filter to get times at each specific layer
+    times0 = times[layer == 0]
+    times1 = times[layer == 1]
+    print(ak.to_list(times0))
+    print(ak.to_list(times1))
+
+    #get time difference between two layers
+    if len(times0) and len(times1):
+        t_out = times1 - times0
+        self.events['timeDiff'] = t_out
+    else:
+        self.events['timeDiff'] = None
+
+
+#add our custom function to milliqanCuts
+setattr(milliqanCuts, 'getPulseDiff', getPulseDiff)
+
 #define a file list to run over
 filelist = ['/mnt/hadoop/se/store/user/milliqan/trees/v34/1000/MilliQan_Run1006.4_v34.root:t']
 
@@ -38,13 +68,13 @@ myplotter = milliqanPlotter()
 
 #create a 1D root histogram
 h_1d = r.TH1F("h_1d", "1D Histogram", 80, -40, 40)
-h_1d.GetXaxis().SetTitle("timeFit_module_calibrated")
+h_1d.GetXaxis().SetTitle("timeDiff between layer 0 and 1")
 
 #add root histogram to plotter
-myplotter.addHistograms(h_1d, ['timeFit_module_calibrated'], 'straightLineCut')
+myplotter.addHistograms(h_1d, 'timeDiff')
 
 #defining the cutflow
-cutflow = [boardMatchCut, pickupCut, mycuts.layerCut, mycuts.straightLineCut, myplotter.dict['h_1d']]
+cutflow = [boardMatchCut, pickupCut, mycuts.layerCut, mycuts.straightLineCut, mycuts.getPulseDiff, myplotter.dict['h_1d']]
 
 #create a schedule of the cuts
 myschedule = milliQanScheduler(cutflow, mycuts, myplotter)
@@ -59,7 +89,7 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts, myplotter
 myiterator.run()
 
 #create a new TFile
-f = r.TFile("1DhistTimeFit.root", "recreate")
+f = r.TFile("1DhistTimeDiff.root", "recreate")
 
 #write the histograms to the file
 h_1d.Write()

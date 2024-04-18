@@ -524,17 +524,18 @@ def sudo_straight(self, cutName = "StraghtCosmic",NPEcut = 20):
 
 
     #try to find the event that only one layer has the muon events. This is an Event based tag.
-    print(len(lay0Muon)) #10K should be event based
+    #print(len(lay0Muon)) #10K should be event based
     #print(ak.to_list(lay0Muon))
     lay0Muon_T = transformed_array = [[x] for x in lay0Muon]
     lay1Muon_T = transformed_array = [[x] for x in lay1Muon]
     lay2Muon_T = transformed_array = [[x] for x in lay2Muon]
     lay3Muon_T = transformed_array = [[x] for x in lay3Muon]
     CleanEventTags = np.concatenate((lay0Muon_T,lay1Muon_T,lay2Muon_T,lay3Muon_T),axis = 1) #FIXME: this is not working on event based variable
-    print(len(CleanEventTags))
+    #print(len(CleanEventTags))
     #print(ak.count_nonzero(lay0Muon))
     #print(len(CleanEventTags))  #FIXME: currently the size is 40k. The concatination seems have issue at above
-    self.events["Clean_MuonEvent"] = ak.count_nonzero(CleanEventTags) == 1
+    #print(ak.to_list(ak.count_nonzero(CleanEventTags,axis = 1)))
+    self.events["Clean_MuonEvent"] = ak.count_nonzero(CleanEventTags,axis = 1) == 1
     #print(ak.to_list(self.events["Clean_MuonEvent"]))
 
    

@@ -520,10 +520,22 @@ def sudo_straight(self, cutName = "StraghtCosmic",NPEcut = 20):
     l2Arr = (lay2Muon) & (self.events["layer"]==2)
     l3Arr = (lay3Muon) & (self.events["layer"]==3)
     
-    #try to find the event that only one layer has the muon events. This is an Event based tag.
-    CleanEventTags = np.concatenate((lay0Muon,lay1Muon,lay2Muon,lay3Muon))
-    self.events["Clean_MuonEvent"] = ak.count_nonzero(CleanEventTags) == 1
 
+
+
+    #try to find the event that only one layer has the muon events. This is an Event based tag.
+    print(len(lay0Muon)) #10K should be event based
+    #print(ak.to_list(lay0Muon))
+    lay0Muon_T = transformed_array = [[x] for x in lay0Muon]
+    lay1Muon_T = transformed_array = [[x] for x in lay1Muon]
+    lay2Muon_T = transformed_array = [[x] for x in lay2Muon]
+    lay3Muon_T = transformed_array = [[x] for x in lay3Muon]
+    CleanEventTags = np.concatenate((lay0Muon_T,lay1Muon_T,lay2Muon_T,lay3Muon_T),axis = 1) #FIXME: this is not working on event based variable
+    print(len(CleanEventTags))
+    #print(ak.count_nonzero(lay0Muon))
+    #print(len(CleanEventTags))  #FIXME: currently the size is 40k. The concatination seems have issue at above
+    self.events["Clean_MuonEvent"] = ak.count_nonzero(CleanEventTags) == 1
+    #print(ak.to_list(self.events["Clean_MuonEvent"]))
 
    
     #tag the pulses that is at the adjacent layers where muon event can be found
@@ -868,7 +880,7 @@ if __name__ == "__main__":
 
     #output result to txt file
     else:
-        with open(f'{outputPath}/Run{numRun}CutFlow5B.txt', 'w') as cfFile:
+        with open(f'{outputPath}/Run{numRun}CutFlow7.txt', 'w') as cfFile:
             sys.stdout = cfFile  # Change the standard output to the file
             myiterator.run() #output from counting function will be saved in the txt file above.
 
@@ -877,14 +889,15 @@ if __name__ == "__main__":
         # After the block, stdout will return to its default (usually the console)
         # reset stdout to its original state
         sys.stdout = sys.__stdout__
-        f_out = r.TFile(f"{outputPath}/Run{numRun}CutFlow6.root", "RECREATE")
+        """
+        f_out = r.TFile(f"{outputPath}/Run{numRun}CutFlow7.root", "RECREATE")
         M_adj_NPE.Write()
         M_NPE.Write()
         NPERatio.Write()
         CorrectTime.Write()
         NuniqueBar.Write()
         f_out.Close()
-
+        """
    
         #-------------------------------------output histograms and save in root file. Please comment it out if you dont need it------------------------------------------------
     """

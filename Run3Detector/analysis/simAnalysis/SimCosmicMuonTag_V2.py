@@ -650,7 +650,7 @@ if __name__ == "__main__":
     #cutflow = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,mycuts.fourRowBigHits,mycuts.TBBigHit,mycuts.P_TBBigHit,mycuts.P_BBigHit]
 
 
-
+   
     #"placeholder" is use in cutName argument. This argument is useless in some of the methods but to make the "getCut" work I need to use the  
     fourRowBigHitsCut = mycuts.getCut(mycuts.fourRowBigHits, "fourRowBigHitsCut",cut=False)
     TBBigHitCut = mycuts.getCut(mycuts.TBBigHit,"placeholder", cut = False)
@@ -666,7 +666,7 @@ if __name__ == "__main__":
     P_BBigHitCutCount= mycuts.getCut(mycuts.countEvent, "placeholder" ,Countobject = "P_BBigHit")
     #NbarsHitsCount1= mycuts.getCut(mycuts.P_BBigHit, "NBarsHits",cut = None,hist = NBarsHitTag1)#FIXME: getCut can't take hist as argument. Maybe I should remove it
     #cutflowSTD = [mycuts.MuonEvent,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.CosmuonTagIntialization,TBBigHitCut,mycuts.NbarsHitsCount ,myplotter.dict['NBarsHitTag2']] #default analysis cutflow
-
+    
     #-------------------------section for making histograms---------------------------------------
     ChanVsbarNpeBTag1 = r.TH2F("ChanVsbarNpeBTag1","bar chanvsmpe tag1;chan; bar NPE", 80,0,80,200,0,100000)
     ChanVsbarNpePTag1 = r.TH2F("P ChanvsNPE tag 1","panel chanvsmpe tag1;chan; bar NPE", 80,0,80,200,0,100000)
@@ -696,8 +696,8 @@ if __name__ == "__main__":
     middleRowNPE = r.TH1F("middleRowNPE", "nPE", 4000, 0, 40000)
     ChanVsbarNpeB = r.TH2F("ChanVsbarNpeB","bar chanvsmpe tag1;chan; bar NPE", 80,0,80,200,0,100000)
     CorrectTimeDist =  r.TH1F("CorrectTimeDist" , "D_t Max with correction w;D_t Max; Events",40,-15,25)
-    NuniqueBar = r.TH1F("NuniqueBar" , "NuniqueBar;number of unique bar;events",50,0,50)  
-    NPERatio = r.TH1F("NPERatio","NPE ratio;max NPE/min NPE;Events",150,0,150)
+    #NuniqueBar = r.TH1F("NuniqueBar" , "NuniqueBar;number of unique bar;events",50,0,50)  
+    #NPERatio = r.TH1F("NPERatio","NPE ratio;max NPE/min NPE;Events",150,0,150)
 
     #eventCuts at below is used while making plot
     eventCutsD = mycuts.getCut(mycuts.combineCuts, 'eventCuts', ["None_empty_event","TBBigHit", "barCut"])
@@ -712,17 +712,24 @@ if __name__ == "__main__":
     myplotter.addHistograms(middleRowNPE, 'nPE', 'eventCuts2') #bar NPE
     myplotter.addHistograms(ChanVsbarNpeB, ['chan','nPE'], 'eventCuts4') #general NPE vs chan distribution
     myplotter.addHistograms(CorrectTimeDist, 'DT_CorrectTime', 'eventCuts5') #FIXME: this is not being used now. general NPE vs chan distribution.
-    myplotter.addHistograms(NuniqueBar, 'NBarsHits', 'eventCuts4')
-    myplotter.addHistograms(NPERatio, 'BarNPERatio', 'eventCuts4')
-
+    #myplotter.addHistograms(NuniqueBar, 'NBarsHits', 'eventCuts4')
+    #myplotter.addHistograms(NPERatio, 'BarNPERatio', 'eventCuts4')
+    
 
 
     #------------new plots for straight muon events--------------------------------
     #The direct comparision for sim and offline is only meaningful before pulse reach saturation value(20 Npe). I use the range 0-100 nPE just like the deomonstrator.
     M_NPE = r.TH1F("M_NPE", "nPE muon event layer", 100, 0, 100)
-    M_adj_NPE = r.TH1F("M_NPE", "nPE muon event adjacnet layer", 100, 0, 100)
+    M_adj_NPE = r.TH1F("M_adj_NPE", "nPE muon event adjacnet layer", 100, 0, 100)
     myplotter.addHistograms(M_NPE, 'nPE', 'MuonLayers')
     myplotter.addHistograms(M_adj_NPE, 'nPE', 'MuonADJLayers')
+    NuniqueBar = r.TH1F("NuniqueBar" , "NuniqueBar;number of unique bar;events",50,0,50)
+    myplotter.addHistograms(NuniqueBar, 'NBarsHits', 'StraghtCosmic')
+    CorrectTime =  r.TH1F("CorrectTime" , "D_t Max with correction w;D_t Max; Events",5000,0,5000)
+    myplotter.addHistograms(CorrectTime, 'DT_CorrectTime', 'StraghtCosmic')
+    NPERatio = r.TH1F("NPERatio","NPE ratio;max NPE/min NPE;Events",5000,0,5000)
+    myplotter.addHistograms(NPERatio, 'BarNPERatio', 'StraghtCosmic')
+    myplotter.addHistograms(CorrectTime, 'DT_CorrectTime', 'StraghtCosmic')
 
 
  
@@ -788,17 +795,7 @@ if __name__ == "__main__":
     #cutflow6 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.sudo_straight,myplotter.dict['M_NPE'], myplotter.dict['M_adj_NPE']]
 
 
-    M_NPE = r.TH1F("M_NPE", "nPE muon event layer", 100, 0, 100)
-    M_adj_NPE = r.TH1F("M_adj_NPE", "nPE muon event adjacnet layer", 100, 0, 100)
-    myplotter.addHistograms(M_NPE, 'nPE', 'MuonLayers')
-    myplotter.addHistograms(M_adj_NPE, 'nPE', 'MuonADJLayers')
-    NuniqueBar = r.TH1F("NuniqueBar" , "NuniqueBar;number of unique bar;events",50,0,50)
-    myplotter.addHistograms(NuniqueBar, 'NBarsHits', 'StraghtCosmic')
-    CorrectTime =  r.TH1F("CorrectTime" , "D_t Max with correction w;D_t Max; Events",5000,0,5000)
-    myplotter.addHistograms(CorrectTime, 'DT_CorrectTime', 'StraghtCosmic')
-    NPERatio = r.TH1F("NPERatio","NPE ratio;max NPE/min NPE;Events",5000,0,5000)
-    myplotter.addHistograms(NPERatio, 'BarNPERatio', 'StraghtCosmic')
-    myplotter.addHistograms(CorrectTime, 'DT_CorrectTime', 'StraghtCosmic')
+    
 
     cutflow6 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.BarNPERatioCalculate,mycuts.NbarsHitsCount,mycuts.findCorrectTime,mycuts.sudo_straight,myplotter.dict['CorrectTime'],myplotter.dict['M_NPE'],myplotter.dict['M_adj_NPE'],myplotter.dict["NuniqueBar"],myplotter.dict["NPERatio"]]
 
@@ -834,7 +831,7 @@ if __name__ == "__main__":
     
     #note cutflow 1-3 are checked
     
-    cutflow = cutflow5B
+    cutflow = cutflow6
 
     myschedule = milliQanScheduler(cutflow, mycuts)
 

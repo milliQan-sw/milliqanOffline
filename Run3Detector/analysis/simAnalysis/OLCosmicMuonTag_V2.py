@@ -130,8 +130,14 @@ if __name__ == "__main__":
     #data missing occurs
     cutflow6 = [mycuts.boardsMatched,mycuts.pickupCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.BarNPERatioCalculate,mycuts.NbarsHitsCount,findCorrectTimeOL,mycuts.sudo_straight,myplotter.dict['CorrectTime'],myplotter.dict['M_NPE'],myplotter.dict['M_adj_NPE'],myplotter.dict["NuniqueBar"],myplotter.dict["NPERatio"]]
     
-
-    cutflow = cutflow6
+    
+    #cutflow 7 for finding the clean muon events
+    cleanMuon_count = mycuts.getCut(mycuts.countEvent,'placeholder', Countobject= 'Clean_MuonEvent')
+    clean_Muon_layer = mycuts.getCut(mycuts.combineCuts, 'clean_Muon_layer', ["MuonLayers","Clean_MuonEvent"])
+    clean_Muon_adj_layer = mycuts.getCut(mycuts.combineCuts, 'clean_Muon_adj_layer', ["MuonADJLayers","Clean_MuonEvent"])
+    cutflow7 = [mycuts.boardsMatched,mycuts.pickupCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.sudo_straight,clean_Muon_layer,clean_Muon_adj_layer,cleanMuon_count]    
+    
+    cutflow = cutflow7
 
     myschedule = milliQanScheduler(cutflow, mycuts,myplotter)
 
@@ -146,7 +152,7 @@ if __name__ == "__main__":
 
     #output result to txt file
     else:
-        with open(f'{outputPath}/Run{numRun}_file{fileNum}CutFlow6.txt', 'w') as cfFile:
+        with open(f'{outputPath}/Run{numRun}_file{fileNum}CutFlow7.txt', 'w') as cfFile:
             sys.stdout = cfFile  # Change the standard output to the file
             myiterator.run() #output from counting function will be saved in the txt file above.
 
@@ -155,6 +161,7 @@ if __name__ == "__main__":
         # After the block, stdout will return to its default (usually the console)
         # reset stdout to its original state
         sys.stdout = sys.__stdout__
+        """
         f_out = r.TFile(f"{outputPath}/Run{numRun}_file{fileNum}_muonStraight.root", "RECREATE")
         M_adj_NPE.Write()
         M_NPE.Write()
@@ -162,7 +169,7 @@ if __name__ == "__main__":
         CorrectTime.Write()
         NuniqueBar.Write()
         f_out.Close()
-        
+        """
 
 
 

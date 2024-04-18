@@ -16,7 +16,7 @@ def parse_args():
     parser.add_argument('-s', '--subDir', type=str, help='Subdirectory to be processed')
     parser.add_argument('-a', '--all', action='store_true', help='Find all non processed files and create offline trees')
     parser.add_argument('-f', '--reprocess', action='store_true', help='Reprocess all files')
-    parser.add_argument('-v', '--version', type=str, default='34', help='Set the version of offline trees')
+    parser.add_argument('-v', '--version', type=str, default='35', help='Set the version of offline trees')
     parser.add_argument('-S', '--single', type=str, default='-1', help='Single file to be submitted')
     parser.add_argument('-R', '--run', type=str, help='Single run to be submitted')
     parser.add_argument('-o', '--outputDir', type=str, help='Output directory for files')

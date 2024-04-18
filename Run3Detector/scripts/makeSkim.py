@@ -27,7 +27,7 @@ def makeSkim(inputFile,outputFile,cutString,test=False):
 
 if __name__ == "__main__":
     # defaultCutString = "Sum$(caloJetTotalEmEnergyEcalCellDT > 1 && caloJetTotalEmEnergyEcalCellCap > 10 && abs(caloJetEta)<1.48 && caloJetNEcalCellCap > 25 && caloJetTotalEmEnergyEcalCellWeird < 1 && caloJetTotalEmEnergyEcalCellDiWeird < 1) > 0"
-    defaultCutString = "Max$(layer==0)&&Max$(layer==1)&&Max$(layer==2)&&Max$(layer==3)&&Max$(chan==16)<1&&Max$(chan==18)<1"
+    defaultCutString = "Max$(layer==0)&&Max$(layer==1)&&Max$(layer==2)&&Max$(layer==3)&&MaxIf$(area,chan==16)>7E3&&MaxIf$(area,chan==18)>4E3"
     # defaultCutString = "Sum$(caloJetNEcalCell>10&&caloJetTotalEmEnergyEcalCellCap>10&&caloJetWeightedTimeEcalCellMedianCap<-2)>0"
     if len(sys.argv) < 3:
         print ("usage python skimAllRelevantEvents.py <inputFile> <outputFile> <optional: cut string>")

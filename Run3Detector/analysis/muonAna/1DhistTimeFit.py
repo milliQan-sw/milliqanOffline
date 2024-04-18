@@ -38,10 +38,10 @@ myplotter = milliqanPlotter()
 
 #create a 1D root histogram
 h_1d = r.TH1F("h_1d", "1D Histogram", 80, -40, 40)
-h_1d.GetXaxis().SetTitle("timeFit_module_calibrated")
+h_1d.GetXaxis().SetTitle("time")
 
 #add root histogram to plotter
-myplotter.addHistograms(h_1d, ['time'], 'straightLineCut')
+myplotter.addHistograms(h_1d, 'time', 'straightLineCut')
 
 #defining the cutflow
 cutflow = [boardMatchCut, pickupCut, mycuts.layerCut, mycuts.straightLineCut, myplotter.dict['h_1d']]

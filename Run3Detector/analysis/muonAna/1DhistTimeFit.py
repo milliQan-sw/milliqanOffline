@@ -19,7 +19,7 @@ from milliqanPlotter import *
 filelist = ['/mnt/hadoop/se/store/user/milliqan/trees/v34/1000/MilliQan_Run1006.4_v34.root:t']
 
 #define the necessary branches to run over
-branches = ['pickupFlag', 'boardsMatched', 'timeFit_module_calibrated', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type']
+branches = ['pickupFlag', 'boardsMatched', 'time', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type']
 
 #define the milliqan cuts object
 mycuts = milliqanCuts()
@@ -41,7 +41,7 @@ h_1d = r.TH1F("h_1d", "1D Histogram", 80, -40, 40)
 h_1d.GetXaxis().SetTitle("timeFit_module_calibrated")
 
 #add root histogram to plotter
-myplotter.addHistograms(h_1d, ['timeFit_module_calibrated'], 'straightLineCut')
+myplotter.addHistograms(h_1d, ['time'], 'straightLineCut')
 
 #defining the cutflow
 cutflow = [boardMatchCut, pickupCut, mycuts.layerCut, mycuts.straightLineCut, myplotter.dict['h_1d']]
@@ -59,7 +59,7 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts, myplotter
 myiterator.run()
 
 #create a new TFile
-f = r.TFile("1DhistTimeFit.root", "recreate")
+f = r.TFile("1DhistTime.root", "recreate")
 
 #write the histograms to the file
 h_1d.Write()

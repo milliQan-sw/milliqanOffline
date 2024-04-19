@@ -17,32 +17,32 @@ from milliqanPlotter import *
 
 #define function to get the time difference between pulses in layer0 and layer1
 def getPulseDiff(self):
-    #apply cuts to timeFit_module_calibrated
+    # Initialize an empty (or placeholder) array for time differences
+    # Using a masked array or setting up a NaN array for floats can work
+    t_out = ak.full_like(self.events['timeFit_module_calibrated'], np.nan, highlevel=False)
+    
+    # Apply cuts to timeFit_module_calibrated
     times = self.events['timeFit_module_calibrated'][self.events['straightLineCut']]
-
-    #apply cuts to layer and type for further cut to timeFit_module_calibrated
+    
+    # Apply cuts to layer and type for further cut to timeFit_module_calibrated
     layer = self.events['layer'][self.events['straightLineCut']]
     type = self.events['type'][self.events['straightLineCut']]
     
-    #filter to get times at each specific layer
-    times0 = times[layer == 0]
-    times0 = times[type == 0] #exclude panel pulses
-
-    times1 = times[layer == 1]
-    times1 = times[type == 0] #exclude panel pulses
-
-    #array information
-    print(ak.to_list(times0))
-    print(ak.to_list(times1))
-
-    print(len(times0))
-    print(len(times1))
+    # Filter to get times at each specific layer
+    times0 = times[(layer == 0) & (type == 0)]
+    times1 = times[(layer == 1) & (type == 0)]
     
-    print(ak.count(times0, axis=1))
-    print(ak.count(times1, axis=1))
-
-    #get time difference between two layers
-    t_out = times1 - times0
+    # Calculate the time difference between the two layers for events that pass the cuts
+    t_out_valid = times1 - times0
+    
+    # We only assign these valid differences to the indices where the straightLineCut is True
+    # Find the indices where straightLineCut is True
+    indices = ak.nonzero(self.events['straightLineCut'])[0]
+    
+    # Assign the computed time differences to these indices in the placeholder array
+    ak.num(t_out)[indices] = t_out_valid
+    
+    # Assign the computed array back to the event structure
     self.events['timeDiff'] = t_out
 
 

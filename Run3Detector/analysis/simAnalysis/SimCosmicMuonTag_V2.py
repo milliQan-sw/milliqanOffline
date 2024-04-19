@@ -277,11 +277,8 @@ def findCorrectTime(self,cutName = "DT_CorrectTime",cut = None,timeData = "time"
         TimeArrayL2 = self.events[timeData][self.events.layer==2] - (3.96 * 2)
         TimeArrayL3 = self.events[timeData][self.events.layer==3] - (3.96 * 3)
         
-    #FIXME: to do find T3-T1 max. check if a event have hit at these two layer
-    #CorretTimeArray = np.concatenate((TimeArrayL0, TimeArrayL1,TimeArrayL2,TimeArrayL3), axis=1)
-    #self.events[cutName] =ak.Array((ak.max(CorretTimeArray,axis=1)-ak.min(CorretTimeArray,axis=1)) ) #FIXME: this is not the correct way of finding Dt in current analysis. Dt is the not the same Dt in finding the signal like events
     
-    #TimeArrayL2 and TimeArrayL1 will be used in the later cased
+    #TimeArrayL2 and TimeArrayL1 will be used in the later case
     TimeArrayL0 = TimeArrayL0 [TimeArrayL0 <= 2500]
     TimeArrayL3 = TimeArrayL3[TimeArrayL3 <= 2500]
     TimeArrayL0_max = ak.max(TimeArrayL0,axis=1)
@@ -290,10 +287,12 @@ def findCorrectTime(self,cutName = "DT_CorrectTime",cut = None,timeData = "time"
     TimeArrayL3_min = ak.min(TimeArrayL3,axis=1)
     diff1 = TimeArrayL3_max - TimeArrayL0_min
     diff2 = TimeArrayL3_min - TimeArrayL0_max
-    print(diff1)
-
-
-
+    #change array strturn for np concatination
+    diff1 = [[x] for x in diff1]
+    diff2 = [[x] for x in diff2]
+    TimeDiff = np.concatenate((diff1,diff2),axis = 1)
+    self.events["maxTimeDTL0L3"] = ak.max(TimeDiff) #FIXME: can't find the max with none
+     
 
 
 

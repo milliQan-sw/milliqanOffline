@@ -171,15 +171,15 @@ if __name__ == "__main__":
         # After the block, stdout will return to its default (usually the console)
         # reset stdout to its original state
         sys.stdout = sys.__stdout__
-        """
+        #"""
         f_out = r.TFile(f"{outputPath}/Run{numRun}_file{fileNum}_muonStraight.root", "RECREATE")
-        M_adj_NPE.Write()
-        M_NPE.Write()
-        NPERatio.Write()
-        CorrectTime.Write()
-        NuniqueBar.Write()
+        M_adj_NPE_C.Write()
+        M_NPE_C.Write()
+        NPERatio_C.Write()
+        CorrectTime_C.Write()
+        NuniqueBar_C.Write()
         f_out.Close()
-        """
+        #"""
 
 
 

@@ -291,7 +291,8 @@ def findCorrectTime(self,cutName = "DT_CorrectTime",cut = None,timeData = "time"
     diff1 = [[x] for x in diff1]
     diff2 = [[x] for x in diff2]
     TimeDiff = np.concatenate((diff1,diff2),axis = 1)
-    self.events["maxTimeDTL0L3"] = ak.max(TimeDiff) #FIXME: can't find the max with none
+    print(ak.to_list(ak.drop_none(TimeDiff,axis = 1)))
+    #self.events["maxTimeDTL0L3"] = ak.max(TimeDiff) #FIXME: can't find the max with none
      
 
 

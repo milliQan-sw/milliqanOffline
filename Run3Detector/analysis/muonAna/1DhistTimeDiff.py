@@ -32,6 +32,9 @@ def getTimeDiff(self):
 
     DiffArrayA = TimeArrayL1_max - TimeArrayL0_min
     DiffArrayB = TimeArrayL1_min - TimeArrayL0_max
+    print(DiffArrayA)
+    print(DiffArrayB)
+
 
 
 

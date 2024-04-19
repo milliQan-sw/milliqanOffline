@@ -36,8 +36,6 @@ def getTimeDiff(self):
     print(DiffArrayB)
 
 
-
-
 #add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)
 

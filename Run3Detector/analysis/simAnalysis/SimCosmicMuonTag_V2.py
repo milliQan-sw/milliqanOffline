@@ -538,7 +538,7 @@ def sudo_straight(self, cutName = "StraghtCosmic",NPEcut = 20):
     #print(len(CleanEventTags))  #FIXME: currently the size is 40k. The concatination seems have issue at above
     #print(ak.to_list(ak.count_nonzero(CleanEventTags,axis = 1)))
     self.events["Clean_MuonEvent"] = ak.count_nonzero(CleanEventTags,axis = 1) == 1
-    #print(ak.to_list(self.events["Clean_MuonEvent"]))
+    print(ak.to_list(self.events["event"][self.events["Clean_MuonEvent"]]))
 
    
     #tag the pulses that is at the adjacent layers where muon event can be found

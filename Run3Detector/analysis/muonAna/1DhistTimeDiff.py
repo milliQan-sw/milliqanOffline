@@ -34,7 +34,7 @@ def getPulseDiff(self):
     print(ak.count(times1, axis=1))
 
     #get the max difference in two layers
-    max_diffs = ak.zeros(2)
+    max_diffs = []
 
     for i in range(2):
         max0 = ak.max(times0[i])
@@ -44,7 +44,7 @@ def getPulseDiff(self):
 
         diff1 = max0 - min1
         diff2 = max1 - min0
-        max_diffs[i] = max(diff1, diff2)
+        max_diffs.append(max(diff1, diff2))
 
     #create an array to store the time differences between two layers
     self.events['timeDiff'] = max_diffs

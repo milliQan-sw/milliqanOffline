@@ -751,21 +751,21 @@ if __name__ == "__main__":
     myplotter.addHistograms(CorrectTime, 'DT_CorrectTime', 'StraghtCosmic')
     NPERatio = r.TH1F("NPERatio","NPE ratio;max NPE/min NPE;Events",5000,0,5000)
     myplotter.addHistograms(NPERatio, 'BarNPERatio', 'StraghtCosmic')
-    myplotter.addHistograms(CorrectTime, 'DT_CorrectTime', 'StraghtCosmic')
+    
 
     
-    #plot for "clean" muon event.
+    #------------------------plot for "clean" muon event. Cut flow 7------------------------------------
     M_NPE_C = r.TH1F("M_NPE_C", "nPE muon event layer", 100, 0, 100)
     M_adj_NPE_C = r.TH1F("M_adj_NPE_C", "nPE muon event adjacnet layer", 100, 0, 100)
-    myplotter.addHistograms(M_NPE_C, 'nPE', 'MuonLayers')
-    myplotter.addHistograms(M_adj_NPE_C	, 'nPE', 'MuonADJLayers')
+    myplotter.addHistograms(M_NPE_C, 'nPE', 'clean_Muon_layer')
+    myplotter.addHistograms(M_adj_NPE_C	, 'nPE', 'clean_Muon_adj_layer')
     NuniqueBar_C = r.TH1F("NuniqueBar" , "NuniqueBar;number of unique bar;events",50,0,50)
-    myplotter.addHistograms(NuniqueBar_C, 'NBarsHits', 'StraghtCosmic')
+    myplotter.addHistograms(NuniqueBar_C, 'NBarsHits', 'Clean_MuonEvent')
     CorrectTime_C =  r.TH1F("CorrectTime_C" , "D_t Max with correction w;D_t Max; Events",5000,0,5000)
-    myplotter.addHistograms(CorrectTime_C, 'DT_CorrectTime', 'StraghtCosmic')
+    myplotter.addHistograms(CorrectTime_C, 'DT_CorrectTime', 'Clean_MuonEvent')
     NPERatio_C = r.TH1F("NPERatio_C","NPE ratio;max NPE/min NPE;Events",5000,0,5000)
-    myplotter.addHistograms(NPERatio_C, 'BarNPERatio', 'StraghtCosmic')
-    myplotter.addHistograms(CorrectTime_C, 'DT_CorrectTime', 'StraghtCosmic') 
+    myplotter.addHistograms(NPERatio_C, 'BarNPERatio', 'Clean_MuonEvent')
+   
 
 
 

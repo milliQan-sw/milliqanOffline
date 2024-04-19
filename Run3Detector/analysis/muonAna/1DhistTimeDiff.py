@@ -19,6 +19,7 @@ from milliqanPlotter import *
 def getPulseDiff(self):
     #apply cuts to timeFit_module_calibrated
     times = self.events['timeFit_module_calibrated'][self.events['straightLineCut']]
+    print(ak.count(times, axis=1))
 
     #apply cuts to layer and type for further cut to timeFit_module_calibrated
     layer = self.events['layer'][self.events['straightLineCut']]
@@ -31,8 +32,6 @@ def getPulseDiff(self):
     times1 = times[type == 0]
 
     #array information
-    print(ak.count(self.events['timeFit_module_calibrated'], axis=1))
-    print(ak.count(times, axis=1))
     print(ak.count(times0, axis=1))
     print(ak.count(times1, axis=1))
 

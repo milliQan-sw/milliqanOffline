@@ -16,43 +16,27 @@ from milliqanCuts import *
 from milliqanPlotter import *
 
 #define function to get the time difference between pulses in layer0 and layer1
-def getPulseDiff(self):
-    #apply cuts to timeFit_module_calibrated
-    times = self.events['timeFit_module_calibrated'][self.events['straightLineCut']]
+def getTimeDiff(self):
+    TimeArrayL0 = self.events['timeFit_module_calibrated'][self.events['layer'] == 0]
+    TimeArrayL1 = self.events['timeFit_module_calibrated'][self.events['layer'] == 1]
+    TimeArrayL2 = self.events['timeFit_module_calibrated'][self.events['layer'] == 2]
+    TimeArrayL3 = self.events['timeFit_module_calibrated'][self.events['layer'] == 3]
 
-    #apply cuts to layer and type for further cut to timeFit_module_calibrated
-    layer = self.events['layer'][self.events['straightLineCut']]
-    type = self.events['type'][self.events['straightLineCut']]
-    
-    #filter to get times at each specific layer and exclude panel pulses
-    times0 = times[(layer == 0)&(type == 0)]
-    times1 = times[(layer == 1)&(type == 0)]
+    TimeArrayL0 = TimeArrayL0[TimeArrayL0 <= 2500]
+    TimeArrayL1 = TimeArrayL1[TimeArrayL1 <= 2500]
 
-    #array information
-    print(ak.count(times, axis=1))
-    print(ak.count(times0, axis=1))
-    print(ak.count(times1, axis=1))
+    TimeArrayL0_max = ak.max(TimeArrayL0, axis=1)
+    TimeArrayL0_min = ak.min(TimeArrayL0, axis=1)
+    TimeArrayL1_max = ak.max(TimeArrayL1, axis=1)
+    TimeArrayL1_min = ak.min(TimeArrayL1, axis=1)
 
-    #get the max difference in two layers
-    max_diffs = []
-    for i in range(2):
-        max0 = ak.max(times0[i])
-        min0 = ak.min(times0[i])
-        max1 = ak.max(times1[i])
-        min1 = ak.min(times1[i])
+    DiffArrayA = TimeArrayL1_max - TimeArrayL0_min
+    DiffArrayB = TimeArrayL1_min - TimeArrayL0_max
 
-        diff1 = max0 - min1
-        diff2 = max1 - min0
-        max_diffs.append(max(diff1, diff2))
-
-    print(max_diffs)
-    self.events["check"] = True
-    #create an array to store the time differences between two layers
-    self.events['timeDiff'] = max_diffs
 
 
 #add our custom function to milliqanCuts
-setattr(milliqanCuts, 'getPulseDiff', getPulseDiff)
+setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)
 
 #define a file list to run over
 filelist = ['/mnt/hadoop/se/store/user/milliqan/trees/v34/1000/MilliQan_Run1006.4_v34.root:t']
@@ -83,7 +67,7 @@ h_1d.GetXaxis().SetTitle("time difference between layer 0 and 1")
 myplotter.addHistograms(h_1d, 'timeDiff')
 
 #defining the cutflow
-cutflow = [boardMatchCut, pickupCut, mycuts.layerCut, mycuts.straightLineCut, mycuts.getPulseDiff, myplotter.dict['h_1d']]
+cutflow = [boardMatchCut, pickupCut, mycuts.layerCut, mycuts.straightLineCut, mycuts.getTimeDiff, myplotter.dict['h_1d']]
 
 #create a schedule of the cuts
 myschedule = milliQanScheduler(cutflow, mycuts, myplotter)

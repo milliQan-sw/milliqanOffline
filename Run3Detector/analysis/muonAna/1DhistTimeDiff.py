@@ -46,7 +46,7 @@ def getPulseDiff(self):
         max_diffs.append(max(diff1, diff2))
 
     print(max_diffs)
-    self.events["check"] = [True,False]
+    self.events["check"] = True
     #create an array to store the time differences between two layers
     self.events['timeDiff'] = max_diffs
 

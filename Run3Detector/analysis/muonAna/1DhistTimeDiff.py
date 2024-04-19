@@ -19,17 +19,17 @@ from milliqanPlotter import *
 def getPulseDiff(self):
     #apply cuts to timeFit_module_calibrated
     times = self.events['timeFit_module_calibrated'][self.events['straightLineCut']]
-    print(ak.count(times, axis=1))
 
     #apply cuts to layer and type for further cut to timeFit_module_calibrated
     layer = self.events['layer'][self.events['straightLineCut']]
     type = self.events['type'][self.events['straightLineCut']]
     
     #filter to get times at each specific layer and exclude panel pulses
-    times0 = times[layer == 0&(type == 0)]
+    times0 = times[(layer == 0)&(type == 0)]
     times1 = times[(layer == 1)&(type == 0)]
 
     #array information
+    print(ak.count(times, axis=1))
     print(ak.count(times0, axis=1))
     print(ak.count(times1, axis=1))
 

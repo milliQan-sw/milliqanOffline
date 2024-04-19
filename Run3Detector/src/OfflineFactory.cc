@@ -1654,7 +1654,7 @@ void OfflineFactory::prepareWave(int ic){
     //Get dynamical pedestal per channel in a particular event
     double pedestal_mV = 0.0; //Final pedestal correction to be applied
     float rms_variation_max = 4.0;
-    float pedestal_variation_max = 150.0;
+    float pedestal_variation_max = 80.0;
     TH1D * histTemp = new TH1D("temp","temp",1+int(pedestal_variation_max/dynamicPedestalGranularity+1E-3)*2,-pedestal_variation_max-dynamicPedestalGranularity/2,pedestal_variation_max+dynamicPedestalGranularity/2);
     //Iteratively check if the variation in amplitude is less than 4 mV within 16 consecutive samples. Use only first 1000ns (400 samples) to avoid trigger.
     for(int ibin = 1; ibin <= dynamicPedestalTotalSamples; ibin+=dynamicPedestalConsecutiveSamples){

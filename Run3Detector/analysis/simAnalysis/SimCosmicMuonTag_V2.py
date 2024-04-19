@@ -280,6 +280,23 @@ def findCorrectTime(self,cutName = "DT_CorrectTime",cut = None,timeData = "time"
     #FIXME: to do find T3-T1 max. check if a event have hit at these two layer
     #CorretTimeArray = np.concatenate((TimeArrayL0, TimeArrayL1,TimeArrayL2,TimeArrayL3), axis=1)
     #self.events[cutName] =ak.Array((ak.max(CorretTimeArray,axis=1)-ak.min(CorretTimeArray,axis=1)) ) #FIXME: this is not the correct way of finding Dt in current analysis. Dt is the not the same Dt in finding the signal like events
+    
+    #TimeArrayL2 and TimeArrayL1 will be used in the later cased
+    TimeArrayL0 = TimeArrayL0 [TimeArrayL0 <= 2500]
+    TimeArrayL3 = TimeArrayL3[TimeArrayL3 <= 2500]
+    TimeArrayL0_max = ak.max(TimeArrayL0,axis=1)
+    TimeArrayL0_min = ak.min(TimeArrayL0,axis=1)
+    TimeArrayL3_max = ak.max(TimeArrayL3,axis=1)
+    TimeArrayL3_min = ak.min(TimeArrayL3,axis=1)
+    diff1 = TimeArrayL3_max - TimeArrayL0_min
+    diff2 = TimeArrayL3_min - TimeArrayL0_max
+    print(diff1)
+
+
+
+
+
+
 
 
     
@@ -839,7 +856,7 @@ if __name__ == "__main__":
     cleanMuon_count = mycuts.getCut(mycuts.countEvent,'placeholder', Countobject= 'Clean_MuonEvent')
     clean_Muon_layer = mycuts.getCut(mycuts.combineCuts, 'clean_Muon_layer', ["MuonLayers","Clean_MuonEvent"])
     clean_Muon_adj_layer = mycuts.getCut(mycuts.combineCuts, 'clean_Muon_adj_layer', ["MuonADJLayers","Clean_MuonEvent"])
-    cutflow7 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.BarNPERatioCalculate,mycuts.NbarsHitsCount,mycuts.sudo_straight,clean_Muon_layer,clean_Muon_adj_layer,cleanMuon_count,myplotter.dict['M_NPE_C'],myplotter.dict['M_adj_NPE_C'],myplotter.dict["NuniqueBar_C"],myplotter.dict["NPERatio_C"]]
+    cutflow7 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.BarNPERatioCalculate,mycuts.NbarsHitsCount,mycuts.sudo_straight,clean_Muon_layer,clean_Muon_adj_layer,cleanMuon_count,mycuts.findCorrectTime,myplotter.dict['M_NPE_C'],myplotter.dict['M_adj_NPE_C'],myplotter.dict["NuniqueBar_C"],myplotter.dict["NPERatio_C"]]
     
     
     #-----------------------start of analysis---------------------------------------

@@ -133,8 +133,8 @@ struct offline_tree_{
     vector<float> v_triggerBand_max;
     vector<float> v_triggerBand_maxTime;
     vector<float> v_triggerBand_RMS;
-    vector<float> v_sideband_mean_calib;
-    vector<float> v_sideband_RMS_calib;
+    vector<float> v_sideband_mean_raw;
+    vector<float> v_sideband_RMS_raw;
     vector<Long64_t> v_groupTDC_g0;
     vector<Long64_t> v_groupTDC_g1;
     vector<Long64_t> v_groupTDC_g2;

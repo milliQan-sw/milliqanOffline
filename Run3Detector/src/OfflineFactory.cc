@@ -553,6 +553,8 @@ void OfflineFactory::prepareOutBranches(){
     outTree->Branch("dynamicPedestal",&outputTreeContents.v_dynamicPedestal);
     outTree->Branch("sidebandMean",&outputTreeContents.v_sideband_mean);
     outTree->Branch("sidebandRMS",&outputTreeContents.v_sideband_RMS);
+    outTree->Branch("sidebandMeanRaw",&outputTreeContents.v_sideband_mean_raw);
+    outTree->Branch("sidebandRMSRaw",&outputTreeContents.v_sideband_RMS_raw);
     outTree->Branch("maxThreeConsec",&outputTreeContents.v_max_threeConsec);
     outTree->Branch("chan",&outputTreeContents.v_chan);
     outTree->Branch("chanWithinBoard",&outputTreeContents.v_chanWithinBoard);
@@ -610,6 +612,8 @@ void OfflineFactory::resetOutBranches(){
     outputTreeContents.v_dynamicPedestal.clear();
     outputTreeContents.v_sideband_mean.clear();
     outputTreeContents.v_sideband_RMS.clear();
+    outputTreeContents.v_sideband_mean_raw.clear();
+    outputTreeContents.v_sideband_RMS_raw.clear();
     outputTreeContents.v_max_threeConsec.clear();
     outputTreeContents.v_chan.clear();
     outputTreeContents.v_chanWithinBoard.clear();
@@ -1636,6 +1640,12 @@ void OfflineFactory::prepareWave(int ic){
     TAxis * a = waves[ic]->GetXaxis();
     // a->Set( a->GetNbins(), a->GetXmin()/sampleRate, a->GetXmax()/sampleRate);
     // waves[ic]->ResetStats();
+
+    //Measure the sideband before corrections
+    pair<float,float> mean_rms_raw = measureSideband(ic);
+    outputTreeContents.v_sideband_mean_raw.push_back(mean_rms_raw.first);
+    outputTreeContents.v_sideband_RMS_raw.push_back(mean_rms_raw.second);
+
     //subtract calibrated mean
     for(int ibin = 1; ibin <= waves[ic]->GetNbinsX(); ibin++){
         waves[ic]->SetBinContent(ibin,waves[ic]->GetBinContent(ibin)-pedestals[ic]);        

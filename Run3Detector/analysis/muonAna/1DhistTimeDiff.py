@@ -38,7 +38,7 @@ def getPulseDiff(self):
     print(ak.count(times0, axis=1))
     print(ak.count(times1, axis=1))
 
-    #get time difference between two layers
+    #create an array to store the time differences between two layers
     t_out = times1 - times0
     self.events['timeDiff'] = t_out
 
@@ -69,7 +69,7 @@ myplotter = milliqanPlotter()
 
 #create a 1D root histogram
 h_1d = r.TH1F("h_1d", "1D Histogram", 80, -40, 40)
-h_1d.GetXaxis().SetTitle("timeDiff between layer 0 and 1")
+h_1d.GetXaxis().SetTitle("time difference between layer 0 and 1")
 
 #add root histogram to plotter
 myplotter.addHistograms(h_1d, 'timeDiff')

@@ -222,7 +222,7 @@ def NbarsHitsCount(self,cutName = "NBarsHits",cut = None, hist = None):
 
     bararr = ak.copy(self.events)
 
-
+    bararr["chan"] = bararr["chan"][bararr["type"]==0]
 
     if cut:
         cutMask, junk = ak.broadcast_arrays(bararr.cut, bararr.layer)
@@ -230,7 +230,7 @@ def NbarsHitsCount(self,cutName = "NBarsHits",cut = None, hist = None):
         uniqueBarArr = ak.Array([np.unique(x) for x in bararr.chan[cutMask]])
         self.events[cutName] = ak.count(uniqueBarArr,axis = 1)
     else:
-        uniqueBarArr = ak.Array([np.unique(x) for x in bararr.chan])
+        uniqueBarArr = ak.Array([np.unique(x) for x in bararr["chan"]])
         self.events[cutName] = ak.count(uniqueBarArr, axis = 1)
         
     

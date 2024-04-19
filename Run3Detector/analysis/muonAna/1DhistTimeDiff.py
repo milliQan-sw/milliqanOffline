@@ -25,8 +25,10 @@ def getPulseDiff(self):
     type = self.events['type'][self.events['straightLineCut']]
     
     #filter to get times at each specific layer and exclude panel pulses
-    times0 = times[layer == 0][type == 0]
-    times1 = times[layer == 1][type == 0]
+    times0 = times[layer == 0]
+    times0 = times[type == 0]
+    times1 = times[layer == 1]
+    times1 = times[type == 0]
 
     #array information
     print(ak.to_list(times0))

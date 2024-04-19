@@ -33,9 +33,21 @@ def getPulseDiff(self):
     print(ak.count(times0, axis=1))
     print(ak.count(times1, axis=1))
 
+    #get the max difference in two layers
+    max_diffs = ak.zeros(2)
+
+    for i in range(2):
+        max0 = ak.max(times0[i])
+        min0 = ak.min(times0[i])
+        max1 = ak.max(times1[i])
+        min1 = ak.min(times1[i])
+
+        diff1 = max0 - min1
+        diff2 = max1 - min0
+        max_diffs[i] = max(diff1, diff2)
+
     #create an array to store the time differences between two layers
-    t_out = times1 - times0
-    self.events['timeDiff'] = t_out
+    self.events['timeDiff'] = max_diffs
 
 
 #add our custom function to milliqanCuts

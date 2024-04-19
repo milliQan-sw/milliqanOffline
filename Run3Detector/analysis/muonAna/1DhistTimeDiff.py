@@ -17,26 +17,33 @@ from milliqanPlotter import *
 
 #define function to get the time difference between pulses in layer0 and layer1
 def getPulseDiff(self):
-    #apply cuts to needed branches
+    #apply cuts to timeFit_module_calibrated
     times = self.events['timeFit_module_calibrated'][self.events['straightLineCut']]
+
+    #apply cuts to layer and type for further cut to timeFit_module_calibrated
     layer = self.events['layer'][self.events['straightLineCut']]
+    type = self.events['type'][self.events['straightLineCut']]
     
     #filter to get times at each specific layer
     times0 = times[layer == 0]
+    times0 = times[type == 0] #exclude panel pulses
+
     times1 = times[layer == 1]
+    times1 = times[type == 0] #exclude panel pulses
+
+    #array information
     print(ak.to_list(times0))
     print(ak.to_list(times1))
+
     print(len(times0))
     print(len(times1))
+    
     print(ak.count(times0, axis=1))
     print(ak.count(times1, axis=1))
 
     #get time difference between two layers
-    if len(times0) and len(times1):
-        t_out = times1 - times0
-        self.events['timeDiff'] = t_out
-    else:
-        self.events['timeDiff'] = None
+    t_out = times1 - times0
+    self.events['timeDiff'] = t_out
 
 
 #add our custom function to milliqanCuts

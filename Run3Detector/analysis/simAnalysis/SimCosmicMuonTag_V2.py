@@ -222,7 +222,7 @@ def NbarsHitsCount(self,cutName = "NBarsHits",cut = None, hist = None):
 
     bararr = ak.copy(self.events)
 
-    bararr["chan"] = bararr["chan"][bararr["type"]==0]
+    bararr["chan"] = bararr["chan"][(bararr["type"]==0) & (bararr["nPE"]>=20)]
 
     if cut:
         cutMask, junk = ak.broadcast_arrays(bararr.cut, bararr.layer)

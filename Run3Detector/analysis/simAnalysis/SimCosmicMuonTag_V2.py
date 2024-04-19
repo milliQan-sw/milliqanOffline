@@ -753,8 +753,19 @@ if __name__ == "__main__":
     myplotter.addHistograms(NPERatio, 'BarNPERatio', 'StraghtCosmic')
     myplotter.addHistograms(CorrectTime, 'DT_CorrectTime', 'StraghtCosmic')
 
-
- 
+    
+    #plot for "clean" muon event.
+    M_NPE_C = r.TH1F("M_NPE_C", "nPE muon event layer", 100, 0, 100)
+    M_adj_NPE_C = r.TH1F("M_adj_NPE_C", "nPE muon event adjacnet layer", 100, 0, 100)
+    myplotter.addHistograms(M_NPE_C, 'nPE', 'MuonLayers')
+    myplotter.addHistograms(M_adj_NPE_C	, 'nPE', 'MuonADJLayers')
+    NuniqueBar_C = r.TH1F("NuniqueBar" , "NuniqueBar;number of unique bar;events",50,0,50)
+    myplotter.addHistograms(NuniqueBar_C, 'NBarsHits', 'StraghtCosmic')
+    CorrectTime_C =  r.TH1F("CorrectTime_C" , "D_t Max with correction w;D_t Max; Events",5000,0,5000)
+    myplotter.addHistograms(CorrectTime_C, 'DT_CorrectTime', 'StraghtCosmic')
+    NPERatio_C = r.TH1F("NPERatio_C","NPE ratio;max NPE/min NPE;Events",5000,0,5000)
+    myplotter.addHistograms(NPERatio_C, 'BarNPERatio', 'StraghtCosmic')
+    myplotter.addHistograms(CorrectTime_C, 'DT_CorrectTime', 'StraghtCosmic') 
 
 
 
@@ -832,7 +843,7 @@ if __name__ == "__main__":
     #-----------------------start of analysis---------------------------------------
 
     #-----------------------CustomFunction in MQprocessor---------------------------
-    CEhist = r.TH1F("hist", "CutEfficiency", 10, 0, 10) #histogram for making the cutefficiency
+    #CEhist = r.TH1F("hist", "CutEfficiency", 10, 0, 10) #histogram for making the cutefficiency
     
     """
     def makeCuteffPlot(events):

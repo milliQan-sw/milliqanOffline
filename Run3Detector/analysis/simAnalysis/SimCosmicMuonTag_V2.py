@@ -287,13 +287,20 @@ def findCorrectTime(self,cutName = "DT_CorrectTime",cut = None,timeData = "time"
     TimeArrayL3_min = ak.min(TimeArrayL3,axis=1)
     diff1 = TimeArrayL3_max - TimeArrayL0_min
     diff2 = TimeArrayL3_min - TimeArrayL0_max
+    #print(f"drop none test: {ak.to_list(ak.drop_none(diff1))}") #drop none is working at here
     #change array strturn for np concatination
     diff1 = [[x] for x in diff1]
+    #print(f"drop none test: {ak.to_list(ak.drop_none(diff1))}") #thing also work at here
+    #print(f"drop none test: {ak.to_list(ak.fill_none(diff1,-100))}") #this also work
+    diff1=ak.fill_none(diff1,-6000)
     diff2 = [[x] for x in diff2]
+    diff2=ak.fill_none(diff2,-6000)
     TimeDiff = np.concatenate((diff1,diff2),axis = 1)
-    print(ak.to_list(ak.fill_none(TimeDiff, -50000))) #the none value will be overwirte with with -50000
-    #TimeDiff=ak.fill_none(TimeDiff, -50000)
-    #self.events["maxTimeDTL0L3"] = ak.max(TimeDiff) #FIXME: can't find the max with none
+    #print(f"TimeDiff list {ak.to_list(TimeDiff)}")
+    #print(f"TimeDiff drop none list {ak.to_list(ak.drop_none(TimeDiff))}")
+    #print(ak.to_list(ak.fill_none(TimeDiff, -50000,axis = 1))) #the none value will be overwirte with with -50000
+    #TimeDiff=ak.fill_none(TimeDiff, -50000,axis = 1)
+    self.events["maxTimeDTL0L3"] = ak.max(TimeDiff) #FIXME: can't find the max with none
      
 
 

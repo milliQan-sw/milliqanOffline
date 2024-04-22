@@ -32,7 +32,7 @@ def get_area (input_item:Union[TFile, TH1],
     """
     if isinstance(input_item, TH1):
         return input_item.Integral(input_item.FindFixBin(start),
-                                   input_item.FindFixBin(stop))
+                                   input_item.FindFixBin(stop), "width") 
 
     elif isinstance(input_item, TFile):
         keys = input_item.GetListOfKeys()
@@ -98,7 +98,7 @@ if __name__ == "__main__":
             line2.Draw()
 
             canvas.Write()
-    led_area_hist.Scale(1/led_area_hist.Integral())
+    led_area_hist.Scale(1/led_area_hist.Integral("width"))
 
     SPE_AREA = 480
     SPE_TOLERANCE = 5.14921
@@ -155,7 +155,7 @@ if __name__ == "__main__":
             line2.Draw()
             canvas.Write()
             
-    no_led_area_hist.Scale(1/no_led_area_hist.Integral())
+    no_led_area_hist.Scale(1/no_led_area_hist.Integral("width"))
     no_led_area_hist.Fit(g1, "+", "", 0, 1000)
     area_canvas = TCanvas("area", "LED Area")
 

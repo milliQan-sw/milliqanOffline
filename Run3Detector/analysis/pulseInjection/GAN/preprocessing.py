@@ -18,42 +18,44 @@ import numpy.typing as npt
 import numpy as np
 import uproot
 from ROOT import TFile, TH1, TSpectrum
+from scipy.signal import find_peaks
 
-logging.basicConfig(level=logging.WARNING)
+logging.basicConfig(level=logging.ERROR)
+
 
 class WaveformProcessor():
     ns_per_measurement = 2.5
     number_of_measurements = 1024
 
     def __init__(self, input_file_path: str):
-        input_file = uproot.open(input_file_path)
-        histogram_names = input_file.keys()
+        self.input_file_path = input_file_path
+        self.input_file = uproot.open(input_file_path)
+        histogram_names = self.input_file.keys()
 
-        logging.debug(f"Input file: {input_file}")
-
+        logging.debug(f"Input file: {self.input_file}")
 
         self.times = np.arange(0,
-                               self.number_of_measurements*
+                               self.number_of_measurements *
                                self.ns_per_measurement,
                                self.ns_per_measurement)
 
         self.histogram_dict = {}
 
         for name in histogram_names:
-            histogram = input_file[name]
+            histogram = self.input_file[name]
             if histogram.classname == "TH1D":
                 data = histogram.values()
 
                 # Remove trailing ;1 from names given by uproot
                 self.histogram_dict[name[:name.rfind(";")]] = data
 
-        self.noise: Dict[str, float] = self.background_estimation(input_file_path)
+        self.noise: Dict[str, float] = self.background_estimation()
 
         logging.debug(f" Histograms: {self.histogram_dict}")
 
-    def background_estimation(self, input_file: str)->Dict[str, float]:
+    def background_estimation(self) -> Dict[str, float]:
         noise_dict = {}
-        input_file = TFile(input_file, "READ")
+        input_file = TFile.Open(self.input_file_path)
         for key in input_file.GetListOfKeys():
             obj = key.ReadObj()
             if isinstance(obj, TH1):
@@ -67,24 +69,30 @@ class WaveformProcessor():
                 noise_dict[key.GetName()] = np.mean(background_array)
         return noise_dict
 
-    def find_waveform_bounds(self) -> Dict[str, npt.NDArray]:
+    def find_waveform_bounds(self, n_peaks: int,
+                             noise_dict: Dict[str, float],
+                             peak_prominence: float = 50) -> Dict[str, npt.NDArray]:
         peak_dictionary = {}
         for key, value in self.histogram_dict.items():
-            peak_positions, _ = find_peaks(value, prominence=5, height=15)
+            peak_positions, _ = find_peaks(value, distance=100, height=30)
+            if len(peak_positions) > 1:
+                continue
+
+            print(f"Number of Peaks: {len(peak_positions)}")
             pulse_bounds = np.empty([len(peak_positions), 2])
 
             continue_flag = False
             for i, index in enumerate(peak_positions):
                 start_index = index
                 while (start_index > 0 and
-                       value[start_index] > self.noise_dict[key]):
+                       value[start_index] > noise_dict[key]):
                     start_index -= 1
 
                 pulse_bounds[i][0] = start_index
 
                 stop_index = index
                 while (stop_index < len(value) and
-                       value[stop_index] > self.noise_dict[key]):
+                       value[stop_index] > noise_dict[key]):
                     stop_index += 1
                 pulse_bounds[i][1] = stop_index
 
@@ -104,8 +112,8 @@ class WaveformProcessor():
                                     peak_dictionary.values()])
         logging.debug("Number of waves: {}".format(number_of_waves))
 
-        # TODO The size of this array should be variable 
-        input_data = np.zeros((number_of_waves, 201))
+        # TODO The size of this array should be variable
+        input_data = np.zeros((number_of_waves, 500))
 
         index = 0
         for key, value in peak_dictionary.items():
@@ -117,10 +125,6 @@ class WaveformProcessor():
 
                 sliced_histogram_values = (self.histogram_dict[key]
                                            [int(waveform[0]):int(waveform[1]+1)])
-
-                # if len(sliced_histogram_values) > 100:
-                #     logging.debug("Skipping {}".format(key))
-                #     continue
 
                 logging.debug("input_data shape: {}".format(len(input_data)))
                 logging.debug("sliced_histogram_values shape: {}"
@@ -139,7 +143,7 @@ class WaveformProcessor():
         if not os.path.exists(plotDirectory):
             os.mkdir(plotDirectory)
         for key, value in self.histogram_dict.items():
-            try :
+            try:
                 plt.clf()
                 plt.plot(self.times, value)
                 for peak in self.peak_dictionary[key]:
@@ -154,5 +158,3 @@ class WaveformProcessor():
         """
         Create a area distribution histogram to determine where the SPE peak is
         """
-
-        

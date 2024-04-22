@@ -8,7 +8,6 @@ import ganv2
 from preprocessing import WaveformProcessor
 from utilities import plot_loss
 
-tf.compat.v1.disable_eager_execution()
 # Data Preprocessing Constants
 WAVEFORM_BOUNDS = (1200, 1600)
 SPE_AREA = 500
@@ -17,8 +16,8 @@ NS_PER_MEASUREMENT = 2.5
 # Model Constants
 LATENT_DIM = 500
 BATCH_SIZE = 128
-EPOCHS = 1000
-EVAL_EPOCH = 5000  # How often you should get output during training
+EPOCHS = 100000
+EVAL_EPOCH = 2000  # How often you should get output during training
 
 PLOT = False
 
@@ -78,6 +77,7 @@ for epoch in range(EPOCHS):
     g_loss = 0.0
 
     i = 0
+    assert dataset is not None, "Error in setting up dataset"
     for waveform_batch, label_batch in dataset:
         i+=1
         d_batch_loss, g_batch_loss = ganv2.train_step(waveform_batch, label_batch,
@@ -93,8 +93,8 @@ for epoch in range(EPOCHS):
     g_loss_values.append(g_loss)
 end = time.time()
 
-plot_loss(d_loss_values, g_loss_values, save_location="Plots/loss.png")
+plot_loss(d_loss_values, g_loss_values, save_location=f"Plots/loss_{EPOCHS}.png")
 
 print(f"Training took {end - start} seconds to complete.")
-discriminator.save("TrainedModels/discriminator.keras")
-generator.save("TrainedModels/generator.keras")
+discriminator.save(f"TrainedModels/discriminator_{EPOCHS}.keras")
+generator.save(f"TrainedModels/generator_{EPOCHS}.keras")

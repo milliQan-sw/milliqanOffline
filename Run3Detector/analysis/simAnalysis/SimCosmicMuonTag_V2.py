@@ -296,16 +296,25 @@ def findCorrectTime(self,cutName = "DT_CorrectTime",cut = None,timeData = "time"
     diff2 = [[x] for x in diff2]
     diff2=ak.fill_none(diff2,-6000.0)
     TimeDiff = np.concatenate((diff1,diff2),axis = 1)
-    #print(ak.to_list(TimeDiff))
-    #print(f"TimeDiff list {ak.to_list(TimeDiff)}")
-    #print(f"TimeDiff drop none list {ak.to_list(ak.drop_none(TimeDiff))}")
-    #print(ak.to_list(ak.fill_none(TimeDiff, -50000,axis = 1))) #the none value will be overwirte with with -50000
-    #TimeDiff=ak.fill_none(TimeDiff, -50000,axis = 1)
-    self.events["maxTimeDTL0L3"] = ak.max(TimeDiff,axis = 1) #FIXME: can't find the max with none
+    #test for removeing those none value and check the index
+    #TimeDiff = TimeDiff[TimeDiff>-5000]  
+    abs_max_index = np.argmax(np.abs(TimeDiff),axis = 1) #get the index for abs max value, but the -6k can cause trouble
+    testArr = TimeDiff[abs_max_index] # this return all empty array, I suspect the numpy index method doesn't work with awkward array.
+    #print(abs_max_index)
+    print(ak.to_list(abs_max_index))#it is workingi. I saw "1" in this array. this means some of the "Dt" have different value.
+
+    #print(ak.to_list(testArr[testArr>-5000]))
+
+    #print(ak.to_list(TimeDiff[abs_max_index]))
+    #self.events["maxTimeDTL0L3"] = TimeDiff[abs_max_index]
+    #print(f"abs_max_index {abs_max_index}")
+    #print(f"TimeDiff {TimeDiff}")
+    
     #print(len(self.events["maxTimeDTL0L3"]))
+    #print(self.events)
     #print(self.events["maxTimeDTL0L3"][self.events["maxTimeDTL0L3"]>-6000.0])
-    print(len(self.events["maxTimeDTL0L3"][self.events["maxTimeDTL0L3"]>-6000.0]))
-    print(ak.to_list(self.events["maxTimeDTL0L3"][self.events["maxTimeDTL0L3"]>-6000.0]))
+    #print(len(self.events["maxTimeDTL0L3"][self.events["maxTimeDTL0L3"]>-6000.0]))
+    #print(ak.to_list(self.events["maxTimeDTL0L3"][self.events["maxTimeDTL0L3"]>-6000.0]))
     #print(ak.to_list(self.events["maxTimeDTL0L3"])) #this result doesnt making any sense. 
 
 

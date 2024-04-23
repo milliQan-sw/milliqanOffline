@@ -262,7 +262,7 @@ def BarNPERatioCalculate(self,cutName = "BarNPERatio",cut = None):
         
 #bar trim should be used prior using this function
 #introduce correction factor such that time for paricle travel from IP to bar channel is same for time at different layer
-def findCorrectTime(self,cutName = "DT_CorrectTime",cut = None,timeData = "time"):
+def findCorrectTime(self,cutName = "DT_CorrectTime",cut = None,timeData = "time", NPECut = 1):
     if cut:
         cutMask, junk = ak.broadcast_arrays(self.events.cut, self.events.layer)
         TimeArrayL0 = slef.events[timeData][cutMask & self.events.layer==0]
@@ -272,10 +272,10 @@ def findCorrectTime(self,cutName = "DT_CorrectTime",cut = None,timeData = "time"
         
         
     else:
-        TimeArrayL0 = self.events[timeData][(self.events.layer==0) & (self.events["nPE"] >=20) & (self.events[timeData] > 0)] 
-        TimeArrayL1 = self.events[timeData][(self.events.layer==1) & (self.events["nPE"] >=20) & (self.events[timeData] > 0)] - (3.96 * 1)
-        TimeArrayL2 = self.events[timeData][(self.events.layer==2) & (self.events["nPE"] >=20) & (self.events[timeData] > 0)] - (3.96 * 2)
-        TimeArrayL3 = self.events[timeData][(self.events.layer==3) & (self.events["nPE"] >=20) & (self.events[timeData] > 0)] - (3.96 * 3)
+        TimeArrayL0 = self.events[timeData][(self.events.layer==0) & (self.events["nPE"] >= NPECut) & (self.events[timeData] > 0)] 
+        TimeArrayL1 = self.events[timeData][(self.events.layer==1) & (self.events["nPE"] >= NPECut) & (self.events[timeData] > 0)] - (3.96 * 1)
+        TimeArrayL2 = self.events[timeData][(self.events.layer==2) & (self.events["nPE"] >= NPECut) & (self.events[timeData] > 0)] - (3.96 * 2)
+        TimeArrayL3 = self.events[timeData][(self.events.layer==3) & (self.events["nPE"] >= NPECut) & (self.events[timeData] > 0)] - (3.96 * 3)
         
     
     #TimeArrayL2 and TimeArrayL1 will be used in the later case

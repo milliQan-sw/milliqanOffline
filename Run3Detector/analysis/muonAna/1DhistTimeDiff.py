@@ -17,6 +17,14 @@ from milliqanPlotter import *
 
 #define function to get the time difference between pulses in layer0 and layer1
 def getTimeDiff(self):
+
+
+
+
+
+
+    
+    """
     TimeArrayL0 = self.events['timeFit_module_calibrated'][self.events['layer'] == 0]
     TimeArrayL1 = self.events['timeFit_module_calibrated'][self.events['layer'] == 1]
     TimeArrayL2 = self.events['timeFit_module_calibrated'][self.events['layer'] == 2]
@@ -34,6 +42,7 @@ def getTimeDiff(self):
     DiffArrayB = TimeArrayL1_min - TimeArrayL0_max
     print(DiffArrayA)
     print(DiffArrayB)
+    """
 
 
 #add our custom function to milliqanCuts

@@ -20,6 +20,7 @@ def parse_args():
     parser.add_argument('-S', '--single', type=str, default='-1', help='Single file to be submitted')
     parser.add_argument('-R', '--run', type=str, help='Single run to be submitted')
     parser.add_argument('-o', '--outputDir', type=str, help='Output directory for files')
+    parser.add_argument('-l', '--logOutDir', type=str, help='Output directory for logs')
     parser.add_argument('--slab', action='store_true', help='Option to run over slab data (default is bar)')
     parser.add_argument('--formosa', action='store_true', help='Option to run over formosa data (overrides slab)')
     #parser.add_argument('--reprocess', type=str, default='missingOfflineFiles.txt', help='reprocess files in given txt file')
@@ -51,10 +52,13 @@ def singleRun():
             outDir = '/eos/experiment/formosa/commissioning/data/offline/v{}/{}/{}/'.format(args.version, args.runDir,args.subDir)
         else:
             outDir = '/store/user/milliqan/trees/v{}/{}/'.format(args.version, args.runDir)
-    if os.getenv("OFFLINESITE") == "eos": 
-        logDir = '/afs/cern.ch/work/m/mcitron/batchOutput/log/trees/v{0}/logs_v{0}_{1}_{2}-{3}/'.format(args.version, args.runDir, args.subDir, now.strftime("%m-%d-%H-%M"))
+    if args.logOutDir:
+        logDir = args.logOutDir
     else:
-        logDir = '/data/users/milliqan/log/trees/v{0}/logs_v{0}_{1}_{2}-{3}/'.format(args.version, args.runDir, args.subDir, now.strftime("%m-%d"))
+        if os.getenv("OFFLINESITE") == "eos": 
+            logDir = '/afs/cern.ch/work/m/mcitron/batchOutput/log/trees/v{0}/logs_v{0}_{1}_{2}-{3}/'.format(args.version, args.runDir, args.subDir, now.strftime("%m-%d-%H-%M"))
+        else:
+            logDir = '/data/users/milliqan/log/trees/v{0}/logs_v{0}_{1}_{2}-{3}/'.format(args.version, args.runDir, args.subDir, now.strftime("%m-%d"))
 
     if(not os.path.isdir(outDir)): os.makedirs(outDir)
     if(not os.path.isdir(logDir)): os.makedirs(logDir)

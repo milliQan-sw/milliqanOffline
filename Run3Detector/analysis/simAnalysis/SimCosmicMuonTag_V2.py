@@ -272,14 +272,14 @@ def findCorrectTime(self,cutName = "DT_CorrectTime",cut = None,timeData = "time"
         
         
     else:
-        TimeArrayL0 = self.events[timeData][self.events.layer==0] 
-        TimeArrayL1 = self.events[timeData][self.events.layer==1] - (3.96 * 1)
-        TimeArrayL2 = self.events[timeData][self.events.layer==2] - (3.96 * 2)
-        TimeArrayL3 = self.events[timeData][self.events.layer==3] - (3.96 * 3)
+        TimeArrayL0 = self.events[timeData][(self.events.layer==0) & (self.events["nPE"] >=20) & (self.events[timeData] > 0)] 
+        TimeArrayL1 = self.events[timeData][(self.events.layer==1) & (self.events["nPE"] >=20) & (self.events[timeData] > 0)] - (3.96 * 1)
+        TimeArrayL2 = self.events[timeData][(self.events.layer==2) & (self.events["nPE"] >=20) & (self.events[timeData] > 0)] - (3.96 * 2)
+        TimeArrayL3 = self.events[timeData][(self.events.layer==3) & (self.events["nPE"] >=20) & (self.events[timeData] > 0)] - (3.96 * 3)
         
     
     #TimeArrayL2 and TimeArrayL1 will be used in the later case
-    TimeArrayL0 = TimeArrayL0 [(TimeArrayL0 <= 2500) & (self.events["nPE"] >=20)]
+    TimeArrayL0 = TimeArrayL0 [(TimeArrayL0 <= 2500)]
     TimeArrayL3 = TimeArrayL3[TimeArrayL3 <= 2500]
     TimeArrayL0_max = ak.max(TimeArrayL0,axis=1)
     TimeArrayL0_min = ak.min(TimeArrayL0,axis=1)

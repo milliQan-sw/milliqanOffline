@@ -24,7 +24,7 @@ class milliQanScheduler():
         if (self.plotter  != None):
             self.plotter.events = self.events
         else:
-            print("please be aware that plotter is not being used now")
+            print("MilliQan Scheduler: Please be aware that plotter is not being used now")
 
     def addToSchedule(self, input):
         name = None
@@ -39,16 +39,17 @@ class milliQanScheduler():
             name = input.__parent__
         else:
             #print("Name", input.__name__)
+            print(input, type(input))
             name = input.__name__
         
         if name in globals() or name in locals():
             #input = hello_decorator(input)
             self.schedule.append(input)
-        elif name in dir(milliqanCuts):
+        elif name in dir(milliqanCuts) or name in dir(self.cuts):
             #input = hello_decorator(input)
             self.schedule.append(input)
         else:
-            print("Function {0} does not exist".format(name))
+            print("MilliQan Scheduler: Function {0} does not exist".format(name))
 
     def createSchedule(self):
         for input in self.inputs:

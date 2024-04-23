@@ -1,4 +1,4 @@
-from ROOT import TH1, TH2, TGraph
+from ROOT import TH1, TH2, TGraph, TFile
 import awkward as ak
 from array import array
 import numpy as np
@@ -60,3 +60,12 @@ class milliqanPlotter():
         h_ = milliqanPlot(histogram, variable, cut)
         self.histograms.append(h_)
         self.updateDict(h_)
+
+    def saveHistograms(self, outputFile):
+        fout = TFile.Open(outputFile, 'recreate')
+        fout.cd()
+
+        for hist in self.histograms:
+            hist.histogram.Write()
+
+        fout.Close()

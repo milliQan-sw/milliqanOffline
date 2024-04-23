@@ -28,18 +28,21 @@ class milliqanProcessor():
                 if isinstance(branch.variables, list):
                     for i in branch.variables:
                         if i not in events.fields:
-                            print("Branch {0} does not exist in event array".format(i))
+                            print("MilliQan Processor: Branch {0} does not exist in event array".format(i))
                             break
                     branch.plot(events)
                 else:
+                    print("Variables:", branch.variables, branch.__name__)
                     if branch.variables in events.fields:
                         branch.plot(events)
                     #elif branch.variables in self.custom_out:
                     #    branch.plot(self.custom_out)
                     else:
-                        print("Branch {0} does not exist in event array or custom output".format(branch.variables))
+                        print("MilliQan Processor: Branch {0} does not exist in event array or custom output".format(branch.variables))
+                        print(events.fields)
                         break
             else:
+                print("Name:", branch.__name__, branch, "test")
                 branch()
         return events
 
@@ -77,12 +80,19 @@ class milliqanProcessor():
             total_events += len(events)
 
             #print(events['tTrigger'][0])
+            #_, events['boardMatchCut'] = ak.broadcast_arrays(events['pickupFlag'], events['boardMatchCut'])
+            _, events['fileNumber'] = ak.broadcast_arrays(events['pickupFlag'], events['fileNumber'])
+            _, events['runNumber'] = ak.broadcast_arrays(events['pickupFlag'], events['runNumber'])
             _, events['tTrigger'] = ak.broadcast_arrays(events['pickupFlag'], events['tTrigger'])
             _, events['event'] = ak.broadcast_arrays(events['pickupFlag'], events['event'])
+            _, events['boardsMatched'] = ak.broadcast_arrays(events['pickupFlag'], events['boardsMatched'])
+
             #_, events['fileNumber'] = ak.broadcast_arrays(events['pickupFlag'], events['fileNumber'])
             #print(events['pickupFlag'][0])
             #print(events['tTrigger'][0])
-           
+
+
+
             if self.max_events and total_events >= self.max_events: break
 
             events = self.makeBranches(events)

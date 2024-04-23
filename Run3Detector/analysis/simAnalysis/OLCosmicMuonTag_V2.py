@@ -135,6 +135,7 @@ if __name__ == "__main__":
     cleanMuon_count = mycuts.getCut(mycuts.countEvent,'placeholder', Countobject= 'Clean_MuonEvent')
     clean_Muon_layer = mycuts.getCut(mycuts.combineCuts, 'clean_Muon_layer', ["MuonLayers","Clean_MuonEvent"])
     clean_Muon_adj_layer = mycuts.getCut(mycuts.combineCuts, 'clean_Muon_adj_layer', ["MuonADJLayers","Clean_MuonEvent"])
+    clean_Muon_Dt = mycuts.getCut(mycuts.findCorrectTime, 'placeholder',cut = None,timeData = "timeFit_module_calibrated")
     M_NPE_C = r.TH1F("M_NPE_C", "nPE muon event layer", 100, 0, 100)
     M_adj_NPE_C = r.TH1F("M_adj_NPE_C", "nPE muon event adjacnet layer", 100, 0, 100)
     myplotter.addHistograms(M_NPE_C, 'nPE', 'clean_Muon_layer')
@@ -145,7 +146,8 @@ if __name__ == "__main__":
     myplotter.addHistograms(CorrectTime_C, 'maxTimeDTL0L3', 'Clean_MuonEvent') 
     NPERatio_C = r.TH1F("NPERatio_C","NPE ratio;max NPE/min NPE;Events",5000,0,5000)
     myplotter.addHistograms(NPERatio_C, 'BarNPERatio', 'Clean_MuonEvent')
-    cutflow7 = [mycuts.boardsMatched,mycuts.pickupCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.BarNPERatioCalculate,mycuts.NbarsHitsCount,mycuts.sudo_straight,clean_Muon_layer,clean_Muon_adj_layer,cleanMuon_count,mycuts.findCorrectTime,myplotter.dict['M_NPE_C'],myplotter.dict['M_adj_NPE_C'],myplotter.dict["NuniqueBar_C"],myplotter.dict["NPERatio_C"],myplotter.dict["CorrectTime_C"]]    
+    
+    cutflow7 = [mycuts.boardsMatched,mycuts.pickupCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.BarNPERatioCalculate,mycuts.NbarsHitsCount,mycuts.sudo_straight,clean_Muon_layer,clean_Muon_adj_layer,cleanMuon_count,clean_Muon_Dt,myplotter.dict['M_NPE_C'],myplotter.dict['M_adj_NPE_C'],myplotter.dict["NuniqueBar_C"],myplotter.dict["NPERatio_C"],myplotter.dict["CorrectTime_C"]]    
     
     cutflow = cutflow7
 

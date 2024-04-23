@@ -287,27 +287,20 @@ def findCorrectTime(self,cutName = "DT_CorrectTime",cut = None,timeData = "time"
     TimeArrayL3_min = ak.min(TimeArrayL3,axis=1)
     diff1 = TimeArrayL3_max - TimeArrayL0_min
     diff2 = TimeArrayL3_min - TimeArrayL0_max
-    #print(f"drop none test: {ak.to_list(ak.drop_none(diff1))}") #drop none is working at here
+    
     #change array strturn for np concatination
     diff1 = [[x] for x in diff1]
-    #print(f"drop none test: {ak.to_list(ak.drop_none(diff1))}") #thing also work at here
-    #print(f"drop none test: {ak.to_list(ak.fill_none(diff1,-100))}") #this also work
     diff1=ak.fill_none(diff1,-6000.0)
     diff2 = [[x] for x in diff2]
     diff2=ak.fill_none(diff2,-6000.0)
     TimeDiff = np.concatenate((diff1,diff2),axis = 1)
-    #test for removeing those none value and check the index
-    #TimeDiff = TimeDiff[TimeDiff>-5000]  
-    abs_max_index = np.argmax(np.abs(TimeDiff),axis = 1) #get the index for abs max value, but the -6k can cause trouble
-    #testArr = TimeDiff[abs_max_index] # this return all empty array, I suspect the numpy index method doesn't work with awkward array.
-    #print(abs_max_index)
-    #print(ak.to_list(abs_max_index))#it is workingi. I saw "1" in this array. this means some of the "Dt" have different value.
-    print(TimeDiff[0])
+    
+    abs_max_index = np.argmax(np.abs(TimeDiff),axis = 1) #get the index for abs max value
     #find the max abs Dt with value in abs_max_index
     TimeDiff = [TimeDiff[index][value] for index,value in enumerate(abs_max_index)]
     #print(TimeDiff)
     self.events["maxTimeDTL0L3"] = TimeDiff
-
+    print(ak.to_list(self.events["maxTimeDTL0L3"][self.events["maxTimeDTL0L3"] > -5000])) 
 
 
 
@@ -568,7 +561,7 @@ def sudo_straight(self, cutName = "StraghtCosmic",NPEcut = 20):
     #print(len(CleanEventTags))  #FIXME: currently the size is 40k. The concatination seems have issue at above
     #print(ak.to_list(ak.count_nonzero(CleanEventTags,axis = 1)))
     self.events["Clean_MuonEvent"] = ak.count_nonzero(CleanEventTags,axis = 1) == 1
-    print(ak.to_list(self.events["event"][self.events["Clean_MuonEvent"]]))
+    #print(ak.to_list(self.events["event"][self.events["Clean_MuonEvent"]])) #used for debug only
 
    
     #tag the pulses that is at the adjacent layers where muon event can be found

@@ -279,7 +279,7 @@ def findCorrectTime(self,cutName = "DT_CorrectTime",cut = None,timeData = "time"
         
     
     #TimeArrayL2 and TimeArrayL1 will be used in the later case
-    TimeArrayL0 = TimeArrayL0 [TimeArrayL0 <= 2500]
+    TimeArrayL0 = TimeArrayL0 [(TimeArrayL0 <= 2500) & (self.events["nPE"] >=20)]
     TimeArrayL3 = TimeArrayL3[TimeArrayL3 <= 2500]
     TimeArrayL0_max = ak.max(TimeArrayL0,axis=1)
     TimeArrayL0_min = ak.min(TimeArrayL0,axis=1)

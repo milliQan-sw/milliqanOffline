@@ -66,7 +66,8 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
                 fileNumber = 0
             else:
                 runNumber = int(inputFile.split("/")[-1].split("Run")[-1].split(".")[0])
-                fileNumber = int(inputFile.split("/")[-1].split(".")[1].split("_")[0])    
+                fileNumber = int(inputFile.split("/")[-1].split(".")[1].split("_")[0]) 
+                print("Run, {}, File, {}".format(inputFile.split("/")[-1].split("Run")[-1].split(".")[0], inputFile.split("/")[-1].split(".")[1].split("_")[0]))   
         except:
             if publish:
                 print ("Could not identify file and/or run number so cannot publish")

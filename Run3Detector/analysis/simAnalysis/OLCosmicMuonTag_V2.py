@@ -144,10 +144,15 @@ if __name__ == "__main__":
     myplotter.addHistograms(NuniqueBar_C, 'NBarsHits', 'Clean_MuonEvent')
     CorrectTime_C =  r.TH1F("CorrectTime_C" , "D_t Max with correction w;D_t Max; Events",6000,-3000,3000)
     myplotter.addHistograms(CorrectTime_C, 'maxTimeDTL0L3', 'Clean_MuonEvent') 
+
+    #CorrectTime_default is to check what does CorrectTime should look like without the Clean muon cut
+    CorrectTime_default =  r.TH1F("CorrectTime_default" , "D_t Max with correction w;D_t Max; Events",6000,-3000,3000)
+    myplotter.addHistograms(CorrectTime_default, 'maxTimeDTL0L3', 'None_empty_event') 
+
     NPERatio_C = r.TH1F("NPERatio_C","NPE ratio;max NPE/min NPE;Events",5000,0,5000)
     myplotter.addHistograms(NPERatio_C, 'BarNPERatio', 'Clean_MuonEvent')
     
-    cutflow7 = [mycuts.boardsMatched,mycuts.pickupCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.BarNPERatioCalculate,mycuts.NbarsHitsCount,mycuts.sudo_straight,clean_Muon_layer,clean_Muon_adj_layer,cleanMuon_count,clean_Muon_Dt,myplotter.dict['M_NPE_C'],myplotter.dict['M_adj_NPE_C'],myplotter.dict["NuniqueBar_C"],myplotter.dict["NPERatio_C"],myplotter.dict["CorrectTime_C"]]    
+    cutflow7 = [mycuts.boardsMatched,mycuts.pickupCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.BarNPERatioCalculate,mycuts.NbarsHitsCount,mycuts.sudo_straight,clean_Muon_layer,clean_Muon_adj_layer,cleanMuon_count,clean_Muon_Dt,myplotter.dict['M_NPE_C'],myplotter.dict['M_adj_NPE_C'],myplotter.dict["NuniqueBar_C"],myplotter.dict["NPERatio_C"],myplotter.dict["CorrectTime_C"],myplotter.dict["CorrectTime_default"]]    
     
     cutflow = cutflow7
 

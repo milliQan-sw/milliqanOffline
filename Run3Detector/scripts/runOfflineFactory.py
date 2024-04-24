@@ -48,6 +48,7 @@ def validateOutput(outputFile,runNumber=-1,fileNumber=-1):
         if not tagObj:
             tagObj = f1.Get("tag_{}_{}".format(runNumber,fileNumber))
         tag = tagObj.GetTitle()
+        f1.Close()
     except Exception as ex:
         msg = traceback.format_exc()
         if "EDProductGetter" not in msg:

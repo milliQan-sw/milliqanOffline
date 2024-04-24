@@ -1522,11 +1522,25 @@ vector<vector<pair<float,float>>> OfflineFactory::readWaveDataPerEvent(int i){
     vector<vector<pair<float,float> > > allPulseBounds;
     outputTreeContents.boardsMatched = true;
     for(int idig=0; idig < nDigitizers; idig++){
+
+        //correct all pulses to the TDC time of digitizer 0
+        float thisCorrection = (float)5*((int64_t)evt->digitizers[0].TDC[0] - (int64_t)evt->digitizers[idig].TDC[0]);
+        tdcCorrection[idig] = thisCorrection; //5ns per TDC clock
         if(evt->digitizers[idig].TDC[0] == 0) {
             outputTreeContents.boardsMatched = false;
-            break;
+        }
+        /*std::cout << "digi 0 " << evt->digitizers[0].TDC[0] << ", digi " << idig << " " << evt->digitizers[idig].TDC[0] << 
+            ", diff " << (int64_t)evt->digitizers[0].TDC[0] - (int64_t)evt->digitizers[idig].TDC[0] << ", correction " << thisCorrection << ", boards matched " << 
+            outputTreeContents.boardsMatched << std::endl;*/
+
+    }
+    //if boards are not matched don't overcorrect times (will throw out these events offline anyway)
+    if (outputTreeContents.boardsMatched == false) {
+        for(int i=0; i < sizeof(tdcCorrection)/sizeof(tdcCorrection[0]); i++){
+            tdcCorrection[i] = 0;
         }
     }
+
     totalPulseCount = 0;
     for(int ic=0;ic<numChan;ic++){
         //Pulse finding
@@ -1631,7 +1645,7 @@ void OfflineFactory::readWaveData(){
 void OfflineFactory::writeOutputTree(){
     outFile->cd();
     outTree->Write();
-    trigMetaDataCopy->Write();
+    if (friendFileName != "") trigMetaDataCopy->Write();
     writeVersion();
     outFile->Close();
     if (inFile) inFile->Close();
@@ -1852,8 +1866,8 @@ vector< pair<float,float> > OfflineFactory::processChannel(int ic){
         outputTreeContents.v_fallSamples.push_back(above20-above80);
         outputTreeContents.v_time.push_back(pulseBounds[ipulse].first);
         outputTreeContents.v_timeFit.push_back(timeFit);
-        outputTreeContents.v_time_module_calibrated.push_back(pulseBounds[ipulse].first+timingCalibrations[ic]);
-        outputTreeContents.v_timeFit_module_calibrated.push_back(timeFit+timingCalibrations[ic]);
+        outputTreeContents.v_time_module_calibrated.push_back(pulseBounds[ipulse].first+timingCalibrations[ic]+tdcCorrection[ic/16]);
+        outputTreeContents.v_timeFit_module_calibrated.push_back(timeFit+timingCalibrations[ic]+tdcCorrection[ic/16]);
         float area = waves[ic]->Integral("width");
         outputTreeContents.v_area.push_back(area);
         outputTreeContents.v_nPE.push_back((waves[ic]->Integral("width")/(speAreas[ic]))*(0.4/sampleRate));

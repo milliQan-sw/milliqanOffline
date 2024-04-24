@@ -41,6 +41,7 @@ offlineProduction:
         GIT_SUBMODULE_STRATEGY: recursive
     script:  
         - cd Run3Detector
+        - . setup.sh
         - python3 scripts/runOfflineFactory.py --inputFile input.root --outputFile output.root --exe ./test.exe
 
 analysis:

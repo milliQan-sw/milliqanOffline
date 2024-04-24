@@ -262,7 +262,7 @@ def BarNPERatioCalculate(self,cutName = "BarNPERatio",cut = None):
         
 #bar trim should be used prior using this function
 #introduce correction factor such that time for paricle travel from IP to bar channel is same for time at different layer
-def findCorrectTime(self,cutName = "DT_CorrectTime",cut = None,timeData = "time", NPECut = 1):
+def findCorrectTime(self,cutName = "DT_CorrectTime",cut = None,timeData = "time", NPECut = 0):
     if cut:
         cutMask, junk = ak.broadcast_arrays(self.events.cut, self.events.layer)
         TimeArrayL0 = slef.events[timeData][cutMask & self.events.layer==0]

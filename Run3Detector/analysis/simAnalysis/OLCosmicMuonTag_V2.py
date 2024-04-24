@@ -185,6 +185,7 @@ if __name__ == "__main__":
         NPERatio_C.Write()
         CorrectTime_C.Write()
         NuniqueBar_C.Write()
+        CorrectTime_default.Write()
         f_out.Close()
         #"""
 

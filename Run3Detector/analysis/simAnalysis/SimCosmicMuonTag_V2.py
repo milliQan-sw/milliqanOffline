@@ -338,9 +338,36 @@ def findCorrectTime(self,cutName = "DT_CorrectTime",cut = None,timeData = "time"
 
 
 
+#findCorrectTime for offline data. only take the pulse within 800,1500. The trigger sould be around 1200 ns
+def findCorrectTimeOL(self,cutName = "DT_CorrectTime",cut = None,timeData = "time", NPECut = 0):
+    if cut:
+        cutMask, junk = ak.broadcast_arrays(self.events.cut, self.events.layer)
+        TimeArrayL0 = slef.events[timeData][cutMask & self.events.layer==0]
+        TimeArrayL1 = slef.events[timeData][cutMask & self.events.layer==1]
+        TimeArrayL2 = slef.events[timeData][cutMask & self.events.layer==2]
+        TimeArrayL3 = slef.events[timeData][cutMask & self.events.layer==3]
+        
+        
+    else:
+        TimeArrayL0 = self.events[timeData][(self.events.layer==0) & (self.events["nPE"] >= NPECut) & (self.events[timeData] > 0)] 
+        TimeArrayL1 = self.events[timeData][(self.events.layer==1) & (self.events["nPE"] >= NPECut) & (self.events[timeData] > 0)] - (3.96 * 1)
+        TimeArrayL2 = self.events[timeData][(self.events.layer==2) & (self.events["nPE"] >= NPECut) & (self.events[timeData] > 0)] - (3.96 * 2)
+        TimeArrayL3 = self.events[timeData][(self.events.layer==3) & (self.events["nPE"] >= NPECut) & (self.events[timeData] > 0)] - (3.96 * 3)
+        
+    
+    #TimeArrayL2 and TimeArrayL1 will be used in the later case
+    TimeArrayL0 = TimeArrayL0 [(TimeArrayL0 <= 1500) & (TimeArrayL0 >= 800)]
+    TimeArrayL3 = TimeArrayL3[(TimeArrayL3 <= 1500) & (TimeArrayL0 >= 800)]
+    TimeArrayL0_min = ak.min(TimeArrayL0,axis=1)
+    TimeArrayL3_min = ak.min(TimeArrayL3,axis=1)
+    diff1 = TimeArrayL3_min - TimeArrayL0_min
 
+    
+    #change array strturn for np concatination
+    diff1 = [[x] for x in diff1]
+    diff1=ak.fill_none(diff1,-6000.0)
 
-
+    self.events["offlineL03"] = diff1
     
 
     

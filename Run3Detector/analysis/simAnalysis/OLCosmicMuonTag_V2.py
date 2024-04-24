@@ -124,6 +124,8 @@ if __name__ == "__main__":
     myplotter.addHistograms(CorrectTime, 'DT_CorrectTime', 'StraghtCosmic')
     NPERatio = r.TH1F("NPERatio","NPE ratio;max NPE/min NPE;Events",5000,0,5000)
     myplotter.addHistograms(NPERatio, 'BarNPERatio', 'StraghtCosmic')
+   
+
     
     findCorrectTimeOL = mycuts.getCut(mycuts.findCorrectTime,"DT_CorrectTime", cut = False, timeData = "timeFit_module_calibrated")    
     myplotter.addHistograms(CorrectTime, 'DT_CorrectTime', 'StraghtCosmic')
@@ -148,11 +150,18 @@ if __name__ == "__main__":
     #CorrectTime_default is to check what does CorrectTime should look like without the Clean muon cut
     CorrectTime_default =  r.TH1F("CorrectTime_default" , "D_t Max with correction w;D_t Max; Events",6000,-3000,3000)
     myplotter.addHistograms(CorrectTime_default, 'maxTimeDTL0L3', 'None_empty_event') 
+    #extra histogram for Offline data
+    CorrectTime_OL =  r.TH1F("CorrectTime_OL" , "D_t Max with correction w;D_t Max; Events",6000,-3000,3000)
+    myplotter.addHistograms(CorrectTime_OL, 'offlineL03', 'Clean_MuonEvent') 
+    CorrectTime_default_OL =  r.TH1F("CorrectTime_default_OL" , "D_t Max with correction w;D_t Max; Events",6000,-3000,3000)
+    myplotter.addHistograms(CorrectTime_default_OL, 'offlineL03', 'None_empty_event') 
+
+
 
     NPERatio_C = r.TH1F("NPERatio_C","NPE ratio;max NPE/min NPE;Events",5000,0,5000)
     myplotter.addHistograms(NPERatio_C, 'BarNPERatio', 'Clean_MuonEvent')
     
-    cutflow7 = [mycuts.boardsMatched,mycuts.pickupCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.BarNPERatioCalculate,mycuts.NbarsHitsCount,mycuts.sudo_straight,clean_Muon_layer,clean_Muon_adj_layer,cleanMuon_count,clean_Muon_Dt,myplotter.dict['M_NPE_C'],myplotter.dict['M_adj_NPE_C'],myplotter.dict["NuniqueBar_C"],myplotter.dict["NPERatio_C"],myplotter.dict["CorrectTime_C"],myplotter.dict["CorrectTime_default"]]    
+    cutflow7 = [mycuts.boardsMatched,mycuts.pickupCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.BarNPERatioCalculate,mycuts.NbarsHitsCount,mycuts.sudo_straight,clean_Muon_layer,clean_Muon_adj_layer,cleanMuon_count,clean_Muon_Dt,mycuts.findCorrectTimeOL,myplotter.dict['M_NPE_C'],myplotter.dict['M_adj_NPE_C'],myplotter.dict["NuniqueBar_C"],myplotter.dict["NPERatio_C"],myplotter.dict["CorrectTime_C"],myplotter.dict["CorrectTime_default"],myplotter.dict["CorrectTime_OL"],myplotter.dict["CorrectTime_default_OL"]]    
     
     cutflow = cutflow7
 

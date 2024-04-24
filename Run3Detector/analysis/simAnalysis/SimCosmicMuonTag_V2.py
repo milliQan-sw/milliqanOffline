@@ -826,6 +826,8 @@ if __name__ == "__main__":
     myplotter.addHistograms(CorrectTime_C, 'maxTimeDTL0L3', 'Clean_MuonEvent')
     NPERatio_C = r.TH1F("NPERatio_C","NPE ratio;max NPE/min NPE;Events",5000,0,5000)
     myplotter.addHistograms(NPERatio_C, 'BarNPERatio', 'Clean_MuonEvent')
+    CorrectTime_default =  r.TH1F("CorrectTime_default" , "D_t Max with correction w;D_t Max; Events",6000,-3000,3000)
+    myplotter.addHistograms(CorrectTime_default, 'maxTimeDTL0L3', 'None_empty_event') 
    
 
 
@@ -898,7 +900,8 @@ if __name__ == "__main__":
     cleanMuon_count = mycuts.getCut(mycuts.countEvent,'placeholder', Countobject= 'Clean_MuonEvent')
     clean_Muon_layer = mycuts.getCut(mycuts.combineCuts, 'clean_Muon_layer', ["MuonLayers","Clean_MuonEvent"])
     clean_Muon_adj_layer = mycuts.getCut(mycuts.combineCuts, 'clean_Muon_adj_layer', ["MuonADJLayers","Clean_MuonEvent"])
-    cutflow7 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.BarNPERatioCalculate,mycuts.NbarsHitsCount,mycuts.sudo_straight,clean_Muon_layer,clean_Muon_adj_layer,cleanMuon_count,mycuts.findCorrectTime,myplotter.dict['M_NPE_C'],myplotter.dict['M_adj_NPE_C'],myplotter.dict["NuniqueBar_C"],myplotter.dict["NPERatio_C"],myplotter.dict["CorrectTime_C"]]
+    
+    cutflow7 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.BarNPERatioCalculate,mycuts.NbarsHitsCount,mycuts.sudo_straight,clean_Muon_layer,clean_Muon_adj_layer,cleanMuon_count,mycuts.findCorrectTime,myplotter.dict['M_NPE_C'],myplotter.dict['M_adj_NPE_C'],myplotter.dict["NuniqueBar_C"],myplotter.dict["NPERatio_C"],myplotter.dict["CorrectTime_C"],myplotter.dict["CorrectTime_default"]]
     
     
     #-----------------------start of analysis---------------------------------------
@@ -969,7 +972,9 @@ if __name__ == "__main__":
         NPERatio_C.Write()
         CorrectTime_C.Write()
         NuniqueBar_C.Write()
+        CorrectTime_default.Write()
         f_out.Close()
+        
         #"""
    
         #-------------------------------------output histograms and save in root file. Please comment it out if you dont need it------------------------------------------------

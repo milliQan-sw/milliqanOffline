@@ -43,7 +43,7 @@ offlineProduction:
         - cd Run3Detector
         - . setup.sh
         - curl -O https://cernbox.cern.ch/s/4b3s7iRaaP2cVnj/download/input.root
-        - [ ! -f "test.exe" ] && ./compile.sh test.exe
+        - if [ ! -f "test.exe" ]; then ./compile.sh test.exe; fi
         - python3 scripts/runOfflineFactory.py --inputFile input.root --outputFile output.root --exe ./test.exe
 
 analysis:

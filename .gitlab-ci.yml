@@ -32,6 +32,7 @@ setup:
     artifacts:
       paths:
         - Run3Detector/test.exe
+        - MilliDAQ/
 
 offlineProduction:
     image: $CI_REGISTRY_IMAGE

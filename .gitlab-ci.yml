@@ -32,11 +32,13 @@ setup:
         - rm -rf ../../MilliDAQ
     artifacts:
       paths:
-        - test.exe
+        - Run3Detector/test.exe
 
 offlineProduction:
     image: $CI_REGISTRY_IMAGE
     stage: offlineProduction
+    dependencies:
+        - setup
     rules:
         - if: $CI_PIPELINE_SOURCE != "schedule"
     variables:

@@ -318,10 +318,10 @@ def findCorrectTime(self,cutName = "DT_CorrectTime",cut = None,timeData = "time"
 def findCorrectTime(self,cutName = "DT_CorrectTime",cut = None,timeData = "time", NPECut = 0):
     if cut:
         cutMask, junk = ak.broadcast_arrays(self.events.cut, self.events.layer)
-        TimeArrayL0 = slef.events[timeData][cutMask & self.events.layer==0]
-        TimeArrayL1 = slef.events[timeData][cutMask & self.events.layer==1]
-        TimeArrayL2 = slef.events[timeData][cutMask & self.events.layer==2]
-        TimeArrayL3 = slef.events[timeData][cutMask & self.events.layer==3]
+        TimeArrayL0 = self.events[timeData][cutMask & self.events.layer==0]
+        TimeArrayL1 = self.events[timeData][cutMask & self.events.layer==1]
+        TimeArrayL2 = self.events[timeData][cutMask & self.events.layer==2]
+        TimeArrayL3 = self.events[timeData][cutMask & self.events.layer==3]
         
         
     else:

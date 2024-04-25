@@ -1,165 +1,75 @@
-from typing import Dict
-from tensorflow import keras
-from tensorflow.keras import layers
-from tensorflow.keras.models import Sequential
-import matplotlib.pyplot as plt
-from tensorflow.keras.layers import Dense, InputLayer
-import numpy as np
-from typing import Union
 import tensorflow as tf
+from tensorflow.keras.layers import (Input, Dense, LeakyReLU, Embedding, Flatten,
+                                     Concatenate, Reshape, Activation)
+from tensorflow.keras.models import Model
 
+def build_generator(latent_dim, output_shape, embed_dim, num_classes):
+    noise = Input((latent_dim), name="noise_input")
+    x = Dense(256, name="gen_dense0")(noise)
+    x = LeakyReLU(0.2, name="gen_relu0")(x)
 
-def define_discriminator(n_inputs, num_classes):
-    inputs = layers.Input(shape=n_inputs)
-    labels = layers.Input(shape=(num_classes))
-    concatenated = layers.Concatenate()([inputs, labels])
-    x = Dense(25, activation='relu')(concatenated)
-    output = Dense(1, activation='sigmoid')(x)
-    model = keras.Model([inputs, labels], output)
-    return model
+    label = Input((1), name="label")
+    l = Embedding(num_classes, embed_dim, input_length=1)(label)
+    l = Flatten()(l)
 
-def define_generator(self, latent_dim, n_outputs=100, num_classes=4):
-    inputs = layers.Input(shape=(latent_dim,))
-    labels = layers.Input(shape=(num_classes))
-    concatenated = layers.Concatenate()([inputs, labels])
-    x = layers.Dense(500, activation= 'relu')(concatenated)
-    output = layers.Dense(n_outputs, activation='linear')(x)
+    x = Concatenate()([x, l])
+    x = Dense(256, name="gen_dense1")(x)
+    x = LeakyReLU(0.2, name="gen_relu1")(x)
+    # x = dense(output_shape)(x)
+    # x = leakyrelu(0.2)(x)
 
-    return keras.Model([inputs, labels], output)
+    output = Activation("tanh")(x)
+    output = Dense(output_shape, name="gen_dense2")(x)
+    return Model([noise, label], output, name="generator")
 
-class GAN():
-    NUM_CLASSES = 4
+def build_discriminator(embed_dim, input_shape, num_classes):
+    waveform = Input((input_shape), name="discriminator_input")
+    x = Dense(64)(waveform)
+    x = LeakyReLU(0.2)(x)
 
-    def define_discriminator(self, n_inputs=100, optimizer='adam'):
-        inputs = layers.Input(shape=n_inputs)
-        labels = layers.Input(shape=(self.NUM_CLASSES))
-        concatenated = layers.Concatenate()([inputs, labels])
-        x = Dense(25, activation='relu')(concatenated)
-        output = Dense(1, activation='sigmoid')(x)
-        model = keras.Model([inputs, labels], output)
-        model.compile(loss='binary_crossentropy', optimizer=optimizer, metrics=['accuracy'])
+    label = Input((1), name="class_label")
+    l = Embedding(num_classes, embed_dim)(label)
+    l = Flatten()(l)
 
-        return model
+    x = Concatenate()([x, l])
+    output = Dense(1)(x)
 
-    def define_generator(self, latent_dim, n_outputs=100):
-        inputs = layers.Input(shape=(latent_dim,))
-        labels = layers.Input(shape=(self.NUM_CLASSES))
-        concatenated = layers.Concatenate()([inputs, labels])
-        x = layers.Dense(500, activation= 'relu')(concatenated)
-        output = layers.Dense(n_outputs, activation='linear')(x)
+    return Model([waveform, label], output, name="discriminator")
 
-        return keras.Model([inputs, labels], output)
+# The discriminator loss is defined as the combination of how well it is able
+# discriminate against real and fake data. The generator loss measures
+# how often the generated data is caught by the discriminator. Even ideally,
+# the loss should not go to 0, it will meet in the middle somewhere
+@tf.function
+def train_step (real_waveforms, real_labels, latent_dim, num_classes, generator, discriminator, g_opt, d_opt):
+    batch_size = tf.shape(real_waveforms)[0]
+    bce_loss = tf.keras.losses.BinaryCrossentropy(from_logits=True, label_smoothing=0.1)
 
-    def define_gan(self, generator, discriminator):
-        discriminator.trainable = False
-        model = Sequential()
-        print("LZDFLKSJDF")
-        model.add(generator)
-        print("AHHHH")
-        model.add(discriminator)
-        # This will compile the generator as well
-        model.build(input_shape=(generator.input_shape[0], generator.input_shape[1] + self.NUM_CLASSES))
-        model.compile(loss='binary_crossentropy', optimizer='adam')
-        return model
+    noise = tf.random.normal([batch_size, latent_dim])
 
-    def generate_real_samples(self, isolated_waveforms,
-                              number_of_samples: int):
-        waveform, npe_label = isolated_waveforms
+    for _ in range(3):
+        # Gradient tape keeps track of the forward pass so that you can back-propagate the errors
+        with tf.GradientTape() as dtape:
+            # Generate waveforms
+            generated_waveforms = generator([noise, real_labels], training=True)
 
-        random_choices = np.random.randint(0, high=len(isolated_waveforms),
-                                           size=number_of_samples)
-        x_train = waveform[random_choices]
-        x_train = x_train.reshape(number_of_samples,
-                                  len(isolated_waveforms[0]))
-        return [x_train, npe_label]
+            # Train the discriminator over real data and generated data
+            real_output = discriminator([real_waveforms, real_labels], training=True)
+            fake_output = discriminator([generated_waveforms, real_labels], training=True)
 
-    def generate_latent_points(self, latent_dim, n):
-        x_input = np.random.randn(latent_dim, n)
-        x_input = x_input.reshape(n, latent_dim)
-        return x_input
+            # The loss of the GAN is the cumulative loss on the real and fake data
+            d_real_loss = bce_loss(tf.ones_like(real_output), real_output)
+            d_fake_loss = bce_loss(tf.zeros_like(fake_output), fake_output)
+            d_loss = d_real_loss + d_fake_loss
 
-    def generate_fake_samples(self, generator, latent_dim, labels, n):
-        random_latent_vectors = tf.random.normal(shape=(n, latent_dim))
-        gen_x = generator.predict(random_latent_vectors)
-        return [gen_x, labels]
+        d_grad = dtape.gradient(d_loss, discriminator.trainable_variables)
+        d_opt.apply_gradients(zip(d_grad, discriminator.trainable_variables))
 
-    def summarize_performance(self, epoch, generator, discriminator, latent_dim, isolated_waveforms, labels, n=100, save_dir="Plots/"):
+    with tf.GradientTape() as gtape:
+        generated_waveforms = generator([noise, real_labels], training=True)
+        fake_output = discriminator([generated_waveforms, real_labels], training=True)
+        g_loss = bce_loss(tf.ones_like(fake_output), fake_output)
+    g_grad = gtape.gradient(g_loss, generator.trainable_variables)
+    g_opt.apply_gradients(zip(g_grad, generator.trainable_variables))
 
-        x_real =  self.generate_real_samples(isolated_waveforms, n)
-        y_real = np.ones((n, 1))
-        _, acc_real = discriminator.evaluate(x_real, y_real, verbose=0)
-        x_fake = self.generate_fake_samples(generator, latent_dim, x_real[1], n)
-        y_fake = np.zeros((n, 1))
-        _, acc_fake = discriminator.evaluate(x_fake, y_fake, verbose=0)
-
-        print(epoch, acc_real, acc_fake)
-        plt.clf()
-        plt.plot(x_fake[0], color='blue')
-        plt.savefig(save_dir+f"waveform_{epoch}")
-        plt.show()
-
-    def train(self, generator, discriminator,
-              gan, latent_dim, input_data: Dict[str, np.ndarray],
-              n_epochs=10000, n_batch=32,
-              n_eval=2000) -> Union[list[float], np.ndarray]:
-
-        half_batch = int(n_batch/2)
-        loss: list[float] = []
-        y_real = np.ones((half_batch, 1))
-        y_fake = np.zeros((half_batch, 1))
-        for i in range(n_epochs):
-            x_real = self.generate_real_samples(input_data, half_batch)
-
-            x_fake = self.generate_fake_samples(generator, latent_dim, x_real[1], half_batch)
-            discriminator.train_on_batch(x_real, y_real)
-            discriminator.train_on_batch(x_fake, y_fake)
-            x_gan = self.generate_latent_points(latent_dim, n_batch)
-            # You only train the discriminator during GAN training
-            # Therefore, you want the generator to output data that passes as
-            # real data
-            y_gan = np.ones((n_batch, 1)) 
-            loss.append(gan.train_on_batch(x_gan, y_gan))
-
-            if (i + 1) % n_eval == 0:
-                self.summarize_performance(i, generator, discriminator,
-                                           latent_dim, input_data, labels)
-#        data = self.generate_fake_samples(generator, latent_dim, 1)
-#        plt.plot(data[0][0])
-#        plt.show()
-        return loss, generator.get_weights() 
-
-class ConditionalGAN(keras.Model):
-    def __init__(self, generator, discriminator):
-        super().__init__()
-        self.generator = generator
-        self.discriminator = discriminator
-
-    def compile(self, d_optimizer, g_optimizer, loss_fn):
-        super().compile()
-        self.d_optimizer = d_optimizer
-        self.g_optimizer = g_optimizer
-        self.loss_fn = loss_fn
-
-    def train_step(self, data, laten_dimension=1000):
-        real_waveforms, labels = data
-
-        # Generate Fake Images
-        random_latent_vectors = tf.random.normal(shape=(tf.shape(real_waveforms)[0], latent_dimension))
-        generated_waveforms = self.generator([random_latent_vectors, labels])
-
-        # Train discriminator
-        with tf.GradientTape() as tape:
-            fake_output = self.discriminator([generated_waveforms, labels])
-            real_output = self.discriminator([real_waveforms, labels])
-            d_loss = self.loss_fn(tf.ones_like(real_output), real_output) + self.loss_fn(tf.zeros_like(fake_output), fake_output)
-        grads = tape.gradient(d_loss, self.discriminator.trainable_weights)
-        self.d_optimizer.apply_gradients(zip(grads, self.discriminator.trainable_weights))
-
-        with tf.GradientTape() as tape:
-            generated_waveforms = self.generator([random_latent_vectors, labels])
-            fake_output = self.discriminator([generated_images, labels])
-            g_loss = self.loss_fn(tf.ones_like(fake_output), fake_output)
-        grads = tape.gradient(g_loss, self.generator.trainable_weights)
-        self.g_optimizer.apply_gradients(zip(grads, self.generator.trainable_weights))
-
-        return {"d_loss": d_loss, "g_loss": g_loss}
+    return d_loss, g_loss

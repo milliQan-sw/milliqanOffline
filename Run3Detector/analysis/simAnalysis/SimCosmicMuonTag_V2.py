@@ -253,13 +253,22 @@ def NbarsHitsCountV2(self,arr, hist, branches = None):
 
 
 #bar trim should be used prior using this function
+#this is used for finding NPE ratio from pulse at any layer.
+#the "cut" here is the event based cut/tag.
 def BarNPERatioCalculate(self,cutName = "BarNPERatio",cut = None):
     if cut:
-        cutMask, junk = ak.broadcast_arrays(self.events.cut, self.events.layer)
-        self.events[cutName] = ((ak.max(self.events.nPE[cutMask],axis=1)/ak.min(self.events.nPE[cutMask],axis=1)))
+        cutMask, junk = ak.broadcast_arrays(self.events[cut], self.events.layer)
+        self.events[cutName] = ((ak.max(self.events.nPE[(cutMask) & (self.events.barCut)],axis=1)/ak.min(self.events.nPE[(cutMask) & (self.events.barCut)],axis=1)))
     else:
-        self.events[cutName] = ((ak.max(self.events.nPE,axis=1)/ak.min(self.events.nPE,axis=1)))
-        
+        self.events[cutName] = ((ak.max(self.events.nPE[self.events.barCut],axis=1)/ak.min(self.events.nPE[self.events.barCut],axis=1)))
+
+#NPERatio V2. Layer constraint is applied. The layer constraint need to be converted into pulse based
+def BarNPERatioCalculateV2(self,cutName = "BarNPERatio_P",cut = None):
+
+    self.events[cutName] = ((ak.max(self.events.nPE[cut],axis=1)/ak.min(self.events.nPE[cut],axis=1)))
+
+
+
 #bar trim should be used prior using this function
 #introduce correction factor such that time for paricle travel from IP to bar channel is same for time at different layer
 
@@ -602,11 +611,11 @@ def sudo_straight(self, cutName = "StraghtCosmic",NPEcut = 20):
             else: lay3Muon = lay3Muon | path
             
     
-    #tag the pulses that has is the layer where muon event can be found
-    l0Arr = (lay0Muon) & (self.events["layer"]==0)
-    l1Arr = (lay1Muon) & (self.events["layer"]==1)
-    l2Arr = (lay2Muon) & (self.events["layer"]==2)
-    l3Arr = (lay3Muon) & (self.events["layer"]==3)
+    #tag the pulses that has is in the layer where muon event can be found
+    l0Arr = (lay0Muon) & ((self.events["layer"]==0) & (self.events["barCut"]))
+    l1Arr = (lay1Muon) & ((self.events["layer"]==1)  & (self.events["barCut"]))
+    l2Arr = (lay2Muon) & ((self.events["layer"]==2)  & (self.events["barCut"]))
+    l3Arr = (lay3Muon) & ((self.events["layer"]==3)  & (self.events["barCut"]))
     
 
 
@@ -614,15 +623,11 @@ def sudo_straight(self, cutName = "StraghtCosmic",NPEcut = 20):
     #try to find the event that only one layer has the muon events. This is an Event based tag.
     #print(len(lay0Muon)) #10K should be event based
     #print(ak.to_list(lay0Muon))
-    lay0Muon_T = transformed_array = [[x] for x in lay0Muon]
-    lay1Muon_T = transformed_array = [[x] for x in lay1Muon]
-    lay2Muon_T = transformed_array = [[x] for x in lay2Muon]
-    lay3Muon_T = transformed_array = [[x] for x in lay3Muon]
-    CleanEventTags = np.concatenate((lay0Muon_T,lay1Muon_T,lay2Muon_T,lay3Muon_T),axis = 1) #FIXME: this is not working on event based variable
-    #print(len(CleanEventTags))
-    #print(ak.count_nonzero(lay0Muon))
-    #print(len(CleanEventTags))  #FIXME: currently the size is 40k. The concatination seems have issue at above
-    #print(ak.to_list(ak.count_nonzero(CleanEventTags,axis = 1)))
+    lay0Muon_T =  [[x] for x in lay0Muon]
+    lay1Muon_T =  [[x] for x in lay1Muon]
+    lay2Muon_T =  [[x] for x in lay2Muon]
+    lay3Muon_T =  [[x] for x in lay3Muon]
+    CleanEventTags = np.concatenate((lay0Muon_T,lay1Muon_T,lay2Muon_T,lay3Muon_T),axis = 1) 
     self.events["Clean_MuonEvent"] = ak.count_nonzero(CleanEventTags,axis = 1) == 1
     #print(ak.to_list(self.events["event"][self.events["Clean_MuonEvent"]])) #used for debug only
 
@@ -635,7 +640,8 @@ def sudo_straight(self, cutName = "StraghtCosmic",NPEcut = 20):
     self.events["MuonL1"] = l1Arr      
     self.events["MuonL2"] = l2Arr      
     self.events["MuonL3"] = l3Arr
-    self.events["MuonLayers"] = l0Arr | l1Arr | l2Arr | l3Arr
+    self.events["MuonLayers"] = l0Arr | l1Arr | l2Arr | l3Arr   #pulse based tag.
+    self.events["otherlayer"] = ~self.events["MuonLayers"] #layers that can't find the muon event.
     self.events["MuonADJL0"] = (self.events["layer"]==0) & (adj0)
     self.events["MuonADJL1"] = (self.events["layer"]==1) & (adj1)      
     self.events["MuonADJL2"] = (self.events["layer"]==2) & (adj2)      

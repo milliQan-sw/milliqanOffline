@@ -29,7 +29,6 @@ setup:
         - sed -i 's/\.\.\///' setup.sh
         - . setup.sh
         - ./compile.sh test.exe
-        - rm -rf ../../MilliDAQ
     artifacts:
       paths:
         - Run3Detector/test.exe

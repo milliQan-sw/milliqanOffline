@@ -33,7 +33,7 @@ mycuts = milliqanCuts()
 myplotter = milliqanPlotter()
 
 
-T_h = r.TH1F("M_NPE", "nPE muon event layer", 250, 0, 2500)
+T_h = r.TH1F("T_h", "nPE muon event layer", 250, 0, 2500)
 myplotter.addHistograms(T_h, 'timeFit_module_calibrated', 'barCut')
 
 cutflow = [mycuts.barCut,myplotter.dict['T_h']]

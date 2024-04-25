@@ -57,10 +57,16 @@ def train_step (real_waveforms, real_labels, latent_dim, num_classes, generator,
             real_output = discriminator([real_waveforms, real_labels], training=True)
             fake_output = discriminator([generated_waveforms, real_labels], training=True)
 
+<<<<<<< HEAD
             # The loss of the GAN is the cumulative loss on the real and fake data
             d_real_loss = bce_loss(tf.ones_like(real_output), real_output)
             d_fake_loss = bce_loss(tf.zeros_like(fake_output), fake_output)
             d_loss = d_real_loss + d_fake_loss
+=======
+    label = Input((1), name="class_label")
+    l = Embedding(num_classes, embed_dim)(label)
+    l = Flatten()(l)
+>>>>>>> 9fcedb0d0479721003f4e7df26a44ff5ea15285b
 
         d_grad = dtape.gradient(d_loss, discriminator.trainable_variables)
         d_opt.apply_gradients(zip(d_grad, discriminator.trainable_variables))

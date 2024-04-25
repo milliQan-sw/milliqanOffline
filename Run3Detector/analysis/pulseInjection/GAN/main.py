@@ -1,12 +1,10 @@
 import time
+import sys
 
 import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
 
-import ganv2
-from preprocessing import WaveformProcessor
-from utilities import plot_loss
 
 # Data Preprocessing Constants
 WAVEFORM_BOUNDS = (1200, 1600)
@@ -22,7 +20,8 @@ EVAL_EPOCH = 2000  # How often you should get output during training
 PLOT = False
 
 # Preprocess Waveform Data
-INPUT_FILE = "/home/ryan/Documents/Data/MilliQan/outputWaveforms_812_2p5V.root"
+INPUT_FILE = ("/home/ryan/Documents/Research/Data/MilliQanWaveforms/"
+              "outputWaveforms_812_2p5V.root")
 processor = WaveformProcessor(INPUT_FILE)
 
 
@@ -33,17 +32,28 @@ static_bounds = {key: np.array([[np.where(processor.times == WAVEFORM_BOUNDS[0])
 
 # Isolate Waveforms
 isolated_peaks = processor.isolate_waveforms(static_bounds)
+peak_heights = np.max(isolated_peaks, axis=1)
+utilities.plot_histogram(peak_heights, 100, 0, 300,
+                         write_to_existing_file=True,
+                         file_path="height.root")
+one_npe_fit = TF1("g1", "gaus", 
+
+# Create Height Classification
+
 
 npe = np.round(np.divide(np.trapz(isolated_peaks), SPE_AREA))
-num_classes = 12
-#num_classes = len(tf.unique(npe)[0])
+
+NUM_CLASSES = 3
+# num_classes = len(tf.unique(npe)[0])
 
 dataset = tf.data.Dataset.from_tensor_slices((isolated_peaks,
                                               npe))
 
-dataset = dataset.filter(lambda data, label: tf.logical_and(label >=0, label <12))
+dataset = dataset.filter(lambda data, label: tf.logical_and(label >= 0,
+                                                            label <= NUM_CLASSES))
 dataset = dataset.shuffle(buffer_size=200)
-dataset = dataset.batch(BATCH_SIZE).prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
+dataset = dataset.batch(BATCH_SIZE).prefetch(buffer_size=tf.data.experimental.
+                                             AUTOTUNE)
 
 if PLOT:
     for i, value in enumerate(isolated_peaks):
@@ -55,16 +65,16 @@ if PLOT:
         plt.savefig(f"Plots/isolated_peak_{i}.png")
 
 # # Defining GAN
-discriminator = ganv2.build_discriminator(embed_dim=128, input_shape=201,
-                                          num_classes=num_classes)
+discriminator = gan.build_discriminator(embed_dim=128, input_shape=201,
+                                          num_classes=NUM_CLASSES+1)
 
-generator = ganv2.build_generator(LATENT_DIM, output_shape=201, embed_dim=16,
-                                  num_classes=num_classes)
+generator = gan.build_generator(LATENT_DIM, output_shape=201, embed_dim=16,
+                                  num_classes=NUM_CLASSES+1)
 
 print(generator.summary())
 # Train Models
-generator_opt = tf.keras.optimizers.Adam()
-disc_opt = tf.keras.optimizers.Adam()
+generator_opt = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
+disc_opt = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
 
 d_loss_values = []
 g_loss_values = [] 
@@ -80,8 +90,8 @@ for epoch in range(EPOCHS):
     assert dataset is not None, "Error in setting up dataset"
     for waveform_batch, label_batch in dataset:
         i+=1
-        d_batch_loss, g_batch_loss = ganv2.train_step(waveform_batch, label_batch,
-                                                      LATENT_DIM, num_classes,
+        generator_opt, disc_opt, d_batch_loss, g_batch_loss = gan.train_step(waveform_batch, label_batch,
+                                                      LATENT_DIM,
                                                       generator, discriminator,
                                                       generator_opt, disc_opt)
         d_loss += d_batch_loss

@@ -28,9 +28,11 @@ setup:
         - sed -i "s|UCSB|GitLab|g" setup.sh
         - sed -i 's/\.\.\///' setup.sh
         - . setup.sh
-        - curl -o input.root https://cernbox.cern.ch/s/4b3s7iRaaP2cVnj/download
         - ./compile.sh test.exe
         - rm -rf ../../MilliDAQ
+    artifacts:
+      paths:
+        - test.exe
 
 offlineProduction:
     image: $CI_REGISTRY_IMAGE
@@ -40,10 +42,10 @@ offlineProduction:
     variables:
         GIT_SUBMODULE_STRATEGY: recursive
     script:  
+        - use test.exe
         - cd Run3Detector
         - . setup.sh
         - curl -O https://cernbox.cern.ch/s/4b3s7iRaaP2cVnj/download/input.root
-        - if [ ! -f "test.exe" ]; then ./compile.sh test.exe; fi
         - python3 scripts/runOfflineFactory.py --inputFile input.root --outputFile output.root --exe ./test.exe
 
 analysis:

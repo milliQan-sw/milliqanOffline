@@ -17,7 +17,7 @@ from milliqanPlotter import *
 import awkward as ak
 
 
-branches = ["timeFit_module_calibrated","type"]
+branches = ["timeFit_module_calibrated","type","boardsMatched","pickupFlag"]
 
 
 numRun = str(sys.argv[1])
@@ -33,10 +33,24 @@ mycuts = milliqanCuts()
 myplotter = milliqanPlotter()
 
 
-T_h = r.TH1F("T_h", "nPE muon event layer", 250, 0, 2500)
+T_h = r.TH1F("T_h", "timeFit_module_calibrated;ns; # of pulses", 250, 0, 2500)
 myplotter.addHistograms(T_h, 'timeFit_module_calibrated', 'barCut')
 
-cutflow = [mycuts.barCut,myplotter.dict['T_h']]
+cutflow = [mycuts.boardsMatched,mycuts.pickupCut,mycuts.barCut,myplotter.dict['T_h']]
+
+
+#create a schedule of the cuts
+myschedule = milliQanScheduler(cutflow, mycuts, myplotter)
+
+#print out the schedule
+myschedule.printSchedule()
+
+#create the milliqan processor object
+myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts, myplotter)
+
+#run the milliqan processor
+myiterator.run()
+
 
 f_out = r.TFile(f"{outputPath}/Run{numRun}_file{fileNum}_findTrigger.root", "RECREATE")
 T_h.Write()

@@ -42,7 +42,6 @@ offlineProduction:
     variables:
         GIT_SUBMODULE_STRATEGY: recursive
     script:  
-        - use test.exe
         - cd Run3Detector
         - . setup.sh
         - curl -O https://cernbox.cern.ch/s/4b3s7iRaaP2cVnj/download/input.root

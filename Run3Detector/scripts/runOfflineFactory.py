@@ -190,7 +190,7 @@ def publishDataset(configurationsJSON,inputFile,outputFile,fileNumber,runNumber,
     return True
 
 def getConfigs(runNum, offlineDir):
-    if runNum == -1 and 'barConfigs' in offlineDir: return 'configRun1097_present'
+    if runNum == -1 and 'barConfigs' in offlineDir: return 'configRun1296_present'
     elif runNum == -1 and 'slabConfigs' in offlineDir: return 'configRun0_present'
     fin = open(offlineDir+"/runInfo.json")
     runs = json.load(fin)

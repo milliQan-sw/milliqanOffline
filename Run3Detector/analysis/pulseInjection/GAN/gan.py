@@ -19,11 +19,14 @@ def build_generator(latent_dim, output_shape, embed_dim, num_classes):
     x = Concatenate()([x, l])
     x = Dense(256, name="gen_dense1")(x)
     x = LeakyReLU(0.2, name="gen_relu1")(x)
-    # x = dense(output_shape)(x)
-    # x = leakyrelu(0.2)(x)
+    x = Dense(128)(x)
+    x = LeakyReLU(0.2)(x)
+    x = Dense(64)(x)
+    x = LeakyReLU(0.2)(x)
+    output = Dense(output_shape)(x)
 
-    output = Activation("tanh")(x)
-    output = Dense(output_shape, name="gen_dense2")(x)
+    # output = Activation("tanh")(x)
+    # output = Dense(output_shape, name="gen_dense2")(x)
     return Model([noise, label], output, name="generator")
 
 
@@ -37,21 +40,23 @@ def build_discriminator(embed_dim, input_shape, num_classes, extra_info_shape):
     label_embedding = Flatten()(label_embedding)
 
     # Extra info input
-    extra_info_input = Input((extra_info_shape), name="extra_info_input")
-    extra_info_flat = Flatten()(extra_info_input)
+    # extra_info_input = Input((extra_info_shape), name="extra_info_input")
+    # extra_info_flat = Flatten()(extra_info_input)
 
     # Concatenate all inputs
     concatenated_inputs = Concatenate(name='disc_concat')(
-        [x, label_embedding, extra_info_flat])
+        [x, label_embedding])
 
     # Discriminator layers
     x = Dense(256, name="disc_dense0")(concatenated_inputs)
     x = LeakyReLU(0.2, name="disc_relu0")(x)
+    x = Dense(64)(x)
+    x = LeakyReLU(0.2)(x)
     output = Dense(1, name="disc_dense1", activation="tanh")(x)
 
     # Create and compile the discriminator model
     discriminator = Model(
-        [data_input, label_input, extra_info_input], output, name="discriminator")
+        [data_input, label_input], output, name="discriminator")
     return discriminator
 
 
@@ -67,43 +72,42 @@ def calculate_extra_metrics(waveform):
 # the loss should not go to 0, it will meet in the middle somewhere
 def train_step(real_waveforms, real_labels, latent_dim, num_classes, generator, discriminator, g_opt, d_opt, batch_size):
     batch_size = tf.shape(real_waveforms)[0]
-    bce_loss = tf.keras.losses.BinaryCrossentropy(
-        from_logits=True, label_smoothing=0.1)
+    cross_entropy = tf.keras.losses.BinaryCrossentropy(from_logits=True)
 
     noise = tf.random.normal([batch_size, latent_dim])
 
-    for _ in range(3):
-        # Gradient tape keeps track of the forward pass so that you can back-propagate the errors
-        with tf.GradientTape() as dtape:
-            # Generate waveforms
-            generated_waveforms = generator(
-                [noise, real_labels], training=True)
+    # Gradient tape keeps track of the forward pass so that you can back-propagate the errors
+    with tf.GradientTape() as dtape, tf.GradientTape() as gtape:
+        # Generate waveforms
+        generated_waveforms = generator(
+            [noise, real_labels], training=True)
 
-            gen_extra_info = calculate_extra_metrics(generated_waveforms)
+        gen_extra_info = calculate_extra_metrics(generated_waveforms)
 
-            real_extra_info = calculate_extra_metrics(real_waveforms)
+        real_extra_info = calculate_extra_metrics(real_waveforms)
 
-            # Train the discriminator over real data and generated data
-            real_output = discriminator(
-                [real_waveforms, real_labels, real_extra_info], training=True)
-            fake_output = discriminator(
-                [generated_waveforms, real_labels, gen_extra_info], training=True)
+        # Train the discriminator over real data and generated data
+        real_output = discriminator(
+            [real_waveforms, real_labels], training=True)
+        fake_output = discriminator(
+            [generated_waveforms, real_labels], training=True)
 
-            # The loss of the GAN is the cumulative loss on the real and fake data
-            d_real_loss = bce_loss(tf.ones_like(real_output), real_output)
-            d_fake_loss = bce_loss(tf.zeros_like(fake_output), fake_output)
-            d_loss = d_real_loss + d_fake_loss
+        # The loss of the GAN is the cumulative loss on the real and fake data
+        d_real_loss = cross_entropy(tf.ones_like(real_output), real_output)
+        d_fake_loss = cross_entropy(tf.zeros_like(fake_output), fake_output)
+        d_loss = d_real_loss + d_fake_loss
 
-        d_grad = dtape.gradient(d_loss, discriminator.trainable_variables)
-        d_opt.apply_gradients(zip(d_grad, discriminator.trainable_variables))
-
-    with tf.GradientTape() as gtape:
+        # Train generator
         generated_waveforms = generator([noise, real_labels], training=True)
         gen_extra_info = calculate_extra_metrics(generated_waveforms)
         fake_output = discriminator(
-            [generated_waveforms, real_labels, gen_extra_info], training=True)
-        g_loss = bce_loss(tf.ones_like(fake_output), fake_output)
+            [generated_waveforms, real_labels], training=True)
+        g_loss = cross_entropy(tf.ones_like(fake_output), fake_output)
+
+    d_grad = dtape.gradient(d_loss, discriminator.trainable_variables)
+    d_opt.apply_gradients(zip(d_grad, discriminator.trainable_variables))
+
     g_grad = gtape.gradient(g_loss, generator.trainable_variables)
     g_opt.apply_gradients(zip(g_grad, generator.trainable_variables))
 
-    return d_loss, g_loss
+    return d_loss, g_loss, g_opt, d_opt

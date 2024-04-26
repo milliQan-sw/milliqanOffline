@@ -17,8 +17,8 @@ NS_PER_MEASUREMENT = 2.5
 
 # Model Constants
 LATENT_DIM = 500
-BATCH_SIZE = 128
-EPOCHS = 100000
+BATCH_SIZE = 64
+EPOCHS = 50
 EVAL_EPOCH = 2000  # How often you should get output during training
 
 PLOT = False
@@ -48,21 +48,21 @@ NUM_CLASSES = 3
 # num_classes = len(tf.unique(npe)[0])
 
 balanced_dataset = fix_imbalanced_data(isolated_peaks, npe,
-                    1, 2, "oversample")
+                                       1, 2, "oversample", batch_size=BATCH_SIZE)
 
-if balanced_dataset is not None:
-    for features, label in balanced_dataset.take(1):
-        logging.info("Mean of data labels: {}".format(label.numpy().mean()))
+# if balanced_dataset is not None:
+#     for features, label in balanced_dataset.take(1):
+#         logging.info("Mean of data labels: {}".format(label.numpy().mean()))
 
     
-# dataset = tf.data.Dataset.from_tensor_slices((isolated_peaks,
-#                                               npe))
+dataset = tf.data.Dataset.from_tensor_slices((isolated_peaks,
+                                              npe))
 
-# dataset = dataset.filter(lambda data, label: tf.logical_and(label >= 0,
-#                                                             label <= NUM_CLASSES))
-# dataset = dataset.shuffle(buffer_size=200)
-# dataset = dataset.batch(BATCH_SIZE).prefetch(buffer_size=tf.data.experimental.
-#                                              AUTOTUNE)
+dataset = dataset.filter(lambda data, label: tf.logical_and(label > 0,
+                                                            label < NUM_CLASSES))
+dataset = dataset.shuffle(buffer_size=200)
+dataset = dataset.batch(BATCH_SIZE).prefetch(buffer_size=tf.data.experimental.
+                                             AUTOTUNE)
 
 if PLOT:
     for i, value in enumerate(isolated_peaks):
@@ -90,15 +90,15 @@ g_loss_values = np.zeros(EPOCHS)
 start = time.time()
 for epoch in range(EPOCHS):
     if (epoch % 100) == 0:
-        print(f"On epoch {epoch}")
+        logging.info(f"On epoch {epoch}")
     d_loss = 0.0
     g_loss = 0.0
 
     i = 0
-    assert balanced_dataset is not None, "Error in setting up dataset"
-    for waveform_batch, label_batch in balanced_dataset:
+    assert dataset is not None, "Error in setting up dataset"
+    for waveform_batch, label_batch in dataset:
         i+=1
-        d_batch_loss, g_batch_loss = gan.train_step(waveform_batch, label_batch,
+        d_batch_loss, g_batch_loss, generator_opt, disc_opt = gan.train_step(waveform_batch, label_batch,
                                                                              LATENT_DIM, NUM_CLASSES,
                                                                              generator, discriminator,
                                                                              generator_opt, disc_opt, BATCH_SIZE)
@@ -113,6 +113,6 @@ end = time.time()
 
 utilities.plot_loss(d_loss_values, g_loss_values, save_location=f"Plots/loss_{EPOCHS}.png")
 
-print(f"Training took {end - start} seconds to complete.")
+logging.info(f"Training took {end - start} seconds to complete.")
 discriminator.save(f"TrainedModels/discriminator_{EPOCHS}.keras")
 generator.save(f"TrainedModels/generator_{EPOCHS}.keras")

@@ -343,7 +343,7 @@ def findCorrectTime(self,cutName = "DT_CorrectTime",cut = None,timeData = "time"
     diff1 = [[x] for x in diff1]
     diff1=ak.fill_none(diff1,-6000.0)
 
-    self.events["maxTimeDTL0L3"] = diff1
+    self.events["DTL0L3"] = diff1
 
     
 

@@ -325,6 +325,8 @@ def findCorrectTime(self,cutName = "DT_CorrectTime",cut = None,timeData = "time"
         
         
     else:
+        
+
         TimeArrayL0 = self.events[timeData][(self.events.layer==0) & (self.events["nPE"] >= NPECut) & (self.events[timeData] > 0)] 
         TimeArrayL1 = self.events[timeData][(self.events.layer==1) & (self.events["nPE"] >= NPECut) & (self.events[timeData] > 0)] - (3.96 * 1)
         TimeArrayL2 = self.events[timeData][(self.events.layer==2) & (self.events["nPE"] >= NPECut) & (self.events[timeData] > 0)] - (3.96 * 2)

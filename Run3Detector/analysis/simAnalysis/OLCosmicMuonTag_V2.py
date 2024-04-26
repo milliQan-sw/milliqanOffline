@@ -4,15 +4,30 @@ branches = ["height","timeFit_module_calibrated","chan","runNumber","column","ev
 
 #use this one after pickup and board matching cut
 def offlinePreProcess(self,cutName = None, cut = None, startTime = 1000, endTime = 1500):
-    removePulse_T = (self.events["timeFit_module_calibrated"] >= startTime) & (self.events["timeFit_module_calibrated"] >=endTime)
+    removePulse_T = (self.events["timeFit_module_calibrated"] >= startTime) & (self.events["timeFit_module_calibrated"] <=endTime)
+    #debug:
+    """
     for branch in branches:
-        if branch == "runNumber" or "event" or "fileNumber" or 'boardsMatched' or "pickupFlag":
-            pass
-        else:
-            self.events[branch] = self.events[branch][removePulse_T]
-    
+        print(f"i am in for loop {branch}")
+        if branch == "runNumber" or "event" or "fileNumber" or "boardsMatched"  or "timeFit_module_calibrated":
+            continue
+        
+        print("reach here")
+        print(branch)
+        self.events[branch] = self.events[branch][removePulse_T]
+    """
+    #for loop doesn't work for unknown reason.
+    self.events["height"] = self.events["height"][removePulse_T]
+    self.events["chan"] = self.events["chan"][removePulse_T]
+    self.events["column"] = self.events["column"][removePulse_T]
+    self.events["pickupFlag"] = self.events["pickupFlag"][removePulse_T]
+    self.events["layer"] = self.events["layer"][removePulse_T]
+    self.events["nPE"] = self.events["nPE"][removePulse_T]
+    self.events["type"] = self.events["type"][removePulse_T]
+    self.events["row"] = self.events["row"][removePulse_T]
+    self.events["area"] = self.events["area"][removePulse_T]
     self.events["timeFit_module_calibrated"] = self.events["timeFit_module_calibrated"][removePulse_T]
-
+    #print(ak.count(
 
 setattr(milliqanCuts, 'offlinePreProcess',offlinePreProcess)  
 
@@ -180,7 +195,7 @@ if __name__ == "__main__":
     NPERatio_C = r.TH1F("NPERatio_C","NPE ratio;max NPE/min NPE;Events",5000,0,5000)
     myplotter.addHistograms(NPERatio_C, 'BarNPERatio', 'Clean_MuonEvent')
     #FIXME:mycuts.offlinePreProcess   this method cause the find correctTime crash 
-    cutflow7 = [mycuts.boardsMatched,mycuts.pickupCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.BarNPERatioCalculate,mycuts.NbarsHitsCount,mycuts.sudo_straight,NpeRatio_adj_tag,NpeRatio_ot_tag,clean_Muon_layer,clean_Muon_adj_layer,cleanMuon_count,clean_Muon_Dt,myplotter.dict['M_NPE_C'],myplotter.dict['M_adj_NPE_C'],myplotter.dict["NuniqueBar_C"],myplotter.dict["NPERatio_C"],myplotter.dict["CorrectTime_OL"],myplotter.dict["CorrectTime_default_OL"],myplotter.dict["NpeRatio_adj"],myplotter.dict["NpeRatio_ot"]]    
+    cutflow7 = [mycuts.offlinePreProcess,mycuts.boardsMatched,mycuts.pickupCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.BarNPERatioCalculate,mycuts.NbarsHitsCount,mycuts.sudo_straight,NpeRatio_adj_tag,NpeRatio_ot_tag,clean_Muon_layer,clean_Muon_adj_layer,cleanMuon_count,clean_Muon_Dt,myplotter.dict['M_NPE_C'],myplotter.dict['M_adj_NPE_C'],myplotter.dict["NuniqueBar_C"],myplotter.dict["NPERatio_C"],myplotter.dict["CorrectTime_OL"],myplotter.dict["CorrectTime_default_OL"],myplotter.dict["NpeRatio_adj"],myplotter.dict["NpeRatio_ot"]]    
     
     cutflow = cutflow7
 

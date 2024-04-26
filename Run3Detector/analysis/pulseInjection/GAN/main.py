@@ -1,5 +1,6 @@
 import time
 import logging
+logging.basicConfig(level = logging.INFO)
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -9,7 +10,6 @@ from preprocessing import WaveformProcessor, fix_imbalanced_data
 import gan
 import utilities
 
-logging.basicConfig(level="INFO")
 # Data Preprocessing Constants
 WAVEFORM_BOUNDS = (1200, 1600)
 SPE_AREA = 500
@@ -40,7 +40,6 @@ peak_heights = np.max(isolated_peaks, axis=1)
 utilities.plot_histogram(peak_heights, 100, 0, 300,
                          write_to_existing_file=True,
                          file_path="height.root")
-
 
 
 npe = np.round(np.divide(np.trapz(isolated_peaks), SPE_AREA))
@@ -75,10 +74,10 @@ if PLOT:
         plt.savefig(f"Plots/isolated_peak_{i}.png")
 
 # # Defining GAN
-discriminator = gan.build_discriminator(embed_dim=128, input_shape=201,
+discriminator = gan.build_discriminator(embed_dim=128, input_shape=isolated_peaks.shape[1],
                                           num_classes=NUM_CLASSES+1, extra_info_shape=2)
 
-generator = gan.build_generator(LATENT_DIM, output_shape=201, embed_dim=16,
+generator = gan.build_generator(LATENT_DIM, output_shape=isolated_peaks.shape[1], embed_dim=16,
                                   num_classes=NUM_CLASSES+1)
 
 # Train Models
@@ -108,8 +107,8 @@ for epoch in range(EPOCHS):
 
     d_loss /= i
     g_loss /= i
-    d_loss_values[epoch](d_loss)
-    g_loss_values[epoch](g_loss)
+    d_loss_values[epoch] = d_loss
+    g_loss_values[epoch] = g_loss
 end = time.time()
 
 utilities.plot_loss(d_loss_values, g_loss_values, save_location=f"Plots/loss_{EPOCHS}.png")

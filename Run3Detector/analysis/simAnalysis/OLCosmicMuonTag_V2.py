@@ -154,8 +154,6 @@ if __name__ == "__main__":
     myplotter.addHistograms(M_adj_NPE_C	, 'nPE', 'clean_Muon_adj_layer')
     NuniqueBar_C = r.TH1F("NuniqueBar_C" , "NuniqueBar;number of unique bar;events",50,0,50)
     myplotter.addHistograms(NuniqueBar_C, 'NBarsHits', 'Clean_MuonEvent')
-    CorrectTime_C =  r.TH1F("CorrectTime_C" , "D_t Max with correction w;D_t Max; Events",6000,-3000,3000)
-    myplotter.addHistograms(CorrectTime_C, 'maxTimeDTL0L3', 'Clean_MuonEvent') 
 
     #nperatio with layer constraint
     NpeRatio_adj = r.TH1F("NpeRatio_adj","NPE ratio;max NPE/min NPE;Events",5000,0,5000)
@@ -168,12 +166,11 @@ if __name__ == "__main__":
     myplotter.addHistograms(NpeRatio_ot, 'NpeRatio_ot_tag', 'Clean_MuonEvent')
 
 
-    #CorrectTime_default is to check what does CorrectTime should look like without the Clean muon cut
-    CorrectTime_default =  r.TH1F("CorrectTime_default" , "D_t Max with correction w;D_t Max; Events",6000,-3000,3000)
-    myplotter.addHistograms(CorrectTime_default, 'maxTimeDTL0L3', 'None_empty_event') 
+    
     #extra histogram for Offline data
     CorrectTime_OL =  r.TH1F("CorrectTime_OL" , "D_t Max with correction w;D_t Max; Events",6000,-3000,3000)
     myplotter.addHistograms(CorrectTime_OL, 'DTL0L3', 'Clean_MuonEvent') 
+    #CorrectTime_default_OL is to check what does CorrectTime should look like without the Clean muon cut
     CorrectTime_default_OL =  r.TH1F("CorrectTime_default_OL" , "D_t Max with correction w;D_t Max; Events",6000,-3000,3000)
     myplotter.addHistograms(CorrectTime_default_OL, 'DTL0L3', 'None_empty_event') 
 
@@ -182,7 +179,7 @@ if __name__ == "__main__":
     NPERatio_C = r.TH1F("NPERatio_C","NPE ratio;max NPE/min NPE;Events",5000,0,5000)
     myplotter.addHistograms(NPERatio_C, 'BarNPERatio', 'Clean_MuonEvent')
     #FIXME:mycuts.offlinePreProcess   this method cause the find correctTime crash 
-    cutflow7 = [mycuts.boardsMatched,mycuts.pickupCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.BarNPERatioCalculate,mycuts.NbarsHitsCount,mycuts.sudo_straight,NpeRatio_adj_tag,NpeRatio_ot_tag,clean_Muon_layer,clean_Muon_adj_layer,cleanMuon_count,clean_Muon_Dt,myplotter.dict['M_NPE_C'],myplotter.dict['M_adj_NPE_C'],myplotter.dict["NuniqueBar_C"],myplotter.dict["NPERatio_C"],myplotter.dict["CorrectTime_C"],myplotter.dict["CorrectTime_default"],myplotter.dict["CorrectTime_OL"],myplotter.dict["CorrectTime_default_OL"],myplotter.dict["NpeRatio_adj"],myplotter.dict["NpeRatio_ot"]]    
+    cutflow7 = [mycuts.boardsMatched,mycuts.pickupCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.BarNPERatioCalculate,mycuts.NbarsHitsCount,mycuts.sudo_straight,NpeRatio_adj_tag,NpeRatio_ot_tag,clean_Muon_layer,clean_Muon_adj_layer,cleanMuon_count,clean_Muon_Dt,myplotter.dict['M_NPE_C'],myplotter.dict['M_adj_NPE_C'],myplotter.dict["NuniqueBar_C"],myplotter.dict["NPERatio_C"],myplotter.dict["CorrectTime_C"],myplotter.dict["CorrectTime_OL"],myplotter.dict["CorrectTime_default_OL"],myplotter.dict["NpeRatio_adj"],myplotter.dict["NpeRatio_ot"]]    
     
     cutflow = cutflow7
 

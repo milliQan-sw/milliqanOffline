@@ -46,7 +46,7 @@ offlineProduction:
     script:  
         - cd Run3Detector
         - . setup.sh
-        - curl -O https://cernbox.cern.ch/s/4b3s7iRaaP2cVnj/download/input.root
+        - curl -O https://cernbox.cern.ch/s/incyVcvuTXPx7m8/download/input.root
         - python3 scripts/runOfflineFactory.py --inputFile input.root --outputFile output.root --exe ./test.exe
 
 analysis:

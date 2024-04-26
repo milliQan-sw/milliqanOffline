@@ -1,10 +1,12 @@
 import time
-import sys
 
 import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
 
+from preprocessing import WaveformProcessor
+import gan
+import utilities
 
 # Data Preprocessing Constants
 WAVEFORM_BOUNDS = (1200, 1600)
@@ -36,9 +38,7 @@ peak_heights = np.max(isolated_peaks, axis=1)
 utilities.plot_histogram(peak_heights, 100, 0, 300,
                          write_to_existing_file=True,
                          file_path="height.root")
-one_npe_fit = TF1("g1", "gaus", 
 
-# Create Height Classification
 
 
 npe = np.round(np.divide(np.trapz(isolated_peaks), SPE_AREA))
@@ -66,18 +66,17 @@ if PLOT:
 
 # # Defining GAN
 discriminator = gan.build_discriminator(embed_dim=128, input_shape=201,
-                                          num_classes=NUM_CLASSES+1)
+                                          num_classes=NUM_CLASSES+1, extra_info_shape=2)
 
 generator = gan.build_generator(LATENT_DIM, output_shape=201, embed_dim=16,
                                   num_classes=NUM_CLASSES+1)
 
-print(generator.summary())
 # Train Models
 generator_opt = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
 disc_opt = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
 
-d_loss_values = []
-g_loss_values = [] 
+d_loss_values = np.zeros(EPOCHS)
+g_loss_values = np.zeros(EPOCHS) 
 
 start = time.time()
 for epoch in range(EPOCHS):
@@ -90,20 +89,20 @@ for epoch in range(EPOCHS):
     assert dataset is not None, "Error in setting up dataset"
     for waveform_batch, label_batch in dataset:
         i+=1
-        generator_opt, disc_opt, d_batch_loss, g_batch_loss = gan.train_step(waveform_batch, label_batch,
-                                                      LATENT_DIM,
-                                                      generator, discriminator,
-                                                      generator_opt, disc_opt)
+        d_batch_loss, g_batch_loss = gan.train_step(waveform_batch, label_batch,
+                                                                             LATENT_DIM, NUM_CLASSES,
+                                                                             generator, discriminator,
+                                                                             generator_opt, disc_opt, BATCH_SIZE)
         d_loss += d_batch_loss
         g_loss += g_batch_loss
 
     d_loss /= i
     g_loss /= i
-    d_loss_values.append(d_loss)
-    g_loss_values.append(g_loss)
+    d_loss_values[epoch](d_loss)
+    g_loss_values[epoch](g_loss)
 end = time.time()
 
-plot_loss(d_loss_values, g_loss_values, save_location=f"Plots/loss_{EPOCHS}.png")
+utilities.plot_loss(d_loss_values, g_loss_values, save_location=f"Plots/loss_{EPOCHS}.png")
 
 print(f"Training took {end - start} seconds to complete.")
 discriminator.save(f"TrainedModels/discriminator_{EPOCHS}.keras")

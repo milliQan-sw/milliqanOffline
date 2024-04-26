@@ -6,6 +6,10 @@ branches = ["height","timeFit_module_calibrated","chan","runNumber","column","ev
 def offlinePreProcess(self,cutName = None, cut = None, startTime = 1000, endTime = 1500):
     removePulse_T = (self.events["timeFit_module_calibrated"] >= startTime) & (self.events["timeFit_module_calibrated"] <=endTime)
     #debug:
+    print(f"before removing the pulse time data is {self.events['timeFit_module_calibrated']}")
+    
+
+
     """
     for branch in branches:
         print(f"i am in for loop {branch}")
@@ -28,6 +32,7 @@ def offlinePreProcess(self,cutName = None, cut = None, startTime = 1000, endTime
     self.events["area"] = self.events["area"][removePulse_T]
     self.events["timeFit_module_calibrated"] = self.events["timeFit_module_calibrated"][removePulse_T]
     #print(ak.count(
+    print(f"after removing the pulse time data is {self.events['timeFit_module_calibrated']}")
 
 setattr(milliqanCuts, 'offlinePreProcess',offlinePreProcess)  
 

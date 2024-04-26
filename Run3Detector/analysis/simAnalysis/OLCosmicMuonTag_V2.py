@@ -193,7 +193,7 @@ if __name__ == "__main__":
     myplotter.addHistograms(CorrectTime_OL, 'DTL0L3', 'Clean_MuonEvent') 
     #CorrectTime_default_OL is to check what does CorrectTime should look like without the Clean muon cut
     CorrectTime_default_OL =  r.TH1F("CorrectTime_default_OL" , "D_t Max with correction w;D_t Max; Events",6000,-3000,3000)
-    myplotter.addHistograms(CorrectTime_default_OL, 'DTL0L3', 'None_empty_event') 
+    myplotter.addHistograms(CorrectTime_default_OL, 'DTL0L3', 'StraghtCosmic') 
 
 
 

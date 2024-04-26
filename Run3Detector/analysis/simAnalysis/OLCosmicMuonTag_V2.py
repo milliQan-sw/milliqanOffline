@@ -155,7 +155,8 @@ if __name__ == "__main__":
     NuniqueBar_C = r.TH1F("NuniqueBar_C" , "NuniqueBar;number of unique bar;events",50,0,50)
     myplotter.addHistograms(NuniqueBar_C, 'NBarsHits', 'Clean_MuonEvent')
 
-    #nperatio with layer constraint
+    #npe ratio with hits from adjacent layers 
+    #
     NpeRatio_adj = r.TH1F("NpeRatio_adj","NPE ratio;max NPE/min NPE;Events",5000,0,5000)
     NpeRatio_adj_tag= mycuts.getCut(mycuts.BarNPERatioCalculateV2, "NpeRatio_adj_tag",cut = "MuonADJLayers") 
     myplotter.addHistograms(NpeRatio_adj, 'NpeRatio_adj_tag', 'Clean_MuonEvent')

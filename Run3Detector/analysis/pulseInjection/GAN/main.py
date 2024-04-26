@@ -1,6 +1,5 @@
 import time
 import logging
-logging.basicConfig(level = logging.INFO)
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -10,6 +9,9 @@ from preprocessing import WaveformProcessor, fix_imbalanced_data
 import gan
 import utilities
 
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
 # Data Preprocessing Constants
 WAVEFORM_BOUNDS = (1200, 1600)
 SPE_AREA = 500
@@ -17,14 +19,14 @@ NS_PER_MEASUREMENT = 2.5
 
 # Model Constants
 LATENT_DIM = 500
-BATCH_SIZE = 64
-EPOCHS = 50
+BATCH_SIZE = 16
+EPOCHS = 200
 EVAL_EPOCH = 2000  # How often you should get output during training
 
-PLOT = False
+PLOT = True
 
 # Preprocess Waveform Data
-INPUT_FILE = ("/home/ryan/Documents/Data/MilliQan/"
+INPUT_FILE = ("/home/ryan/Documents/Research/Data/MilliQanWaveforms/"
               "outputWaveforms_812_2p5V.root")
 processor = WaveformProcessor(INPUT_FILE)
 
@@ -54,7 +56,6 @@ balanced_dataset = fix_imbalanced_data(isolated_peaks, npe,
 #     for features, label in balanced_dataset.take(1):
 #         logging.info("Mean of data labels: {}".format(label.numpy().mean()))
 
-    
 dataset = tf.data.Dataset.from_tensor_slices((isolated_peaks,
                                               npe))
 
@@ -64,8 +65,8 @@ dataset = dataset.shuffle(buffer_size=200)
 dataset = dataset.batch(BATCH_SIZE).prefetch(buffer_size=tf.data.experimental.
                                              AUTOTUNE)
 
-if PLOT:
-    for i, value in enumerate(isolated_peaks):
+if logger.isEnabledFor(logging.DEBUG):
+    for i, value in enumerate(isolated_peaks[:10]):
         print(f"Index: {value}")
         plt.clf()
         plt.plot(value)
@@ -90,14 +91,14 @@ g_loss_values = np.zeros(EPOCHS)
 start = time.time()
 for epoch in range(EPOCHS):
     if (epoch % 100) == 0:
-        logging.info(f"On epoch {epoch}")
+        logger.info(f"On epoch {epoch}")
     d_loss = 0.0
     g_loss = 0.0
 
     i = 0
     assert dataset is not None, "Error in setting up dataset"
     for waveform_batch, label_batch in dataset:
-        i+=1
+        i += 1
         d_batch_loss, g_batch_loss, generator_opt, disc_opt = gan.train_step(waveform_batch, label_batch,
                                                                              LATENT_DIM, NUM_CLASSES,
                                                                              generator, discriminator,
@@ -113,6 +114,6 @@ end = time.time()
 
 utilities.plot_loss(d_loss_values, g_loss_values, save_location=f"Plots/loss_{EPOCHS}.png")
 
-logging.info(f"Training took {end - start} seconds to complete.")
+logger.info(f"Training took {end - start} seconds to complete.")
 discriminator.save(f"TrainedModels/discriminator_{EPOCHS}.keras")
 generator.save(f"TrainedModels/generator_{EPOCHS}.keras")

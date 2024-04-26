@@ -2,9 +2,19 @@ from SimCosmicMuonTag_V2 import *
 
 branches = ["height","timeFit_module_calibrated","chan","runNumber","column","event","fileNumber",'boardsMatched',"pickupFlag","layer","nPE","type","row","area"]
 
+#use this one after pickup and board matching cut
+def offlinePreProcess(self,cutName = None, cut = None, startTime = 1000, endTime = 1500):
+    removePulse_T = (self.events["timeFit_module_calibrated"] >= startTime) & (self.events["timeFit_module_calibrated"] >=endTime)
+    for branch in branches:
+        if branch == "runNumber" or "event" or "fileNumber" or 'boardsMatched' or "pickupFlag":
+            pass
+        else:
+            self.events[branch] = self.events[branch][removePulse_T]
+    
+    self.events["timeFit_module_calibrated"] = self.events["timeFit_module_calibrated"][removePulse_T]
 
 
-
+setattr(milliqanCuts, 'offlinePreProcess',offlinePreProcess)  
 
 if __name__ == "__main__":
 
@@ -172,7 +182,7 @@ if __name__ == "__main__":
     NPERatio_C = r.TH1F("NPERatio_C","NPE ratio;max NPE/min NPE;Events",5000,0,5000)
     myplotter.addHistograms(NPERatio_C, 'BarNPERatio', 'Clean_MuonEvent')
     
-    cutflow7 = [mycuts.boardsMatched,mycuts.pickupCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.BarNPERatioCalculate,mycuts.NbarsHitsCount,mycuts.sudo_straight,NpeRatio_adj_tag,NpeRatio_ot_tag,clean_Muon_layer,clean_Muon_adj_layer,cleanMuon_count,clean_Muon_Dt,mycuts.findCorrectTimeOL,myplotter.dict['M_NPE_C'],myplotter.dict['M_adj_NPE_C'],myplotter.dict["NuniqueBar_C"],myplotter.dict["NPERatio_C"],myplotter.dict["CorrectTime_C"],myplotter.dict["CorrectTime_default"],myplotter.dict["CorrectTime_OL"],myplotter.dict["CorrectTime_default_OL"],myplotter.dict["NpeRatio_adj"],myplotter.dict["NpeRatio_ot"]]    
+    cutflow7 = [mycuts.boardsMatched,mycuts.pickupCut,mycuts.offlinePreProcess,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.BarNPERatioCalculate,mycuts.NbarsHitsCount,mycuts.sudo_straight,NpeRatio_adj_tag,NpeRatio_ot_tag,clean_Muon_layer,clean_Muon_adj_layer,cleanMuon_count,clean_Muon_Dt,mycuts.findCorrectTimeOL,myplotter.dict['M_NPE_C'],myplotter.dict['M_adj_NPE_C'],myplotter.dict["NuniqueBar_C"],myplotter.dict["NPERatio_C"],myplotter.dict["CorrectTime_C"],myplotter.dict["CorrectTime_default"],myplotter.dict["CorrectTime_OL"],myplotter.dict["CorrectTime_default_OL"],myplotter.dict["NpeRatio_adj"],myplotter.dict["NpeRatio_ot"]]    
     
     cutflow = cutflow7
 

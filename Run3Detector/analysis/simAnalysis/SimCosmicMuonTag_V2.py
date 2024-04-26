@@ -621,7 +621,7 @@ def sudo_straight(self, cutName = "StraghtCosmic",NPEcut = 20):
     #check the number of events that can pass the cosmic straight cut
     print(f"cosmic straight : {len(self.events['event'][self.events[cutName]])}")
       
-
+setattr(milliqanCuts, 'BarNPERatioCalculateV2' ,BarNPERatioCalculateV2)
 setattr(milliqanCuts, 'sudo_straight',sudo_straight)    
 
 setattr(milliqanCuts, 'adjLayerData' , adjLayerData)

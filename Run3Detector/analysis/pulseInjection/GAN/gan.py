@@ -27,35 +27,17 @@ def build_generator(latent_dim, output_shape, embed_dim, num_classes):
     return Model([noise, label], output, name="generator")
 
 
-# def build_discriminator(embed_dim, input_shape, num_classes):
-#     waveform = Input((input_shape), name="discriminator_input")
-#     x = Dense(64)(waveform)
-#     x = LeakyReLU(0.2)(x)
-#     x = Flatten()(x)
-
-#     label = Input((1), name="class_label")
-#     label = Embedding(num_classes, embed_dim)(label)
-#     label = Flatten()(label)
-
-#     extra_info = Input((2,), name="extra_info")
-#     extra_info = Normalization()(extra_info)
-
-#     x = Concatenate()([x, label, extra_info])
-#     output = Dense(1)(x)
-
-#     return Model([waveform, label, extra_info], output, name="discriminator")
-# Data input
-def build_discriminator(embed_dim, input_shape, num_classes):
+def build_discriminator(embed_dim, input_shape, num_classes, extra_info_shape):
     data_input = Input(input_shape, name="data_input")
     x = Flatten()(data_input)
 
     # Label input
     label_input = Input((1,), name="label")
-    label_embedding = Embedding(num_classes, 10)(label_input)
+    label_embedding = Embedding(num_classes, embed_dim)(label_input)
     label_embedding = Flatten()(label_embedding)
 
     # Extra info input
-    extra_info_input = Input((2), name="extra_info_input")
+    extra_info_input = Input((extra_info_shape), name="extra_info_input")
     extra_info_flat = Flatten()(extra_info_input)
 
     # Concatenate all inputs

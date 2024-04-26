@@ -1017,9 +1017,11 @@ if __name__ == "__main__":
         M_adj_NPE_C.Write()
         M_NPE_C.Write()
         NPERatio_C.Write()
-        CorrectTime_C.Write()
+        CorrectTime_OL.Write()
+        CorrectTime_default_OL.Write()
+        NpeRatio_adj.Write()
+        NpeRatio_ot.Write()
         NuniqueBar_C.Write()
-        CorrectTime_default.Write()
         f_out.Close()
         
         #"""

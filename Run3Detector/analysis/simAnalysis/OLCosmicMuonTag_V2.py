@@ -173,9 +173,9 @@ if __name__ == "__main__":
     myplotter.addHistograms(CorrectTime_default, 'maxTimeDTL0L3', 'None_empty_event') 
     #extra histogram for Offline data
     CorrectTime_OL =  r.TH1F("CorrectTime_OL" , "D_t Max with correction w;D_t Max; Events",6000,-3000,3000)
-    myplotter.addHistograms(CorrectTime_OL, 'offlineL03', 'Clean_MuonEvent') 
+    myplotter.addHistograms(CorrectTime_OL, 'DTL0L3', 'Clean_MuonEvent') 
     CorrectTime_default_OL =  r.TH1F("CorrectTime_default_OL" , "D_t Max with correction w;D_t Max; Events",6000,-3000,3000)
-    myplotter.addHistograms(CorrectTime_default_OL, 'offlineL03', 'None_empty_event') 
+    myplotter.addHistograms(CorrectTime_default_OL, 'DTL0L3', 'None_empty_event') 
 
 
 

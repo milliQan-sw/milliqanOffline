@@ -11,7 +11,7 @@ plot_waveforms
 
 """
 
-from typing import Dict
+from typing import Dict, Union
 import logging
 
 import numpy.typing as npt
@@ -19,8 +19,37 @@ import numpy as np
 import uproot
 from ROOT import TFile, TH1, TSpectrum
 from scipy.signal import find_peaks
+import tensorflow as tf
 
 logging.basicConfig(level=logging.ERROR)
+
+def fix_imbalanced_data(input_data:npt.ArrayLike,
+                        input_labels:npt.ArrayLike,
+                        majority_label:int,
+                        minority_label:int,
+                        oversample_undersample:str,
+                        shuffle_buffer_size:int = 100000,
+                        batch_size=256
+                        )-> Union[tf.data.Dataset, None]:
+
+    dataset = tf.data.Dataset.from_tensor_slices((input_data,
+                                                  input_labels))
+
+    majority_dataset = dataset.filter(lambda data, label:
+                                      label == majority_label).shuffle(shuffle_buffer_size)
+    minority_dataset = dataset.filter(lambda data, label:
+                                      label == minority_label).shuffle(shuffle_buffer_size)
+    if oversample_undersample == "oversample":
+        resampled_ds = tf.data.Dataset.sample_from_datasets([majority_dataset,
+                                                             minority_dataset],
+                                                            weights=[0.5,0.5])
+        resampled_ds = resampled_ds.batch(batch_size).prefetch(2)
+        return resampled_ds
+    else:
+        logging.warning("Only oversample is setup!")
+        return
+
+                                                            
 
 
 class WaveformProcessor():
@@ -154,7 +183,3 @@ class WaveformProcessor():
             except KeyError:
                 continue
 
-    def get_npe_distribution(self) -> None:
-        """
-        Create a area distribution histogram to determine where the SPE peak is
-        """

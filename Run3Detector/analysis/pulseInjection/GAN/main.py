@@ -1,13 +1,15 @@
 import time
+import logging
 
 import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
 
-from preprocessing import WaveformProcessor
+from preprocessing import WaveformProcessor, fix_imbalanced_data
 import gan
 import utilities
 
+logging.basicConfig(level="INFO")
 # Data Preprocessing Constants
 WAVEFORM_BOUNDS = (1200, 1600)
 SPE_AREA = 500
@@ -22,7 +24,7 @@ EVAL_EPOCH = 2000  # How often you should get output during training
 PLOT = False
 
 # Preprocess Waveform Data
-INPUT_FILE = ("/home/ryan/Documents/Research/Data/MilliQanWaveforms/"
+INPUT_FILE = ("/home/ryan/Documents/Data/MilliQan/"
               "outputWaveforms_812_2p5V.root")
 processor = WaveformProcessor(INPUT_FILE)
 
@@ -46,14 +48,22 @@ npe = np.round(np.divide(np.trapz(isolated_peaks), SPE_AREA))
 NUM_CLASSES = 3
 # num_classes = len(tf.unique(npe)[0])
 
-dataset = tf.data.Dataset.from_tensor_slices((isolated_peaks,
-                                              npe))
+balanced_dataset = fix_imbalanced_data(isolated_peaks, npe,
+                    1, 2, "oversample")
 
-dataset = dataset.filter(lambda data, label: tf.logical_and(label >= 0,
-                                                            label <= NUM_CLASSES))
-dataset = dataset.shuffle(buffer_size=200)
-dataset = dataset.batch(BATCH_SIZE).prefetch(buffer_size=tf.data.experimental.
-                                             AUTOTUNE)
+if balanced_dataset is not None:
+    for features, label in balanced_dataset.take(1):
+        logging.info("Mean of data labels: {}".format(label.numpy().mean()))
+
+    
+# dataset = tf.data.Dataset.from_tensor_slices((isolated_peaks,
+#                                               npe))
+
+# dataset = dataset.filter(lambda data, label: tf.logical_and(label >= 0,
+#                                                             label <= NUM_CLASSES))
+# dataset = dataset.shuffle(buffer_size=200)
+# dataset = dataset.batch(BATCH_SIZE).prefetch(buffer_size=tf.data.experimental.
+#                                              AUTOTUNE)
 
 if PLOT:
     for i, value in enumerate(isolated_peaks):
@@ -86,8 +96,8 @@ for epoch in range(EPOCHS):
     g_loss = 0.0
 
     i = 0
-    assert dataset is not None, "Error in setting up dataset"
-    for waveform_batch, label_batch in dataset:
+    assert balanced_dataset is not None, "Error in setting up dataset"
+    for waveform_batch, label_batch in balanced_dataset:
         i+=1
         d_batch_loss, g_batch_loss = gan.train_step(waveform_batch, label_batch,
                                                                              LATENT_DIM, NUM_CLASSES,

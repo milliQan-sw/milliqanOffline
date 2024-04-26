@@ -265,7 +265,7 @@ def BarNPERatioCalculate(self,cutName = "BarNPERatio",cut = None):
 #NPERatio V2. Layer constraint is applied. The layer constraint need to be converted into pulse based
 def BarNPERatioCalculateV2(self,cutName = "BarNPERatio_P",cut = None):
 
-    self.events[cutName] = ((ak.max(self.events.nPE[cut],axis=1)/ak.min(self.events.nPE[cut],axis=1)))
+    self.events[cutName] = ((ak.max(self.events.nPE[self.events[cut]],axis=1)/ak.min(self.events.nPE[self.events[cut]],axis=1)))
 
 
 

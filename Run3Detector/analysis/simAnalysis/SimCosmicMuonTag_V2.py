@@ -500,6 +500,7 @@ def sudo_straight(self, cutName = "StraghtCosmic",NPEcut = 20):
     lxArr = ak.copy(self.events)
     
     eventList = []
+    DownEventList = [] #save the save event that pass the downward tags.
 
     #FIXME: move this section to initialization?
     for layer in range(4):
@@ -512,8 +513,9 @@ def sudo_straight(self, cutName = "StraghtCosmic",NPEcut = 20):
 
         #case 1: for muon passing straight across the detector and leave the hits along same column but different rows.
         for c in range(4):
-            eventList.append(ak.any(lxArr[f"L{layer}_r0_c{c}"], axis = 1) & ak.any(lxArr[f"L{layer}_r1_c{c}"], axis = 1) & ak.any(lxArr[f"L{layer}_r2_c{c}"], axis = 1) & ak.any(lxArr[f"L{layer}_r3_c{c}"], axis = 1))
-        
+            tag=(ak.any(lxArr[f"L{layer}_r0_c{c}"], axis = 1) & ak.any(lxArr[f"L{layer}_r1_c{c}"], axis = 1) & ak.any(lxArr[f"L{layer}_r2_c{c}"], axis = 1) & ak.any(lxArr[f"L{layer}_r3_c{c}"], axis = 1))
+            eventList.append(tag)
+            DownEventList.append(tag)
 
         #case 2-1: for the  first three hits(count from the layer 3 to layer 0) are at the same column
         for c in range(3):
@@ -551,7 +553,9 @@ def sudo_straight(self, cutName = "StraghtCosmic",NPEcut = 20):
     lay3Muon = []
 
     
-    
+    for index,path in enumerate(DownEventList):
+        if index == 0: SpassArr = path 
+        else: SpassArr = SpassArr | path
 
 
     for index, path in enumerate(eventList):
@@ -620,6 +624,7 @@ def sudo_straight(self, cutName = "StraghtCosmic",NPEcut = 20):
 
     #put the new straight muon tag back to arrays
     self.events[cutName] = passArr
+    self.events["downwardPath"] = SpassArr #straight downward path. Hits 
     #check the number of events that can pass the cosmic straight cut
     print(f"cosmic straight : {len(self.events['event'][self.events[cutName]])}")
       

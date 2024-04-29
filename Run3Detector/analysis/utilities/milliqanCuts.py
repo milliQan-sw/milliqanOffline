@@ -15,7 +15,7 @@ def mqCut(func):
     # inner function can access the outer local  
     # functions like in this case "func"  
     modified_name = func.__name__
-    print("decorator", modified_name)
+    #print("decorator", modified_name)
 
     def inner1(self, *args, **kwargs):  
         #print("Hello, this is before function execution")  
@@ -23,7 +23,7 @@ def mqCut(func):
         # inside the wrapper function.  
         func(self, *args, **kwargs)
         self.cutflowCounter(modified_name)
-        print("decorator2", func, modified_name, func.__name__, func.__qualname__)
+        #print("decorator2", func, modified_name, func.__name__, func.__qualname__)
         #print("This is after function execution")  
     inner1.__name__ = modified_name
     return inner1
@@ -33,18 +33,18 @@ def getCutMod(name=None, *args, **kwargs):
         modified_name = func.__name__
         if name!=None:
             modified_name = name
-        print("modified name:", modified_name)
+        #print("modified name:", modified_name)
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
 
             func(*args, **kwargs)
             myclass.cutflowCounter(modified_name)
-            print("decorator2", func, modified_name, func.__name__, func.__qualname__)
+            #print("decorator2", func, modified_name, func.__name__, func.__qualname__)
             #return result
 
         wrapper.__name__ = modified_name
         return wrapper
-        print("wrapper name", wrapper.__name__)
+        #print("wrapper name", wrapper.__name__)
         #setattr(milliqanCuts, modified_name, inner)
         #print("set attr", modified_name, inner, inner.__name__)
     if name!=None:
@@ -53,12 +53,12 @@ def getCutMod(name=None, *args, **kwargs):
 
 def getCutClass(func):
     modified_name = func.__name__
-    print("decorator", modified_name)
+    #print("decorator", modified_name)
     def wrapper(self, *args, **kwargs):
 
         func(self, *args, **kwargs)
         self.cutflowCounter(modified_name)
-        print("decorator2", func, modified_name, func.__name__, func.__qualname__)
+        #print("decorator2", func, modified_name, func.__name__, func.__qualname__)
         #return result
 
     wrapper.__name__ = modified_name
@@ -192,8 +192,19 @@ class milliqanCuts():
         self.cutflowCounter()
 
     #create mask for pulses passing area cuts
-    def areaCut(self, cutName='areaCut', cut=50000):
-        self.events[cutName] = self.events.area >= int(cut)
+    @getCutClass
+    def areaCut(self, cutName='areaCut', areaCut=50000, cut=False, branches=None):
+        self.events[cutName] = self.events.area >= int(areaCut)
+        if cut:
+            for branch in branches:
+                self.events[branch] = self.events[branch][self.events[cutName]]
+
+    @getCutClass
+    def heightCut(self, cutName='heightCut', heightCut=800, cut=False, branches=None):
+        self.events[cutName] = self.events.height >= int(heightCut)
+        if cut:
+            for branch in branches:
+                self.events[branch] = self.events[branch][self.events[cutName]]
 
     #First pulse in a given channel
     def firstChanPulse(self):
@@ -357,10 +368,9 @@ class milliqanCuts():
 
     def getCut(self, func, name, *args, **kwargs):
         if func.__name__ == 'combineCuts':
-            lam_ = lambda arg: func(name, arg)
+            lam_ = lambda: func(name, *args, **kwargs)
         else:
-            #lam_ = lambda: func(*args, cutName=name, **kwargs)
-            lam_ = lambda *func_args, **func_kwargs: func(*func_args, cutName=name, **func_kwargs)
+            lam_ = lambda: func(*args, cutName=name, **kwargs)
         lam_.__name__ = name
         lam_.__parent__ = func.__name__
         setattr(self, name, lam_)

@@ -32,7 +32,6 @@ class milliqanProcessor():
                             break
                     branch.plot(events)
                 else:
-                    print("Variables:", branch.variables, branch.__name__)
                     if branch.variables in events.fields:
                         branch.plot(events)
                     #elif branch.variables in self.custom_out:
@@ -42,7 +41,7 @@ class milliqanProcessor():
                         print(events.fields)
                         break
             else:
-                print("Name:", branch.__name__, branch, "test")
+                #print("Name:", branch.__name__, branch, "test")
                 branch()
         return events
 
@@ -53,7 +52,7 @@ class milliqanProcessor():
         try:
             return self.customFunction(events)
         except Exception as error:
-            print("Error", error)
+            print("MilliQan Processor: Error", error)
             return
 
     def setCustomFunction(self, fcn):
@@ -76,6 +75,8 @@ class milliqanProcessor():
             num_workers=8,
 
             ):
+
+            print("MilliQan Processor: Processing event {}...".format(total_events))
 
             total_events += len(events)
 

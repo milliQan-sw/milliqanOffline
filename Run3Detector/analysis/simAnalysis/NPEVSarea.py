@@ -14,6 +14,8 @@ if __name__ == "__main__":
     fileNum = str(sys.argv[2])
     filelist =[f'/home/czheng/SimCosmicFlatTree/offlinefile/MilliQan_Run{numRun}.{fileNum}_v34.root:t']
     print(filelist)
+    output = str(sys.argv[3])
+    print(f"output {output}")
 
 
 

@@ -86,38 +86,39 @@ def getTimeDiff(self):
     height331MAX = height331.max() if not height331.empty else 0
 
     times = self.events['timeFit_module_calibrated']['straightLineCut']
-    time000 = times[self.events['height'] == height000MAX]
-    time010 = times[self.events['height'] == height010MAX]
-    time020 = times[self.events['height'] == height020MAX]
-    time030 = times[self.events['height'] == height030MAX]
-    time001 = times[self.events['height'] == height001MAX]
-    time011 = times[self.events['height'] == height011MAX]
-    time021 = times[self.events['height'] == height021MAX]
-    time031 = times[self.events['height'] == height031MAX]
-    time100 = times[self.events['height'] == height100MAX]
-    time110 = times[self.events['height'] == height110MAX]
-    time120 = times[self.events['height'] == height120MAX]
-    time130 = times[self.events['height'] == height130MAX]
-    time101 = times[self.events['height'] == height101MAX]
-    time111 = times[self.events['height'] == height111MAX]
-    time121 = times[self.events['height'] == height121MAX]
-    time131 = times[self.events['height'] == height131MAX]
-    time200 = times[self.events['height'] == height200MAX]
-    time210 = times[self.events['height'] == height210MAX]
-    time220 = times[self.events['height'] == height220MAX]
-    time230 = times[self.events['height'] == height230MAX]
-    time201 = times[self.events['height'] == height201MAX]
-    time211 = times[self.events['height'] == height211MAX]
-    time221 = times[self.events['height'] == height221MAX]
-    time231 = times[self.events['height'] == height231MAX]
-    time300 = times[self.events['height'] == height300MAX]
-    time310 = times[self.events['height'] == height310MAX]
-    time320 = times[self.events['height'] == height320MAX]
-    time330 = times[self.events['height'] == height330MAX]
-    time301 = times[self.events['height'] == height301MAX]
-    time311 = times[self.events['height'] == height311MAX]
-    time321 = times[self.events['height'] == height321MAX]
-    time331 = times[self.events['height'] == height331MAX]
+    time000 = ak.min(times[(self.events['height'] == height000MAX) & (self.events['row'] == 0) & (self.events['column'] == 0) & (self.events['layer'] == 0)])
+    time010 = ak.min(times[(self.events['height'] == height010MAX) & (self.events['row'] == 0) & (self.events['column'] == 1) & (self.events['layer'] == 0)])
+    time020 = ak.min(times[(self.events['height'] == height020MAX) & (self.events['row'] == 0) & (self.events['column'] == 2) & (self.events['layer'] == 0)])
+    time030 = ak.min(times[(self.events['height'] == height030MAX) & (self.events['row'] == 0) & (self.events['column'] == 3) & (self.events['layer'] == 0)])
+    time001 = ak.min(times[(self.events['height'] == height001MAX) & (self.events['row'] == 0) & (self.events['column'] == 0) & (self.events['layer'] == 1)])
+    time011 = ak.min(times[(self.events['height'] == height011MAX) & (self.events['row'] == 0) & (self.events['column'] == 1) & (self.events['layer'] == 1)])
+    time021 = ak.min(times[(self.events['height'] == height021MAX) & (self.events['row'] == 0) & (self.events['column'] == 2) & (self.events['layer'] == 1)])
+    time031 = ak.min(times[(self.events['height'] == height031MAX) & (self.events['row'] == 0) & (self.events['column'] == 3) & (self.events['layer'] == 1)])
+    time100 = ak.min(times[(self.events['height'] == height100MAX) & (self.events['row'] == 1) & (self.events['column'] == 0) & (self.events['layer'] == 0)])
+    time110 = ak.min(times[(self.events['height'] == height110MAX) & (self.events['row'] == 1) & (self.events['column'] == 1) & (self.events['layer'] == 0)])
+    time120 = ak.min(times[(self.events['height'] == height120MAX) & (self.events['row'] == 1) & (self.events['column'] == 2) & (self.events['layer'] == 0)])
+    time130 = ak.min(times[(self.events['height'] == height130MAX) & (self.events['row'] == 1) & (self.events['column'] == 3) & (self.events['layer'] == 0)])
+    time101 = ak.min(times[(self.events['height'] == height101MAX) & (self.events['row'] == 1) & (self.events['column'] == 0) & (self.events['layer'] == 1)])
+    time111 = ak.min(times[(self.events['height'] == height111MAX) & (self.events['row'] == 1) & (self.events['column'] == 1) & (self.events['layer'] == 1)])
+    time121 = ak.min(times[(self.events['height'] == height121MAX) & (self.events['row'] == 1) & (self.events['column'] == 2) & (self.events['layer'] == 1)])
+    time131 = ak.min(times[(self.events['height'] == height131MAX) & (self.events['row'] == 1) & (self.events['column'] == 3) & (self.events['layer'] == 1)])
+    time200 = ak.min(times[(self.events['height'] == height200MAX) & (self.events['row'] == 2) & (self.events['column'] == 0) & (self.events['layer'] == 0)])
+    time200 = ak.min(times[(self.events['height'] == height200MAX) & (self.events['row'] == 2) & (self.events['column'] == 0) & (self.events['layer'] == 0)])
+    time210 = ak.min(times[(self.events['height'] == height210MAX) & (self.events['row'] == 2) & (self.events['column'] == 1) & (self.events['layer'] == 0)])
+    time220 = ak.min(times[(self.events['height'] == height220MAX) & (self.events['row'] == 2) & (self.events['column'] == 2) & (self.events['layer'] == 0)])
+    time230 = ak.min(times[(self.events['height'] == height230MAX) & (self.events['row'] == 2) & (self.events['column'] == 3) & (self.events['layer'] == 0)])
+    time201 = ak.min(times[(self.events['height'] == height201MAX) & (self.events['row'] == 2) & (self.events['column'] == 0) & (self.events['layer'] == 1)])
+    time211 = ak.min(times[(self.events['height'] == height211MAX) & (self.events['row'] == 2) & (self.events['column'] == 1) & (self.events['layer'] == 1)])
+    time221 = ak.min(times[(self.events['height'] == height221MAX) & (self.events['row'] == 2) & (self.events['column'] == 2) & (self.events['layer'] == 1)])
+    time231 = ak.min(times[(self.events['height'] == height231MAX) & (self.events['row'] == 2) & (self.events['column'] == 3) & (self.events['layer'] == 1)])
+    time300 = ak.min(times[(self.events['height'] == height300MAX) & (self.events['row'] == 3) & (self.events['column'] == 0) & (self.events['layer'] == 0)])
+    time310 = ak.min(times[(self.events['height'] == height310MAX) & (self.events['row'] == 3) & (self.events['column'] == 1) & (self.events['layer'] == 0)])
+    time320 = ak.min(times[(self.events['height'] == height320MAX) & (self.events['row'] == 3) & (self.events['column'] == 2) & (self.events['layer'] == 0)])
+    time330 = ak.min(times[(self.events['height'] == height330MAX) & (self.events['row'] == 3) & (self.events['column'] == 3) & (self.events['layer'] == 0)])
+    time301 = ak.min(times[(self.events['height'] == height301MAX) & (self.events['row'] == 3) & (self.events['column'] == 0) & (self.events['layer'] == 1)])
+    time311 = ak.min(times[(self.events['height'] == height311MAX) & (self.events['row'] == 3) & (self.events['column'] == 1) & (self.events['layer'] == 1)])
+    time321 = ak.min(times[(self.events['height'] == height321MAX) & (self.events['row'] == 3) & (self.events['column'] == 2) & (self.events['layer'] == 1)])
+    time331 = ak.min(times[(self.events['height'] == height331MAX) & (self.events['row'] == 3) & (self.events['column'] == 3) & (self.events['layer'] == 1)])
 
     timeDiff00 = time001 - time000
     timeDiff01 = time011 - time010
@@ -136,20 +137,9 @@ def getTimeDiff(self):
     timeDiff32 = time321 - time320
     timeDiff33 = time331 - time330
 
-    self.events['timeDiff02'] = timeDiff02
-    self.events['timeDiff03'] = timeDiff03
-    self.events['timeDiff10'] = timeDiff10
-    self.events['timeDiff11'] = timeDiff11
-    self.events['timeDiff12'] = timeDiff12
-    self.events['timeDiff13'] = timeDiff13
-    self.events['timeDiff20'] = timeDiff20
-    self.events['timeDiff21'] = timeDiff21
-    self.events['timeDiff22'] = timeDiff22
-    self.events['timeDiff23'] = timeDiff23
-    self.events['timeDiff30'] = timeDiff30
-    self.events['timeDiff31'] = timeDiff31
-    self.events['timeDiff32'] = timeDiff32
-    self.events['timeDiff33'] = timeDiff33
+    time_diffs = [timeDiff00, timeDiff01, timeDiff02, timeDiff03, timeDiff10, timeDiff11, timeDiff12, timeDiff13, 
+              timeDiff20, timeDiff21, timeDiff22, timeDiff23, timeDiff30, timeDiff31, timeDiff32, timeDiff33]
+    print(time_diffs)
 
 
 

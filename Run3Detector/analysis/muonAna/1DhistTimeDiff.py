@@ -15,7 +15,7 @@ from milliqanScheduler import *
 from milliqanCuts import *
 from milliqanPlotter import *
 
-#define function to get the time difference between pulses in layer0 and layer1
+#define function to get the 16 time difference between pulses in layer0 and layer1
 def getTimeDiff(self):
 
 
@@ -24,6 +24,12 @@ def getTimeDiff(self):
 
 
     
+
+
+
+
+
+
     """
     TimeArrayL0 = self.events['timeFit_module_calibrated'][self.events['layer'] == 0]
     TimeArrayL1 = self.events['timeFit_module_calibrated'][self.events['layer'] == 1]
@@ -70,7 +76,7 @@ fourLayerCut = mycuts.getCut(mycuts.fourLayerCut, 'fourLayerCut', cut=False)
 myplotter = milliqanPlotter()
 
 #create a 1D root histogram
-h_1d = r.TH1F("h_1d", "1D Histogram", 80, -40, 40)
+h_1d = r.TH1F("h_1d", "Time Difference 1D Hist", 80, -40, 40)
 h_1d.GetXaxis().SetTitle("time difference between layer 0 and 1")
 
 #add root histogram to plotter

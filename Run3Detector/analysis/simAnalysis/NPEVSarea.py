@@ -35,7 +35,7 @@ if __name__ == "__main__":
     
 
 
-    cutflow = [mycuts.offlinePreProcess,mycuts.boardsMatched,mycuts.pickupCut,mycuts.barCut,mycuts.panelCut,myplotter.dict['Bar_pulseNPE'],myplotter.dict['Slab_pulseArea'],myplotter.dict['Bar_NPE_Area']]
+    cutflow = [mycuts.offlinePreProcess,mycuts.boardsMatched,mycuts.pickupCut,mycuts.barCut,mycuts.panelCut,myplotter.dict['Bar_pulseArea'],myplotter.dict['Bar_pulseNPE'],myplotter.dict['Slab_pulseArea'],myplotter.dict['Bar_NPE_Area']]
 
     myschedule = milliQanScheduler(cutflow, mycuts, myplotter)
 

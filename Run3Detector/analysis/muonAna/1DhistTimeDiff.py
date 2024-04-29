@@ -18,7 +18,7 @@ from milliqanPlotter import *
 #define function to get the 16 time difference between pulses in layer0 and layer1
 def getTimeDiff(self):
     print(ak.to_pandas(self.events))
-    heights = self.events['height']['straightLineCut']
+    heights = self.events['height'][self.events['straightLineCut']]
 
     height000 = heights[(self.events['row']==0)&(self.events['column']==0)&(self.events['layer']==0)]
     height010 = heights[(self.events['row']==0)&(self.events['column']==1)&(self.events['layer']==0)]
@@ -86,7 +86,7 @@ def getTimeDiff(self):
     height321MAX = height321.max() if not height321.empty else 0
     height331MAX = height331.max() if not height331.empty else 0
 
-    times = self.events['timeFit_module_calibrated']['straightLineCut']
+    times = self.events['timeFit_module_calibrated'][self.events['straightLineCut']]
     time000 = ak.min(times[(self.events['height'] == height000MAX) & (self.events['row'] == 0) & (self.events['column'] == 0) & (self.events['layer'] == 0)])
     time010 = ak.min(times[(self.events['height'] == height010MAX) & (self.events['row'] == 0) & (self.events['column'] == 1) & (self.events['layer'] == 0)])
     time020 = ak.min(times[(self.events['height'] == height020MAX) & (self.events['row'] == 0) & (self.events['column'] == 2) & (self.events['layer'] == 0)])

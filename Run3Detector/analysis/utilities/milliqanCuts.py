@@ -7,89 +7,30 @@ import functools
 #import copy
 
 # defining a decorator  
-def mqCut(func):  
-    
-    # inner1 is a Wrapper function in   
-    # which the argument is called  
-        
-    # inner function can access the outer local  
-    # functions like in this case "func"  
+def mqCut(func):   
     modified_name = func.__name__
-    #print("decorator", modified_name)
 
-    def inner1(self, *args, **kwargs):  
-        #print("Hello, this is before function execution")  
-        # calling the actual function now  
-        # inside the wrapper function.  
+    def wrapper(self, *args, **kwargs):  
         func(self, *args, **kwargs)
         self.cutflowCounter(modified_name)
-        #print("decorator2", func, modified_name, func.__name__, func.__qualname__)
-        #print("This is after function execution")  
-    inner1.__name__ = modified_name
-    return inner1
+
+    wrapper.__name__ = modified_name
+    return wrapper
 
 #def getCutMod(myclass=None, func=None, name=None, *args, **kwargs):
 def getCutMod(func, myclass, name=None, *args, **kwargs):
     modified_name = func.__name__
     if name is not None:
         modified_name = name
-    print("modified name:", modified_name)
     setattr(milliqanCuts, modified_name, func)
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
 
         func(*args, **kwargs)
         myclass.cutflowCounter(modified_name)
-        #print("decorator2", func, modified_name, func.__name__, func.__qualname__)
-        #return result
 
     wrapper.__name__ = modified_name
     return wrapper
-
-
-'''def getCutMod(newName=None, *dargs, **dkwargs):
-    # Define the decorator with arguments
-    def decorator(myclass, func):
-        print(func.__name__)
-        modified_name = func.__name__
-        if name is not None:
-            modified_name = name
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            func(*args, **kwargs)
-            myclass.cutflowCounter(modified_name)
-
-    print("name", newName)
-    if newName is not None:
-        return decorator(*dargs, **dkwargs)
-    else:
-        return decorator()'''
-
-'''if name is None and not dargs and not dkwargs:
-        print("default")
-        # Define the default decorator without arguments
-        def default_decorator(func):
-            print("Default decorator applied")
-            return func
-        return default_decorator
-    else:
-        print("modified")
-        def decorator_with_args(myclass, func):
-            print(func.__name__)
-            modified_name = func.__name__
-            if name is not None:
-                modified_name = name
-            print("Modified name:", modified_name)
-            setattr(milliqanCuts, modified_name, func)
-
-            @functools.wraps(func)
-            def wrapper(*args, **kwargs):
-                func(*args, **kwargs)  # Include **kwargs here
-                myclass.cutflowCounter(modified_name)
-            
-            wrapper.__name__ = modified_name
-            return wrapper
-        return decorator_with_args'''
 
 class milliqanCuts():
 
@@ -125,7 +66,7 @@ class milliqanCuts():
         self.counter=0
 
     #function to allow multiple masks (cuts) to be combined together and saved as name
-    #@getCutMod
+    @mqCut
     def combineCuts(self, name, cuts):
         for cut in cuts:
             if name in ak.fields(self.events):
@@ -134,12 +75,12 @@ class milliqanCuts():
                 self.events[name] = self.events[cut]
 
     # Dummy cut for use while construcing the cutflow mechanics
-    #@getCutMod
+    @mqCut
     def neverCut(self, cutName=None, cut=False):
         if cut: self.events = self.events
         self.cutflowCounter()
 
-    #@getCutMod
+    @mqCut
     def pickupCut(self, cutName=None, cut=False, tight=False, branches=None):
         if cut and tight:
             for branch in branches:
@@ -149,7 +90,7 @@ class milliqanCuts():
                 if branch == 'boardsMatched': continue
                 self.events[branch] = self.events[branch][~self.events.pickupFlag]
 
-    #@getCutMod
+    @mqCut
     def boardsMatched(self, cutName=None, cut=False, branches=None):
         self.events['boardsMatched'], junk = ak.broadcast_arrays(self.events.boardsMatched, self.events.pickupFlag)
         
@@ -158,7 +99,7 @@ class milliqanCuts():
                 if branch == 'boardsMatched': continue
                 self.events[branch] = self.events[branch][self.events.boardsMatched]
 
-    #@mqCut
+    @mqCut
     def countTriggers(self, cutName='countTriggers', trigNum=2):
         triggers = ak.firsts(self.events['tTrigger'])
         binary_trig = 1 << (trigNum-1)
@@ -167,7 +108,7 @@ class milliqanCuts():
         #print("instances of trigger {}, {}".format(trigNum, thisTrig))
         self.events[cutName] = thisTrig
 
-    #@getCutMod
+    @mqCut
     def firstEvent(self):
         events = ak.firsts(self.events['event'])
         mask = np.zeros(len(events), dtype=bool)
@@ -176,6 +117,7 @@ class milliqanCuts():
         self.events['firsts'] = mask
         #create mask for pulses in each layer
 
+    @mqCut
     def layerCut(self):
         self.events['layer0'] = self.events.layer == 0
         self.events['layer1'] = self.events.layer == 1
@@ -183,6 +125,7 @@ class milliqanCuts():
         self.events['layer3'] = self.events.layer == 3
 
     #event level mask selecting events with hits in 4 layers
+    @mqCut
     def fourLayerCut(self, cutName=None, cut=False):
         self.events['fourLayerCut'] =(ak.any(self.events.layer==0, axis=1) & 
                                       ak.any(self.events.layer==1, axis=1) & 
@@ -191,6 +134,7 @@ class milliqanCuts():
         if cut: self.events = self.events[self.events.fourLayerCut]
         self.cutflowCounter()
 
+    @mqCut
     def oneHitPerLayerCut(self, cutName=None, cut=False, multipleHits=False):
         if multipleHits:
             layer0 = (self.events.layer==0) & (self.events['type']==0)
@@ -220,14 +164,14 @@ class milliqanCuts():
         self.cutflowCounter()
 
     #create mask for pulses passing area cuts
-    #@mqCut
+    @mqCut
     def areaCut(self, cutName='areaCut', areaCut=50000, cut=False, branches=None):
         self.events[cutName] = self.events.area >= int(areaCut)
         if cut:
             for branch in branches:
                 self.events[branch] = self.events[branch][self.events[cutName]]
 
-    #@mqCut
+    @mqCut
     def heightCut(self, cutName='heightCut', heightCut=800, cut=False, branches=None):
         self.events[cutName] = self.events.height >= int(heightCut)
         if cut:
@@ -235,6 +179,7 @@ class milliqanCuts():
                 self.events[branch] = self.events[branch][self.events[cutName]]
 
     #First pulse in a given channel
+    @mqCut
     def firstChanPulse(self):
         self.events['firstChanPulse'] = self.events.ipulse == 0
 
@@ -249,6 +194,7 @@ class milliqanCuts():
 
     #selection events that have hits in a straight path
     #option allowedMove will select events that only move one bar horizontally/vertically
+    @mqCut
     def straightLineCut(self, allowedMove=False):
         
         #allowed combinations of moving
@@ -350,6 +296,7 @@ class milliqanCuts():
 
             self.events['moveOnePath'] = passing
 
+    @mqCut
     def getPulseTimeDiff(self):
         times = self.events['timeFit_module_calibrated'][self.events['eventCuts']]
         passing = self.events['eventCuts'][self.events['eventCuts']]
@@ -364,6 +311,7 @@ class milliqanCuts():
         self.events['timeDiff'] = t_out
 
     #select self.events that have 3 area saturating pulses in a line
+    @mqCut
     def threeAreaSaturatedInLine(self, areaCut=50000):
         #make sure 3 layers have saturating hits
         sat_0 = self.events.area[(self.events.eventCuts) & (self.events.layer0) & (self.events.area >= areaCut) & (self.events.straightPulseCut)]
@@ -375,6 +323,7 @@ class milliqanCuts():
         self.events['four_sat'] = ak.any(sat_0, axis=1) & ak.any(sat_1, axis=1) & ak.any(sat_2, axis=1) & (ak.any(sat_3, axis=1))
         
     #select self.events that have 3 height saturating pulses in a line
+    @mqCut
     def threeHeightSaturatedInLine(self, heightCut=50000):
         #make sure 3 layers have saturating hits
         sat_0 = self.events.area[(self.events.eventCuts) & (self.events.layer0) & (self.events.area >= heightCut) & (self.events.straightPulseCut)]
@@ -385,6 +334,7 @@ class milliqanCuts():
         self.events['three_sat'] = ak.any(sat_0, axis=1) & ak.any(sat_1, axis=1) & ak.any(sat_2, axis=1) | (ak.any(sat_0, axis=1) & ak.any(sat_1, axis=1) & ak.any(sat_3, axis=1)) | (ak.any(sat_0, axis=1) & ak.any(sat_2, axis=1) & ak.any(sat_3, axis=1)) | (ak.any(sat_1, axis=1) & ak.any(sat_2, axis=1) & ak.any(sat_3, axis=1))
         self.events['four_sat'] = ak.any(sat_0, axis=1) & ak.any(sat_1, axis=1) & ak.any(sat_2, axis=1) & (ak.any(sat_3, axis=1))
 
+    @mqCut
     def matchedTDCTimes(self):
         board0 = self.events.v_groupTDC_g0[:, 0]
         board1 = self.events.v_groupTDC_g0[:, 1]
@@ -403,31 +353,3 @@ class milliqanCuts():
         lam_.__parent__ = func.__name__
         setattr(self, name, lam_)
         return lam_
-
-    '''def getCut(self, original_function, new_name, *args, **kwargs):
-        """
-        Function that modifies the behavior of the original function,
-        renames it, and returns the modified function.
-        """
-        # Define the modified function
-        def modified_function(*args, **kwargs):
-            # Call the original function with modified arguments
-            result = original_function(*args, **kwargs)
-            return result
-
-        # Rename the modified function
-        modified_function.__name__ = new_name
-        return modified_function'''
-
-    '''def getCut(self, name, new_name, *args, **kwargs):
-        original_method = getattr(self, name)  # Get the original method
-        modified_method = self.create_modified_method(original_method, new_name, *args, **kwargs)  # Create the modified method
-        setattr(self, new_name, modified_method)  # Set the modified method
-
-    def create_modified_method(self, original_method, new_name, *args, **kwargs):
-        def modified_method(*args, **kwargs):
-            # Do something with new_args or modify the behavior as needed
-            print("Modified method '{}' called with args: {}".format(new_name, args))
-            return original_method(*args, **kwargs)
-        modified_method.__name__ = new_name  # Set the name of the modified method
-        return modified_method'''

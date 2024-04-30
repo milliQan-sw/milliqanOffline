@@ -28,42 +28,68 @@ def mqCut(func):
     inner1.__name__ = modified_name
     return inner1
 
-def getCutMod(name=None, *args, **kwargs):
-    def decorator(myclass, func):
-        modified_name = func.__name__
-        if name!=None:
-            modified_name = name
-        #print("modified name:", modified_name)
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-
-            func(*args, **kwargs)
-            myclass.cutflowCounter(modified_name)
-            #print("decorator2", func, modified_name, func.__name__, func.__qualname__)
-            #return result
-
-        wrapper.__name__ = modified_name
-        return wrapper
-        #print("wrapper name", wrapper.__name__)
-        #setattr(milliqanCuts, modified_name, inner)
-        #print("set attr", modified_name, inner, inner.__name__)
-    if name!=None:
-        decorator.__name__ = str(name)
-    return decorator
-
-def getCutClass(func):
+#def getCutMod(myclass=None, func=None, name=None, *args, **kwargs):
+def getCutMod(func, myclass, name=None, *args, **kwargs):
     modified_name = func.__name__
-    #print("decorator", modified_name)
-    def wrapper(self, *args, **kwargs):
+    if name is not None:
+        modified_name = name
+    print("modified name:", modified_name)
+    setattr(milliqanCuts, modified_name, func)
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
 
-        func(self, *args, **kwargs)
-        self.cutflowCounter(modified_name)
+        func(*args, **kwargs)
+        myclass.cutflowCounter(modified_name)
         #print("decorator2", func, modified_name, func.__name__, func.__qualname__)
         #return result
 
     wrapper.__name__ = modified_name
     return wrapper
 
+
+'''def getCutMod(newName=None, *dargs, **dkwargs):
+    # Define the decorator with arguments
+    def decorator(myclass, func):
+        print(func.__name__)
+        modified_name = func.__name__
+        if name is not None:
+            modified_name = name
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            func(*args, **kwargs)
+            myclass.cutflowCounter(modified_name)
+
+    print("name", newName)
+    if newName is not None:
+        return decorator(*dargs, **dkwargs)
+    else:
+        return decorator()'''
+
+'''if name is None and not dargs and not dkwargs:
+        print("default")
+        # Define the default decorator without arguments
+        def default_decorator(func):
+            print("Default decorator applied")
+            return func
+        return default_decorator
+    else:
+        print("modified")
+        def decorator_with_args(myclass, func):
+            print(func.__name__)
+            modified_name = func.__name__
+            if name is not None:
+                modified_name = name
+            print("Modified name:", modified_name)
+            setattr(milliqanCuts, modified_name, func)
+
+            @functools.wraps(func)
+            def wrapper(*args, **kwargs):
+                func(*args, **kwargs)  # Include **kwargs here
+                myclass.cutflowCounter(modified_name)
+            
+            wrapper.__name__ = modified_name
+            return wrapper
+        return decorator_with_args'''
 
 class milliqanCuts():
 
@@ -76,12 +102,14 @@ class milliqanCuts():
         # Increments events passing each stage of the cutflow
         # Creates each stage during the first pass
         if name in self.cutflow:
-            self.cutflow[name] += len(self.events)
-        #if len(self.cutflow) > self.counter:
-        #    self.cutflow[self.counter]+=len(self.events)
-        # Builds the array without knowledge of the number of cuts
+            remaining = ak.sum(self.events['event'], axis=1) > 0
+            remaining = self.events['event'][remaining]
+            self.cutflow[name] += len(remaining)
+
         else:
-            self.cutflow[name]=len(self.events)
+            remaining = ak.sum(self.events['event'], axis=1) > 0
+            remaining = self.events['event'][remaining]
+            self.cutflow[name]=len(remaining)
         self.counter+=1
 
     def getCutflowCounts(self):
@@ -130,7 +158,7 @@ class milliqanCuts():
                 if branch == 'boardsMatched': continue
                 self.events[branch] = self.events[branch][self.events.boardsMatched]
 
-    @getCutClass
+    #@mqCut
     def countTriggers(self, cutName='countTriggers', trigNum=2):
         triggers = ak.firsts(self.events['tTrigger'])
         binary_trig = 1 << (trigNum-1)
@@ -192,14 +220,14 @@ class milliqanCuts():
         self.cutflowCounter()
 
     #create mask for pulses passing area cuts
-    @getCutClass
+    #@mqCut
     def areaCut(self, cutName='areaCut', areaCut=50000, cut=False, branches=None):
         self.events[cutName] = self.events.area >= int(areaCut)
         if cut:
             for branch in branches:
                 self.events[branch] = self.events[branch][self.events[cutName]]
 
-    @getCutClass
+    #@mqCut
     def heightCut(self, cutName='heightCut', heightCut=800, cut=False, branches=None):
         self.events[cutName] = self.events.height >= int(heightCut)
         if cut:

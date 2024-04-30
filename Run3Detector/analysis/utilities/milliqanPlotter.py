@@ -20,7 +20,6 @@ class milliqanPlot():
                 output = [ak.flatten(y,axis=None) for y in output]
             #2D histograms
             if len(output) == 2 and len(output[0])>0:
-                #print("MilliQan Plotter:", output[0])
                 myarray0 = array('d', output[0])
                 myarray1 = array('d', output[1])
                 self.histogram.FillN(len(myarray0), myarray0, myarray1, np.ones(len(myarray0)))

@@ -205,6 +205,9 @@ if __name__ == "__main__":
 
     #cutflow 8 check the NPE and area distribution with tag downwardPath, StraghtCosmic,Clean_MuonEvent. Please beware panel hit are not being checked. When making the NPE and area plot wtih run 1163, I used first 200 files.
   
+    #new count for downwardPath
+    #DW_Muon_count = mycuts.getCut(mycuts.countEvent,'placeholder', Countobject= 'downwardPath')
+
     #histograms for downwardPath
     Bar_Area_DW = r.TH1F("Bar_Area_DW", "area bar; area ; pulse", 7000, 0, 700000)
     Bar_NPE_DW = r.TH1F("Bar_NPE_DW", "nPE bar; nPE ; pulse", 500, 0, 1000)
@@ -269,7 +272,7 @@ if __name__ == "__main__":
     
 
 
-    cutflow = cutflow7
+    cutflow = cutflow8
 
     myschedule = milliQanScheduler(cutflow, mycuts,myplotter)
 

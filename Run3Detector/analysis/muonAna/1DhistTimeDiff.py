@@ -15,36 +15,37 @@ from milliqanScheduler import *
 from milliqanCuts import *
 from milliqanPlotter import *
 
-#define function to get the 16 time difference between pulses in layer0 and layer1
+#define the function to get the 16 (or less) time difference between pulses in layer0 and layer1
 def getTimeDiff(self):
+    #get the branches after cuts 
     rows = self.events['row'][self.events['straightLineCut']]
     columns = self.events['column'][self.events['straightLineCut']]
     layers = self.events['layer'][self.events['straightLineCut']]
-
     heights = self.events['height'][self.events['straightLineCut']]
     times = self.events['timeFit_module_calibrated'][self.events['straightLineCut']]
 
-    # Initialize dictionary to hold max heights and corresponding min times for each sensor
+    #initialize dictionary to hold max heights and corresponding min times for each sensor
     max_heights = {}
     min_times = {}
 
-    # Iterate over each sensor grid position and layer
+    #iterate over each channel (here we use row/column/layer)
     for row in range(4):
         for column in range(4):
             for layer in range(2):
-                # Generate key for dictionary
+                #generate key for dictionary
                 key = (row, column, layer)
-                
-                # Find the max height at this position and layer
+                #define the mask for current channel
                 condition = (rows == row) & (columns == column) & (layers == layer)
+                #make a nested list
                 nested_list = ak.to_list(heights[condition])
+                #find the max height at current channel by flattening the nested list and then using max()
                 non_empty_values = [item for sublist in nested_list for item in sublist if len(sublist) > 0]
                 max_height = max(non_empty_values, default=None)
 
                 if max_height is not None:
-                    # Store the max height
+                    #store the max height
                     max_heights[key] = max_height
-                    
+                                        
                     # Find the corresponding time for the max height
                     time_condition = condition & (heights == max_height)
                     min_time = ak.min(times[time_condition])

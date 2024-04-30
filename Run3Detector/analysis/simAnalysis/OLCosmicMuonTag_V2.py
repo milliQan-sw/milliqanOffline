@@ -304,7 +304,7 @@ if __name__ == "__main__":
         NpeRatio_adj.Write()
         NpeRatio_ot.Write()
         NuniqueBar_C.Write()
-        """"""
+        """
         Bar_Area_DW.Write()
         Bar_NPE_DW.Write()
         Slab_Area_DW.Write()

@@ -202,6 +202,73 @@ if __name__ == "__main__":
     #FIXME:mycuts.offlinePreProcess   this method cause the find correctTime crash 
     cutflow7 = [mycuts.offlinePreProcess,mycuts.boardsMatched,mycuts.pickupCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.BarNPERatioCalculate,mycuts.NbarsHitsCount,mycuts.sudo_straight,NpeRatio_adj_tag,NpeRatio_ot_tag,clean_Muon_layer,clean_Muon_adj_layer,cleanMuon_count,clean_Muon_Dt,myplotter.dict['M_NPE_C'],myplotter.dict['M_adj_NPE_C'],myplotter.dict["NuniqueBar_C"],myplotter.dict["NPERatio_C"],myplotter.dict["CorrectTime_OL"],myplotter.dict["CorrectTime_default_OL"],myplotter.dict["NpeRatio_adj"],myplotter.dict["NpeRatio_ot"]]    
     
+
+    #cutflow 8 check the NPE and area distribution with tag downwardPath, StraghtCosmic,Clean_MuonEvent. Please beware panel hit are not being checked. When making the NPE and area plot wtih run 1163, I used first 200 files.
+  
+    #histograms for downwardPath
+    Bar_Area_DW = r.TH1F("Bar_Area_DW", "area bar; area ; pulse", 7000, 0, 700000)
+    Bar_NPE_DW = r.TH1F("Bar_NPE_DW", "nPE bar; nPE ; pulse", 500, 0, 1000)
+    Slab_Area_DW = r.TH1F("Slab_Area_DW", "area Slab; area ; pulse", 7000, 0, 700000)
+    #for offline file V34, the npe is the same as pulse area. So I only draw the 2D histogram for bars
+    Bar_NPE_Area_DW = r.TH2F("Bar_NPE_Area_DW", "bar channels; nPE; area",20,0,1000,20, 0, 700000)
+
+    #histograms for StraghtCosmic
+    Bar_Area_St = r.TH1F("Bar_Area_St", "area bar; area ; pulse", 7000, 0, 700000)
+    Bar_NPE_St = r.TH1F("Bar_NPE_St", "nPE bar; nPE ; pulse", 500, 0, 1000)
+    Slab_Area_St = r.TH1F("Slab_Area_St", "area Slab; area ; pulse", 7000, 0, 700000)
+    Bar_NPE_Area_St = r.TH2F("Bar_NPE_Area_St", "bar channels; nPE; area",20,0,1000,20, 0, 700000)
+
+    #histograms for Clean_MuonEvent
+    Bar_Area_CL = r.TH1F("Bar_Area_CL", "area bar; area ; pulse", 7000, 0, 700000)
+    Bar_NPE_CL = r.TH1F("Bar_NPE_CL", "nPE bar; nPE ; pulse", 500, 0, 1000)
+    Slab_Area_CL = r.TH1F("Slab_Area_CL", "area Slab; area ; pulse", 7000, 0, 700000)
+    Bar_NPE_Area_CL = r.TH2F("Bar_NPE_Area_CL", "bar channels; nPE; area",20,0,1000,20, 0, 700000)
+
+
+    #adding combine cuts for downwardPath
+    dw_bar_cf8 = mycuts.getCut(mycuts.combineCuts, 'dw_bar_cf8', ["downwardPath", "barCut"])
+    dw_panel_cf8 = mycuts.getCut(mycuts.combineCuts, 'dw_panel_cf8', ["downwardPath", "panelCut"])
+
+    #adding combine cuts for StraghtCosmic
+    St_bar_cf8 = mycuts.getCut(mycuts.combineCuts, 'St_bar_cf8', ["StraghtCosmic", "barCut"])
+    St_panel_cf8 = mycuts.getCut(mycuts.combineCuts, 'St_panel_cf8', ["StraghtCosmic", "panelCut"])
+
+    #adding combine cuts for Clean_MuonEvent
+    CL_bar_cf8 = mycuts.getCut(mycuts.combineCuts, 'CL_bar_cf8', ["Clean_MuonEvent", "barCut"])
+    CL_panel_cf8 = mycuts.getCut(mycuts.combineCuts, 'CL_panel_cf8', ["Clean_MuonEvent", "panelCut"])
+
+    #add hists with tags
+    myplotter.addHistograms(Bar_Area_DW, 'area', 'dw_bar_cf8')
+    myplotter.addHistograms(Bar_NPE_DW, 'nPE', 'dw_bar_cf8')
+    myplotter.addHistograms(Slab_Area_DW, 'area', 'dw_panel_cf8')
+    myplotter.addHistograms(Bar_NPE_Area_DW, ['nPE','area'], 'dw_bar_cf8')
+
+    myplotter.addHistograms(Bar_Area_St, 'area', 'St_bar_cf8')
+    myplotter.addHistograms(Bar_NPE_St, 'nPE', 'St_bar_cf8')
+    myplotter.addHistograms(Slab_Area_St, 'area', 'St_panel_cf8')
+    myplotter.addHistograms(Bar_NPE_Area_St, ['nPE','area'], 'St_bar_cf8')
+
+
+    myplotter.addHistograms(Bar_Area_CL, 'area', 'CL_bar_cf8')
+    myplotter.addHistograms(Bar_NPE_CL, 'nPE', 'CL_bar_cf8')
+    myplotter.addHistograms(Slab_Area_CL, 'area', 'CL_panel_cf8')
+    myplotter.addHistograms(Bar_NPE_Area_CL, ['nPE','area'], 'CL_bar_cf8')
+
+
+  
+
+
+
+
+
+
+
+
+
+    cutflow8 = [mycuts.offlinePreProcess,mycuts.boardsMatched,mycuts.pickupCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.sudo_straight,dw_bar_cf8,dw_panel_cf8,St_bar_cf8,St_panel_cf8,CL_bar_cf8,CL_panel_cf8,myplotter.dict['Bar_Area_DW'],myplotter.dict['Bar_NPE_DW'],myplotter.dict['Slab_Area_DW'],myplotter.dict['Bar_NPE_Area_DW'],myplotter.dict['Bar_Area_St'],myplotter.dict['Bar_NPE_St'],myplotter.dict['Slab_Area_St'],myplotter.dict['Bar_NPE_Area_St'],myplotter.dict['Bar_Area_CL'],myplotter.dict['Bar_NPE_CL'],myplotter.dict['Slab_Area_CL'],myplotter.dict['Bar_NPE_Area_CL'])
+    
+
+
     cutflow = cutflow7
 
     myschedule = milliQanScheduler(cutflow, mycuts,myplotter)
@@ -226,8 +293,9 @@ if __name__ == "__main__":
         # After the block, stdout will return to its default (usually the console)
         # reset stdout to its original state
         sys.stdout = sys.__stdout__
-        #"""
+
         f_out = r.TFile(f"{outputPath}/Run{numRun}_file{fileNum}_muonStraight.root", "RECREATE")
+        """#histograms for cutflow 7
         M_adj_NPE_C.Write()
         M_NPE_C.Write()
         NPERatio_C.Write()
@@ -236,8 +304,23 @@ if __name__ == "__main__":
         NpeRatio_adj.Write()
         NpeRatio_ot.Write()
         NuniqueBar_C.Write()
+        """"""
+        Bar_Area_DW.Write()
+        Bar_NPE_DW.Write()
+        Slab_Area_DW.Write()
+        Bar_NPE_Area_DW.Write()
+        Bar_Area_St.Write()
+        Bar_NPE_St.Write()
+        Slab_Area_St.Write()
+        Bar_NPE_Area_St.Write()
+        Bar_Area_CL.Write()
+        Bar_NPE_CL.Write()
+        Slab_Area_CL.Write()
+        Bar_NPE_Area_CL.Write()
+
+
         f_out.Close()
-        #"""
+
 
 
 

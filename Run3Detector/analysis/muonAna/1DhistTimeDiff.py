@@ -157,15 +157,6 @@ def getTimeDiff(self):
     time321 = ak.min(times[(heights == height321MAX) & (rows == 3) & (columns == 2) & (layers == 1)])
     time331 = ak.min(times[(heights == height331MAX) & (rows == 3) & (columns == 3) & (layers == 1)])
 
-    print(time000)
-    print(time010)
-    print(time020)
-    print(time030) #empty
-    print(time001)
-    print(time011) #empty
-    print(time021)
-    print(time031)
-
     timeDiff00 = time001 - time000
     timeDiff01 = time011 - time010
     timeDiff02 = time021 - time020

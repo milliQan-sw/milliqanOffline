@@ -47,7 +47,7 @@ def getTimeDiff(self):
                     
                     # Find the corresponding time for the max height
                     time_condition = condition & (heights == max_height)
-                    min_time = ak.min(times[time_condition], default=None)
+                    min_time = ak.min(times[time_condition])
                     
                     # Store the min time
                     min_times[key] = min_time

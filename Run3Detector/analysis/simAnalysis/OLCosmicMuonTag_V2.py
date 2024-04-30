@@ -326,6 +326,7 @@ if __name__ == "__main__":
         Bar_NPE_CL.Write()
         Slab_Area_CL.Write()
         Bar_NPE_Area_CL.Write()
+        NuniqueBar_DW.Write()
 
 
         f_out.Close()

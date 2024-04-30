@@ -15,15 +15,9 @@ from milliqanScheduler import *
 from milliqanCuts import *
 from milliqanPlotter import *
 
-#define function to extract the max value of a nested array
-def max_of_nested_subarrays(nested_array):
-    nested_list = ak.to_list(nested_array)
-    non_empty_values = [item for sublist in nested_list for item in sublist if len(sublist) > 0]
-    return max(non_empty_values, default=0)
-
 #define function to get the 16 time difference between pulses in layer0 and layer1
 def getTimeDiff(self):
-
+    
     rows = self.events['row'][self.events['straightLineCut']]
     columns = self.events['column'][self.events['straightLineCut']]
     layers = self.events['layer'][self.events['straightLineCut']]
@@ -63,6 +57,12 @@ def getTimeDiff(self):
     height311 = heights[(rows == 3) & (columns == 1) & (layers == 1)]
     height321 = heights[(rows == 3) & (columns == 2) & (layers == 1)]
     height331 = heights[(rows == 3) & (columns == 3) & (layers == 1)]
+
+    #define function to extract the max value of a nested array
+    def max_of_nested_subarrays(nested_array):
+        nested_list = ak.to_list(nested_array)
+        non_empty_values = [item for sublist in nested_list for item in sublist if len(sublist) > 0]
+        return max(non_empty_values, default=None)
 
     height000MAX = max_of_nested_subarrays(height000)
     height010MAX = max_of_nested_subarrays(height010)
@@ -130,58 +130,31 @@ def getTimeDiff(self):
     time321 = ak.min(times[(heights == height321MAX) & (rows == 3) & (columns == 2) & (layers == 1)])
     time331 = ak.min(times[(heights == height331MAX) & (rows == 3) & (columns == 3) & (layers == 1)])
 
-    print(time000)
-    print(time010)
-    print(time020)
-    print(time030)
-    print(time001)
-    print(time011)
-    print(time021)
-    print(time031)
-    print(time100)
-    print(time110)
-    print(time120)
-    print(time130)
-    print(time101)
-    print(time111)
-    print(time121)
-    print(time131)
-    print(time200)
-    print(time210)
-    print(time220)
-    print(time230)
-    print(time201)
-    print(time211)
-    print(time221)
-    print(time231)
-    print(time300)
-    print(time310)
-    print(time320)
-    print(time330)
-    print(time301)
-    print(time311)
-    print(time321)
-    print(time331)
+    def safe_subtract(t1, t2):
+        if t1 is None or t2 is None:
+            return None
+        else:
+            return t1 - t2
 
-    timeDiff00 = time001 - time000
-    timeDiff01 = time011 - time010
-    timeDiff02 = time021 - time020
-    timeDiff03 = time031 - time030
-    timeDiff10 = time101 - time100
-    timeDiff11 = time111 - time110
-    timeDiff12 = time121 - time120
-    timeDiff13 = time131 - time130
-    timeDiff20 = time201 - time200
-    timeDiff21 = time211 - time210
-    timeDiff22 = time221 - time220
-    timeDiff23 = time231 - time230
-    timeDiff30 = time301 - time300
-    timeDiff31 = time311 - time310
-    timeDiff32 = time321 - time320
-    timeDiff33 = time331 - time330
+    time_diffs = [
+    safe_subtract(time001, time000),
+    safe_subtract(time011, time010),
+    safe_subtract(time021, time020),
+    safe_subtract(time031, time030),
+    safe_subtract(time101, time100),
+    safe_subtract(time111, time110),
+    safe_subtract(time121, time120),
+    safe_subtract(time131, time130),
+    safe_subtract(time201, time200),
+    safe_subtract(time211, time210),
+    safe_subtract(time221, time220),
+    safe_subtract(time231, time230),
+    safe_subtract(time301, time300),
+    safe_subtract(time311, time310),
+    safe_subtract(time321, time320),
+    safe_subtract(time331, time330)
+    ]
 
-    time_diffs = [timeDiff00, timeDiff01, timeDiff02, timeDiff03, timeDiff10, timeDiff11, timeDiff12, timeDiff13, 
-              timeDiff20, timeDiff21, timeDiff22, timeDiff23, timeDiff30, timeDiff31, timeDiff32, timeDiff33]
     print(time_diffs)
 
 

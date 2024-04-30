@@ -38,9 +38,12 @@ def getTimeDiff(self):
                 condition = (rows == row) & (columns == column) & (layers == layer)
                 #make a nested list
                 nested_list = ak.to_list(heights[condition])
+                print(nested_list)
                 #find the max height at current channel by flattening the nested list and then using max()
                 non_empty_values = [item for sublist in nested_list for item in sublist if len(sublist) > 0]
+                print(non_empty_values)
                 max_height = max(non_empty_values, default=None) 
+                print(max_height)
 
                 if max_height is not None:
                     #store the max height
@@ -63,7 +66,7 @@ def getTimeDiff(self):
                 time_diffs.append(time_diff)
 
     print(time_diffs)
-    
+
     #fit the list data into timeDiff branch to make plots
     self.events['timeDiff'] = time_diffs
 

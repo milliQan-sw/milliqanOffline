@@ -97,38 +97,38 @@ def getTimeDiff(self):
     print(height331)
     print()
 
-    height000MAX = max([ak.max(subarray) for subarray in height000 if len(subarray) > 0], default=0)
-    height010MAX = ak.max(height010) if len(height010) > 0 else 0
-    height020MAX = ak.max(height020) if len(height020) > 0 else 0
-    height030MAX = ak.max(height030) if len(height030) > 0 else 0
-    height001MAX = ak.max(height001) if len(height001) > 0 else 0
-    height011MAX = ak.max(height011) if len(height011) > 0 else 0
-    height021MAX = ak.max(height021) if len(height021) > 0 else 0
-    height031MAX = ak.max(height031) if len(height031) > 0 else 0
-    height100MAX = ak.max(height100) if len(height100) > 0 else 0
-    height110MAX = ak.max(height110) if len(height110) > 0 else 0
-    height120MAX = ak.max(height120) if len(height120) > 0 else 0
-    height130MAX = ak.max(height130) if len(height130) > 0 else 0
-    height101MAX = ak.max(height101) if len(height101) > 0 else 0
-    height111MAX = ak.max(height111) if len(height111) > 0 else 0
-    height121MAX = ak.max(height121) if len(height121) > 0 else 0
-    height131MAX = ak.max(height131) if len(height131) > 0 else 0
-    height200MAX = ak.max(height200) if len(height200) > 0 else 0
-    height210MAX = ak.max(height210) if len(height210) > 0 else 0
-    height220MAX = ak.max(height220) if len(height220) > 0 else 0
-    height230MAX = ak.max(height230) if len(height230) > 0 else 0
-    height201MAX = ak.max(height201) if len(height201) > 0 else 0
-    height211MAX = ak.max(height211) if len(height211) > 0 else 0
-    height221MAX = ak.max(height221) if len(height221) > 0 else 0
-    height231MAX = ak.max(height231) if len(height231) > 0 else 0
-    height300MAX = ak.max(height300) if len(height300) > 0 else 0
-    height310MAX = ak.max(height310) if len(height310) > 0 else 0
-    height320MAX = ak.max(height320) if len(height320) > 0 else 0
-    height330MAX = ak.max(height330) if len(height330) > 0 else 0
-    height301MAX = ak.max(height301) if len(height301) > 0 else 0
-    height311MAX = ak.max(height311) if len(height311) > 0 else 0
-    height321MAX = ak.max(height321) if len(height321) > 0 else 0
-    height331MAX = ak.max(height331) if len(height331) > 0 else 0
+    height000MAX = max_of_nested_subarrays(height000)
+    height010MAX = max_of_nested_subarrays(height010)
+    height020MAX = max_of_nested_subarrays(height020)
+    height030MAX = max_of_nested_subarrays(height030)
+    height001MAX = max_of_nested_subarrays(height001)
+    height011MAX = max_of_nested_subarrays(height011)
+    height021MAX = max_of_nested_subarrays(height021)
+    height031MAX = max_of_nested_subarrays(height031)
+    height100MAX = max_of_nested_subarrays(height100)
+    height110MAX = max_of_nested_subarrays(height110)
+    height120MAX = max_of_nested_subarrays(height120)
+    height130MAX = max_of_nested_subarrays(height130)
+    height101MAX = max_of_nested_subarrays(height101)
+    height111MAX = max_of_nested_subarrays(height111)
+    height121MAX = max_of_nested_subarrays(height121)
+    height131MAX = max_of_nested_subarrays(height131)
+    height200MAX = max_of_nested_subarrays(height200)
+    height210MAX = max_of_nested_subarrays(height210)
+    height220MAX = max_of_nested_subarrays(height220)
+    height230MAX = max_of_nested_subarrays(height230)
+    height201MAX = max_of_nested_subarrays(height201)
+    height211MAX = max_of_nested_subarrays(height211)
+    height221MAX = max_of_nested_subarrays(height221)
+    height231MAX = max_of_nested_subarrays(height231)
+    height300MAX = max_of_nested_subarrays(height300)
+    height310MAX = max_of_nested_subarrays(height310)
+    height320MAX = max_of_nested_subarrays(height320)
+    height330MAX = max_of_nested_subarrays(height330)
+    height301MAX = max_of_nested_subarrays(height301)
+    height311MAX = max_of_nested_subarrays(height311)
+    height321MAX = max_of_nested_subarrays(height321)
+    height331MAX = max_of_nested_subarrays(height331)
 
     print(height000MAX)
     print(height010MAX)
@@ -162,9 +162,6 @@ def getTimeDiff(self):
     print(height311MAX)
     print(height321MAX)
     print(height331MAX)
-    print()
-
-    print(len(height030))
 
     time000 = ak.min(times[(heights == height000MAX) & (rows == 0) & (columns == 0) & (layers == 0)])
     time010 = ak.min(times[(heights == height010MAX) & (rows == 0) & (columns == 1) & (layers == 0)])

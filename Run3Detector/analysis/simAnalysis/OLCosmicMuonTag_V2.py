@@ -287,7 +287,7 @@ if __name__ == "__main__":
 
     #output result to txt file
     else:
-        with open(f'{outputPath}/Run{numRun}_file{fileNum}CutFlow7.txt', 'w') as cfFile:
+        with open(f'{outputPath}/Run{numRun}_file{fileNum}CutFlow8.txt', 'w') as cfFile:
             sys.stdout = cfFile  # Change the standard output to the file
             myiterator.run() #output from counting function will be saved in the txt file above.
 
@@ -297,7 +297,7 @@ if __name__ == "__main__":
         # reset stdout to its original state
         sys.stdout = sys.__stdout__
 
-        f_out = r.TFile(f"{outputPath}/Run{numRun}_file{fileNum}_muonStraight.root", "RECREATE")
+        f_out = r.TFile(f"{outputPath}/Run{numRun}_file{fileNum}_CutFlow8.root", "RECREATE")
         """#histograms for cutflow 7
         M_adj_NPE_C.Write()
         M_NPE_C.Write()

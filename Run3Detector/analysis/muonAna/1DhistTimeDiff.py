@@ -15,6 +15,11 @@ from milliqanScheduler import *
 from milliqanCuts import *
 from milliqanPlotter import *
 
+#define function to extract the max value of a nested array
+def max_of_nested_subarrays(nested_array):
+    non_empty_values = [item for sublist in nested_array for item in sublist if sublist]
+    return max(non_empty_values, default=0)
+
 #define function to get the 16 time difference between pulses in layer0 and layer1
 def getTimeDiff(self):
 
@@ -92,7 +97,7 @@ def getTimeDiff(self):
     print(height331)
     print()
 
-    height000MAX = ak.max(height000) if len(height000) > 0 else 0
+    height000MAX = max([ak.max(subarray) for subarray in height000 if len(subarray) > 0], default=0)
     height010MAX = ak.max(height010) if len(height010) > 0 else 0
     height020MAX = ak.max(height020) if len(height020) > 0 else 0
     height030MAX = ak.max(height030) if len(height030) > 0 else 0

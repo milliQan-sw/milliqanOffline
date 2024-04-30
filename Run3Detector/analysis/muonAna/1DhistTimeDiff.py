@@ -17,143 +17,50 @@ from milliqanPlotter import *
 
 #define function to get the 16 time difference between pulses in layer0 and layer1
 def getTimeDiff(self):
-    
     rows = self.events['row'][self.events['straightLineCut']]
     columns = self.events['column'][self.events['straightLineCut']]
     layers = self.events['layer'][self.events['straightLineCut']]
 
     heights = self.events['height'][self.events['straightLineCut']]
     times = self.events['timeFit_module_calibrated'][self.events['straightLineCut']]
-    
-    height000 = heights[(rows == 0) & (columns == 0) & (layers == 0)]
-    height010 = heights[(rows == 0) & (columns == 1) & (layers == 0)]
-    height020 = heights[(rows == 0) & (columns == 2) & (layers == 0)]
-    height030 = heights[(rows == 0) & (columns == 3) & (layers == 0)]
-    height001 = heights[(rows == 0) & (columns == 0) & (layers == 1)]
-    height011 = heights[(rows == 0) & (columns == 1) & (layers == 1)]
-    height021 = heights[(rows == 0) & (columns == 2) & (layers == 1)]
-    height031 = heights[(rows == 0) & (columns == 3) & (layers == 1)]
-    height100 = heights[(rows == 1) & (columns == 0) & (layers == 0)]
-    height110 = heights[(rows == 1) & (columns == 1) & (layers == 0)]
-    height120 = heights[(rows == 1) & (columns == 2) & (layers == 0)]
-    height130 = heights[(rows == 1) & (columns == 3) & (layers == 0)]
-    height101 = heights[(rows == 1) & (columns == 0) & (layers == 1)]
-    height111 = heights[(rows == 1) & (columns == 1) & (layers == 1)]
-    height121 = heights[(rows == 1) & (columns == 2) & (layers == 1)]
-    height131 = heights[(rows == 1) & (columns == 3) & (layers == 1)]
-    height200 = heights[(rows == 2) & (columns == 0) & (layers == 0)]
-    height210 = heights[(rows == 2) & (columns == 1) & (layers == 0)]
-    height220 = heights[(rows == 2) & (columns == 2) & (layers == 0)]
-    height230 = heights[(rows == 2) & (columns == 3) & (layers == 0)]
-    height201 = heights[(rows == 2) & (columns == 0) & (layers == 1)]
-    height211 = heights[(rows == 2) & (columns == 1) & (layers == 1)]
-    height221 = heights[(rows == 2) & (columns == 2) & (layers == 1)]
-    height231 = heights[(rows == 2) & (columns == 3) & (layers == 1)]
-    height300 = heights[(rows == 3) & (columns == 0) & (layers == 0)]
-    height310 = heights[(rows == 3) & (columns == 1) & (layers == 0)]
-    height320 = heights[(rows == 3) & (columns == 2) & (layers == 0)]
-    height330 = heights[(rows == 3) & (columns == 3) & (layers == 0)]
-    height301 = heights[(rows == 3) & (columns == 0) & (layers == 1)]
-    height311 = heights[(rows == 3) & (columns == 1) & (layers == 1)]
-    height321 = heights[(rows == 3) & (columns == 2) & (layers == 1)]
-    height331 = heights[(rows == 3) & (columns == 3) & (layers == 1)]
 
-    #define function to extract the max value of a nested array
-    def max_of_nested_subarrays(nested_array):
-        nested_list = ak.to_list(nested_array)
-        non_empty_values = [item for sublist in nested_list for item in sublist if len(sublist) > 0]
-        return max(non_empty_values, default=None)
+    # Initialize dictionary to hold max heights and corresponding min times for each sensor
+    max_heights = {}
+    min_times = {}
 
-    height000MAX = max_of_nested_subarrays(height000)
-    height010MAX = max_of_nested_subarrays(height010)
-    height020MAX = max_of_nested_subarrays(height020)
-    height030MAX = max_of_nested_subarrays(height030)
-    height001MAX = max_of_nested_subarrays(height001)
-    height011MAX = max_of_nested_subarrays(height011)
-    height021MAX = max_of_nested_subarrays(height021)
-    height031MAX = max_of_nested_subarrays(height031)
-    height100MAX = max_of_nested_subarrays(height100)
-    height110MAX = max_of_nested_subarrays(height110)
-    height120MAX = max_of_nested_subarrays(height120)
-    height130MAX = max_of_nested_subarrays(height130)
-    height101MAX = max_of_nested_subarrays(height101)
-    height111MAX = max_of_nested_subarrays(height111)
-    height121MAX = max_of_nested_subarrays(height121)
-    height131MAX = max_of_nested_subarrays(height131)
-    height200MAX = max_of_nested_subarrays(height200)
-    height210MAX = max_of_nested_subarrays(height210)
-    height220MAX = max_of_nested_subarrays(height220)
-    height230MAX = max_of_nested_subarrays(height230)
-    height201MAX = max_of_nested_subarrays(height201)
-    height211MAX = max_of_nested_subarrays(height211)
-    height221MAX = max_of_nested_subarrays(height221)
-    height231MAX = max_of_nested_subarrays(height231)
-    height300MAX = max_of_nested_subarrays(height300)
-    height310MAX = max_of_nested_subarrays(height310)
-    height320MAX = max_of_nested_subarrays(height320)
-    height330MAX = max_of_nested_subarrays(height330)
-    height301MAX = max_of_nested_subarrays(height301)
-    height311MAX = max_of_nested_subarrays(height311)
-    height321MAX = max_of_nested_subarrays(height321)
-    height331MAX = max_of_nested_subarrays(height331)
+    # Iterate over each sensor grid position and layer
+    for row in range(4):
+        for column in range(4):
+            for layer in range(2):
+                # Generate key for dictionary
+                key = (row, column, layer)
+                
+                # Find the max height at this position and layer
+                condition = (rows == row) & (columns == column) & (layers == layer)
+                nested_list = ak.to_list(heights[condition])
+                non_empty_values = [item for sublist in nested_list for item in sublist if len(sublist) > 0]
+                max_height = max(non_empty_values, default=None)
 
-    time000 = ak.min(times[(heights == height000MAX) & (rows == 0) & (columns == 0) & (layers == 0)])
-    time010 = ak.min(times[(heights == height010MAX) & (rows == 0) & (columns == 1) & (layers == 0)])
-    time020 = ak.min(times[(heights == height020MAX) & (rows == 0) & (columns == 2) & (layers == 0)])
-    time030 = ak.min(times[(heights == height030MAX) & (rows == 0) & (columns == 3) & (layers == 0)])
-    time001 = ak.min(times[(heights == height001MAX) & (rows == 0) & (columns == 0) & (layers == 1)])
-    time011 = ak.min(times[(heights == height011MAX) & (rows == 0) & (columns == 1) & (layers == 1)])
-    time021 = ak.min(times[(heights == height021MAX) & (rows == 0) & (columns == 2) & (layers == 1)])
-    time031 = ak.min(times[(heights == height031MAX) & (rows == 0) & (columns == 3) & (layers == 1)])
-    time100 = ak.min(times[(heights == height100MAX) & (rows == 1) & (columns == 0) & (layers == 0)])
-    time110 = ak.min(times[(heights == height110MAX) & (rows == 1) & (columns == 1) & (layers == 0)])
-    time120 = ak.min(times[(heights == height120MAX) & (rows == 1) & (columns == 2) & (layers == 0)])
-    time130 = ak.min(times[(heights == height130MAX) & (rows == 1) & (columns == 3) & (layers == 0)])
-    time101 = ak.min(times[(heights == height101MAX) & (rows == 1) & (columns == 0) & (layers == 1)])
-    time111 = ak.min(times[(heights == height111MAX) & (rows == 1) & (columns == 1) & (layers == 1)])
-    time121 = ak.min(times[(heights == height121MAX) & (rows == 1) & (columns == 2) & (layers == 1)])
-    time131 = ak.min(times[(heights == height131MAX) & (rows == 1) & (columns == 3) & (layers == 1)])
-    time200 = ak.min(times[(heights == height200MAX) & (rows == 2) & (columns == 0) & (layers == 0)])
-    time210 = ak.min(times[(heights == height210MAX) & (rows == 2) & (columns == 1) & (layers == 0)])
-    time220 = ak.min(times[(heights == height220MAX) & (rows == 2) & (columns == 2) & (layers == 0)])
-    time230 = ak.min(times[(heights == height230MAX) & (rows == 2) & (columns == 3) & (layers == 0)])
-    time201 = ak.min(times[(heights == height201MAX) & (rows == 2) & (columns == 0) & (layers == 1)])
-    time211 = ak.min(times[(heights == height211MAX) & (rows == 2) & (columns == 1) & (layers == 1)])
-    time221 = ak.min(times[(heights == height221MAX) & (rows == 2) & (columns == 2) & (layers == 1)])
-    time231 = ak.min(times[(heights == height231MAX) & (rows == 2) & (columns == 3) & (layers == 1)])
-    time300 = ak.min(times[(heights == height300MAX) & (rows == 3) & (columns == 0) & (layers == 0)])
-    time310 = ak.min(times[(heights == height310MAX) & (rows == 3) & (columns == 1) & (layers == 0)])
-    time320 = ak.min(times[(heights == height320MAX) & (rows == 3) & (columns == 2) & (layers == 0)])
-    time330 = ak.min(times[(heights == height330MAX) & (rows == 3) & (columns == 3) & (layers == 0)])
-    time301 = ak.min(times[(heights == height301MAX) & (rows == 3) & (columns == 0) & (layers == 1)])
-    time311 = ak.min(times[(heights == height311MAX) & (rows == 3) & (columns == 1) & (layers == 1)])
-    time321 = ak.min(times[(heights == height321MAX) & (rows == 3) & (columns == 2) & (layers == 1)])
-    time331 = ak.min(times[(heights == height331MAX) & (rows == 3) & (columns == 3) & (layers == 1)])
+                if max_height is not None:
+                    # Store the max height
+                    max_heights[key] = max_height
+                    
+                    # Find the corresponding time for the max height
+                    time_condition = condition & (heights == max_height)
+                    min_time = ak.min(times[time_condition])
+                    
+                    # Store the min time
+                    min_times[key] = min_time
 
-    def safe_subtract(t1, t2):
-        if t1 is None or t2 is None:
-            return None
-        else:
-            return t1 - t2
-
-    time_diffs = [
-    safe_subtract(time001, time000),
-    safe_subtract(time011, time010),
-    safe_subtract(time021, time020),
-    safe_subtract(time031, time030),
-    safe_subtract(time101, time100),
-    safe_subtract(time111, time110),
-    safe_subtract(time121, time120),
-    safe_subtract(time131, time130),
-    safe_subtract(time201, time200),
-    safe_subtract(time211, time210),
-    safe_subtract(time221, time220),
-    safe_subtract(time231, time230),
-    safe_subtract(time301, time300),
-    safe_subtract(time311, time310),
-    safe_subtract(time321, time320),
-    safe_subtract(time331, time330)
-    ]
+    # Calculate time differences between layer 1 and layer 0 for each sensor position
+    time_diffs = []
+    for row in range(4):
+        for column in range(4):
+            key0 = (row, column, 0)
+            key1 = (row, column, 1)
+            if key0 in min_times and key1 in min_times:
+                time_diff = min_times[key1] - min_times[key0] if min_times[key1] is not None and min_times[key0] is not None else None
+                time_diffs.append(time_diff)
 
     print(time_diffs)
 

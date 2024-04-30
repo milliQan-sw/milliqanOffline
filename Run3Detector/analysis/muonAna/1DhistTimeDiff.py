@@ -28,7 +28,7 @@ def getTimeDiff(self):
     max_heights = {}
     min_times = {}
 
-    #iterate over each channel (here we use row/column/layer)
+    #iterate over each channel (here using row/column/layer)
     for row in range(4):
         for column in range(4):
             for layer in range(2):
@@ -40,30 +40,32 @@ def getTimeDiff(self):
                 nested_list = ak.to_list(heights[condition])
                 #find the max height at current channel by flattening the nested list and then using max()
                 non_empty_values = [item for sublist in nested_list for item in sublist if len(sublist) > 0]
-                max_height = max(non_empty_values, default=None)
+                max_height = max(non_empty_values, default=None) 
 
                 if max_height is not None:
                     #store the max height
-                    max_heights[key] = max_height
-                                        
-                    # Find the corresponding time for the max height
+                    max_heights[key] = max_height                                        
+                    #find the corresponding time for the max height (here choosing the min/max time to avoid multiple entries)
                     time_condition = condition & (heights == max_height)
-                    min_time = ak.min(times[time_condition])
-                    
-                    # Store the min time
+                    min_time = ak.min(times[time_condition])                    
+                    #store the min time
                     min_times[key] = min_time
 
-    # Calculate time differences between layer 1 and layer 0 for each sensor position
+    #calculate time differences between layer 1 and layer 0 for each channel
     time_diffs = []
     for row in range(4):
         for column in range(4):
             key0 = (row, column, 0)
             key1 = (row, column, 1)
             if key0 in min_times and key1 in min_times:
+                #here deleting time differences in channels that have no pulses
                 time_diff = min_times[key1] - min_times[key0] if min_times[key1] is not None and min_times[key0] is not None else None
                 time_diffs.append(time_diff)
 
     print(time_diffs)
+    
+    #fit the list data into timeDiff branch to make plots
+    self.events['timeDiff'] = time_diffs
 
 #add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)

@@ -128,6 +128,10 @@ def getTimeDiff(self):
     print(time010)
     print(time020)
     print(time030)
+    print(time001)
+    print(time011)
+    print(time021)
+    print(time031)
 
     timeDiff00 = time001 - time000
     timeDiff01 = time011 - time010

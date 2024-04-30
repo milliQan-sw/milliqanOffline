@@ -58,38 +58,38 @@ def getTimeDiff(self):
     height321 = heights[(rows == 3) & (columns == 2) & (layers == 1)]
     height331 = heights[(rows == 3) & (columns == 3) & (layers == 1)]
 
-    height000MAX = max(height000) if len(height000) > 0 else 0
-    height010MAX = max(height010) if len(height010) > 0 else 0
-    height020MAX = max(height020) if len(height020) > 0 else 0
-    height030MAX = max(height030) if len(height030) > 0 else 0
-    height001MAX = max(height001) if len(height001) > 0 else 0
-    height011MAX = max(height011) if len(height011) > 0 else 0
-    height021MAX = max(height021) if len(height021) > 0 else 0
-    height031MAX = max(height031) if len(height031) > 0 else 0
-    height100MAX = max(height100) if len(height100) > 0 else 0
-    height110MAX = max(height110) if len(height110) > 0 else 0
-    height120MAX = max(height120) if len(height120) > 0 else 0
-    height130MAX = max(height130) if len(height130) > 0 else 0
-    height101MAX = max(height101) if len(height101) > 0 else 0
-    height111MAX = max(height111) if len(height111) > 0 else 0
-    height121MAX = max(height121) if len(height121) > 0 else 0
-    height131MAX = max(height131) if len(height131) > 0 else 0
-    height200MAX = max(height200) if len(height200) > 0 else 0
-    height210MAX = max(height210) if len(height210) > 0 else 0
-    height220MAX = max(height220) if len(height220) > 0 else 0
-    height230MAX = max(height230) if len(height230) > 0 else 0
-    height201MAX = max(height201) if len(height201) > 0 else 0
-    height211MAX = max(height211) if len(height211) > 0 else 0
-    height221MAX = max(height221) if len(height221) > 0 else 0
-    height231MAX = max(height231) if len(height231) > 0 else 0
-    height300MAX = max(height300) if len(height300) > 0 else 0
-    height310MAX = max(height310) if len(height310) > 0 else 0
-    height320MAX = max(height320) if len(height320) > 0 else 0
-    height330MAX = max(height330) if len(height330) > 0 else 0
-    height301MAX = max(height301) if len(height301) > 0 else 0
-    height311MAX = max(height311) if len(height311) > 0 else 0
-    height321MAX = max(height321) if len(height321) > 0 else 0
-    height331MAX = max(height331) if len(height331) > 0 else 0
+    height000MAX = ak.max(height000) if len(height000) > 0 else 0
+    height010MAX = ak.max(height010) if len(height010) > 0 else 0
+    height020MAX = ak.max(height020) if len(height020) > 0 else 0
+    height030MAX = ak.max(height030) if len(height030) > 0 else 0
+    height001MAX = ak.max(height001) if len(height001) > 0 else 0
+    height011MAX = ak.max(height011) if len(height011) > 0 else 0
+    height021MAX = ak.max(height021) if len(height021) > 0 else 0
+    height031MAX = ak.max(height031) if len(height031) > 0 else 0
+    height100MAX = ak.max(height100) if len(height100) > 0 else 0
+    height110MAX = ak.max(height110) if len(height110) > 0 else 0
+    height120MAX = ak.max(height120) if len(height120) > 0 else 0
+    height130MAX = ak.max(height130) if len(height130) > 0 else 0
+    height101MAX = ak.max(height101) if len(height101) > 0 else 0
+    height111MAX = ak.max(height111) if len(height111) > 0 else 0
+    height121MAX = ak.max(height121) if len(height121) > 0 else 0
+    height131MAX = ak.max(height131) if len(height131) > 0 else 0
+    height200MAX = ak.max(height200) if len(height200) > 0 else 0
+    height210MAX = ak.max(height210) if len(height210) > 0 else 0
+    height220MAX = ak.max(height220) if len(height220) > 0 else 0
+    height230MAX = ak.max(height230) if len(height230) > 0 else 0
+    height201MAX = ak.max(height201) if len(height201) > 0 else 0
+    height211MAX = ak.max(height211) if len(height211) > 0 else 0
+    height221MAX = ak.max(height221) if len(height221) > 0 else 0
+    height231MAX = ak.max(height231) if len(height231) > 0 else 0
+    height300MAX = ak.max(height300) if len(height300) > 0 else 0
+    height310MAX = ak.max(height310) if len(height310) > 0 else 0
+    height320MAX = ak.max(height320) if len(height320) > 0 else 0
+    height330MAX = ak.max(height330) if len(height330) > 0 else 0
+    height301MAX = ak.max(height301) if len(height301) > 0 else 0
+    height311MAX = ak.max(height311) if len(height311) > 0 else 0
+    height321MAX = ak.max(height321) if len(height321) > 0 else 0
+    height331MAX = ak.max(height331) if len(height331) > 0 else 0
 
     time000 = ak.min(times[(heights == height000MAX) & (rows == 0) & (columns == 0) & (layers == 0)])
     time010 = ak.min(times[(heights == height010MAX) & (rows == 0) & (columns == 1) & (layers == 0)])

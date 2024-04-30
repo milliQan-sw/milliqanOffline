@@ -17,7 +17,10 @@ from milliqanPlotter import *
 
 #define function to extract the max value of a nested array
 def max_of_nested_subarrays(nested_array):
-    non_empty_values = [item for sublist in nested_array for item in sublist if sublist]
+    # Use ak.to_list to convert awkward arrays to regular lists for processing
+    nested_list = ak.to_list(nested_array)
+    # Flatten and filter non-empty sublists
+    non_empty_values = [item for sublist in nested_list for item in sublist if len(sublist) > 0]
     return max(non_empty_values, default=0)
 
 #define function to get the 16 time difference between pulses in layer0 and layer1

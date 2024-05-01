@@ -34,7 +34,7 @@ if __name__ == "__main__":
     myplotter.addHistograms(TimeDistribution, 'timeFit_module_calibrated', 'areaTag')
     myplotter.addHistograms(AreaDistribution, 'area', 'timingWindow')
 
-    cutflow = [mycuts.boardsMatched,mycuts.pickupCut,mycuts.barCut,mycuts.T_Tag,mycuts.area_Tag,myplotter.dict['TimeDistribution'],myplotter.dict['AreaDistribution'])
+    cutflow = [mycuts.boardsMatched,mycuts.pickupCut,mycuts.barCut,mycuts.T_Tag,mycuts.area_Tag,myplotter.dict['TimeDistribution'],myplotter.dict['AreaDistribution']]
     myschedule = milliQanScheduler(cutflow, mycuts, myplotter)
 
     myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts, myplotter)

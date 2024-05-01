@@ -24,7 +24,7 @@ def getTimeDiff(self):
     heights = self.events['height'][self.events['straightLineCut']]
     times = self.events['timeFit_module_calibrated'][self.events['straightLineCut']]
 
-    #initialize dictionary to hold max heights and corresponding min times for each sensor
+    #initialize dictionary to hold max heights and corresponding times for each sensor for each event
     max_heights = {}
     min_times = {}
 
@@ -34,33 +34,33 @@ def getTimeDiff(self):
             for layer in range(2):
                 #generate key for dictionary
                 key = (row, column, layer)
-                #define the mask for current channel
+                #define the mask for the current channel
                 condition = (rows == row) & (columns == column) & (layers == layer)
-                #make a nested list
-                nested_list = ak.to_list(heights[condition])
-                #find the max height at current channel
-                flattened_non_empty_values = [item for sublist in nested_list for item in sublist if len(sublist) > 0]
-                max_height = max(flattened_non_empty_values, default=None)
+                #get sublist heights under the condition
+                channel_heights = heights[condition]
+                channel_times = times[condition]
 
-                if max_height is not None:
-                    #store the max height
-                    max_heights[key] = max_height                                        
-                    #find the corresponding time for the max height (here choosing the min/max time to avoid multiple entries)
-                    time_condition = condition & (heights == max_height)
-                    min_time = ak.min(times[time_condition])                    
-                    #store the min time
-                    min_times[key] = min_time
+                #find the max height of each sublist and its corresponding time
+                max_heights[key] = ak.max(channel_heights, axis=-1, mask_identity=True)
+                min_times[key] = ak.zeros_like(max_heights[key])  # Initialize with zeros of the same shape
 
-    #calculate time differences between layer 1 and layer 0 for each channel
+                #loop through each sublist to find the corresponding min time for each max height
+                for i, sublist in enumerate(channel_heights):
+                    if len(sublist) > 0:
+                        max_height = max(sublist)
+                        max_index = sublist.index(max_height)
+                        min_times[key][i] = channel_times[i][max_index]
+
+    #calculate time differences between layer 1 and layer 0 for each channel for each event
     time_diffs = []
     for row in range(4):
         for column in range(4):
             key0 = (row, column, 0)
             key1 = (row, column, 1)
             if key0 in min_times and key1 in min_times:
-                #here deleting time differences in channels that have no pulses
-                time_diff = min_times[key1] - min_times[key0] if min_times[key1] is not None and min_times[key0] is not None else None
-                time_diffs.append(time_diff)
+                #compute time difference for each event in the channel
+                channel_diffs = min_times[key1] - min_times[key0]
+                time_diffs.append(channel_diffs)
 
     print(time_diffs)
 

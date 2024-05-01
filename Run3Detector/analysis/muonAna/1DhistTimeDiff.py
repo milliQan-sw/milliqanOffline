@@ -40,6 +40,7 @@ def getTimeDiff(self):
                 channel_heights = heights[locationMask]
                 channel_times = times[locationMask]
                 print(channel_heights)
+                print()
                 print(channel_times)
 
                 # find the max height of each sublist and its corresponding time

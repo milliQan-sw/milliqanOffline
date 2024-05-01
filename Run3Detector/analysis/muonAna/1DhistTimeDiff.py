@@ -44,9 +44,9 @@ def getTimeDiff(self):
                 if ak.any(ak.num(channel_heights) > 0):  # check if there's any non-empty event (sublist)
                     # store the list of max heights in each event into the dictionary
                     max_heights[key] = ak.max(channel_heights, axis=-1)
-                    print(max_heights[key])
                     # boolean mask for where each sublist achieves its max height
-                    max_mask = channel_heights == ak.broadcast_arrays(max_heights[key], channel_heights)[0]
+                    max_mask = (channel_heights == ak.broadcast_arrays(max_heights[key], channel_heights)[0])
+                    print(ak.broadcast_arrays(max_heights[key], channel_heights)[0])
                     # use the mask to select the minimum times corresponding to the max heights
                     masked_times = ak.mask(channel_times, max_mask)
                     # select the first occurrence of the time where the max height is found

@@ -74,11 +74,8 @@ def getTimeDiff(self):
                     time_diff = cor_times[key1][i] - cor_times[key0][i]
                     time_diffs.append(time_diff)
 
-    # convert the list of arrays to a single awkward array for efficiency in operations
-    #time_diffs = ak.concatenate(time_diffs)
-
     # print out the time differences
-    print(len(time_diffs)) 
+    print(len(time_diffs))
     print(time_diffs)
 
     # fit the list data into timeDiff branch to make plots

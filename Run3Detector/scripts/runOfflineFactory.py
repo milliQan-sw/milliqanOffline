@@ -48,6 +48,7 @@ def validateOutput(outputFile,runNumber=-1,fileNumber=-1):
         if not tagObj:
             tagObj = f1.Get("tag_{}_{}".format(runNumber,fileNumber))
         tag = tagObj.GetTitle()
+        f1.Close()
     except Exception as ex:
         msg = traceback.format_exc()
         if "EDProductGetter" not in msg:
@@ -189,7 +190,7 @@ def publishDataset(configurationsJSON,inputFile,outputFile,fileNumber,runNumber,
     return True
 
 def getConfigs(runNum, offlineDir):
-    if runNum == -1 and 'barConfigs' in offlineDir: return 'configRun1097_present'
+    if runNum == -1 and 'barConfigs' in offlineDir: return 'configRun1296_present'
     elif runNum == -1 and 'slabConfigs' in offlineDir: return 'configRun0_present'
     fin = open(offlineDir+"/runInfo.json")
     runs = json.load(fin)

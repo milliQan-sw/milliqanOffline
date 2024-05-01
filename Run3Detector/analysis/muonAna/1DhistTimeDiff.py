@@ -34,27 +34,29 @@ def getTimeDiff(self):
             for layer in range(2):
                 # generate key for dictionary
                 key = (row, column, layer)
+
                 # define the location mask for the current channel
                 locationMask = (rows == row) & (columns == column) & (layers == layer)
-                # get heights and times at current channel
+
+                # get heights and times at current channel (they have the exact same dimension)
                 channel_heights = heights[locationMask]
                 channel_times = times[locationMask]
+
+                print(channel_heights)
+                print(channel_times)
+                print()
 
                 # find the max height of each event (sublist) and its corresponding min/max time
                 if ak.any(ak.num(channel_heights) > 0):  # check if there's any non-empty event (sublist)
                     # store the list of max heights in each event into the dictionary
                     max_heights[key] = ak.max(channel_heights, axis=-1)
-                    # boolean mask for where each sublist achieves its max height
+
+                    # boolean mask to know which pulse (element) in each event (sublist) achieves its max height
                     max_mask = (channel_heights == ak.broadcast_arrays(max_heights[key], channel_heights)[0])
 
-                    print(max_heights[key])
-                    print(channel_heights)
-                    print(ak.broadcast_arrays(max_heights[key], channel_heights)[0])
-                    print(max_mask)
-                    print()
-
-                    # use the mask to select the minimum times corresponding to the max heights
+                    # use the mask to pick out the min/max times corresponding to the max heights
                     masked_times = ak.mask(channel_times, max_mask)
+
                     # select the first occurrence of the time where the max height is found
                     min_times[key] = ak.min(masked_times, axis=-1)
 
@@ -64,6 +66,7 @@ def getTimeDiff(self):
         for column in range(4):
             key0 = (row, column, 0)
             key1 = (row, column, 1)
+
             if key0 in min_times and key1 in min_times:
                 # compute time difference for each event in the channel
                 channel_diffs = min_times[key1] - min_times[key0]

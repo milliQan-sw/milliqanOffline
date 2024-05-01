@@ -22,6 +22,7 @@ summingResult.py: count the number of sim events that pass different cuts from a
 
 offlineCheck1.py: check the result by applying the analysis to offline data
 
+NPEVSarea.py: file I have for making  NPE vs area histogram for bar and slab.
 
 SimMuon_tag.py: find the events that matches the cosmic muon characteristic and then send the eventID and file ID to muonTagPlot.py to create histograms.
 

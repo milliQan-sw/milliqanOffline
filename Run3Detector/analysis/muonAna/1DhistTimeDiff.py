@@ -42,8 +42,8 @@ def getTimeDiff(self):
                 channel_heights = heights[locationMask]
                 channel_times = times[locationMask]
 
-                print(channel_heights)
-                print(channel_times)
+                print(ak.num(channel_heights))
+                print(ak.num(channel_times))
                 print()
 
                 # find the max height of each event (sublist) and its corresponding min/max time

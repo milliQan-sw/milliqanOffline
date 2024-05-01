@@ -15,30 +15,30 @@ from milliqanScheduler import *
 from milliqanCuts import *
 from milliqanPlotter import *
 
-# define the function to get the 16 (or less) time difference between pulses in layer0 and layer1
-def getTimeDiff(self):
-    # get the branches after cuts 
+# define the function to get the time differences between events in each channel in layer0 and layer1
+def getTimeDiff(self)
+    # get the variables after cuts
     rows = self.events['row'][self.events['straightLineCut']]
     columns = self.events['column'][self.events['straightLineCut']]
     layers = self.events['layer'][self.events['straightLineCut']]
     heights = self.events['height'][self.events['straightLineCut']]
     times = self.events['timeFit_module_calibrated'][self.events['straightLineCut']]
 
-    # initialize dictionary to hold max heights and corresponding times for each sensor for each event
+    # initialize dictionary to hold max heights and corresponding min/max (to avoid multiple entries) times
     max_heights = {}
     min_times = {}
 
-    # iterate over each channel (here using row/column/layer)
+    # iterate over each channel (here using row/column/layer to locate each channel)
     for row in range(4):
         for column in range(4):
             for layer in range(2):
                 # generate key for dictionary
                 key = (row, column, layer)
-                # define the mask for the current channel
-                condition = (rows == row) & (columns == column) & (layers == layer)
-                # get sublist heights under the condition
-                channel_heights = heights[condition]
-                channel_times = times[condition]
+                # define the location mask for the current channel
+                locationMask = (rows == row) & (columns == column) & (layers == layer)
+                # get heights that have passed cuts at current channel
+                channel_heights = heights[locationMask]
+                channel_times = times[locationMask]
 
                 # find the max height of each sublist and its corresponding time
                 if ak.any(ak.num(channel_heights) > 0):  # check if there are non-empty sublists

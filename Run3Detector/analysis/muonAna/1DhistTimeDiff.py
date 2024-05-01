@@ -71,6 +71,9 @@ def getTimeDiff(self):
                 channel_time_diffs = cor_times[key1] - cor_times[key0]
                 time_diffs.append(channel_time_diffs)
 
+    # convert the list of arrays to a single awkward array for efficiency in operations
+    time_diffs = ak.concatenate(time_diffs)
+    
     print(time_diffs)
 
     # fit the list data into timeDiff branch to make plots

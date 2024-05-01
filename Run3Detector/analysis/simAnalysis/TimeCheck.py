@@ -20,13 +20,13 @@ if __name__ == "__main__":
         self.events["timingWindow"] = (self.events["barCut"]) & (self.events["timeFit_module_calibrated"] > 1000) & (self.events["timeFit_module_calibrated"] < 1400)
 
     def area_Tag(self):
-        self.events["areaTag"] = (self.events["barCut"]) & (self.events["area"] > 200000)
+        self.events["areaTag"] = (self.events["barCut"]) & (self.events["area"] > 100000)
 
     setattr(milliqanCuts, 'T_Tag',T_Tag)  
     setattr(milliqanCuts, 'area_Tag',area_Tag)  
 
 
-    TimeDistribution = r.TH1F("TimeDistribution", "timing distribution when bar area is above 200k ; area ; pulse", 100, 0, 2500)
+    TimeDistribution = r.TH1F("TimeDistribution", "timing distribution when bar area is above 100k ; area ; pulse", 100, 0, 2500)
     AreaDistribution = r.TH1F("AreaDistribution", "area bar within 1000-1400ns; area ; pulse", 7000, 0, 700000)
 
 

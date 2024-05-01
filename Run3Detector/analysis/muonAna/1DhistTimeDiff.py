@@ -70,12 +70,10 @@ def getTimeDiff(self):
             key1 = (row, column, 1)
 
             if key0 in cor_times and key1 in cor_times:
-                # get the minimum length of the two arrays to avoid index error (there may be cases where the two chanels in different layers have different numbers of events)
-                min_length = min(len(cor_times[key0]), len(cor_times[key1]))
-                # compute time difference for the events that exist on both layers at current location
-                for i in range(min_length):
-                    time_diff = cor_times[key1][i] - cor_times[key0][i]
-                    time_diffs.append(time_diff)
+                for i in range(len(cor_times[key0])): # both channels have the same number of events (some of them are nones)
+                    if cor_times[key0][i] is not None and cor_times[key1][i] is not None:
+                        time_diff = cor_times[key1][i] - cor_times[key0][i]
+                        time_diffs.append(time_diff)
 
     # print out the time differences
     print(len(time_diffs))

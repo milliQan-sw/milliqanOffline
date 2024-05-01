@@ -15,6 +15,7 @@ from processorConstants import *
 class milliqanProcessor():
 
     def __init__(self, filelist, branches, schedule=None, cuts=None, plotter=None, max_events=None, qualityLevel="tight", verbosity='minimal'):
+        self.script_dir = os.path.abspath(__file__).replace("milliqanProcessor.py", "")
         self.qualityLevelString = qualityLevel
         self.verbosityString = verbosity
         self.qualityLevel, self.verbosity = self.constantPuller()
@@ -49,7 +50,7 @@ class milliqanProcessor():
             
         #goodJson_array = ak.from_json(pathlib.Path("goodRuns.json"))
         #goodJson_array = ak.from_json(pathlib.Path("../goodRunTools/goodRunsMerged.json"))
-        goodJson_array = ak.from_json(pathlib.Path("../../configuration/barConfigs/goodRunsList.json"))
+        goodJson_array = ak.from_json(pathlib.Path(self.script_dir + "/../../configuration/barConfigs/goodRunsList.json"))
         data = ak.Array(goodJson_array['data'])
         goodJson = ak.zip({
             'run': data[:, 0],

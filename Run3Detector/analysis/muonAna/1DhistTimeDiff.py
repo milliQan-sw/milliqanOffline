@@ -15,7 +15,7 @@ from milliqanScheduler import *
 from milliqanCuts import *
 from milliqanPlotter import *
 
-# define the function to get the time differences between events in each channel in layer0 and layer1
+# define the function to get the time differences between events in each channel in layer 0 and layer 1
 def getTimeDiff(self):
     # extract variables of events that have passed the cuts
     rows = self.events['row'][self.events['straightLineCut']]
@@ -56,21 +56,22 @@ def getTimeDiff(self):
                     # present only the corresponding times of max heights in each event in current channel by flattening and removing the "none" values
                     cor_times[key] = ak.flatten(nested_cor_times, axis=None)
 
-                    print(key, cor_times[key])
+                    print(key, cor_times[key])  # there should 32 or fewer channels as some of them may have no pulses at all
 
-    # calculate time differences between layer 1 and layer 0 for each channel for each event
+    # calculate time differences between layer 1 and layer 0 in each channel for each event
     time_diffs = []
     for row in range(4):
         for column in range(4):
+            # define keys to locate time
             key0 = (row, column, 0)
             key1 = (row, column, 1)
 
             if key0 in cor_times and key1 in cor_times:
-                # compute time difference for each event in the channel
-                channel_diffs = cor_times[key1] - cor_times[key0]
-                time_diffs.append(channel_diffs)
+                # compute time difference for each event in current channel
+                channel_time_diffs = cor_times[key1] - cor_times[key0]
+                time_diffs.append(channel_time_diffs)
 
-    # print(time_diffs)
+    print(time_diffs)
 
     # fit the list data into timeDiff branch to make plots
     self.events['timeDiff'] = time_diffs

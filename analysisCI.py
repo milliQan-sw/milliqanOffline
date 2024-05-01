@@ -10,11 +10,11 @@ if __name__ == "__main__":
 
     #get the offline file and a copy of output plots from cernbox
     #TODO may want to use the file processed when checking offline file processing
-    if not os.path.exists('offline.root'): os.system('curl -o offline.root https://cernbox.cern.ch/s/7aVy5emV9tivPrl/download')
+    if not os.path.exists('notActuallyRun1364.3.root'): os.system('curl -o notActuallyRun1364.3.root https://cernbox.cern.ch/s/7aVy5emV9tivPrl/download')
     if not os.path.exists('check.root'): os.system('curl -o check.root https://cernbox.cern.ch/s/hTZyaUVU9fuCWUX/download')
 
     #define a file list to run over
-    filelist = ['offline.root:t']
+    filelist = ['notActuallyRun1364.3.root:t']
 
     #define the necessary branches to run over
     branches = ['pickupFlag', 'boardsMatched', 'timeFit_module_calibrated', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type']

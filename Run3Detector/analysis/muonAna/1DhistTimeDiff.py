@@ -54,7 +54,7 @@ def getTimeDiff(self):
                     nested_cor_times = ak.mask(channel_times, max_mask)
 
                     # handle each event: extract the non-None value or return None if all are None
-                    cor_times[key] = ak.Array([sublist[0] if ak.any(ak.is_none(sublist) == False) else None for sublist in nested_cor_times])
+                    cor_times[key] = ak.Array([sublist[0] if sublist is not None and len(sublist) > 0 else None for sublist in ak.to_list(nested_cor_times)])
 
                     print(key, cor_times[key])  # there should 32 or fewer channels as some of them may have no pulses at all
 

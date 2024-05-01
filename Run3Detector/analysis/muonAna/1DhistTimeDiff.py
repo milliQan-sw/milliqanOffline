@@ -56,8 +56,8 @@ def getTimeDiff(self):
                     # present only the corresponding times of max heights in each event in current channel by flattening and removing the "none" values
                     cor_times[key] = ak.flatten(nested_cor_times, axis=None)
 
-    print(cor_times)
-    
+                    print(key, cor_times[key])
+
     # calculate time differences between layer 1 and layer 0 for each channel for each event
     time_diffs = []
     for row in range(4):

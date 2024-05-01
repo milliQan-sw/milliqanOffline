@@ -34,15 +34,17 @@ def getTimeDiff(self):
             for layer in range(2):
                 #generate key for dictionary
                 key = (row, column, layer)
+
                 #define the mask for the current channel
                 condition = (rows == row) & (columns == column) & (layers == layer)
+
                 #get sublist heights under the condition
                 channel_heights = heights[condition]
                 channel_times = times[condition]
 
                 #find the max height of each sublist and its corresponding time
                 max_heights[key] = ak.max(channel_heights, axis=-1, mask_identity=True)
-                min_times[key] = ak.zeros_like(max_heights[key])  # Initialize with zeros of the same shape
+                min_times[key] = ak.zeros_like(max_heights[key])  #initialize with zeros of the same shape
 
                 #loop through each sublist to find the corresponding min time for each max height
                 for i, sublist in enumerate(channel_heights):

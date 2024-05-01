@@ -34,20 +34,25 @@ def getTimeDiff(self):
             for layer in range(2):
                 #generate key for dictionary
                 key = (row, column, layer)
+
                 #define the mask for current channel
                 condition = (rows == row) & (columns == column) & (layers == layer)
+
                 #make a nested list
                 nested_list = ak.to_list(heights[condition])
+
                 #find the max height at current channel
                 flattened_non_empty_values = [item for sublist in nested_list for item in sublist if len(sublist) > 0]
                 max_height = max(flattened_non_empty_values, default=None)
 
                 if max_height is not None:
                     #store the max height
-                    max_heights[key] = max_height                                        
+                    max_heights[key] = max_height         
+
                     #find the corresponding time for the max height (here choosing the min/max time to avoid multiple entries)
                     time_condition = condition & (heights == max_height)
-                    min_time = ak.min(times[time_condition])                    
+                    min_time = ak.min(times[time_condition])  
+
                     #store the min time
                     min_times[key] = min_time
 

@@ -47,7 +47,7 @@ offlineProduction:
         - cd Run3Detector
         - . setup.sh
         - curl -o MilliQan_Run1426.1_default.root https://cernbox.cern.ch/s/incyVcvuTXPx7m8/download/
-        - python3 scripts/runOfflineFactory.py --inputFile MilliQan_Run1426.1_default.root --outputFile output.root --exe ./test.exe
+        - python3 scripts/runOfflineFactory.py --inputFile MilliQan_Run1426.1_default.root --outputFile MilliQan_Run1426.1_v35.root --exe ./test.exe
 
 analysis:
     image: $DOCKER_IMAGE

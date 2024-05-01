@@ -16,8 +16,8 @@ from milliqanCuts import *
 from milliqanPlotter import *
 
 # define the function to get the time differences between events in each channel in layer0 and layer1
-def getTimeDiff(self)
-    # get the variables after cuts
+def getTimeDiff(self):
+    # extract variables of events that have passed the cuts
     rows = self.events['row'][self.events['straightLineCut']]
     columns = self.events['column'][self.events['straightLineCut']]
     layers = self.events['layer'][self.events['straightLineCut']]
@@ -36,9 +36,11 @@ def getTimeDiff(self)
                 key = (row, column, layer)
                 # define the location mask for the current channel
                 locationMask = (rows == row) & (columns == column) & (layers == layer)
-                # get heights that have passed cuts at current channel
+                # get heights and times at current channel
                 channel_heights = heights[locationMask]
                 channel_times = times[locationMask]
+                print(channel_heights)
+                print(channel_times)
 
                 # find the max height of each sublist and its corresponding time
                 if ak.any(ak.num(channel_heights) > 0):  # check if there are non-empty sublists
@@ -61,7 +63,7 @@ def getTimeDiff(self)
                 channel_diffs = min_times[key1] - min_times[key0]
                 time_diffs.append(channel_diffs)
 
-    print(time_diffs)
+    # print(time_diffs)
 
     # fit the list data into timeDiff branch to make plots
     self.events['timeDiff'] = time_diffs

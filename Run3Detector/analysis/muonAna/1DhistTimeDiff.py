@@ -52,11 +52,9 @@ def getTimeDiff(self):
 
                     # use the mask to pick out the corresponding times to the max heights in each event
                     nested_cor_times = ak.mask(channel_times, max_mask)
-                    print(nested_cor_times)
-                    print()
 
-                    # present only the corresponding times of max heights in each event in current channel by flattening and removing the "none" values
-                    cor_times[key] = ak.flatten(nested_cor_times, axis=None)
+                    # handle each event: extract the non-None value or return None if all are None
+                    cor_times[key] = ak.Array([sublist[0] if ak.any(ak.is_none(sublist) == False) else None for sublist in nested_cor_times])
 
                     print(key, cor_times[key])  # there should 32 or fewer channels as some of them may have no pulses at all
 

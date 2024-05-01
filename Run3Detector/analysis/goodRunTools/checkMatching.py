@@ -68,6 +68,7 @@ def parse_args():
     parser.add_argument('-s', '--subdir', help='Subdirectory to check for files', type=str, required=True)
     parser.add_argument('-n', '--outputName', help='Name of the output json files', type=str)
     parser.add_argument('-c', '--configDir', help='Path to config dir', type=str, default='../../configuration/barConfigs/')
+    parser.add_argument('-t', '--tag', help="Version of good run list (format v1p0)", type=str, default='v1p0')
     parser.add_argument('--debug', help='Option to run in debug mode', action='store_true')
     args = parser.parse_args()
     return args
@@ -373,21 +374,19 @@ class fileChecker():
         self.runInfos['matchCTime'] = self.runInfos['matchCTime'].apply(lambda x: x.strftime("%Y-%m-%d%H:%M:%S") if x != None else None)
         self.runInfos['offlineCTime'] = self.runInfos['offlineCTime'].apply(lambda x: x.strftime("%Y-%m-%d%H:%M:%S") if x != None else None)
 
-    def makeGoodRunList(self, outName='goodRunList.json'):
+    def makeGoodRunList(self, outName='goodRunList.json', tag='v1p0'):
                 
-        goodRuns = self.runInfos
+        goodRuns = self.runInfos[['run', 'file', 'goodRunLoose', 'goodRunMedium', 'goodRunTight', 'goodSingleTrigger']].copy(deep=True)
 
         #criteria for good runs
-        #goodRuns = goodRuns.drop(goodRuns.loc[(goodRuns['goodRunLoose']==False) & (goodRuns['goodSingleTrigger']==False)].index)
-        goodRuns = goodRuns.drop(goodRuns.loc[(goodRuns['goodRunLoose']==False)].index)
-
+        goodRuns = goodRuns.drop(goodRuns.loc[(goodRuns['goodRunLoose']==False) & (goodRuns['goodSingleTrigger']==False)].index)
         
-        goodRuns = goodRuns[['run', 'file', 'goodRunLoose', 'goodRunMedium', 'goodRunTight', 'goodSingleTrigger']]
+        goodRuns['tag'] = tag
         
         if os.path.exists(outName):
             goodRunList = pd.read_json(outName, orient='split')
             goodRuns = pd.concat([goodRunList, goodRuns])
-            goodRuns.drop_duplicates()
+            goodRuns = goodRuns.drop_duplicates()
 
         goodRuns.to_json(outName, orient = 'split', compression = 'infer', index = 'true')
         
@@ -451,4 +450,4 @@ if __name__ == "__main__":
 
     myfileChecker.printInfo()
     
-    myfileChecker.makeGoodRunList(outName=goodRunListName)
+    myfileChecker.makeGoodRunList(outName=goodRunListName, tag=args.tag)

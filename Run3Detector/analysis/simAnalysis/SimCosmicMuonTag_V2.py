@@ -315,17 +315,25 @@ def findCorrectTime(self,cutName = "DT_CorrectTime",cut = None,timeData = "time"
 """
 
 #new method Dt is calculated by first hit at each layer
-def findCorrectTime(self,cutName = "DT_CorrectTime",cut = None,timeData = "time", NPECut = 0):
+def findCorrectTime(self,cutName = "DT_CorrectTime",cut = None,timeData = "time", offlineMode = False ,NPECut = 0):
     if cut:
+
         cutMask, junk = ak.broadcast_arrays(self.events.cut, self.events.layer)
         TimeArrayL0 = self.events[timeData][cutMask & self.events.layer==0]
         TimeArrayL1 = self.events[timeData][cutMask & self.events.layer==1]
         TimeArrayL2 = self.events[timeData][cutMask & self.events.layer==2]
         TimeArrayL3 = self.events[timeData][cutMask & self.events.layer==3]
-        
+    
+    elif offlineMode == True:
+        #the time correction factor is already applied for offline data
+        TimeArrayL0 = self.events[timeData][(self.events.layer==0) & (self.events["nPE"] >= NPECut) & (self.events[timeData] > 0)] 
+        TimeArrayL1 = self.events[timeData][(self.events.layer==1) & (self.events["nPE"] >= NPECut) & (self.events[timeData] > 0)]
+        TimeArrayL2 = self.events[timeData][(self.events.layer==2) & (self.events["nPE"] >= NPECut) & (self.events[timeData] > 0)]
+        TimeArrayL3 = self.events[timeData][(self.events.layer==3) & (self.events["nPE"] >= NPECut) & (self.events[timeData] > 0)]
+
         
     else:
-        
+        #for sim data
 
         TimeArrayL0 = self.events[timeData][(self.events.layer==0) & (self.events["nPE"] >= NPECut) & (self.events[timeData] > 0)] 
         TimeArrayL1 = self.events[timeData][(self.events.layer==1) & (self.events["nPE"] >= NPECut) & (self.events[timeData] > 0)] - (3.96 * 1)

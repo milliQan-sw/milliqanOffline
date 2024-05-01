@@ -50,14 +50,13 @@ def getTimeDiff(self):
                     # boolean mask to know which pulse (element) in each event (sublist) achieves its max height
                     max_mask = (channel_heights == ak.broadcast_arrays(max_heights[key], channel_heights)[0])
 
-                    # use the mask to pick out the min/max times corresponding to the max heights
-                    masked_times = ak.mask(channel_times, max_mask)
+                    # use the mask to pick out the corresponding times to the max heights in each event
+                    nested_cor_times = ak.mask(channel_times, max_mask)
 
-                    print(masked_times)
-                    print()
+                    # present only the corresponding times of max heights in each event in current channel by flattening and removing the "none" values
+                    cor_times[key] = ak.flatten(nested_cor_times, axis=None)
 
-                    # select the first occurrence of the time where the max height is found
-                    cor_times[key] = ak.min(masked_times, axis=-1)
+                    print(cor_times)
 
     # calculate time differences between layer 1 and layer 0 for each channel for each event
     time_diffs = []

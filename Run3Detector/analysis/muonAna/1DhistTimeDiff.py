@@ -24,9 +24,9 @@ def getTimeDiff(self):
     heights = self.events['height'][self.events['straightLineCut']]
     times = self.events['timeFit_module_calibrated'][self.events['straightLineCut']]
 
-    # initialize dictionary to hold max heights and corresponding min/max (to avoid multiple entries) times
+    # initialize dictionary to hold max heights and corresponding times
     max_heights = {}
-    min_times = {}
+    cor_times = {}
 
     # iterate over each channel (here using row/column/layer to locate each channel)
     for row in range(4):
@@ -42,10 +42,6 @@ def getTimeDiff(self):
                 channel_heights = heights[locationMask]
                 channel_times = times[locationMask]
 
-                print(ak.num(channel_heights))
-                print(ak.num(channel_times))
-                print()
-
                 # find the max height of each event (sublist) and its corresponding min/max time
                 if ak.any(ak.num(channel_heights) > 0):  # check if there's any non-empty event (sublist)
                     # store the list of max heights in each event into the dictionary
@@ -57,8 +53,11 @@ def getTimeDiff(self):
                     # use the mask to pick out the min/max times corresponding to the max heights
                     masked_times = ak.mask(channel_times, max_mask)
 
+                    print(masked_times)
+                    print()
+
                     # select the first occurrence of the time where the max height is found
-                    min_times[key] = ak.min(masked_times, axis=-1)
+                    cor_times[key] = ak.min(masked_times, axis=-1)
 
     # calculate time differences between layer 1 and layer 0 for each channel for each event
     time_diffs = []
@@ -67,9 +66,9 @@ def getTimeDiff(self):
             key0 = (row, column, 0)
             key1 = (row, column, 1)
 
-            if key0 in min_times and key1 in min_times:
+            if key0 in cor_times and key1 in cor_times:
                 # compute time difference for each event in the channel
-                channel_diffs = min_times[key1] - min_times[key0]
+                channel_diffs = cor_times[key1] - cor_times[key0]
                 time_diffs.append(channel_diffs)
 
     # print(time_diffs)

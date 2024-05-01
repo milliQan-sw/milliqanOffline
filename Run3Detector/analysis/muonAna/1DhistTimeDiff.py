@@ -73,8 +73,8 @@ def getTimeDiff(self):
 
     # convert the list of arrays to a single awkward array for efficiency in operations
     time_diffs = ak.concatenate(time_diffs)
-    
-    print(time_diffs)
+
+    print('', time_diffs)
 
     # fit the list data into timeDiff branch to make plots
     self.events['timeDiff'] = time_diffs

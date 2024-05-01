@@ -75,7 +75,7 @@ def getTimeDiff(self):
     time_diffs = ak.concatenate(time_diffs)
 
     # print out the time differences
-    print() 
+    print(len(time_diffs)) 
     print(time_diffs)
 
     # fit the list data into timeDiff branch to make plots

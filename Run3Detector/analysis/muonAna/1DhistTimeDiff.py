@@ -40,8 +40,8 @@ def getTimeDiff(self):
                 channel_heights = heights[locationMask]
                 channel_times = times[locationMask]
                 print(channel_heights)
-                print()
                 print(channel_times)
+                print()
 
                 # find the max height of each sublist and its corresponding time
                 if ak.any(ak.num(channel_heights) > 0):  # check if there are non-empty sublists

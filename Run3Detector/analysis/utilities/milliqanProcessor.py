@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import os
+import re
 import pathlib
 import ROOT as r
 import uproot
@@ -66,8 +67,14 @@ class milliqanProcessor():
         filelist_copy = self.filelist.copy()
         for filepath in filelist_copy:
             filename = os.path.basename(filepath)
-            parts = filename.split('_')
-            run_number, file_number = parts[1].replace("Run","").split('.')
+            pattern = r"Run(\d+)\.(\d+)"
+            match = re.search(pattern, filename)
+            if match:
+                run_number = int(match.group(1))
+                file_number = int(match.group(2))
+            else:
+                raise TypeError("Filename does not match the expected pattern")
+            
             matching_goodJson = goodJson[(goodJson['run'] == int(run_number)) & (goodJson['file'] == int(file_number))]
             
             #Establishes the quality level of the run

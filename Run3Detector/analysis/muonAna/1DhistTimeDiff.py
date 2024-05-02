@@ -62,7 +62,7 @@ def getTimeDiff(self):
                     print(key, cor_times[key])  # there should be 32 channels exactly
 
     # create an empty awkward array to store time differences
-    time_diffs = ak.full_like(self.events['timeFit_module_calibrated'], None)
+    time_diffs = ak.full_like(self.events['boardsMatched'], None)
 
     print(time_diffs)
 

@@ -55,14 +55,17 @@ def getTimeDiff(self):
 
                     # for each event, extract the corresponding time or return None if there's no pulse in that event
                     cor_times[key] = ak.Array([
-                    next((item for item in sublist if item is not None), None) 
-                    if sublist is not None else None
-                    for sublist in ak.to_list(nested_cor_times)])
+                        next((item for item in sublist if item is not None), None) 
+                        if sublist is not None else None
+                        for sublist in ak.to_list(nested_cor_times)])
+                else:
+                    # assign None to cor_times if no valid pulses were found
+                    cor_times[key] = None
 
-                    print(key, cor_times[key])  # there should 32 or fewer channels as some of them may have no pulses at all
+                    print(key, cor_times[key])  # there should be 32 channels exactly
 
     # create an empty awkward array to store time differences
-    time_diffs = ak.full_like(times, None)
+    time_diffs = ak.full_like(self.events['event'], None)
 
     # calculate time differences between layer 1 and layer 0 in each channel for each event
     for row in range(4):
@@ -72,11 +75,10 @@ def getTimeDiff(self):
             key1 = (row, column, 1)
 
             if key0 in cor_times and key1 in cor_times:
-                for i in range(len(cor_times[key0])):
+                for i in range(len(cor_times[key0])):  # len(cor_times[key0]) = len(cor_times[key1])
                     if cor_times[key0][i] is not None and cor_times[key1][i] is not None:
                         time_diff = cor_times[key1][i] - cor_times[key0][i]
-                        location_mask = (rows == row) & (columns == column) & self.events['straightLineCut']
-                        time_diffs = ak.where(location_mask, time_diff, time_diffs)
+                        time_diffs[i] = time_diff
 
     # store the time differences in the 'timeDiff' branch
     self.events['timeDiff'] = time_diffs
@@ -88,7 +90,7 @@ setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)
 filelist = ['/mnt/hadoop/se/store/user/milliqan/trees/v34/1000/MilliQan_Run1006.4_v34.root:t']
 
 # define the necessary branches to run over
-branches = ['pickupFlag', 'boardsMatched', 'timeFit_module_calibrated', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type']
+branches = ['pickupFlag', 'boardsMatched', 'timeFit_module_calibrated', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type', 'event']
 
 # define the milliqan cuts object
 mycuts = milliqanCuts()

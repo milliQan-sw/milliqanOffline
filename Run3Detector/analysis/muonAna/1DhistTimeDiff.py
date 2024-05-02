@@ -62,9 +62,10 @@ def getTimeDiff(self):
                     print(key, cor_times[key])  # there should be 32 channels exactly
 
     # create an empty awkward array to store time differences
-    time_diffs = ak.full_like(self.events['events'], None)
+    time_diffs = ak.full_like(self.events['timeFit_module_calibrated'], None)
+    flattened_time_diffs = ak.flatten(time_diffs)
 
-    print(time_diffs)
+    print(flattened_time_diffs)
 
     # calculate time differences between layer 1 and layer 0 in each channel for each event
     for row in range(4):
@@ -89,7 +90,7 @@ setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)
 filelist = ['/mnt/hadoop/se/store/user/milliqan/trees/v34/1000/MilliQan_Run1006.4_v34.root:t']
 
 # define the necessary branches to run over
-branches = ['events', 'pickupFlag', 'boardsMatched', 'timeFit_module_calibrated', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type']
+branches = ['pickupFlag', 'boardsMatched', 'timeFit_module_calibrated', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type']
 
 # define the milliqan cuts object
 mycuts = milliqanCuts()

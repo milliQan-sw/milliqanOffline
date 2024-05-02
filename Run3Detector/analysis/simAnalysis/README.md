@@ -22,7 +22,17 @@ summingResult.py: count the number of sim events that pass different cuts from a
 
 offlineCheck1.py: check the result by applying the analysis to offline data
 
-NPEVSarea.py: file I have for making  NPE vs area histogram for bar and slab.
+NPEVSarea.py: file I have for making  NPE vs area histogram for bar and slab. associate sh file: NPE_Area_plot.sh.
+But please the data is save to /home/czheng/SimCosmicFlatTree/offline_Area_NPE/no_cutNPE_Area_run1163
+
+
+Cutflow8: offline analysis come with the timing window restriction + new DownwardMuon path tag for cosmic event that big hits can be found along same column.
+cutflow8_OL.sh: you can find the location of data saving location of cutflow 8. 
+but please beaware the separation between timing restrction for the plot with no muon cut(see the file NPE_Area_plot.sh)
+data set 1 for pulse at 1000-1500ns :/home/czheng/SimCosmicFlatTree/offline_Area_NPE/1000_1500ns
+data set 2 for pulse at 1250-1350ns:/home/czheng/SimCosmicFlatTree/offline_Area_NPE/1250_1350ns
+
+
 
 SimMuon_tag.py: find the events that matches the cosmic muon characteristic and then send the eventID and file ID to muonTagPlot.py to create histograms.
 

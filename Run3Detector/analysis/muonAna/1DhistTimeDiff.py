@@ -61,8 +61,10 @@ def getTimeDiff(self):
 
                     print(key, cor_times[key])  # there should 32 or fewer channels as some of them may have no pulses at all
 
+    # create an empty awkward array to store time differences
+    time_diffs = ak.full_like(times, None)
+
     # calculate time differences between layer 1 and layer 0 in each channel for each event
-    time_diffs = []
     for row in range(4):
         for column in range(4):
             # define keys to locate time
@@ -70,16 +72,13 @@ def getTimeDiff(self):
             key1 = (row, column, 1)
 
             if key0 in cor_times and key1 in cor_times:
-                for i in range(len(cor_times[key0])): # both channels have the same number of events (some of them are nones)
+                for i in range(len(cor_times[key0])):
                     if cor_times[key0][i] is not None and cor_times[key1][i] is not None:
                         time_diff = cor_times[key1][i] - cor_times[key0][i]
-                        time_diffs.append(time_diff)
+                        location_mask = (rows == row) & (columns == column) & self.events['straightLineCut']
+                        time_diffs = ak.where(location_mask, time_diff, time_diffs)
 
-    # print out the time differences
-    print(len(time_diffs))
-    print(time_diffs)
-
-    # fit the list data into timeDiff branch to make plots
+    # store the time differences in the 'timeDiff' branch
     self.events['timeDiff'] = time_diffs
 
 # add our custom function to milliqanCuts

@@ -56,9 +56,10 @@ def getTimeDiff(self):
 
                     # for each event, extract the corresponding time or return None if there's no pulse in that event
                     cor_times[key] = ak.Array([
-                    next((item for item in sublist if item is not None), None) 
-                    if sublist is not None else None
-                    for sublist in ak.to_list(raw_cor_times)])
+                        next((item for item in sublist if item is not None), None) if sublist is not None else None
+                        if not all(item is None for item in sublist) else None  # check if all pulses (element) are None
+                        for sublist in ak.to_list(raw_cor_times)
+                        ])
 
                     print(key, cor_times[key])  # there should be 32 channels exactly
 

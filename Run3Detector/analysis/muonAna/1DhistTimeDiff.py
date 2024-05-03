@@ -65,7 +65,7 @@ def getTimeDiff(self):
 
     # create an empty awkward array to store time differences initialized with all Nones
     time_diffs = ak.Array([None] * 1000)
-    print(cor_times[(0, 1, 1)][0])
+    print(len(times))
     # calculate time differences between layer 1 and layer 0 in each channel for each event
     for row in range(4):
         for column in range(4):
@@ -74,7 +74,7 @@ def getTimeDiff(self):
             key1 = (row, column, 1)
 
             if key0 in cor_times and key1 in cor_times:
-                for i in range(len(cor_times[key0])):  # len(cor_times[key0]) = len(cor_times[key1])
+                for i in range(len(times)):
                     if cor_times[key0][i] is not None and cor_times[key1][i] is not None:
                         time_diff = cor_times[key1][i] - cor_times[key0][i]
                         time_diffs[i] = time_diff

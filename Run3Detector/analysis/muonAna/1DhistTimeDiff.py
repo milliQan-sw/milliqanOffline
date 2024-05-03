@@ -63,7 +63,7 @@ def getTimeDiff(self):
 
     # print out key and cor_times[key] for each key (there should be exact 32 channels)
     for key, value in cor_times.items():
-        if value == None: 
+        if ak.is_none(value): 
             print(key, [None, None])
         else:
             print(key, value)

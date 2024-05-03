@@ -77,12 +77,11 @@ def getTimeDiff(self):
                 for i in range(len(cor_times[key0])):  # len(cor_times[key0]) = len(cor_times[key1])
                     if cor_times[key0][i] is not None and cor_times[key1][i] is not None:
                         time_diff = cor_times[key1][i] - cor_times[key0][i]
-                        first_none_index = time_diffs.index(None)
-                        print(first_none_index)
-                        #time_diffs[first_none_index] = time_diff
+                        time_diffs[0] = time_diff
+                        print(time_diffs[0])
 
     # store the time differences in the 'timeDiff' branch
-    self.events['timeDiff'] = time_diffs
+    #self.events['timeDiff'] = time_diffs
 
 # add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)

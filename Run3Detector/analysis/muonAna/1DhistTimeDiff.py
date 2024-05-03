@@ -60,10 +60,8 @@ def getTimeDiff(self):
                         if sublist is not None else None  # check if sublist is None
                         for sublist in ak.to_list(raw_cor_times)
                     ])
-
-    # print out channel number and corresponding desired times of events in that channel
-    for key, value in cor_times.items():
-        print(key, value)
+                    # print out channel number and corresponding desired times of events in that channel
+                    print(key, cor_times[key])
 
     # create an empty awkward array to store time differences
     time_diffs = ak.full_like(self.events['timeFit_module_calibrated'], None)

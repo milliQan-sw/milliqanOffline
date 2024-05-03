@@ -64,7 +64,7 @@ def getTimeDiff(self):
                     print(key, cor_times[key])
 
     # create an empty list to store time differences initialized with all Nones
-    time_diffs = [None] * 1000
+    time_diffs = []
     # calculate time differences between layer 1 and layer 0 in each channel for each event
     for row in range(4):
         for column in range(4):
@@ -76,7 +76,7 @@ def getTimeDiff(self):
                 for i in range(len(times)): # iterate over each event that has passed straightLineCut
                     if cor_times[key0][i] is not None and cor_times[key1][i] is not None:
                         time_diff = cor_times[key1][i] - cor_times[key0][i]
-                        time_diffs[i] = time_diff
+                        time_diffs.append(time_diff)
     
     print(time_diffs)
 

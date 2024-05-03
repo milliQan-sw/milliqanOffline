@@ -77,10 +77,7 @@ def getTimeDiff(self):
                 for i in range(len(cor_times[key0])):  # len(cor_times[key0]) = len(cor_times[key1])
                     if cor_times[key0][i] is not None and cor_times[key1][i] is not None:
                         time_diff = cor_times[key1][i] - cor_times[key0][i]
-
-                        if index < 1000:
-                            time_diffs[index] = time_diff
-                            index += 1
+                        time_diffs[i] = time_diff
     
     print(time_diffs)
 

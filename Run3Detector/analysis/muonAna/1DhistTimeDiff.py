@@ -106,9 +106,10 @@ print(time_diffs)
                         time_diffs[i] = time_diff
     
     print(time_diffs)
-"""
+
     # store the time differences in the 'timeDiff' branch
-    #self.events['timeDiff'] = time_diffs
+    self.events['timeDiff'] = time_diffs
+"""
 
 # add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)

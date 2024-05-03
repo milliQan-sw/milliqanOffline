@@ -63,7 +63,7 @@ def getTimeDiff(self):
 
     # print out channel number and corresponding desired times of events in that channel
     for key, value in cor_times.items():
-        if ak.is_none(value): 
+        if ak.num(value) == 0: 
             print(key, [None, None])
         else:
             print(key, value)

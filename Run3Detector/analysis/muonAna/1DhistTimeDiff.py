@@ -64,7 +64,7 @@ def getTimeDiff(self):
                     print(key, cor_times[key])
 
     # create an empty list to store time differences initialized with all Nones
-    time_diffs = []
+    time_diffs = [None] * 1000
     # calculate time differences between layer 1 and layer 0 in each channel for each event
     for row in range(4):
         for column in range(4):

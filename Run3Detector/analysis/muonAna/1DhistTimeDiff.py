@@ -77,7 +77,7 @@ def getTimeDiff(self):
                 for i in range(len(cor_times[key0])):  # len(cor_times[key0]) = len(cor_times[key1])
                     if cor_times[key0][i] is not None and cor_times[key1][i] is not None:
                         time_diff = cor_times[key1][i] - cor_times[key0][i]
-                        time_diffs = ak.where(ak.is_none(time_diffs), time_diff, time_diffs)f
+                        time_diffs = ak.where(ak.is_none(time_diffs), time_diff, time_diffs)
                         print(time_diffs)
 
     # store the time differences in the 'timeDiff' branch

@@ -15,49 +15,50 @@ from milliqanScheduler import *
 from milliqanCuts import *
 from milliqanPlotter import *
 
-# define the function to get the time differences between events in each channel in layer 0 and layer 1
+# define the function to get the time differences between events in each channel between layer 0 and layer 1
 def getTimeDiff(self):
-    # extract variables of events that have passed the cuts
+    # branches used for locating events in different channels
     rows = self.events['row'][self.events['straightLineCut']]
     columns = self.events['column'][self.events['straightLineCut']]
     layers = self.events['layer'][self.events['straightLineCut']]
+    # branches with data to extract from
     heights = self.events['height'][self.events['straightLineCut']]
     times = self.events['timeFit_module_calibrated'][self.events['straightLineCut']]
 
-    # initialize dictionary to hold max heights and corresponding times
+    # initialize dictionaries to hold max pulse heights and corresponding times
     max_heights = {}
     cor_times = {}
 
-    # iterate over each channel (here using row/column/layer to locate each channel)
+    # iterate over each channel (using row/column/layer to locate each channel)
     for row in range(4):
         for column in range(4):
             for layer in range(2):
-                # generate key for dictionary
+                # generate key for dictionaries
                 key = (row, column, layer)
 
                 # define the location mask for the current channel
                 locationMask = (rows == row) & (columns == column) & (layers == layer)
 
-                # get heights and times at current channel (they have the exact same dimension)
+                # get heights and times at current channel (they should have the exact same dimension)
                 channel_heights = heights[locationMask]
                 channel_times = times[locationMask]
 
-                # find the max height of each event (sublist) and its corresponding min/max time
-                if ak.any(ak.num(channel_heights) > 0):  # check if there's any non-empty event (sublist)
-                    # store the list of max heights in each event into the dictionary
-                    max_heights[key] = ak.max(channel_heights, axis=-1)
+                # find the max height of each event (sublist) and its corresponding time
+                if ak.any(ak.num(channel_heights) > 0):  # check if any sublist in channel_heights is not empty in case it's an empty array
+                    # store the list of max heights in each event (sublist) into the dictionary
+                    max_heights[key] = ak.max(channel_heights, axis=-1) # now channel_heights is flattened
 
                     # boolean mask to know which pulse (element) in each event (sublist) achieves its max height
                     max_mask = (channel_heights == ak.broadcast_arrays(max_heights[key], channel_heights)[0])
 
-                    # use the mask to pick out the corresponding times to the max heights in each event
-                    nested_cor_times = ak.mask(channel_times, max_mask)
+                    # use the mask to pick out the corresponding times to the max pulse heights (element) in each event (sublist)
+                    raw_cor_times = ak.mask(channel_times, max_mask)# an unflattened raw 2D array with only desired times
 
                     # for each event, extract the corresponding time or return None if there's no pulse in that event
                     cor_times[key] = ak.Array([
                     next((item for item in sublist if item is not None), None) 
                     if sublist is not None else None
-                    for sublist in ak.to_list(nested_cor_times)])
+                    for sublist in ak.to_list(raw_cor_times)])
 
                     print(key, cor_times[key])  # there should be 32 channels exactly
 

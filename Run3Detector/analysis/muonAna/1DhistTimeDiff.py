@@ -81,6 +81,7 @@ def getTimeDiff(self):
     print(time_diffs)
     print("Effective time differences total number: ", len(time_diffs))
 
+    # extend time_diffs to a 1000 sized list with Nones
     num_nones = 1000 - len(time_diffs)
     time_diffs.extend([None] * num_nones)
 

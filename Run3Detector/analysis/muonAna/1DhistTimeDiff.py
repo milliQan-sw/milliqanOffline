@@ -78,9 +78,7 @@ def getTimeDiff(self):
                     if cor_times[key0][i] is not None and cor_times[key1][i] is not None:
                         time_diff = cor_times[key1][i] - cor_times[key0][i]
 
-                        time_diffs = ak.setitem(time_diffs, first_none_index, time_diff)
-                        first_none_index += 1
-
+                        time_diffs = ak.concatenate([ak.Array([time_diff]), time_diffs[1:]])
                         print(time_diffs)
 
     # store the time differences in the 'timeDiff' branch

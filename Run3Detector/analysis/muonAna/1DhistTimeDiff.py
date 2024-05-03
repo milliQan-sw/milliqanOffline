@@ -64,7 +64,7 @@ def getTimeDiff(self):
                     print(key, cor_times[key])
 
 # Initialize the array with None (or np.nan if dealing with numerical data exclusively)
-time_diffs = ak.full(1000, None, dtype=object)
+time_diffs = ak.Array([None] * 1000)
 
 # Assuming 'cor_times' is a dictionary holding the time data
 for row in range(4):

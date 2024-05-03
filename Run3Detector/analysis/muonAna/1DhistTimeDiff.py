@@ -63,9 +63,10 @@ def getTimeDiff(self):
 
     # print out key and cor_times[key] for each key (there should be exact 32 channels)
     for key, value in cor_times.items():
-        print(key, value)
-                    
-
+        if value == None: 
+            print(key, [None, None])
+        else:
+            print(key, value)
 
     # create an empty awkward array to store time differences
     time_diffs = ak.full_like(self.events['timeFit_module_calibrated'], None)

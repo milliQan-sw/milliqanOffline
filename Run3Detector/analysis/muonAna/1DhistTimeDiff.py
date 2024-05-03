@@ -61,7 +61,7 @@ def getTimeDiff(self):
                         for sublist in ak.to_list(raw_cor_times)
                     ])
 
-    # print out key and cor_times[key] for each key (there should be exact 32 channels)
+    # print out channel number and corresponding desired times of events in that channel
     for key, value in cor_times.items():
         if ak.is_none(value): 
             print(key, [None, None])

@@ -78,8 +78,8 @@ def getTimeDiff(self):
                     if cor_times[key0][i] is not None and cor_times[key1][i] is not None:
                         time_diff = cor_times[key1][i] - cor_times[key0][i]
 
-                        first_none_index = ak.firsts(ak.is_none(time_diffs))
-                        time_diffs = ak.where(ak.local_index(time_diffs) == first_none_index, time_diff, time_diffs)
+                        time_diffs = ak.setitem(time_diffs, first_none_index, time_diff)
+                        first_none_index += 1
 
                         print(time_diffs)
 

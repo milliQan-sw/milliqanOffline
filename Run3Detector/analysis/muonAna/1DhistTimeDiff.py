@@ -64,7 +64,7 @@ def getTimeDiff(self):
                     print(key, cor_times[key])
 
     # create an empty awkward array to store time differences
-    time_diffs = ak.full_like(self.events['timeFit_module_calibrated'], None)
+    time_diffs = ak.Array([None] * 1000)
     print(len(time_diffs))
 
     # calculate time differences between layer 1 and layer 0 in each channel for each event

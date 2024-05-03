@@ -61,9 +61,10 @@ def getTimeDiff(self):
                         for sublist in ak.to_list(raw_cor_times)
                     ])
 
-                    # print out key and cor_times[key] for each key (there should be exact 32 channels)
-                    for key, value in cor_times.items():
-                        print(key, value)
+    # print out key and cor_times[key] for each key (there should be exact 32 channels)
+    for key, value in cor_times.items():
+        print(key, value)
+                    
 
 
     # create an empty awkward array to store time differences

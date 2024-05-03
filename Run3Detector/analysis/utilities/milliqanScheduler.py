@@ -37,13 +37,8 @@ class milliQanScheduler():
         elif hasattr(input, '__code__') and input.__code__.co_name == '<lambda>':
                 name = input.__parent__
         elif hasattr(input, '__code__') and input.__code__.co_name == 'decorator':
-            print("trying to get name", name)
             name = input.__name__.split()[1]
         else:
-            print("Inside else block", input, input.__name__)
-            print(hasattr(input, '__code__'))
-            if hasattr(input, '__code__'):
-                print("co name", input.__code__.co_name, input.__name__)
             name = input.__name__
         
         if name in globals() or name in locals():
@@ -52,9 +47,6 @@ class milliQanScheduler():
             self.schedule.append(input)
         else:
             print("MilliQan Scheduler: Function {0} does not exist".format(name))
-            print(name in globals())
-            print(dir(self.cuts))
-            print(dir(milliqanCuts))
 
     def createSchedule(self):
         for input in self.inputs:

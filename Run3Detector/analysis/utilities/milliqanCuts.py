@@ -9,7 +9,8 @@ import functools
 # defining a decorator  
 def mqCut(func):   
     modified_name = func.__name__
-
+    
+    @functools.wraps(func)
     def wrapper(self, *args, **kwargs):  
         func(self, *args, **kwargs)
         self.cutflowCounter(modified_name)
@@ -18,15 +19,16 @@ def mqCut(func):
     return wrapper
 
 #def getCutMod(myclass=None, func=None, name=None, *args, **kwargs):
-def getCutMod(func, myclass, name=None, *args, **kwargs):
+def getCutMod(func, myclass, name=None, *dargs, **dkwargs):
     modified_name = func.__name__
     if name is not None:
         modified_name = name
-    setattr(milliqanCuts, modified_name, func)
+    func = func.__wrapped__
+    setattr(myclass, modified_name, func)
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
-
-        func(*args, **kwargs)
+        #print("Inside wrapper", modified_name, args, kwargs)
+        func(myclass, *dargs, **dkwargs)
         myclass.cutflowCounter(modified_name)
 
     wrapper.__name__ = modified_name
@@ -57,10 +59,11 @@ class milliqanCuts():
         # Prints the value after each batch of events
         # TODO: Only print at the very end
         print("------------------Cutflow Table--------------------")
-        print ("{:<15} {:<10}".format('Cut', 'N Passing Events'))
+        print ("{:<25} {:<10}".format('Cut', 'N Passing Events'))
+        print('---------------------------------------------------')
         for key, value in self.cutflow.items():
             #print(i, len(self.cutflow))
-            print("{:<15}{:<10}".format(key, value))
+            print("{:<25} {:<10}".format(key, value))
         print("----------------------------------------------------")
         # Resets the counter at the end of the cutflow
         self.counter=0

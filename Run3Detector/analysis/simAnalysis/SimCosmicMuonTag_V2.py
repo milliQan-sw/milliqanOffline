@@ -649,8 +649,8 @@ def sudo_straight(self, cutName = "StraghtCosmic",NPEcut = 20):
 
 #find the bar max pulse for every events.
 def findMaxNPE(self):
-    self.events["MaxNPE"] = ak.max(self.evens["nPE"][self.evens["barCut"], axis = 1)
-    #but since the performance of each pmt are different, it is to be able to make 2 d plot ?  chan vs max npe for assciate channel. event based but associate with channel
+    self.events["MaxNPE"] = ak.max(self.events["nPE"][self.events["barCut"]], axis = 1)
+    #but since the performance of each pmt are different, it would be great to be able to make 2 d plot  chan vs max npe for associate channel.This is event based but associate with channel
     # build the for loop to find max corresbonding pulse
 
     for layer in range(4):
@@ -659,11 +659,11 @@ def findMaxNPE(self):
                 #set the none to be  -100 so max can work
                 #fix the array
                 tag=(self.events["layer"] == layer) & (self.events["column"] == column) & (self.events["row"] == row) & (self.events["barCut"])
-                self.events[f"MAXNPE_l{layer}_r{row}_c{column}"] = ak.max(self.evens["nPE"][tag], axis = 1)
+                self.events[f"MAXNPE_l{layer}_r{row}_c{column}"] = ak.max(self.events["nPE"][tag], axis = 1)
 
 
 
-setatt(milliqanCuts,'findMaxNPE',findMaxNPE)
+setattr(milliqanCuts,'findMaxNPE',findMaxNPE)
 
 setattr(milliqanCuts, 'BarNPERatioCalculateV2' ,BarNPERatioCalculateV2)
 setattr(milliqanCuts, 'sudo_straight',sudo_straight)    

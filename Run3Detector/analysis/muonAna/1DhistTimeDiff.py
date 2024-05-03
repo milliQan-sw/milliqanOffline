@@ -79,6 +79,7 @@ def getTimeDiff(self):
                         time_diffs.append(time_diff)
     
     print(time_diffs)
+    print(len(time_diffs))
 
     # store the time differences in the 'timeDiff' branch
     self.events['timeDiff'] = time_diffs

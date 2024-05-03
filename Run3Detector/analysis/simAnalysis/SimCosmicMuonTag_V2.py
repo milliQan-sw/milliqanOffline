@@ -504,18 +504,23 @@ def MiddleRow(self):
 
 def sudo_straight(self, cutName = "StraghtCosmic",NPEcut = 20):
     
-    #new script:
+
     lxArr = ak.copy(self.events)
     
     eventList = []
     DownEventList = [] #save the save event that pass the downward tags.
 
-    #FIXME: move this section to initialization?
+
     for layer in range(4):
         for row in range(4):
             for column in range(4):
                 lxArr[f"L{layer}_r{row}_c{column}"]=(lxArr["nPE"] >= NPEcut) & (lxArr["layer"] == layer) & (lxArr["column"] == column) & (lxArr["row"] == row) & (lxArr["barCut"])
     
+    #tag for big hit at the top cosmic panel. Channel is the old offline  channel mapping
+    #top cosmic panel that covers layer 0 and layer 1
+    lxArr["CosP01"] = ak.any ( ( (lxArr["chan"] == 68) & (lxArr["nPE"] >= (NPEcut/12) ) ) , axis = 1)
+    #top cosmic panel that covers layer 2 and layer 3
+    lxArr["CosP23"] = ak.any ( ( (lxArr["chan"] == 72) & (lxArr["nPE"] >= (NPEcut/12) ) ) , axis = 1)
 
     for layer in range(4):
 
@@ -523,7 +528,13 @@ def sudo_straight(self, cutName = "StraghtCosmic",NPEcut = 20):
         for c in range(4):
             tag=(ak.any(lxArr[f"L{layer}_r0_c{c}"], axis = 1) & ak.any(lxArr[f"L{layer}_r1_c{c}"], axis = 1) & ak.any(lxArr[f"L{layer}_r2_c{c}"], axis = 1) & ak.any(lxArr[f"L{layer}_r3_c{c}"], axis = 1))
             eventList.append(tag)
-            DownEventList.append(tag)
+            if layer <= 1:
+                #big hits along the rows at layer 0 and 1
+                DownEventList.append((tag) & (lxArr["CosP01"]) )
+            else:
+                #big hits along the rows at layer 2 and 3
+                DownEventList.append((tag) & (lxArr["CosP23"]) )
+
 
         #case 2-1: for the  first three hits(count from the layer 3 to layer 0) are at the same column
         for c in range(3):

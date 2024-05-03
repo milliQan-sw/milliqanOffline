@@ -63,9 +63,8 @@ def getTimeDiff(self):
                     # print out channel number and corresponding desired times of events in that channel
                     print(key, cor_times[key])
 
-    # create an empty awkward array to store time differences
+    # create an empty awkward array to store time differences initialized with all Nones
     time_diffs = ak.Array([None] * 1000)
-    print(len(time_diffs))
 
     # calculate time differences between layer 1 and layer 0 in each channel for each event
     for row in range(4):
@@ -78,10 +77,12 @@ def getTimeDiff(self):
                 for i in range(len(cor_times[key0])):  # len(cor_times[key0]) = len(cor_times[key1])
                     if cor_times[key0][i] is not None and cor_times[key1][i] is not None:
                         time_diff = cor_times[key1][i] - cor_times[key0][i]
-                        updated_flattened_time_diffs = ak.concatenate([flattened_time_diffs, ak.Array([time_diff])], axis=0)
+                        first_none_index = time_diffs.index(None)
+                        print(first_none_index)
+                        #time_diffs[first_none_index] = time_diff
 
     # store the time differences in the 'timeDiff' branch
-    self.events['timeDiff'] = updated_flattened_time_diffs
+    self.events['timeDiff'] = time_diffs
 
 # add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)

@@ -502,7 +502,7 @@ def MiddleRow(self):
     self.events["MiddleRow"] = ( (self.events["row"]== 1) | (self.events["row"]== 2) )
 
 
-def sudo_straight(self, cutName = "StraghtCosmic",NPEcut = 20):
+def sudo_straight(self, cutName = "StraghtCosmic",NPEcut = 20,time = "time"):
     
 
     lxArr = ak.copy(self.events)
@@ -511,16 +511,39 @@ def sudo_straight(self, cutName = "StraghtCosmic",NPEcut = 20):
     DownEventList = [] #save the save event that pass the downward tags.
 
 
+
     for layer in range(4):
         for row in range(4):
             for column in range(4):
-                lxArr[f"L{layer}_r{row}_c{column}"]=(lxArr["nPE"] >= NPEcut) & (lxArr["layer"] == layer) & (lxArr["column"] == column) & (lxArr["row"] == row) & (lxArr["barCut"])
-    
+                #channel tag
+                lxArr[f"L{layer}_r{row}_c{column}_pre"]=(lxArr["layer"] == layer) & (lxArr["column"] == column) & (lxArr["row"] == row) & (lxArr["barCut"])
+                #use channel tag to get the time
+                ChanTime = lxArr[time][lxArr[f"L{layer}_r{row}_c{column}_pre"]]
+                #find the the time for first hit of associate channel
+                ChanTime = ak.fill_none(ChanTime,-100,axis=1)  #fill none for empty channel. ak.min doesn't work on the empty array
+                FirstHitTime = ak.min(ChanTime,axis = 1) 
+
+                #check if the first hit pass the npe cut
+                #assuming there is no two pulses can have same time. if FirstHitTime < 0 then it suggest this channel has no reading. 
+                lxArr[f"L{layer}_r{row}_c{column}"]=(lxArr["nPE"] >= NPEcut) & (lxArr[f"L{layer}_r{row}_c{column}_pre"]) & (lxArr[time] == FirstHitTime) & (FirstHitTime > 0)
+                
+
     #tag for big hit at the top cosmic panel. Channel is the old offline  channel mapping
     #top cosmic panel that covers layer 0 and layer 1
-    lxArr["CosP01"] = ak.any ( ( (lxArr["chan"] == 68) & (lxArr["nPE"] >= (NPEcut/12) ) ) , axis = 1)
+    lxArr[f"CosP01_pre"] = (lxArr["chan"] == 68)
+    P01_Time = lxArr[time][lxArr[f"CosP01_pre"]]
+    P01_Time = ak.fill_none(P01_Time,-100,axis=1)
+    P01_FirstHitTime = ak.min(P01_Time , axis = 1)
+    lxArr["CosP01"] = ak.any ( ( (lxArr[f"CosP01_pre"]) & (lxArr["nPE"] >= (NPEcut/12))  &  (lxArr[time] == P01_FirstHitTime) & (P01_FirstHitTime > 0)  ) , axis = 1)
+    
+    
     #top cosmic panel that covers layer 2 and layer 3
-    lxArr["CosP23"] = ak.any ( ( (lxArr["chan"] == 72) & (lxArr["nPE"] >= (NPEcut/12) ) ) , axis = 1)
+    lxArr[f"CosP23_pre"] = (lxArr["chan"] == 72)
+    P23_Time = lxArr[time][lxArr[f"CosP23_pre"]]
+    P23_Time = ak.fill_none(P23_Time,-100,axis=1)
+    P23_FirstHitTime = ak.min(P23_Time , axis = 1)
+    
+    lxArr["CosP23"] = ak.any ( ( (lxArr[f"CosP23_pre"]) & (lxArr["nPE"] >= (NPEcut/12))  &  (lxArr[time] == P23_FirstHitTime) & (P23_FirstHitTime > 0)  ) , axis = 1)
 
     for layer in range(4):
 

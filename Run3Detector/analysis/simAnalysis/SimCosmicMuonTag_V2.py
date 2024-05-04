@@ -520,25 +520,19 @@ def sudo_straight(self, cutName = "StraghtCosmic",NPEcut = 20,time = "time"):
                 #use channel tag to get the time
                 ChanTime = lxArr[time][lxArr[f"L{layer}_r{row}_c{column}_pre"]]
                 #find the the time for first hit of associate channel
-                #ChanTime = ak.fill_none(ChanTime,-100,axis=1)  #fill none for empty channel. ak.min doesn't work on the empty array
+
                 FirstHitTime = ak.min(ChanTime,axis = 1) 
-                
                 #check if the first hit pass the npe cut
                 #assuming there is no two pulses can have same time. if FirstHitTime < 0 then it suggest this channel has no reading. 
                 lxArr[f"L{layer}_r{row}_c{column}"]=(lxArr["nPE"] >= NPEcut) & (lxArr[f"L{layer}_r{row}_c{column}_pre"]) & (lxArr[time] == FirstHitTime) & (FirstHitTime > 0)
-                #fill none 
+                #fill none. The none appears when the selected channel has no pulse.
                 lxArr[f"L{layer}_r{row}_c{column}"]  = ak.fill_none( lxArr[f"L{layer}_r{row}_c{column}"] , [False], axis =0) 
-                #FIXME: debug where does the none occur? None and false also exist. something is working
-                #size error in the array at below
-                print(f"L{layer}_r{row}_c{column}]")
-                
-                print(ak.to_list(lxArr[f'L{layer}_r{row}_c{column}']))                
+           
 
     #tag for big hit at the top cosmic panel. Channel is the old offline  channel mapping
     #top cosmic panel that covers layer 0 and layer 1
     lxArr[f"CosP01_pre"] = (lxArr["chan"] == 68)
     P01_Time = lxArr[time][lxArr[f"CosP01_pre"]]
-    #P01_Time = ak.fill_none(P01_Time,-100,axis=1)
     P01_FirstHitTime = ak.min(P01_Time , axis = 1)
     lxArr["Pre_CosP01"] =  (lxArr[f"CosP01_pre"]) & (lxArr["nPE"] >= (NPEcut/12))  &  (lxArr[time] == P01_FirstHitTime) & (P01_FirstHitTime > 0) 
     lxArr["Pre_CosP01"] = ak.fill_none(lxArr["Pre_CosP01"],[False], axis = 0) 
@@ -548,7 +542,6 @@ def sudo_straight(self, cutName = "StraghtCosmic",NPEcut = 20,time = "time"):
     #top cosmic panel that covers layer 2 and layer 3
     lxArr[f"CosP23_pre"] = (lxArr["chan"] == 72)
     P23_Time = lxArr[time][lxArr[f"CosP23_pre"]]
-    #P23_Time = ak.fill_none(P23_Time,-100,axis=1)
     P23_FirstHitTime = ak.min(P23_Time , axis = 1)
     lxArr["Pre_CosP23"] = (lxArr[f"CosP23_pre"]) & (lxArr["nPE"] >= (NPEcut/12))  &  (lxArr[time] == P23_FirstHitTime) & (P23_FirstHitTime  > 0)  
     lxArr["Pre_CosP23"] = ak.fill_none(lxArr["Pre_CosP23"],[False], axis = 0) 
@@ -643,26 +636,13 @@ def sudo_straight(self, cutName = "StraghtCosmic",NPEcut = 20,time = "time"):
     l2Arr = (lay2Muon) & ((self.events["layer"]==2)  & (self.events["barCut"]))
     l3Arr = (lay3Muon) & ((self.events["layer"]==3)  & (self.events["barCut"]))
     
-    #FIXME:debug
-    #none array appears
-    #the none means lay*Muon is none. ->
-    print(f"l0Arr  {l0Arr}")
-    print(f"l1Arr  {l1Arr}")
-    print(f"l2Arr  {l2Arr}")
-    print(f"l3Arr  {l3Arr}")
-
-
-    #try to find the event that only one layer has the muon events. This is an Event based tag.
-    #print(len(lay0Muon)) #10K should be event based
-    #print(ak.to_list(lay0Muon))
     lay0Muon_T =  [[x] for x in lay0Muon]
     lay1Muon_T =  [[x] for x in lay1Muon]
     lay2Muon_T =  [[x] for x in lay2Muon]
     lay3Muon_T =  [[x] for x in lay3Muon]
     CleanEventTags = np.concatenate((lay0Muon_T,lay1Muon_T,lay2Muon_T,lay3Muon_T),axis = 1) 
-    print(ak.to_list(CleanEventTags)) #FIXME: this array is none
     self.events["Clean_MuonEvent"] = ak.count_nonzero(CleanEventTags,axis = 1) == 1
-    #print(ak.to_list(self.events["event"][self.events["Clean_MuonEvent"]])) #used for debug only
+    #print(ak.to_list(self.events["event"][self.events["Clean_MuonEvent"]])) #used for debug only to check which event pass this tag
 
    
     #tag the pulses that is at the adjacent layers where muon event can be found

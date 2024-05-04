@@ -516,23 +516,23 @@ def sudo_straight(self, cutName = "StraghtCosmic",NPEcut = 20,time = "time"):
         for row in range(4):
             for column in range(4):
                 #channel tag
-                lxArr[f"L{layer}_r{row}_c{column}_pre"]=(lxArr["layer"] == layer) & (lxArr["column"] == column) & (lxArr["row"] == row) & (lxArr["barCut"])
+                lxArr[f"L{layer}_r{row}_c{column}_pre"]=(lxArr["layer"] == layer) & (lxArr["column"] == column) & (lxArr["row"] == row) & (lxArr["barCut"]) #if you see none in this array, then it means there is no hit in this array.
                 #use channel tag to get the time
                 ChanTime = lxArr[time][lxArr[f"L{layer}_r{row}_c{column}_pre"]]
                 #find the the time for first hit of associate channel
-                ChanTime = ak.fill_none(ChanTime,-100,axis=1)  #fill none for empty channel. ak.min doesn't work on the empty array
+                #ChanTime = ak.fill_none(ChanTime,-100,axis=1)  #fill none for empty channel. ak.min doesn't work on the empty array
                 FirstHitTime = ak.min(ChanTime,axis = 1) 
-                FirstHitTime = [[x] for x in FirstHitTime] 
+                
                 #check if the first hit pass the npe cut
                 #assuming there is no two pulses can have same time. if FirstHitTime < 0 then it suggest this channel has no reading. 
                 lxArr[f"L{layer}_r{row}_c{column}"]=(lxArr["nPE"] >= NPEcut) & (lxArr[f"L{layer}_r{row}_c{column}_pre"]) & (lxArr[time] == FirstHitTime) & (FirstHitTime > 0)
                 #fill none 
-                lxArr[f"L{layer}_r{row}_c{column}"]  = ak.fill_none( lxArr[f"L{layer}_r{row}_c{column}"] , False)
+                lxArr[f"L{layer}_r{row}_c{column}"]  = ak.fill_none( lxArr[f"L{layer}_r{row}_c{column}"] , False, axis =0) 
                 #FIXME: debug where does the none occur? None and false also exist. something is working
                 #size error in the array at below
-                print("lxArr[fL{layer}_r{row}_c{column}]")
+                print(f"L{layer}_r{row}_c{column}]")
                 
-                print(lxArr[f'L{layer}_r{row}_c{column}'])                
+                print(ak.to_list(lxArr[f'L{layer}_r{row}_c{column}']))                
 
     #tag for big hit at the top cosmic panel. Channel is the old offline  channel mapping
     #top cosmic panel that covers layer 0 and layer 1
@@ -555,7 +555,8 @@ def sudo_straight(self, cutName = "StraghtCosmic",NPEcut = 20,time = "time"):
 
         #case 1: for muon passing straight across the detector and leave the hits along same column but different rows.
         for c in range(4):
-            tag=(ak.any(lxArr[f"L{layer}_r0_c{c}"], axis = 1) & ak.any(lxArr[f"L{layer}_r1_c{c}"], axis = 1) & ak.any(lxArr[f"L{layer}_r2_c{c}"], axis = 1) & ak.any(lxArr[f"L{layer}_r3_c{c}"], axis = 1))
+            tag=(ak.any(lxArr[f"L{layer}_r0_c{c}"], axis = 1) & ak.any(lxArr[f"L{layer}_r1_c{c}"], axis = 1) & ak.any(lxArr[f"L{layer}_r2_c{c}"], axis = 1) & ak.any(lxArr[f"L{layer}_r3_c{c}"], axis = 1)) #FIXME: here an issue can occur. when a channel has no hit a event based "false" occur, the any(.., axis = 1) will crash is this true?
+           
             eventList.append(tag)
             if layer <= 1:
                 #big hits along the rows at layer 0 and 1

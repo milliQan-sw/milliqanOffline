@@ -207,6 +207,7 @@ if __name__ == "__main__":
   
     #new count for downwardPath
     DW_Muon_count = mycuts.getCut(mycuts.countEvent,'placeholder', Countobject= 'downwardPath')
+    OL_sudo_straight = mycuts.getCut(mycuts.sudo_straight,'StraghtCosmic', NPEcut = 20,time = "timeFit_module_calibrated")
 
     #histograms for downwardPath
     Bar_Area_DW = r.TH1F("Bar_Area_DW", "area bar; area ; pulse", 7000, 0, 700000)
@@ -274,7 +275,7 @@ if __name__ == "__main__":
 
 
 
-    cutflow8 = [mycuts.offlinePreProcess,mycuts.boardsMatched,mycuts.pickupCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.NbarsHitsCount,mycuts.sudo_straight,dw_bar_cf8,dw_panel_cf8,St_bar_cf8,St_panel_cf8,CL_bar_cf8,CL_panel_cf8,DW_Muon_count,cleanMuon_count,mycuts.findMaxNPE,myplotter.dict['NuniqueBar_DW'],myplotter.dict['Bar_Area_DW'],myplotter.dict['Bar_NPE_DW'],myplotter.dict['Slab_Area_DW'],myplotter.dict['Bar_NPE_Area_DW'],myplotter.dict['Bar_Area_St'],myplotter.dict['Bar_NPE_St'],myplotter.dict['Slab_Area_St'],myplotter.dict['Bar_NPE_Area_St'],myplotter.dict['Bar_Area_CL'],myplotter.dict['Bar_NPE_CL'],myplotter.dict['Slab_Area_CL'],myplotter.dict['Bar_NPE_Area_CL']]
+    cutflow8 = [mycuts.offlinePreProcess,mycuts.boardsMatched,mycuts.pickupCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.NbarsHitsCount,OL_sudo_straight,dw_bar_cf8,dw_panel_cf8,St_bar_cf8,St_panel_cf8,CL_bar_cf8,CL_panel_cf8,DW_Muon_count,cleanMuon_count,mycuts.findMaxNPE,myplotter.dict['NuniqueBar_DW'],myplotter.dict['Bar_Area_DW'],myplotter.dict['Bar_NPE_DW'],myplotter.dict['Slab_Area_DW'],myplotter.dict['Bar_NPE_Area_DW'],myplotter.dict['Bar_Area_St'],myplotter.dict['Bar_NPE_St'],myplotter.dict['Slab_Area_St'],myplotter.dict['Bar_NPE_Area_St'],myplotter.dict['Bar_Area_CL'],myplotter.dict['Bar_NPE_CL'],myplotter.dict['Slab_Area_CL'],myplotter.dict['Bar_NPE_Area_CL']]
     
 
 

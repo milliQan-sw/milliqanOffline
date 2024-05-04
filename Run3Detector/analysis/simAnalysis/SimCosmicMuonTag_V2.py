@@ -527,7 +527,7 @@ def sudo_straight(self, cutName = "StraghtCosmic",NPEcut = 20,time = "time"):
                 #assuming there is no two pulses can have same time. if FirstHitTime < 0 then it suggest this channel has no reading. 
                 lxArr[f"L{layer}_r{row}_c{column}"]=(lxArr["nPE"] >= NPEcut) & (lxArr[f"L{layer}_r{row}_c{column}_pre"]) & (lxArr[time] == FirstHitTime) & (FirstHitTime > 0)
                 #fill none 
-                lxArr[f"L{layer}_r{row}_c{column}"]  = ak.fill_none( lxArr[f"L{layer}_r{row}_c{column}"] , False, axis =0) 
+                lxArr[f"L{layer}_r{row}_c{column}"]  = ak.fill_none( lxArr[f"L{layer}_r{row}_c{column}"] , [False], axis =0) 
                 #FIXME: debug where does the none occur? None and false also exist. something is working
                 #size error in the array at below
                 print(f"L{layer}_r{row}_c{column}]")

@@ -3,7 +3,7 @@ from SimCosmicMuonTag_V2 import *
 branches = ["height","timeFit_module_calibrated","chan","runNumber","column","event","fileNumber",'boardsMatched',"pickupFlag","layer","nPE","type","row","area"]
 
 #use this one after pickup and board matching cut
-def offlinePreProcess(self,cutName = None, cut = None, startTime = 1000, endTime = 1500):
+def offlinePreProcess(self,cutName = None, cut = None, startTime = 1250, endTime = 1350):
     removePulse_T = (self.events["timeFit_module_calibrated"] >= startTime) & (self.events["timeFit_module_calibrated"] <=endTime)
     #debug:
     #print(f"before removing the pulse time data is {self.events['timeFit_module_calibrated']}")

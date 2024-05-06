@@ -3,7 +3,7 @@ from pymongo import MongoClient
 def mongoConnect():
     try:
         client = MongoClient("mongodb.physics.ucdavis.edu",port=27017,username='mcitron',password='!!!Phys-2024-Mongo-Citron!!!', authSource='admin', authMechanism='SCRAM-SHA-256')
-        db=client['milliQanRawDatasets']
+        db=client['milliQan']
     except:
         print ("Could not publish as failed to connect to mongo server")
         return;

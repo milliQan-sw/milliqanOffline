@@ -56,7 +56,7 @@ if __name__ == "__main__":
 
         shutil.move(dataDir+filename, outputDir+filename) 
         if fileType != 'MilliQan': continue
-        cmd = 'python3 /share/scratch0/milliqan/processTrees/run_processTrees.py -S {0}.{1} -r {2} -s {3}'.format(runNumber, fileNumber, subdir1, subdir2)
+        cmd = 'python3 /share/scratch0/milliqan/processTrees/runDir/run_processTrees.py -S {0}.{1} -r {2} -s {3}'.format(runNumber, fileNumber, subdir1, subdir2)
         wd = os.getcwd()
-        p = subprocess.run([cmd], shell=True, cwd='/share/scratch0/milliqan/processTrees/')
+        p = subprocess.run([cmd], shell=True, cwd='/share/scratch0/milliqan/processTrees/runDir/')
                 

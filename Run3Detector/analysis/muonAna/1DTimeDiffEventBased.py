@@ -63,8 +63,8 @@ def getTimeDiff(self):
                     # print out channel number and corresponding desired times of events in that channel
                     print(key, cor_times[key])
 
-    # create an empty list to store time differences initialized with all Nones
-    time_diffs = []
+    # fill timeFit_module_calibrated with Nones to store in time differences
+    time_diffs = ak.Array([[None] * len(subarray) for subarray in self.events['timeFit_module_calibrated']])
     # calculate time differences between layer 1 and layer 0 in each channel for each event
     for row in range(4):
         for column in range(4):
@@ -76,18 +76,10 @@ def getTimeDiff(self):
                 for i in range(len(times)): # iterate over each event that has passed straightLineCut
                     if cor_times[key0][i] is not None and cor_times[key1][i] is not None:
                         time_diff = cor_times[key1][i] - cor_times[key0][i]
-                        time_diffs.append(time_diff)
-    
-    print(time_diffs)
-    print("Effective time differences total number: ", len(time_diffs))
-    print(raw_cor_times)
-
-    # extend time_diffs to a 1000 sized list with Nones
-    num_nones = 1000 - len(time_diffs)
-    time_diffs.extend([None] * num_nones)
+                        #time_diffs.append(time_diff)
 
     # store the time differences in the 'timeDiff' branch
-    self.events['timeDiff'] = time_diffs
+    #self.events['timeDiff'] = time_diffs
 
 # add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)

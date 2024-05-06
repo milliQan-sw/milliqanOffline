@@ -238,6 +238,8 @@ def NbarsHitsCount(self,cutName = "NBarsHits",cut = None, hist = None):
         bararr = ak.flatten(self.events[cutName],axis=None)
         hist.FillN(len(bararr), bararr, np.ones(len(bararr)))
 
+
+#NbarsHitsCountV2 is no longer used.
 def NbarsHitsCountV2(self,arr, hist, branches = None):
 
     for branch in branches:

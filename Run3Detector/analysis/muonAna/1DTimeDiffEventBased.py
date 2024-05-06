@@ -53,6 +53,7 @@ def getTimeDiff(self):
 
                     # use the mask to pick out the corresponding times to the max pulse heights (element) in each event (sublist)
                     raw_cor_times = ak.mask(channel_times, max_mask)# an unflattened raw 2D array with only desired times
+                    print(raw_cor_times)
 
                     # for each event, extract the corresponding time or return None if there's no pulse in that event
                     cor_times[key] = ak.Array([
@@ -65,7 +66,6 @@ def getTimeDiff(self):
 
     # fill timeFit_module_calibrated with Nones to store in time differences
     time_diffs = ak.Array([[None] * len(subarray) for subarray in self.events['timeFit_module_calibrated']])
-    print(time_diffs)
     # calculate time differences between layer 1 and layer 0 in each channel for each event
     for row in range(4):
         for column in range(4):
@@ -77,10 +77,10 @@ def getTimeDiff(self):
                 for i in range(len(times)): # iterate over each event that has passed straightLineCut
                     if cor_times[key0][i] is not None and cor_times[key1][i] is not None:
                         time_diff = cor_times[key1][i] - cor_times[key0][i]
-                        #time_diffs.append(time_diff)
+                        
 
     # store the time differences in the 'timeDiff' branch
-    #self.events['timeDiff'] = time_diffs
+    self.events['timeDiff'] = time_diffs
 
 # add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)

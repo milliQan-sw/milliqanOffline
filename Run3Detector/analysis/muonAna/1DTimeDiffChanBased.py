@@ -92,9 +92,7 @@ def getTimeDiff(self):
 setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)
 
 # define a file list to run over
-numRun = str(sys.argv[1])
-numFile = str(sys.argv[2])
-filelist =[f'/mnt/hadoop/se/store/user/milliqan/trees/v34/1000/MilliQan_Run{numRun}.{numFile}_v34.root:t']
+filelist = ['/mnt/hadoop/se/store/user/milliqan/trees/v34/1000/MilliQan_Run1006.4_v34.root:t']
 
 # define the necessary branches to run over
 branches = ['pickupFlag', 'boardsMatched', 'timeFit_module_calibrated', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type']

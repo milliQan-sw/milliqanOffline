@@ -62,7 +62,7 @@ def getTimeDiff(self):
                     ])
                     # print out channel number and corresponding desired times of events in that channel
                     print(key, cor_times[key])
-
+    
     # create an empty list to store time differences initialized with all Nones
     time_diffs = []
     # calculate time differences between layer 1 and layer 0 in each channel for each event
@@ -81,12 +81,9 @@ def getTimeDiff(self):
     print(time_diffs)
     print("Effective time differences total number: ", len(time_diffs))
 
-    # extend time_diffs to a 1000 sized list with Nones
-    num_nones = 1000 - len(time_diffs)
-    time_diffs.extend([None] * num_nones)
-
     # store the time differences in the 'timeDiff' branch
     self.events['timeDiff'] = time_diffs
+    
 
 # add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)
@@ -113,7 +110,6 @@ fourLayerCut = mycuts.getCut(mycuts.fourLayerCut, 'fourLayerCut', cut=False)
 myplotter = milliqanPlotter()
 
 # create a 1D root histogram
-h_1d = r.TH1F("h_1d", "timeFit_module_calibrated Difference between layer 0 and 1", 80, -40, 40)
 h_1d.GetXaxis().SetTitle("time difference between layer 0 and 1")
 
 # add root histogram to plotter

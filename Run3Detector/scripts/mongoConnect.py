@@ -6,7 +6,7 @@ def mongoConnect():
         db=client['milliQan']
     except:
         print ("Could not publish as failed to connect to mongo server")
-        return;
+        return
     return db
 
 if __name__ == "__main__":

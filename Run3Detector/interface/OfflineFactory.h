@@ -73,6 +73,17 @@ struct offline_tree_{
     string event_t_string;
     bool boardsMatched;
     int DAQEventNumber;
+    int maxPulseIndex;
+    bool goodRunLoose=false;
+    bool goodRunMedium=false;
+    bool goodRunTight=false;
+    bool goodSingleTrigger=false;
+
+    //Pulse Finding Info
+    std::vector<int> nConsecSamples_;
+    std::vector<int> nConsecSamplesEnd_;
+    std::vector<float> highThreshold_;
+    std::vector<float> lowThreshold_;
 
     //Luminosity Info
     float lumi;
@@ -85,6 +96,7 @@ struct offline_tree_{
     ulong fillEnd; //milliseconds since unix epoch
 
     //pulse vectors
+    vector<int> v_pulseIndex;
     vector<int> v_npulses;
     vector<int> v_ipulse;
     vector<int> v_chan;
@@ -121,8 +133,8 @@ struct offline_tree_{
     vector<float> v_triggerBand_max;
     vector<float> v_triggerBand_maxTime;
     vector<float> v_triggerBand_RMS;
-    vector<float> v_sideband_mean_calib;
-    vector<float> v_sideband_RMS_calib;
+    vector<float> v_sideband_mean_raw;
+    vector<float> v_sideband_RMS_raw;
     vector<Long64_t> v_groupTDC_g0;
     vector<Long64_t> v_groupTDC_g1;
     vector<Long64_t> v_groupTDC_g2;
@@ -131,18 +143,21 @@ struct offline_tree_{
     vector<Long64_t> v_groupTDC_g5;
     vector<Long64_t> v_groupTDC_g6;
     vector<Long64_t> v_groupTDC_g7;
-    vector<float> v_bx;
-    vector<float> v_by;
-    vector<float> v_bz;
+    //vector<float> v_bx;
+    //vector<float> v_by;
+    //vector<float> v_bz;
     vector<float> v_max;
-    vector<float> v_min;
+    //vector<float> v_min;
     vector<float> v_max_afterFilter;
     vector<float> v_max_threeConsec;
     vector<float> v_triggerThresholds;
     vector<bool> v_triggerEnable;
     vector<int> v_triggerLogic;
     vector<int> v_triggerMajority;
+    vector<int> v_triggerPolarity;
     vector<float> v_min_afterFilter;
+    vector<int> v_iMaxPulseLayer;
+    vector<float> v_maxPulseTime;
 
     ulong tClockCycles;
     float tTime;
@@ -164,7 +179,9 @@ public:
     void makeOutputTree();
     void loadJsonConfig(string);
     void getLumis(string);
+    void checkGoodRunList(string);
     void getEventLumis();
+    void setGoodRuns();
     void readMetaData();
     vector<vector<pair<float,float> > > readWaveDataPerEvent(int);
     //        void defineColors(vector<int>, vector<TColor*>, vector<float>, vector<float>, vector<float>);
@@ -200,12 +217,14 @@ private:
     void writeVersion();
     ulong getUnixTime(TString&);
     void setTotalLumi();
+    void findExtrema();
 
 
     float sideband_range[2] = {0,50};
     TString versionShort;
     TString versionLong = "asddsf";
-    float sampleRate = 1.6; //Dummy value here, actual value read in from MetaData
+    std::string goodRunTag;
+    float sampleRate = 1.6;
     bool applyLPFilter = false;
     TString inFileName;
     TString outFileName;
@@ -219,7 +238,7 @@ private:
     mdaq::DemonstratorConfiguration * cfg = new mdaq::DemonstratorConfiguration();
     TString* fileOpenTime;
     TString* fileCloseTime;
-    vector<float> highThresh = {15.};
+    vector<float> highThresh = {15.}; //TODO: do these need to be vectors? They are the same for all channels currently
     vector<float> lowThresh = {5.};
     vector<int> nConsecSamples = {3};
     vector<int> nConsecSamplesEnd = {1};
@@ -232,6 +251,12 @@ private:
     int dynamicPedestalTotalSamples = 400;
     int dynamicPedestalConsecutiveSamples = 16;
     float dynamicPedestalGranularity = 0.25;
+    float tdcCorrection[6]; //set to max number of boards
+
+    bool goodRunLoose;
+    bool goodRunMedium;
+    bool goodRunTight;
+    bool goodSingleTrigger;
 
     //file Lumi info
     vector<float> v_lumi;
@@ -259,7 +284,10 @@ private:
     TTree * inTree;
     TFile * inFile;
     TFile * outFile;
+    TFile * matchedFile;
     TTree * outTree;
+    TTree * trigMetaData;
+    TTree * trigMetaDataCopy;
     offline_tree_ outputTreeContents;
     bool triggerFileMatched;
     vector<TColor *> palette;
@@ -274,9 +302,17 @@ private:
     int tEvtNum = 0;
     int tRunNum = 0;
     int tTBEvent = 0;
+    int totalPulseCount = 0;
 
     Long64_t firstTDC_time=10e15;
     Long64_t lastTDC_time=-1;
+
+    //bool to print only the first warning about file lumi
+    bool firstWarning = true;
+
+    //settings to turn on variable pulse finding height based on online threshold
+    bool variableThresholds = true;
+    int thresholdDecrease = 5;
     
 };
 #endif

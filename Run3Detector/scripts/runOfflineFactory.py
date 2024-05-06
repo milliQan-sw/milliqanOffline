@@ -48,6 +48,7 @@ def validateOutput(outputFile,runNumber=-1,fileNumber=-1):
         if not tagObj:
             tagObj = f1.Get("tag_{}_{}".format(runNumber,fileNumber))
         tag = tagObj.GetTitle()
+        f1.Close()
     except Exception as ex:
         msg = traceback.format_exc()
         if "EDProductGetter" not in msg:
@@ -66,7 +67,8 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
                 fileNumber = 0
             else:
                 runNumber = int(inputFile.split("/")[-1].split("Run")[-1].split(".")[0])
-                fileNumber = int(inputFile.split("/")[-1].split(".")[1].split("_")[0])    
+                fileNumber = int(inputFile.split("/")[-1].split(".")[1].split("_")[0]) 
+                print("Run, {}, File, {}".format(inputFile.split("/")[-1].split("Run")[-1].split(".")[0], inputFile.split("/")[-1].split(".")[1].split("_")[0]))   
         except:
             if publish:
                 print ("Could not identify file and/or run number so cannot publish")
@@ -188,7 +190,7 @@ def publishDataset(configurationsJSON,inputFile,outputFile,fileNumber,runNumber,
     return True
 
 def getConfigs(runNum, offlineDir):
-    if runNum == -1 and 'barConfigs' in offlineDir: return 'configRun1097_present'
+    if runNum == -1 and 'barConfigs' in offlineDir: return 'configRun1296_present'
     elif runNum == -1 and 'slabConfigs' in offlineDir: return 'configRun0_present'
     fin = open(offlineDir+"/runInfo.json")
     runs = json.load(fin)

@@ -3,6 +3,7 @@ import pandas as pd
 import ROOT as r
 from datetime import datetime
 import matplotlib.pyplot as plt
+import math
 
 #luminosity is recorded in inverse ub
 #download lumi csv file from https://cmsoms.cern.ch/
@@ -16,6 +17,7 @@ class lumiDict:
         self.lumis = None
         self.fill = None
         self.beam = None
+        self.beamInRun = None
         self.dir = None
         self.filename = None
         self.start = None
@@ -26,7 +28,9 @@ class mqLumiList():
     def __init__(self):
         self.lumi_csv = ''
         self.rawPath = '/store/user/milliqan/run3/bar/'
-        self.mqLumis = pd.DataFrame(columns=['run', 'file', 'lumis', 'fill', 'beam', 'dir', 'filename', 'start', 'stop'])
+        self.outputFile = '/eos/home-m/micarrig/MilliQanFiles/Configs/mqLumis.json'
+        self.rawLumis = 'Run3_2024Lumis.csv'
+        self.mqLumis = pd.DataFrame(columns=['run', 'file', 'lumis', 'fill', 'beam', 'beamInRun', 'dir', 'filename', 'start', 'stop'])
         self.debug = False
         
     def looper(self):
@@ -46,31 +50,99 @@ class mqLumiList():
                 if not self.debug: self.saveJson()
                 else: self.saveJson(name='mqLumisDebug.json')
 
-                
-    def initializeDataframe(self, path):
+    def updateLumis(self):
+        print("updating the lumi list")
+        filesToProcess = self.getFilesToProcess()
+        for directory, files in filesToProcess.items():
+            print("update lumis, directory", directory, directory.replace(self.rawPath, ''))
+            self.initializeDataframe(directory.replace(self.rawPath, ''), files)
+            self.setFileTimes()
+            self.setMQLumis()
+            if not self.debug: self.saveJson()
+            else: self.saveJson(name='mqLumisDebug.json')
+
+    def getFilesToProcess(self):
+
+        filesToProcess = {}
+
+        lastRun, lastFile = self.getLastUpdate()
+        startingDir0 = math.floor(lastRun/100)*100
+        startingDir1 = math.floor((lastRun-startingDir0)/10)
+        
+        startingDir = '{}{}/000{}'.format(self.rawPath, startingDir0, startingDir1)
+        print("Beginning with {}".format(startingDir))
+        
+        while(os.path.isdir(startingDir)):
+            thisFileList = []
+            print("Looking in directory {}".format(startingDir))
+            for filename in os.listdir(startingDir):
+                if not filename.startswith('MilliQan'): continue
+                runNum, fileNum = self.getRunFile(filename)
+                runNum = int(runNum)
+                fileNum = int(fileNum)
+                #print("Run {}, last run {})".format(runNum, lastRun))
+                #print("File {}, last File {}".format(fileNum, lastFile))
+                if (runNum < lastRun): continue
+                if (runNum == lastRun and fileNum <= lastFile): continue
+                #print("Need to process {}".format(filename))
+                thisFileList.append(filename)
+            filesToProcess[startingDir] = thisFileList
+            
+            if startingDir1 == 9:
+                startingDir0+=100
+                startingDir1 = 0
+            else:
+                startingDir1+=1
+            startingDir = '{}{}/000{}'.format(self.rawPath, startingDir0, str(startingDir1))
+            print("Updated dir to {}".format(startingDir))
+
+        return filesToProcess
+
+    def getLastUpdate(self):
+        prevLumis = pd.read_json(self.outputFile, orient = 'split', compression = 'infer')
+        lastProcess = prevLumis.tail(1)
+        lastRun = lastProcess['run'].values[0]
+        lastFile = lastProcess['file'].values[0]
+        return lastRun, lastFile
+
+    def initializeDataframe(self, path, fileList=None):
         fileCnt = 0
-        for ifile, filename in enumerate(os.listdir(self.rawPath+'/'+path)):
-            if self.debug and fileCnt > 100: 
-                return
-            if not filename.startswith("MilliQan"): continue
-            if fileCnt % 1000 == 0: print("Working on processing file {}".format(fileCnt))
-            runNum_, fileNum_ = self.getRunFile(filename)
-            dict_ = lumiDict()
-            dict_.run = int(runNum_)
-            dict_.file = (fileNum_)
-            dict_.dir = self.rawPath+'/'+path
-            dict_.filename = filename
-            self.mqLumis.loc[len(self.mqLumis.index)] = dict_.__dict__
-            fileCnt += 1
+        if fileList is not None:
+            print("initializing file list", path)
+            for fileCnt, filename in enumerate(fileList):
+                if self.debug and fileCnt > 100:
+                    return
+                if fileCnt % 1000 == 0: print("Working on processing file {}".format(fileCnt))
+                runNum_, fileNum_ = self.getRunFile(filename)
+                dict_ = lumiDict()
+                dict_.run = int(runNum_)
+                dict_.file = (fileNum_)
+                dict_.dir = self.rawPath+'/'+path
+                dict_.filename = filename
+                #print(dict_.__dict__)
+                self.mqLumis.loc[len(self.mqLumis.index)] = dict_.__dict__
+        else:
+            for ifile, filename in enumerate(os.listdir(self.rawPath+'/'+path)):
+                if self.debug and fileCnt > 100: 
+                    return
+                if not filename.startswith("MilliQan"): continue
+                if fileCnt % 1000 == 0: print("Working on processing file {}".format(fileCnt))
+                runNum_, fileNum_ = self.getRunFile(filename)
+                dict_ = lumiDict()
+                dict_.run = int(runNum_)
+                dict_.file = (fileNum_)
+                dict_.dir = self.rawPath+'/'+path
+                dict_.filename = filename
+                self.mqLumis.loc[len(self.mqLumis.index)] = dict_.__dict__
+                fileCnt += 1
                     
-                        
     def getRunFile(self, filename):
         runNum = filename.split('Run')[-1].split('.')[0]
         fileNum = filename.split('.')[1].split('_')[0]
         return runNum, fileNum
         
     def openLumis(self):
-        self.lumiList = pd.read_csv(os.path.dirname(os.path.realpath(__file__))+'/../configuration/Run3Lumis.csv')
+        self.lumiList = pd.read_csv(os.path.dirname(os.path.realpath(__file__))+'/../configuration/' + self.rawLumis)
 
     def convertDatetime(self, time):
         dt_ = datetime.strptime(time, '%Y-%m-%d_%Hh%Mm%Ss')
@@ -128,12 +200,13 @@ class mqLumiList():
             beamType = None 
             beamEnergy = None
             betaStar = None 
-            beamOn = False 
+            beamOn = False #if there is stable beams at time of milliqan run
+            beamInRun = False #if there are any stable beams in the run
             fillStart = None 
             fillEnd = None
             startStableBeam = None
             endStableBeam = None
-            return lumis, fillId, beamType, beamEnergy, betaStar, beamOn, fillStart, fillEnd, startStableBeam, endStableBeam, mqLumi
+            return lumis, fillId, beamType, beamEnergy, betaStar, beamOn, beamInRun, fillStart, fillEnd, startStableBeam, endStableBeam, mqLumi
         
         #if milliqan run starts after all runs in lumi list
         if start > self.lumiList.start_time.max():
@@ -144,11 +217,12 @@ class mqLumiList():
             beamEnergy = None
             betaStar = None 
             beamOn = False 
+            beamInRun = False
             fillStart = None 
             fillEnd = None
             startStableBeam = None
             endStableBeam = None
-            return lumis, fillId, beamType, beamEnergy, betaStar, beamOn, fillStart, fillEnd, startStableBeam, endStableBeam, mqLumi
+            return lumis, fillId, beamType, beamEnergy, betaStar, beamOn, beamInRun, fillStart, fillEnd, startStableBeam, endStableBeam, mqLumi
         
         for i, st in enumerate(self.lumiList.start_time):
             if start < st: 
@@ -177,8 +251,11 @@ class mqLumiList():
             startStableBeam = self.lumiList['start_stable_beam'][startId]
             endStableBeam = self.lumiList['end_stable_beam'][startId]
             beamOn = False
-            if not pd.isna(self.lumiList['start_time'][startId]):
+            beamInRun = False
+            if not pd.isna(self.lumiList['start_stable_beam'][startId]):
                 beamOn = True
+            if not pd.isna(self.lumiList['start_time'][startId]):
+                beamInRun = True
             
             mqLumi = 0
             if beamOn:
@@ -190,13 +267,14 @@ class mqLumiList():
                 mqLumi = totalLumi * frac
                 
         else:
-            #print("ids", startId, stopId)
-            #print("start fill {0}, stop fill {1}".format(self.lumiList['fill_number'][startId], self.lumiList['fill_number'][stopId]))
+            print("ids", startId, stopId)
+            print("start fill {0}, stop fill {1}".format(self.lumiList['fill_number'][startId], self.lumiList['fill_number'][stopId]))
             fillId = self.lumiList['fill_number'][startId:stopId+1].to_list()
             beamType = self.lumiList['fill_type_runtime'][startId:stopId+1].to_list()
             beamEnergy = self.lumiList['energy'][startId:stopId+1].to_list()
             betaStar = self.lumiList['beta_star'][startId:stopId+1].to_list()
-            beamOn = [False if pd.isna(x) else True for x in self.lumiList['start_time'][startId:stopId+1]]
+            beamOn = [False if pd.isna(x) else True for x in self.lumiList['start_stable_beam'][startId:stopId+1]]
+            beamInRun = [False if pd.isna(x) else True for x in self.lumiList['start_time'][startId:stopId+1]]
             fillStart = self.lumiList['start_time'][startId:stopId+1].to_list()
             fillEnd = self.lumiList['end_time'][startId:stopId+1].to_list()
             lumis = self.lumiList['delivered_lumi'][startId:stopId+1].to_list()
@@ -222,23 +300,37 @@ class mqLumiList():
                         mqLumi += frac * x.delivered_lumi
                     elif stop < x.end_stable_beam: #milliqan run ends before fill
                         print("This should be handled already!")
+                        print(start, stop, x.start_stable_beam, x.end_stable_beam)
                 else:
                     print("Bug in code, this case isn't handled")
                         
-        return lumis, fillId, beamType, beamEnergy, betaStar, beamOn, fillStart, fillEnd, startStableBeam, endStableBeam, mqLumi
+        return lumis, fillId, beamType, beamEnergy, betaStar, beamOn, beamInRun, fillStart, fillEnd, startStableBeam, endStableBeam, mqLumi
     
     def setMQLumis(self):
-        self.mqLumis[['lumis', 'fill', 'beamType', 'beamEnergy', 'betaStar', 'beam', 'fillStart', 'fillEnd', 'startStableBeam', 'endStableBeam', 'lumiEst']] = self.mqLumis.apply(lambda x: self.findLumiStart(x.start, x.stop) if x.lumis is None else (x.lumis, x.fill, x.beamType, x.beamEnergy, x.betaStar, x.beam, x.fillStart, x.fillEnd, x.startStableBeam, x.endStableBeam, x.lumiEst), axis='columns', result_type='expand')
+        self.mqLumis[['lumis', 'fill', 'beamType', 'beamEnergy', 'betaStar', 'beam', 'beamInRun', 'fillStart', 'fillEnd', 'startStableBeam', 'endStableBeam', 'lumiEst']] = self.mqLumis.apply(lambda x: self.findLumiStart(x.start, x.stop) if x.lumis is None else (x.lumis, x.fill, x.beamType, x.beamEnergy, x.betaStar, x.beam, x.beamInRun, x.fillStart, x.fillEnd, x.startStableBeam, x.endStableBeam, x.lumiEst), axis='columns', result_type='expand')
 
     def saveJson(self, name='mqLumis.json'):
         self.mqLumis.to_json(name, orient = 'split', compression = 'infer', index = 'true')
-                
+
+    def updateJson(self):
+        existing = pd.read_json(self.outputFile, orient = 'split', compression = 'infer')
+        self.mqLumis = pd.concat((existing, self.mqLumis), ignore_index=True)
+        self.saveJson()
 
 if __name__ == "__main__":
+
+    update=True
+    debug=False
+
     mylumiList = mqLumiList()
-    mylumiList.debug = False
+    mylumiList.debug = True
     mylumiList.openLumis()
     mylumiList.addDatetimes()
-    mylumiList.looper()
+
+    if update:
+        mylumiList.updateLumis()
+        mylumiList.updateJson()
+    else:
+        mylumiList.looper()
 
     

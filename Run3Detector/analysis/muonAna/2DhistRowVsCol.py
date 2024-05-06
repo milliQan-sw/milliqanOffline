@@ -37,9 +37,9 @@ fourLayerCut = mycuts.getCut(mycuts.fourLayerCut, 'fourLayerCut', cut=False)
 myplotter = milliqanPlotter()
 
 # create a 2D root histogram
-h_2d = r.TH2F("h_2d", "2d Histogram", 4, 0, 4, 4, 0, 4)
-h_2d.GetXaxis().SetTitle("column")
-h_2d.GetYaxis().SetTitle("row")
+h_2d = r.TH2F("h_2d", "Row VS Column after straightLineCut in all layers", 4, 0, 4, 4, 0, 4)
+h_2d.GetXaxis().SetTitle("Column")
+h_2d.GetYaxis().SetTitle("Row")
 
 # add root histogram to plotter
 myplotter.addHistograms(h_2d, ['column', 'row'], 'straightLineCut')

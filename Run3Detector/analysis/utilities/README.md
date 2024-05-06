@@ -3,7 +3,7 @@ Overview:
   
 milliqanProcessor: This class acts as a wrapper for the uproot iterate method. Inputs to the processor are: <br>
     -filelist (required): list of input files for the processor to run over, these should be offline trees <br>
-    -branches (required): list of all branches from the offline files that are needed for the specific analysis <br>
+     -branches (required): list of all branches from the offline files that are needed for the specific analysis <br>
     -schedule (required): milliqanScheduler class instance containing a list of all cuts and plots that will be made <br>
     -cuts (depreciated): milliqanCuts class instance passed directly to processor <br>
     -plotter (depreciated): milliqanPlotter class instance passed directly to processor <br>

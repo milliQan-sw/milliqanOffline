@@ -27,7 +27,7 @@ def getTimeDiff(self):
     times = self.events['timeFit_module_calibrated'][self.events['straightLineCut']]
 
     # create an array initialized with all 'False's and have the same dimensions like rows
-    keep_indices = np.zeros_like(rows, dtype=bool)
+    indices_mask = np.zeros_like(rows, dtype=bool)
 
     for row in range(4):
         for column in range(4):
@@ -39,18 +39,18 @@ def getTimeDiff(self):
             
             # check if there are pulses in all four layers
             if np.any(lay0_mask) and np.any(lay1_mask) and np.any(lay2_mask) and np.any(lay3_mask):
-                # if pulses exist in all four layers, mark these indices
-                keep_indices = np.logical_or(keep_indices, lay0_mask)
-                keep_indices = np.logical_or(keep_indices, lay1_mask)
-                keep_indices = np.logical_or(keep_indices, lay2_mask)
-                keep_indices = np.logical_or(keep_indices, lay3_mask)
+                # if pulses exist in all four layers, mark these 4 indices
+                indices_mask = np.logical_or(indices_mask, lay0_mask)
+                indices_mask = np.logical_or(indices_mask, lay1_mask)
+                indices_mask = np.logical_or(indices_mask, lay2_mask)
+                indices_mask = np.logical_or(indices_mask, lay3_mask)
 
     # filter arrays to keep only the indices with complete layer hits
-    rows = rows[keep_indices]
-    columns = columns[keep_indices]
-    layers = layers[keep_indices]
-    heights = heights[keep_indices]
-    times = times[keep_indices]
+    rows = rows[indices_mask]
+    columns = columns[indices_mask]
+    layers = layers[indices_mask]
+    heights = heights[indices_mask]
+    times = times[indices_mask]
                 
     # initialize dictionaries to hold max pulse heights and corresponding times
     max_heights = {}

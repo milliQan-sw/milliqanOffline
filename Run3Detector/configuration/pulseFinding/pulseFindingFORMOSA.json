@@ -1,7 +1,7 @@
 {
     "pulseParams":{"nConsecSamples":[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 2, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
     "nConsecSamplesEnd":[3],
-    "highThresh":[8],
+    "highThresh":[8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 3, 8, 3, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8],
     "lowThresh":[1]},
     "sampleRate":0.4
 }

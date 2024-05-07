@@ -42,10 +42,22 @@ def getTimeDiff(self):
             # on straight line pass, layer 0 and 1
             mask0 = mask & lay0_mask
             mask1 = mask & lay1_mask
-            times0 = times[mask0]
-            times1 = times[mask1]
-            print(times0)
-            print(times1)
+            heights0 = heights[mask0]
+            heights1 = heights[mask1]
+            print(heights0)
+            print(heights1)
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

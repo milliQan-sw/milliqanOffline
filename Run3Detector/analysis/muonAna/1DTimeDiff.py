@@ -24,6 +24,8 @@ def getTimeDiff(self):
     max_heightsL1 = {}
     max_timeL1 = {}
 
+    time_diffs = []
+
     # find the straight line passed pulses
     for row in range(4):
         for column in range(4):
@@ -56,7 +58,6 @@ def getTimeDiff(self):
                 if sublist is not None else None
                 for sublist in ak.to_list(raw_max_timesL0)
             ])
-            print(key, max_timeL0[key])
 
             max_heightsL1[key] = ak.max(heightsL1, axis = -1)
             max_maskL1 = (heightsL1 == ak.broadcast_arrays(max_heightsL1[key], heightsL1)[0])
@@ -67,48 +68,13 @@ def getTimeDiff(self):
                 for sublist in ak.to_list(raw_max_timesL1)
             ])
 
+            time_diff = max_timeL1[key] - max_heightsL1[key]
+            time_diffs.append(time_diff)
+            print(time_diffs)
+
+
 
             
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

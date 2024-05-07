@@ -42,10 +42,10 @@ def getTimeDiff(self):
             # check if there are pulses in all four layers
             if np.any(lay0_mask) and np.any(lay1_mask) and np.any(lay2_mask) and np.any(lay3_mask):
                 # if pulses exist in all four layers, mark these indices to keep
-                keep_indices |= lay0_mask
-                keep_indices |= lay1_mask
-                keep_indices |= lay2_mask
-                keep_indices |= lay3_mask
+                keep_indices = np.logical_or(keep_indices, lay0_mask)
+                keep_indices = np.logical_or(keep_indices, lay1_mask)
+                keep_indices = np.logical_or(keep_indices, lay2_mask)
+                keep_indices = np.logical_or(keep_indices, lay3_mask)
 
     # filter arrays to keep only the indices with complete layer hits
     rows = rows[keep_indices]

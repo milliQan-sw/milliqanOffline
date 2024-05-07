@@ -18,13 +18,43 @@ from milliqanPlotter import *
 # define the function to get the time differences between events in each channel between layer 0 and layer 1
 def getTimeDiff(self):
     # branches used for locating events in different channels
+    # these 5 branches are all pulse_based so they should have the exact same dimensions
     rows = self.events['row'][self.events['straightLineCut']]
     columns = self.events['column'][self.events['straightLineCut']]
     layers = self.events['layer'][self.events['straightLineCut']]
     # branches with data to extract from
     heights = self.events['height'][self.events['straightLineCut']]
     times = self.events['timeFit_module_calibrated'][self.events['straightLineCut']]
+    print(times)
+    print()
 
+    # creating an array to keep track of which indices to keep
+    keep_indices = np.zeros_like(rows, dtype=bool)
+
+    for row in range(4):
+        for column in range(4):
+            # getting masks for each layer at the current row and column
+            lay0_mask = (rows == row) & (columns == column) & (layers == 0)
+            lay1_mask = (rows == row) & (columns == column) & (layers == 1)
+            lay2_mask = (rows == row) & (columns == column) & (layers == 2)
+            lay3_mask = (rows == row) & (columns == column) & (layers == 3)
+            
+            # check if there are pulses in all four layers
+            if np.any(lay0_mask) and np.any(lay1_mask) and np.any(lay2_mask) and np.any(lay3_mask):
+                # if pulses exist in all four layers, mark these indices to keep
+                keep_indices |= lay0_mask
+                keep_indices |= lay1_mask
+                keep_indices |= lay2_mask
+                keep_indices |= lay3_mask
+
+    # filter arrays to keep only the indices with complete layer hits
+    rows = rows[keep_indices]
+    columns = columns[keep_indices]
+    layers = layers[keep_indices]
+    heights = heights[keep_indices]
+    times = times[keep_indices]
+    print(times)
+                
     # initialize dictionaries to hold max pulse heights and corresponding times
     max_heights = {}
     cor_times = {}

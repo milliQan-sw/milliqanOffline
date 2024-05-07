@@ -26,16 +26,8 @@ def getTimeDiff(self):
     heights = self.events['height'][self.events['straightLineCut']]
     times = self.events['timeFit_module_calibrated'][self.events['straightLineCut']]
 
-    print(ak.num(rows))
-    print(ak.num(columns))
-    print(ak.num(layers))
-    print(ak.num(heights))
-    print(ak.num(times))
-
     # create an array initialized with all 'False's and have the same dimensions like rows
     indices_mask = np.zeros_like(rows, dtype=bool)
-
-    print(ak.num(indices_mask))
 
     for row in range(4):
         for column in range(4):
@@ -59,6 +51,12 @@ def getTimeDiff(self):
     layers = layers[indices_mask]
     heights = heights[indices_mask]
     times = times[indices_mask]
+
+    print(ak.num(rows))
+    print(ak.num(columns))
+    print(ak.num(layers))
+    print(ak.num(heights))
+    print(ak.num(times))
 
     print('StraightLine Pulses on layer0 by event: ', ak.num(times[layers == 0]))
     print('StraightLine Pulses on layer1 by event: ', ak.num(times[layers == 1]))

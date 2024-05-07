@@ -26,6 +26,12 @@ def getTimeDiff(self):
     heights = self.events['height'][self.events['straightLineCut']]
     times = self.events['timeFit_module_calibrated'][self.events['straightLineCut']]
 
+    print(ak.num(rows))
+    print(ak.num(columns))
+    print(ak.num(layers))
+    print(ak.num(heights))
+    print(ak.num(times))
+
     # create an array initialized with all 'False's and have the same dimensions like rows
     indices_mask = np.zeros_like(rows, dtype=bool)
 
@@ -51,8 +57,9 @@ def getTimeDiff(self):
     layers = layers[indices_mask]
     heights = heights[indices_mask]
     times = times[indices_mask]
-    print('Pulses on layer0 by event: ', ak.num(times[layers == 0]))
-    print('Pulses on layer1 by event: ', ak.num(times[layers == 1]))
+
+    print('StraightLine Pulses on layer0 by event: ', ak.num(times[layers == 0]))
+    print('StraightLine Pulses on layer1 by event: ', ak.num(times[layers == 1]))
                 
     # initialize dictionaries to hold max pulse heights and corresponding times
     max_heights = {}
@@ -92,8 +99,7 @@ def getTimeDiff(self):
                     # print out channel number and corresponding desired times of events in that channel
                     print(key, cor_times[key])
 
-    print(max_heights[layers == 0])
-    print(max_heights[layers == 1])
+    print('Max Heights: ', max_heights)
     # create an empty list to store time differences initialized with all Nones
     time_diffs = []
     # calculate time differences between layer 1 and layer 0 in each channel for each event

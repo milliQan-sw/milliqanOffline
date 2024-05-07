@@ -25,8 +25,6 @@ def getTimeDiff(self):
     # branches with data to extract from
     heights = self.events['height'][self.events['straightLineCut']]
     times = self.events['timeFit_module_calibrated'][self.events['straightLineCut']]
-    print(times)
-    print()
 
     # creating an array to keep track of which indices to keep
     keep_indices = np.zeros_like(rows, dtype=bool)
@@ -53,7 +51,6 @@ def getTimeDiff(self):
     layers = layers[keep_indices]
     heights = heights[keep_indices]
     times = times[keep_indices]
-    print(times)
                 
     # initialize dictionaries to hold max pulse heights and corresponding times
     max_heights = {}

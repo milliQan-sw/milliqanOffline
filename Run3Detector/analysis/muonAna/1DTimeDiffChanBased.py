@@ -35,6 +35,8 @@ def getTimeDiff(self):
     # create an array initialized with all 'False's and have the same dimensions like rows
     indices_mask = np.zeros_like(rows, dtype=bool)
 
+    print(ak.num(indices_mask))
+
     for row in range(4):
         for column in range(4):
             # getting boolean masks for each layer at the current row and column

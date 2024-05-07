@@ -17,50 +17,35 @@ from milliqanPlotter import *
 
 # define the function to get the time differences between events in each channel between layer 0 and layer 1
 def getTimeDiff(self):
-    # branches used for locating events in different channels
     # these 5 branches are all pulse_based so they should have the exact same dimensions
+    # [88, 75]
     rows = self.events['row'][self.events['straightLineCut']]
     columns = self.events['column'][self.events['straightLineCut']]
     layers = self.events['layer'][self.events['straightLineCut']]
-    # branches with data to extract from
     heights = self.events['height'][self.events['straightLineCut']]
     times = self.events['timeFit_module_calibrated'][self.events['straightLineCut']]
 
-    # create an array initialized with all 'False's and have the same dimensions like rows
-    indices_mask = np.zeros_like(rows, dtype=bool)
-
+    # find the straight line pulses
     for row in range(4):
         for column in range(4):
-            # getting boolean masks for each layer at the current row and column
+            # getting boolean masks for each layer at the current row and column 
+            # [88, 75]
             lay0_mask = (rows == row) & (columns == column) & (layers == 0)
             lay1_mask = (rows == row) & (columns == column) & (layers == 1)
             lay2_mask = (rows == row) & (columns == column) & (layers == 2)
             lay3_mask = (rows == row) & (columns == column) & (layers == 3)
             
-            # check if there are pulses in all four layers
-            if np.any(lay0_mask) and np.any(lay1_mask) and np.any(lay2_mask) and np.any(lay3_mask):
-                # if pulses exist in all four layers, mark these 4 indices
-                indices_mask = np.logical_or(indices_mask, lay0_mask)
-                indices_mask = np.logical_or(indices_mask, lay1_mask)
-                indices_mask = np.logical_or(indices_mask, lay2_mask)
-                indices_mask = np.logical_or(indices_mask, lay3_mask)
+            # masks to check if there are pulses on all four layers to get the straight line passes
+            # [True/False(pulses on all four?), True/False(pulses on all four?)]
+            mask = ak.any(lay0_mask, axis=1) & ak.any(lay1_mask, axis=1) & ak.any(lay2_mask, axis=1) & ak.any(lay3_mask, axis=1)
+            # on straight line pass, layer 0 and 1
+            mask0 = mask & lay0_mask
+            mask1 = mask & lay1_mask
+            heights0 = heights[mask0]
+            heights1 = heights[mask1]
+            print(heights0)
+            print(heights1)
 
-    # filter arrays to keep only the indices with complete layer hits
-    rows = rows[indices_mask]
-    columns = columns[indices_mask]
-    layers = layers[indices_mask]
-    heights = heights[indices_mask]
-    times = times[indices_mask]
-
-    print(ak.num(rows))
-    print(ak.num(columns))
-    print(ak.num(layers))
-    print(ak.num(heights))
-    print(ak.num(times))
-
-    print('StraightLine Pulses on layer0 by event: ', ak.num(times[layers == 0]))
-    print('StraightLine Pulses on layer1 by event: ', ak.num(times[layers == 1]))
-                
     # initialize dictionaries to hold max pulse heights and corresponding times
     max_heights = {}
     cor_times = {}

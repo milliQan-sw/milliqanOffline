@@ -51,7 +51,8 @@ def getTimeDiff(self):
     layers = layers[indices_mask]
     heights = heights[indices_mask]
     times = times[indices_mask]
-    print(ak.num(times[layers == 0]))
+    print('Pulses on layer0 by event: ', ak.num(times[layers == 0]))
+    print('Pulses on layer1 by event: ', ak.num(times[layers == 1]))
                 
     # initialize dictionaries to hold max pulse heights and corresponding times
     max_heights = {}
@@ -91,7 +92,8 @@ def getTimeDiff(self):
                     # print out channel number and corresponding desired times of events in that channel
                     print(key, cor_times[key])
 
-    print(max_heights[key])
+    print(max_heights[layers == 0])
+    print(max_heights[layers == 1])
     # create an empty list to store time differences initialized with all Nones
     time_diffs = []
     # calculate time differences between layer 1 and layer 0 in each channel for each event

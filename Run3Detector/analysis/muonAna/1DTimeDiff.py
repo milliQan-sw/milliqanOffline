@@ -75,20 +75,11 @@ def getTimeDiff(self):
     print(ak.num(time_diffs))
 
     self.events['timeDiff'] = time_diffs
+    num_nones = 1000 - len(time_diffs)
+    time_diffs.extend([None] * num_nones)
 
-
-            
-
-
-
-
-
-
-
-
-
-
-
+    # store the time differences in the 'timeDiff' branch
+    self.events['timeDiff'] = time_diffs
 
     '''
     # iterate over each channel (using row/column/layer to locate each channel)

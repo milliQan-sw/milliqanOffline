@@ -100,7 +100,7 @@ def getTimeDiff(self):
             key1 = (row, column, 1)
 
             if key0 in cor_times and key1 in cor_times:
-                for i in range(len(times)): # iterate over each event that has passed straightLineCut
+                for i in range(len(times)): # iterate over each event that has passed straightLineCut in current channel
                     if cor_times[key0][i] is not None and cor_times[key1][i] is not None:
                         time_diff = cor_times[key1][i] - cor_times[key0][i]
                         time_diffs.append(time_diff)

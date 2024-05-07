@@ -72,8 +72,9 @@ def getTimeDiff(self):
             time_diffs.append(time_diff)
 
     print(len(time_diffs))
-    print(ak.num(time_diffs))            
+    print(ak.num(time_diffs))
 
+    self.events['timeDiff'] = time_diffs
 
 
             

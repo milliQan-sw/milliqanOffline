@@ -371,7 +371,8 @@ class mqLumiList():
         existing = pd.read_json(self.outputFile, orient = 'split', compression = 'infer')
         self.mqLumis = pd.concat((existing, self.mqLumis), ignore_index=True)
         self.mqLumis = self.mqLumis.drop_duplicates(subset=['file', 'run'], keep='last')
-        self.saveJson(name=self.outputFile)
+        self.saveJson(name='mqLumisUpdate.json')
+        os.system('rsync -rzh mqLumisUpdate.json {}'.format(self.outputFile))
 
 
 if __name__ == "__main__":

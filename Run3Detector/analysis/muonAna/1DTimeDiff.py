@@ -15,37 +15,60 @@ from milliqanScheduler import *
 from milliqanCuts import *
 from milliqanPlotter import *
 
-# define the function to get the time differences between events in each channel between layer 0 and layer 1
+# define the function to get the time differences for the max height of events in each channel between layer 0 and layer 1
 def getTimeDiff(self):
-    # these 5 branches are all pulse_based so they should have the exact same dimensions
-    rows = self.events['row'][self.events['straightLineCut']]
-    columns = self.events['column'][self.events['straightLineCut']]
-    layers = self.events['layer'][self.events['straightLineCut']]
-    heights = self.events['height'][self.events['straightLineCut']]
-    times = self.events['timeFit_module_calibrated'][self.events['straightLineCut']]
 
-    # initialize dictionaries to hold max pulse heights and corresponding times
-    max_heights = {}
-    cor_times = {}
+    max_heightsL0 = {}
+    max_timeL0 = {}
 
-    # find the straight line pulses
+    max_heightsL1 = {}
+    max_timeL1 = {}
+
+    # find the straight line passed pulses
     for row in range(4):
         for column in range(4):
-            # getting boolean masks for each layer at the current row and column
-            lay0_mask = (rows == row) & (columns == column) & (layers == 0)
-            lay1_mask = (rows == row) & (columns == column) & (layers == 1)
-            lay2_mask = (rows == row) & (columns == column) & (layers == 2)
-            lay3_mask = (rows == row) & (columns == column) & (layers == 3)
+            # 2D True/False masks determined by channels
+            pulse_maskL0 = (self.events['row'] == row) & (self.events['column'] == column) & (self.events['layer'] == 0)
+            pulse_maskL1 = (self.events['row'] == row) & (self.events['column'] == column) & (self.events['layer'] == 1)
+            pulse_maskL2 = (self.events['row'] == row) & (self.events['column'] == column) & (self.events['layer'] == 2)
+            pulse_maskL3 = (self.events['row'] == row) & (self.events['column'] == column) & (self.events['layer'] == 3)
             
-            # masks to check if there are pulses on all four layers to get the straight line passes
-            mask = ak.any(lay0_mask, axis=1) & ak.any(lay1_mask, axis=1) & ak.any(lay2_mask, axis=1) & ak.any(lay3_mask, axis=1)
-            # on straight line pass, layer 0 and 1
-            mask0 = mask & lay0_mask
-            mask1 = mask & lay1_mask
-            heights0 = heights[mask0]
-            heights1 = heights[mask1]
-            print(heights0)
-            print(heights1)
+            # 1D True/False mask determined by whether there is any straight line pass
+            event_mask = ak.any(pulse_maskL0, axis=1) & ak.any(pulse_maskL1, axis=1) & ak.any(pulse_maskL2, axis=1) & ak.any(pulse_maskL3, axis=1)
+
+            # on straight line passes, layer 0 and 1
+            mask0 = event_mask & pulse_maskL0
+            mask1 = event_mask & pulse_maskL1
+
+            heightsL0 = self.events['height'][mask0]
+            timeL0 = self.events['timeFit_module_calibrated'][mask0]
+
+            heightsL1 = self.events['height'][mask1]
+            timeL1 = self.events['timeFit_module_calibrated'][mask1]
+
+            key = (row, column)
+            
+            max_heightsL0[key] = ak.max(heightsL0, axis = -1)
+            max_maskL0 = (heightsL0 == ak.broadcast_arrays(max_heightsL0[key], heightsL0)[0])
+            raw_max_timesL0 = ak.mask(timeL0, max_maskL0)
+            max_timeL0[key] = ak.Array([
+                next((item for item in sublist if item is not None), None) 
+                if sublist is not None else None
+                for sublist in ak.to_list(raw_max_timesL0)
+            ])
+            print(key, max_timeL0[key])
+
+            max_heightsL1[key] = ak.max(heightsL1, axis = -1)
+            max_maskL1 = (heightsL1 == ak.broadcast_arrays(max_heightsL1[key], heightsL1)[0])
+            raw_max_timesL1 = ak.mask(timeL1, max_maskL1)
+            max_timeL1[key] = ak.Array([
+                next((item for item in sublist if item is not None), None) 
+                if sublist is not None else None
+                for sublist in ak.to_list(raw_max_timesL1)
+            ])
+
+
+            
 
 
 

@@ -18,25 +18,26 @@ from milliqanPlotter import *
 # define the function to get the time differences between events in each channel between layer 0 and layer 1
 def getTimeDiff(self):
     # these 5 branches are all pulse_based so they should have the exact same dimensions
-    # [88, 75]
     rows = self.events['row'][self.events['straightLineCut']]
     columns = self.events['column'][self.events['straightLineCut']]
     layers = self.events['layer'][self.events['straightLineCut']]
     heights = self.events['height'][self.events['straightLineCut']]
     times = self.events['timeFit_module_calibrated'][self.events['straightLineCut']]
 
+    # initialize dictionaries to hold max pulse heights and corresponding times
+    max_heights = {}
+    cor_times = {}
+
     # find the straight line pulses
     for row in range(4):
         for column in range(4):
-            # getting boolean masks for each layer at the current row and column 
-            # [88, 75]
+            # getting boolean masks for each layer at the current row and column
             lay0_mask = (rows == row) & (columns == column) & (layers == 0)
             lay1_mask = (rows == row) & (columns == column) & (layers == 1)
             lay2_mask = (rows == row) & (columns == column) & (layers == 2)
             lay3_mask = (rows == row) & (columns == column) & (layers == 3)
             
             # masks to check if there are pulses on all four layers to get the straight line passes
-            # [True/False(pulses on all four?), True/False(pulses on all four?)]
             mask = ak.any(lay0_mask, axis=1) & ak.any(lay1_mask, axis=1) & ak.any(lay2_mask, axis=1) & ak.any(lay3_mask, axis=1)
             # on straight line pass, layer 0 and 1
             mask0 = mask & lay0_mask
@@ -46,10 +47,19 @@ def getTimeDiff(self):
             print(heights0)
             print(heights1)
 
-    # initialize dictionaries to hold max pulse heights and corresponding times
-    max_heights = {}
-    cor_times = {}
 
+
+
+
+
+
+
+
+
+
+
+
+    '''
     # iterate over each channel (using row/column/layer to locate each channel)
     for row in range(4):
         for column in range(4):
@@ -84,7 +94,6 @@ def getTimeDiff(self):
                     # print out channel number and corresponding desired times of events in that channel
                     print(key, cor_times[key])
 
-    print('Max Heights: ', max_heights)
     # create an empty list to store time differences initialized with all Nones
     time_diffs = []
     # calculate time differences between layer 1 and layer 0 in each channel for each event
@@ -109,6 +118,7 @@ def getTimeDiff(self):
 
     # store the time differences in the 'timeDiff' branch
     self.events['timeDiff'] = time_diffs
+    '''
 
 # add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)

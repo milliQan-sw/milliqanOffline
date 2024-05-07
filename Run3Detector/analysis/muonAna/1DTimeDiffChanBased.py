@@ -51,6 +51,7 @@ def getTimeDiff(self):
     layers = layers[indices_mask]
     heights = heights[indices_mask]
     times = times[indices_mask]
+    print(times)
                 
     # initialize dictionaries to hold max pulse heights and corresponding times
     max_heights = {}

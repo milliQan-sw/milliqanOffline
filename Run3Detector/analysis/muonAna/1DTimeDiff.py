@@ -70,7 +70,8 @@ def getTimeDiff(self):
 
             time_diff = max_timeL1[key] - max_heightsL1[key]
             time_diffs.append(time_diff)
-            print(time_diffs)
+            print(len(time_diffs))
+            print(ak.num(time_diffs))
 
 
 

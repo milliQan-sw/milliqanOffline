@@ -170,6 +170,7 @@ class milliqanCuts():
     @mqCut
     def areaCut(self, cutName='areaCut', areaCut=50000, cut=False, branches=None):
         self.events[cutName] = self.events.area >= int(areaCut)
+        print('area cut', cut)
         if cut:
             for branch in branches:
                 self.events[branch] = self.events[branch][self.events[cutName]]
@@ -198,7 +199,7 @@ class milliqanCuts():
     #selection events that have hits in a straight path
     #option allowedMove will select events that only move one bar horizontally/vertically
     @mqCut
-    def straightLineCut(self, allowedMove=False):
+    def straightLineCut(self, cutName='straightLineCut', allowedMove=False):
         
         #allowed combinations of moving
         combos = []
@@ -223,7 +224,11 @@ class milliqanCuts():
 
                 row_pass = ak.any(r_tmp0, axis=1) & ak.any(r_tmp1, axis=1) & ak.any(r_tmp2, axis=1) & ak.any(r_tmp3, axis=1)
 
+                print("Allowed move", allowedMove)
+
                 if allowedMove:
+
+                    print("Allowing move")
                     rowCut_p1 = self.events.row == y+1
                     rowCut_m1 = self.events.row == y-1
                     colCut_p1 = self.events.column == x+1
@@ -269,14 +274,14 @@ class milliqanCuts():
             if ipath == 0: straight_path = path
             else: straight_path = straight_path | path
 
-        self.events['straightLineCut'] = straight_path
+        self.events[cutName] = straight_path
 
         for x in range(4):
             for y in range(4):
                 if(x == 0 and y == 0): straight_pulse = (straight_cuts[4*x+y]) & (self.events.column == x) & (self.events.row == y)
                 else: straight_pulse = (straight_pulse) | ((straight_cuts[4*x+y]) & (self.events.column == x) & (self.events.row == y))
 
-        self.events['straightPulseCut'] = straight_pulse
+        self.events[cutName+'Pulse'] = straight_pulse
 
         '''testEvt = 2
         tmp = ak.any(self.events['straightPulseCut'], axis=1)

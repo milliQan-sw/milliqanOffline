@@ -53,24 +53,24 @@ def getFileList(dataDir, beam, goodRuns, lumis):
 @mqCut
 def pulseTime(self):
     events = self.events
-    straightPath = self.events['straightPulseCut']
+    straightPath = self.events['straightLineCutPulse']
 
     timeToUse = 'timeFit_module_calibrated'
 
-    self.events['straightPathL0Time'] = events[timeToUse][events['layer0'] & events['straightPulseCut']]
-    self.events['straightPathL1Time'] = events[timeToUse][events['layer1'] & events['straightPulseCut']]
-    self.events['straightPathL2Time'] = events[timeToUse][events['layer2'] & events['straightPulseCut']]
-    self.events['straightPathL3Time'] = events[timeToUse][events['layer3'] & events['straightPulseCut']]
+    self.events['straightPathL0Time'] = events[timeToUse][events['layer0'] & events['straightLineCutPulse']]
+    self.events['straightPathL1Time'] = events[timeToUse][events['layer1'] & events['straightLineCutPulse']]
+    self.events['straightPathL2Time'] = events[timeToUse][events['layer2'] & events['straightLineCutPulse']]
+    self.events['straightPathL3Time'] = events[timeToUse][events['layer3'] & events['straightLineCutPulse']]
 
-    height0 = ak.max(self.events['height'][events['layer0'] & events['straightPulseCut']], axis=1)
-    height1 = ak.max(self.events['height'][events['layer1'] & events['straightPulseCut']], axis=1)
-    height2 = ak.max(self.events['height'][events['layer2'] & events['straightPulseCut']], axis=1)
-    height3 = ak.max(self.events['height'][events['layer3'] & events['straightPulseCut']], axis=1)
+    height0 = ak.max(self.events['height'][events['layer0'] & events['straightLineCutPulse']], axis=1)
+    height1 = ak.max(self.events['height'][events['layer1'] & events['straightLineCutPulse']], axis=1)
+    height2 = ak.max(self.events['height'][events['layer2'] & events['straightLineCutPulse']], axis=1)
+    height3 = ak.max(self.events['height'][events['layer3'] & events['straightLineCutPulse']], axis=1)
 
-    mask0 = (self.events['height'][events['layer0'] & events['straightPulseCut']] == height0)
-    mask1 = (self.events['height'][events['layer1'] & events['straightPulseCut']] == height1)
-    mask2 = (self.events['height'][events['layer2'] & events['straightPulseCut']] == height2)
-    mask3 = (self.events['height'][events['layer3'] & events['straightPulseCut']] == height3)
+    mask0 = (self.events['height'][events['layer0'] & events['straightLineCutPulse']] == height0)
+    mask1 = (self.events['height'][events['layer1'] & events['straightLineCutPulse']] == height1)
+    mask2 = (self.events['height'][events['layer2'] & events['straightLineCutPulse']] == height2)
+    mask3 = (self.events['height'][events['layer3'] & events['straightLineCutPulse']] == height3)
 
     self.events['straightPathL0Time'] = self.events['straightPathL0Time'][mask0]
     self.events['straightPathL1Time'] = self.events['straightPathL1Time'][mask1]
@@ -103,13 +103,13 @@ if __name__ == "__main__":
     lumis = loadJson(milliqanOfflinePath + '/configuration/barConfigs/mqLumis.json')
     lumis['file'] = lumis['file'].astype(int)
 
-    dataDir = '/store/user/milliqan/trees/v34/1100/'
-    beam = True
+    dataDir = '/store/user/milliqan/trees/v34/1300/'
+    beam = False
 
     files = getFileList(dataDir, beam, goodRuns, lumis)
 
     #define a file list to run over
-    filelist = files
+    filelist = files[:4]
     #print(filelist)
     #filelist = ['/store/user/milliqan/trees/v34/1300/MilliQan_Run1364.1_v34.root', '/store/user/milliqan/trees/v34/1300/MilliQan_Run1364.2_v34.root', '/store/user/milliqan/trees/v34/1300/MilliQan_Run1364.3_v34.root', '/store/user/milliqan/trees/v34/1300/MilliQan_Run1365.100_v34.root']
 
@@ -182,6 +182,6 @@ if __name__ == "__main__":
     myiterator.run()
 
     #save plots
-    myplotter.saveHistograms("layerTimes_beamOn_1100_v35_lineMod.root")
+    myplotter.saveHistograms("layerTimes_beamOff_1300_v34_lineMod.root")
 
     mycuts.getCutflowCounts()

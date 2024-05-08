@@ -67,9 +67,7 @@ def getTimeDiff(self):
                 for sublist in ak.to_list(raw_max_timesL1)
             ])
 
-            for t0, t1 in zip(ak.to_list(max_timeL0[key]), ak.to_list(max_timeL1[key])):
-                if t0 is not None and t1 is not None:
-                        time_diffs.append(t1 - t0)
+            time_diffs.append(ak.max(max_timeL1[key]) - ak.max(max_timeL0[key]))
 
 
     for key in max_heightsL0 and max_timeL0:
@@ -145,6 +143,7 @@ h_1d.Write()
 
 # close the file
 f.Close()
+
 
 '''
     # iterate over each channel (using row/column/layer to locate each channel)

@@ -33,26 +33,26 @@ def getTimeDiff(self):
             pulse_maskL1 = (self.events['row'] == row) & (self.events['column'] == column) & (self.events['layer'] == 1)
             pulse_maskL2 = (self.events['row'] == row) & (self.events['column'] == column) & (self.events['layer'] == 2)
             pulse_maskL3 = (self.events['row'] == row) & (self.events['column'] == column) & (self.events['layer'] == 3)
-            
-            # 1D True/False mask determined by whether there is any straight line pass
+
+            # 1D True/False mask determined by whether there is any straight line pass 
             event_mask = ak.any(pulse_maskL0, axis=1) & ak.any(pulse_maskL1, axis=1) & ak.any(pulse_maskL2, axis=1) & ak.any(pulse_maskL3, axis=1)
 
-            # on straight line passes, layer 0 and 1
+            # select events on straight line passes then select layers
             mask0 = event_mask & pulse_maskL0
             mask1 = event_mask & pulse_maskL1
 
-            heightsL0 = self.events['height'][mask0]
-            timeL0 = self.events['timeFit_module_calibrated'][mask0]
+            heightsL0 = self.events['height'][mask0]  # 2D heights in one channel on layer 0
+            timeL0 = self.events['timeFit_module_calibrated'][mask0]  # 2D times in one channel on layer 0
 
             heightsL1 = self.events['height'][mask1]
             timeL1 = self.events['timeFit_module_calibrated'][mask1]
 
             key = (row, column)
             
-            max_heightsL0[key] = ak.max(heightsL0, axis = -1)
+            max_heightsL0[key] = ak.max(heightsL0, axis = -1)  # 1D max heights of each event in one channel
             max_maskL0 = (heightsL0 == ak.broadcast_arrays(max_heightsL0[key], heightsL0)[0])
             raw_max_timesL0 = ak.mask(timeL0, max_maskL0)
-            max_timeL0[key] = ak.Array([
+            max_timeL0[key] = ak.Array([  # 1D max times of each event in one channel
                 next((item for item in sublist if item is not None), None) 
                 if sublist is not None else None
                 for sublist in ak.to_list(raw_max_timesL0)
@@ -68,7 +68,7 @@ def getTimeDiff(self):
             ])
 
             time_diff = max_timeL1[key] - max_heightsL1[key]
-            time_diffs.append(time_diff)
+            time_diffs.append(time_diff)  # add time diffs of all events in current channel to a list
 
     print(len(time_diffs))
     print(ak.num(time_diffs))

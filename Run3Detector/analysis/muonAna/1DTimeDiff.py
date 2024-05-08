@@ -24,7 +24,7 @@ def getTimeDiff(self):
     max_heightsL1 = {}
     max_timeL1 = {}
 
-    time_diffs = {}
+    time_diffs = []
 
     for row in range(4):
         for column in range(4):
@@ -67,8 +67,9 @@ def getTimeDiff(self):
                 for sublist in ak.to_list(raw_max_timesL1)
             ])
 
-            time_diff[key] = max_timeL1[key] - max_timeL0[key]
-            time_diffs.append(time_diff[key])  # add time diffs of all events in current channel to a list
+            for t0, t1 in zip(ak.to_list(max_timeL0[key]), ak.to_list(max_timeL1[key])):
+                if t0 is not None and t1 is not None:
+                        time_diffs.append(t1 - t0)
 
 
     for key in max_heightsL0 and max_timeL0:
@@ -83,10 +84,7 @@ def getTimeDiff(self):
 
     print()
 
-    for sublist in time_diffs:
-        for time_diff in sublist:
-            if time_diff != None:
-                print(time_diff)
+    print(time_diffs)
 
     num_nones = 1000 - len(time_diffs)
     time_diffs.extend([None] * num_nones)

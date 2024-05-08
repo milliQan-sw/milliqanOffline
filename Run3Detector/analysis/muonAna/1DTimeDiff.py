@@ -95,7 +95,7 @@ setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)
 
 # define a file list to run over
 filelist = [
-    '/mnt/hadoop/se/store/user/milliqan/run3/bar/1100/0007/MilliQan_Run1178.422_default.root:t'
+    '/mnt/hadoop/se/store/user/milliqan/run3/bar/1100/0007/MilliQan_Run1178.422_default.root:Events'
 ]
 
 # define the necessary branches to run over

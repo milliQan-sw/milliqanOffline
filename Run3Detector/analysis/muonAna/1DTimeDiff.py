@@ -77,13 +77,15 @@ def getTimeDiff(self):
 
     print()
 
-    for key in max_heightsL0:
-        print(key, "layer 0", ak.max(max_heightsL0[key]))
+    for key in max_heightsL0 and raw_max_timesL0:
+        print(key, "layer 0 Max Height: ", ak.max(max_heightsL0[key]))
+        print(key, "layer 0 Max Time: ", ak.max(raw_max_timesL0[key]))
 
     print()
 
-    for key in max_heightsL1:
-        print(key, "layer 1", ak.max(max_heightsL1[key]))
+    for key in max_heightsL1 and raw_max_timesL1:
+        print(key, "layer 1 Max Height: ", ak.max(max_heightsL1[key]))
+        print(key, "layer 1 Max Time: ", ak.max(raw_max_timesL1[key]))
 
     num_nones = 1000 - len(time_diffs)
     time_diffs.extend([None] * num_nones)

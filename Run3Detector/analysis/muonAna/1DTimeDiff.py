@@ -95,16 +95,12 @@ setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)
 
 # define a file list to run over
 filelist = [
-    '/mnt/hadoop/se/store/user/milliqan/trees/v34/1000/MilliQan_Run1006.1_v34.root:t',
-    '/mnt/hadoop/se/store/user/milliqan/trees/v34/1000/MilliQan_Run1006.2_v34.root:t',
-    '/mnt/hadoop/se/store/user/milliqan/trees/v34/1000/MilliQan_Run1006.3_v34.root:t',
-    '/mnt/hadoop/se/store/user/milliqan/trees/v34/1000/MilliQan_Run1006.4_v34.root:t',
-    '/mnt/hadoop/se/store/user/milliqan/trees/v34/1000/MilliQan_Run1006.5_v34.root:t',
-    '/mnt/hadoop/se/store/user/milliqan/trees/v34/1000/MilliQan_Run1006.6_v34.root:t',
-    '/mnt/hadoop/se/store/user/milliqan/trees/v34/1000/MilliQan_Run1006.7_v34.root:t',
-    '/mnt/hadoop/se/store/user/milliqan/trees/v34/1000/MilliQan_Run1006.8_v34.root:t',
-    '/mnt/hadoop/se/store/user/milliqan/trees/v34/1000/MilliQan_Run1006.9_v34.root:t',
-    '/mnt/hadoop/se/store/user/milliqan/trees/v34/1000/MilliQan_Run1006.10_v34.root:t'
+    '/store\/user\/milliqan\/run3\/bar\/\/1100\/0007","MilliQan_Run1178.422_default.root',
+    '/store\/user\/milliqan\/run3\/bar\/\/1100\/0007","MilliQan_Run1178.423_default.root',
+    '/store\/user\/milliqan\/run3\/bar\/\/1100\/0007","MilliQan_Run1178.424_default.root',
+    '/store\/user\/milliqan\/run3\/bar\/\/1100\/0007","MilliQan_Run1178.425_default.root',
+    '/store\/user\/milliqan\/run3\/bar\/\/1100\/0007","MilliQan_Run1178.426_default.root',
+    '/store\/user\/milliqan\/run3\/bar\/\/1100\/0007","MilliQan_Run1178.427_default.root'
 ]
 
 # define the necessary branches to run over

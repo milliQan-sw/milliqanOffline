@@ -70,8 +70,9 @@ def getTimeDiff(self):
             time_diff = max_timeL1[key] - max_heightsL1[key]
             time_diffs.append(time_diff)  # add time diffs of all events in current channel to a list
 
-    print(len(time_diffs))
-    print(ak.num(time_diffs))
+    for time_diff in time_diffs:
+        if time_diff != None:
+            print(time_diff)
 
     num_nones = 1000 - len(time_diffs)
     time_diffs.extend([None] * num_nones)

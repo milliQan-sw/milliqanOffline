@@ -75,6 +75,14 @@ def getTimeDiff(self):
             if time_diff != None:
                 print(time_diff)
 
+    for key in max_heightsL0:
+        print(key, "layer 0", max_heightsL0[key])
+
+    print()
+
+    for key in max_heightsL1:
+        print(key, "layer 1", max_heightsL1[key])
+
     num_nones = 1000 - len(time_diffs)
     time_diffs.extend([None] * num_nones)
 

@@ -26,7 +26,6 @@ def getTimeDiff(self):
 
     time_diffs = []
 
-    # find the straight line passed pulses
     for row in range(4):
         for column in range(4):
             # 2D True/False masks determined by channels

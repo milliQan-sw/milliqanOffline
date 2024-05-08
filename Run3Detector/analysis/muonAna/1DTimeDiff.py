@@ -118,7 +118,7 @@ myplotter = milliqanPlotter()
 
 # create a 1D root histogram
 h_1d = r.TH1F("h_1d", "timeFit_module_calibrated Differences between layer 0 and 1", 40, -20, 20)
-h_1d.GetXaxis().SetTitle("time difference between layer 0 and 1")
+h_1d.GetXaxis().SetTitle("time difference (TimeLayer1 - TimeLayer0)")
 
 # add root histogram to plotter
 myplotter.addHistograms(h_1d, 'timeDiff')

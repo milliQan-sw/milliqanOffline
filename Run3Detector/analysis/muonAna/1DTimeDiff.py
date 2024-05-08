@@ -67,15 +67,9 @@ def getTimeDiff(self):
                 for sublist in ak.to_list(raw_max_timesL1)
             ])
 
-            time_diff = max_timeL1[key] - max_heightsL1[key]
+            time_diff = max_timeL1[key] - max_timeL0[key]
             time_diffs.append(time_diff)  # add time diffs of all events in current channel to a list
 
-    for sublist in time_diffs:
-        for time_diff in sublist:
-            if time_diff != None:
-                print(time_diff)
-
-    print()
 
     for key in max_heightsL0 and max_timeL0:
         print(key, "layer 0 Max Height: ", ak.max(max_heightsL0[key]))
@@ -86,6 +80,13 @@ def getTimeDiff(self):
     for key in max_heightsL1 and max_timeL1:
         print(key, "layer 1 Max Height: ", ak.max(max_heightsL1[key]))
         print(key, "layer 1 Max Time: ", ak.max(max_timeL1[key]))
+
+    print()
+
+    for sublist in time_diffs:
+        for time_diff in sublist:
+            if time_diff != None:
+                print(time_diff)
 
     num_nones = 1000 - len(time_diffs)
     time_diffs.extend([None] * num_nones)

@@ -28,13 +28,13 @@ def getTimeDiff(self):
 
     for row in range(4):
         for column in range(4):
-            # 2D True/False masks determined by channels
+            # 2D True/False masks determined by channels (at current channel?)
             pulse_maskL0 = (self.events['row'] == row) & (self.events['column'] == column) & (self.events['layer'] == 0)
             pulse_maskL1 = (self.events['row'] == row) & (self.events['column'] == column) & (self.events['layer'] == 1)
             pulse_maskL2 = (self.events['row'] == row) & (self.events['column'] == column) & (self.events['layer'] == 2)
             pulse_maskL3 = (self.events['row'] == row) & (self.events['column'] == column) & (self.events['layer'] == 3)
 
-            # 1D True/False mask determined by whether there is any straight line pass 
+            # 1D True/False mask determined by event (any straight line pass?)
             event_mask = ak.any(pulse_maskL0, axis=1) & ak.any(pulse_maskL1, axis=1) & ak.any(pulse_maskL2, axis=1) & ak.any(pulse_maskL3, axis=1)
             
             height_mask = self.events['height'] > 1000
@@ -94,7 +94,18 @@ def getTimeDiff(self):
 setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)
 
 # define a file list to run over
-filelist = ['/mnt/hadoop/se/store/user/milliqan/trees/v34/1000/MilliQan_Run1006.4_v34.root:t']
+filelist = [
+    '/mnt/hadoop/se/store/user/milliqan/trees/v34/1000/MilliQan_Run1006.1_v34.root:t',
+    '/mnt/hadoop/se/store/user/milliqan/trees/v34/1000/MilliQan_Run1006.2_v34.root:t',
+    '/mnt/hadoop/se/store/user/milliqan/trees/v34/1000/MilliQan_Run1006.3_v34.root:t',
+    '/mnt/hadoop/se/store/user/milliqan/trees/v34/1000/MilliQan_Run1006.4_v34.root:t',
+    '/mnt/hadoop/se/store/user/milliqan/trees/v34/1000/MilliQan_Run1006.5_v34.root:t',
+    '/mnt/hadoop/se/store/user/milliqan/trees/v34/1000/MilliQan_Run1006.6_v34.root:t',
+    '/mnt/hadoop/se/store/user/milliqan/trees/v34/1000/MilliQan_Run1006.7_v34.root:t',
+    '/mnt/hadoop/se/store/user/milliqan/trees/v34/1000/MilliQan_Run1006.8_v34.root:t',
+    '/mnt/hadoop/se/store/user/milliqan/trees/v34/1000/MilliQan_Run1006.9_v34.root:t',
+    '/mnt/hadoop/se/store/user/milliqan/trees/v34/1000/MilliQan_Run1006.10_v34.root:t'
+]
 
 # define the necessary branches to run over
 branches = ['pickupFlag', 'boardsMatched', 'timeFit_module_calibrated', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type']

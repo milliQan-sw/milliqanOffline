@@ -98,6 +98,19 @@ filelist = [
     '/mnt/hadoop/se/store/user/milliqan/run3/bar/1100/0007/MilliQan_Run1178.422_default.root:Events'
 ]
 
+'''
+Check branches in files in root:
+
+TFile* file = TFile::Open("/mnt/hadoop/se/store/user/milliqan/trees/v34/1000/MilliQan_Run1006.1_v34.root");
+TTree* tree = (TTree*)file->Get("t");
+tree->Print();
+
+TFile* file = TFile::Open("/mnt/hadoop/se/store/user/milliqan/run3/bar/1100/0007/MilliQan_Run1178.422_default.root");
+TTree* tree = (TTree*)file->Get("Events");
+tree->Print();
+
+'''
+
 # define the necessary branches to run over
 branches = ['pickupFlag', 'boardsMatched', 'timeFit_module_calibrated', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type']
 

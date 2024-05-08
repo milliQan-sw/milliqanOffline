@@ -66,7 +66,7 @@ def getTimeDiff(self):
                 if sublist is not None else None
                 for sublist in ak.to_list(raw_max_timesL1)
             ])
-            
+
             if ak.max(max_timeL1[key]) is not None and ak.max(max_timeL0[key]) is not None:
                 time_diffs.append(ak.max(max_timeL1[key]) - ak.max(max_timeL0[key]))
 
@@ -115,7 +115,7 @@ fourLayerCut = mycuts.getCut(mycuts.fourLayerCut, 'fourLayerCut', cut=False)
 myplotter = milliqanPlotter()
 
 # create a 1D root histogram
-h_1d = r.TH1F("h_1d", "timeFit_module_calibrated Differences between layer 0 and 1", 1300, 200, 1500)
+h_1d = r.TH1F("h_1d", "timeFit_module_calibrated Differences between layer 0 and 1", 900, -100, 800)
 h_1d.GetXaxis().SetTitle("time difference between layer 0 and 1")
 
 # add root histogram to plotter

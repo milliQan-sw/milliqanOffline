@@ -66,8 +66,9 @@ def getTimeDiff(self):
                 if sublist is not None else None
                 for sublist in ak.to_list(raw_max_timesL1)
             ])
-
-            time_diffs.append(ak.max(max_timeL1[key]) - ak.max(max_timeL0[key]))
+            
+            if ak.max(max_timeL1[key]) is not None and ak.max(max_timeL0[key]) is not None:
+                time_diffs.append(ak.max(max_timeL1[key]) - ak.max(max_timeL0[key]))
 
 
     for key in max_heightsL0 and max_timeL0:

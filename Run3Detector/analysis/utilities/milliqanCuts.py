@@ -686,7 +686,7 @@ class milliqanCuts():
         self.events["StraghtCosmic"] = passArr
         self.events["downwardPath"] = SpassArr #straight downward path. Hits 
         #check the number of events that can pass the cosmic straight cut
-        print(f"cosmic straight : {len(self.events['event'][self.events["StraghtCosmic"]])}")
+        print(f"cosmic straight : {len(self.events['event'][self.events['StraghtCosmic']])}")
 
 
     def offlinePreProcess(self,cutName = None, cut = None, startTime = 1250, endTime = 1350):

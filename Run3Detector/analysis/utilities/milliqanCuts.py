@@ -720,8 +720,9 @@ class milliqanCuts():
                 for column in range(4):
                     tag=(self.events["layer"] == layer) & (self.events["column"] == column) & (self.events["row"] == row) & (self.events["barCut"])
                     #set the none to be  -100 so max can work
+                    self.events[f"MAXNPE_l{layer}_r{row}_c{column}"] = self.events["nPE"][tag]
                     self.events[f"MAXNPE_l{layer}_r{row}_c{column}"] = ak.fill_none(self.events[f"MAXNPE_l{layer}_r{row}_c{column}"], -100)
-                    self.events[f"MAXNPE_l{layer}_r{row}_c{column}"] = ak.max(self.events["nPE"][tag], axis = 1)
+                    self.events[f"MAXNPE_l{layer}_r{row}_c{column}"] = ak.max(self.events[f"MAXNPE_l{layer}_r{row}_c{column}"], axis = 1)
                     
 
 

@@ -61,12 +61,6 @@ myplotter.addHistograms(NuniqueBar_C, 'NBarsHits', 'Clean_MuonEvent')
 
 
 
-
-myschedule = milliQanScheduler(cutflow, mycuts)
-
-myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts)
-
-
 NpeRatio_adj = r.TH1F("NpeRatio_adj","NPE ratio;max NPE/min NPE;Events",5000,0,5000)
 NpeRatio_adj_tag= mycuts.getCut(mycuts.BarNPERatioCalculateV2, "NpeRatio_adj_tag",cut = "MuonADJLayers") 
 myplotter.addHistograms(NpeRatio_adj, 'NpeRatio_adj_tag', 'Clean_MuonEvent')
@@ -94,8 +88,8 @@ cutflow7 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelC
 
 
 cutflow = cutflow7
-
-
+myschedule = milliQanScheduler(cutflow, mycuts)
+myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts)
 #-----------------------------save the txt and root file without condor job-------------------
 if outputPath == '':
     myiterator.run()

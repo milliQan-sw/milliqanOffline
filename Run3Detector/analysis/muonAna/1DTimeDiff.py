@@ -148,16 +148,6 @@ h_1d.Write()
 f.Close()
 
 '''
-Check branches in files in root:
-
-TFile* file = TFile::Open("/mnt/hadoop/se/store/user/milliqan/run3/bar/1100/0007/MilliQan_Run1178.422_default.root");
-TTree* tree = (TTree*)file->Get("Events");
-tree->Print();
-
-'''
-
-
-'''
     # iterate over each channel (using row/column/layer to locate each channel)
     for row in range(4):
         for column in range(4):

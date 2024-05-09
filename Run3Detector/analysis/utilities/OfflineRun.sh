@@ -1,6 +1,6 @@
 #!/bin/bash
 
-for ((num = 1; num <= 207; num ++))
+for ((num = 11; num <= 100; num ++))
 do
-    python3 OLCosmicMuonTag_V2.py 1163  $num /home/czheng/SimCosmicFlatTree/cutEffCheckResult_OffL_20NPEcut/cosmicStraight/Histograms/cutflow7
+    python3 OfflineCosMuon.py 1039  $num /home/czheng/SimCosmicFlatTree/offline_Area_NPE
 done   

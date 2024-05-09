@@ -6,9 +6,9 @@ event_sums = {}
 
 input_files = []
 
-directory= "/home/czheng/SimCosmicFlatTree/cutEffCheckResult_OffL_20NPEcut/"
+directory= "/home/czheng/SimCosmicFlatTree/cutEffCheckResult_OffL_20NPEcut/cosmicStraight/"
 
-base_name = "Run1190"
+base_name = "Run1163"
 
 for filename in os.listdir(directory):
     if filename.startswith(base_name) and filename.endswith("Flow1.txt"):

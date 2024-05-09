@@ -5,13 +5,14 @@ import os
 event_sums = {}
 
 input_files = []
-
-directory= "/home/czheng/SimCosmicFlatTree/cutEffCheckResult_sim_20NPEcut/CosmicStraight/"
+#sim :/home/czheng/SimCosmicFlatTree/cutEffCheckResult_sim_20NPEcut/CosmicStraight/purestraightCut/cutflow7/
+#offline : /home/czheng/SimCosmicFlatTree/cutEffCheckResult_OffL_20NPEcut/cosmicStraight/Histograms/cutflow7/
+directory= "/home/czheng/SimCosmicFlatTree/cutEffCheckResult_OffL_20NPEcut/cosmicStraight/Histograms/cutflow7/"
 
 base_name = "Run"
 
 for filename in os.listdir(directory):
-    if filename.startswith(base_name) and filename.endswith("Flow5B.txt"):
+    if filename.startswith(base_name) and filename.endswith("Flow7.txt"):
         input_files.append(directory+filename)
 
 interestFile = list()
@@ -39,6 +40,9 @@ for filepath in input_files:
                 #print(count)
                 #count = int(count.strip())
                 # update the count in the dictionary
+                if event == "cosmic straight " and count > 0:
+                    print(filepath)
+                    
                 if event in event_sums:
                     event_sums[event] += count
                 else:

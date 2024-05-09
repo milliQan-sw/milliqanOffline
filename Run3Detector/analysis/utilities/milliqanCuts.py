@@ -617,11 +617,50 @@ class milliqanCuts():
         lay1Muon = []
         lay2Muon = []
         lay3Muon = []
-    
+
+        lay0Muon_DW = []
+        lay1Muon_DW = []
+        lay2Muon_DW = []
+        lay3Muon_DW = []
         
         for index,path in enumerate(DownEventList):
             if index == 0: SpassArr = path 
             else: SpassArr = SpassArr | path
+
+            if (index // 4) == 0:
+                if index == 0:
+                    lay0Muon_DW = path
+                else: lay0Muon_DW = lay0Muon_DW | path
+
+            elif (index // 4) == 1:
+                if index == 4:
+                    lay1Muon_DW = path
+                else: lay1Muon_DW = lay1Muon_DW | path
+
+            elif (index // 4) == 2:
+                if index == 8:
+                    lay2Muon_DW = path
+                else: lay2Muon_DW = lay2Muon_DW | path
+
+            elif (index // 4) == 3:
+                if index == 12:
+                    lay3Muon_DW = path
+                else: lay3Muon_DW = lay3Muon_DW | path
+
+        #tag the bar pulses at layerX where muon event (DW) can be found
+        l0Arr_DW = (lay0Muon_DW) & ((self.events["layer"]==0) & (self.events["barCut"]))
+        l1Arr_DW = (lay1Muon_DW) & ((self.events["layer"]==1)  & (self.events["barCut"]))
+        l2Arr_DW = (lay2Muon_DW) & ((self.events["layer"]==2)  & (self.events["barCut"]))
+        l3Arr_DW = (lay3Muon_DW) & ((self.events["layer"]==3)  & (self.events["barCut"]))
+        self.events["MuonLayers_DW"] = l0Arr_DW | l1Arr_DW | l2Arr_DW | l3Arr_DW 
+        adj0_DW,adj1_DW,adj2_DW,adj3_DW=self.adjLayerData(l0Arr_DW,l1Arr_DW,l2Arr_DW,l3Arr_DW) 
+        self.events["MuonADJL0_DW"] = (self.events["layer"]==0) & (adj0_DW)
+        self.events["MuonADJL1_DW"] = (self.events["layer"]==1) & (adj1_DW)      
+        self.events["MuonADJL2_DW"] = (self.events["layer"]==2) & (adj2_DW)      
+        self.events["MuonADJL3_DW"] = (self.events["layer"]==3) & (adj3_DW)
+        self.events["MuonADJLayers_DW"] = self.events["MuonADJL0_DW"] | self.events["MuonADJL1_DW"] | self.events["MuonADJL2_DW"] | self.events["MuonADJL3_DW"]
+        self.events["otherlayer_DW"] = ~self.events["MuonLayers_DW"]
+
     
     
         for index, path in enumerate(eventList):

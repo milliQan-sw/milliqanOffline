@@ -89,7 +89,7 @@ cutflow7 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelC
 
 cutflow = cutflow7
 myschedule = milliQanScheduler(cutflow, mycuts)
-myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts)
+myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts,fileCheckerEnable = False)
 #-----------------------------save the txt and root file without condor job-------------------
 if outputPath == '':
     myiterator.run()

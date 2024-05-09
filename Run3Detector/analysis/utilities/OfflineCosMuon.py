@@ -133,7 +133,7 @@ cutflow = cutflow8
 
 myschedule = milliQanScheduler(cutflow, mycuts,myplotter)
 
-myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts)
+myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts,fileCheckerEnable=False)
 
 #myiterator.run() # comment this out when checking cut efficiency
 

@@ -95,7 +95,16 @@ setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)
 
 # define a file list to run over
 filelist = [
-    '/mnt/hadoop/se/store/user/milliqan/trees/v34/1100/MilliQan_Run1178.528_v34.root'
+    '/mnt/hadoop/se/store/user/milliqan/trees/v34/1100/MilliQan_Run1178.520_v34.root',
+    '/mnt/hadoop/se/store/user/milliqan/trees/v34/1100/MilliQan_Run1178.521_v34.root',
+    '/mnt/hadoop/se/store/user/milliqan/trees/v34/1100/MilliQan_Run1178.522_v34.root',
+    '/mnt/hadoop/se/store/user/milliqan/trees/v34/1100/MilliQan_Run1178.523_v34.root',
+    '/mnt/hadoop/se/store/user/milliqan/trees/v34/1100/MilliQan_Run1178.524_v34.root',
+    '/mnt/hadoop/se/store/user/milliqan/trees/v34/1100/MilliQan_Run1178.525_v34.root',
+    '/mnt/hadoop/se/store/user/milliqan/trees/v34/1100/MilliQan_Run1178.526_v34.root',
+    '/mnt/hadoop/se/store/user/milliqan/trees/v34/1100/MilliQan_Run1178.527_v34.root',
+    '/mnt/hadoop/se/store/user/milliqan/trees/v34/1100/MilliQan_Run1178.528_v34.root',
+    '/mnt/hadoop/se/store/user/milliqan/trees/v34/1100/MilliQan_Run1178.529_v34.root'
 ]
 
 # define the necessary branches to run over

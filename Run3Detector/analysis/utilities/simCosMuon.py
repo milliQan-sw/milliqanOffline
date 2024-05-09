@@ -6,8 +6,6 @@ import sys
 import time
 import json
 
-sys.path.append("../utilities")
-
 from milliqanProcessor import *
 from milliqanScheduler import *
 from milliqanCuts import *

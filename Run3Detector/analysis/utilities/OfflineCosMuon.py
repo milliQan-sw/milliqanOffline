@@ -183,6 +183,9 @@ else:
     Slab_Area_CL.Write()
     Bar_NPE_Area_CL.Write()
     NuniqueBar_DW.Write()
+    NuniqueBar_ST.Write()
+    NuniqueBar_CL.Write()
+
 
 
     f_out.Close()

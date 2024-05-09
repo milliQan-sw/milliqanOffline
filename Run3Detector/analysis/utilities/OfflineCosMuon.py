@@ -64,6 +64,7 @@ myplotter = milliqanPlotter()
 #new count for downwardPath
 DW_Muon_count = mycuts.getCut(mycuts.countEvent,'placeholder', Countobject= 'downwardPath')
 OL_sudo_straight = mycuts.getCut(mycuts.sudo_straight,'StraghtCosmic', NPEcut = 20,time = "timeFit_module_calibrated")
+cleanMuon_count = mycuts.getCut(mycuts.countEvent,'placeholder', Countobject= 'Clean_MuonEvent')
 
 #histograms for downwardPath
 Bar_Area_DW = r.TH1F("Bar_Area_DW", "area bar; area ; pulse", 7000, 0, 700000)

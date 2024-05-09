@@ -148,7 +148,7 @@ class milliqanProcessor():
             #branches
             self.branches,
 
-            step_size=1000,
+            step_size=10000,
 
             num_workers=8,
 

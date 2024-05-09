@@ -125,19 +125,18 @@ def getTimeDiff(self):
 # add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)
 
-# check if command line arguments are provided
-if len(sys.argv) != 3:
-    print("Usage: python3 [script] [start_file_index] [end_file_index]")
-    sys.exit(1)
-
-# assign start and end indices from command line
-start_index = int(sys.argv[1])
-end_index = int(sys.argv[2])
-
 # define a file list to run over
 filelist = [
-    f"/mnt/hadoop/se/store/user/milliqan/trees/v34/1100/MilliQan_Run1118.{i}_v34.root"
-    for i in range(start_index, end_index + 1)
+    '/mnt/hadoop/se/store/user/milliqan/trees/v34/1100/MilliQan_Run1118.520_v34.root',
+    '/mnt/hadoop/se/store/user/milliqan/trees/v34/1100/MilliQan_Run1118.521_v34.root',
+    '/mnt/hadoop/se/store/user/milliqan/trees/v34/1100/MilliQan_Run1118.522_v34.root',
+    '/mnt/hadoop/se/store/user/milliqan/trees/v34/1100/MilliQan_Run1118.523_v34.root',
+    '/mnt/hadoop/se/store/user/milliqan/trees/v34/1100/MilliQan_Run1118.524_v34.root',
+    '/mnt/hadoop/se/store/user/milliqan/trees/v34/1100/MilliQan_Run1118.525_v34.root',
+    '/mnt/hadoop/se/store/user/milliqan/trees/v34/1100/MilliQan_Run1118.526_v34.root',
+    '/mnt/hadoop/se/store/user/milliqan/trees/v34/1100/MilliQan_Run1118.527_v34.root',
+    '/mnt/hadoop/se/store/user/milliqan/trees/v34/1100/MilliQan_Run1118.528_v34.root',
+    '/mnt/hadoop/se/store/user/milliqan/trees/v34/1100/MilliQan_Run1118.529_v34.root'
 ]
 
 # define the necessary branches to run over
@@ -180,11 +179,8 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts, myplotter
 # run the milliqan processor
 myiterator.run()
 
-# create the output file name based on the file indices
-output_filename = f"1DhistTimeDiff_{start_index}_to_{end_index}.root"
-
 # create a new TFile
-f = r.TFile(output_filename, "recreate")
+f = r.TFile("1DhistTimeDiff.root", "recreate")
 
 # write the histograms to the file
 h_1d.Write()

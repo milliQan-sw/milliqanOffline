@@ -73,7 +73,12 @@ Slab_Area_DW = r.TH1F("Slab_Area_DW", "area Slab; area ; pulse", 7000, 0, 700000
 #for offline file V34, the npe is the same as pulse area. So I only draw the 2D histogram for bars
 Bar_NPE_Area_DW = r.TH2F("Bar_NPE_Area_DW", "bar channels; nPE; area",20,0,1000,20, 0, 700000)
 NuniqueBar_DW = r.TH1F("NuniqueBar_DW" , "NuniqueBar DW;number of unique bar;events",50,0,50)
+NuniqueBar_CL = r.TH1F("NuniqueBar_CL" , "NuniqueBar CL;number of unique bar;events",50,0,50)
+NuniqueBar_ST = r.TH1F("NuniqueBar_ST" , "NuniqueBar ST;number of unique bar;events",50,0,50)
+
 myplotter.addHistograms(NuniqueBar_DW, 'NBarsHits', 'downwardPath')
+myplotter.addHistograms(NuniqueBar_ST, 'NBarsHits', 'StraghtCosmic')
+myplotter.addHistograms(NuniqueBar_CL, 'NBarsHits', 'Clean_MuonEvent')
 
 
 #histograms for StraghtCosmic
@@ -125,7 +130,7 @@ myplotter.addHistograms(Bar_NPE_Area_CL, ['nPE','area'], 'CL_bar_cf8')
 
 
 
-cutflow8 = [mycuts.offlinePreProcess,mycuts.boardsMatched,mycuts.pickupCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.NbarsHitsCount,OL_sudo_straight,dw_bar_cf8,dw_panel_cf8,St_bar_cf8,St_panel_cf8,CL_bar_cf8,CL_panel_cf8,DW_Muon_count,cleanMuon_count,mycuts.findMaxNPE,myplotter.dict['NuniqueBar_DW'],myplotter.dict['Bar_Area_DW'],myplotter.dict['Bar_NPE_DW'],myplotter.dict['Slab_Area_DW'],myplotter.dict['Bar_NPE_Area_DW'],myplotter.dict['Bar_Area_St'],myplotter.dict['Bar_NPE_St'],myplotter.dict['Slab_Area_St'],myplotter.dict['Bar_NPE_Area_St'],myplotter.dict['Bar_Area_CL'],myplotter.dict['Bar_NPE_CL'],myplotter.dict['Slab_Area_CL'],myplotter.dict['Bar_NPE_Area_CL']]
+cutflow8 = [mycuts.offlinePreProcess,mycuts.boardsMatched,mycuts.pickupCut,mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.NbarsHitsCount,OL_sudo_straight,dw_bar_cf8,dw_panel_cf8,St_bar_cf8,St_panel_cf8,CL_bar_cf8,CL_panel_cf8,DW_Muon_count,cleanMuon_count,mycuts.findMaxNPE,myplotter.dict['NuniqueBar_DW'],myplotter.dict['NuniqueBar_ST'],myplotter.dict['NuniqueBar_CL'],myplotter.dict['Bar_Area_DW'],myplotter.dict['Bar_NPE_DW'],myplotter.dict['Slab_Area_DW'],myplotter.dict['Bar_NPE_Area_DW'],myplotter.dict['Bar_Area_St'],myplotter.dict['Bar_NPE_St'],myplotter.dict['Slab_Area_St'],myplotter.dict['Bar_NPE_Area_St'],myplotter.dict['Bar_Area_CL'],myplotter.dict['Bar_NPE_CL'],myplotter.dict['Slab_Area_CL'],myplotter.dict['Bar_NPE_Area_CL']]
 
 
 

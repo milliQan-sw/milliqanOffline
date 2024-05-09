@@ -12,24 +12,6 @@ from milliqanCuts import *
 from milliqanPlotter import *
 import awkward as ak
 
-setattr(milliqanCuts, 'BarNPERatioCalculateV2' ,BarNPERatioCalculateV2)
-setattr(milliqanCuts, 'sudo_straight',sudo_straight)    
-
-setattr(milliqanCuts, 'adjLayerData' , adjLayerData)
-
-setattr(milliqanCuts, 'countEvent', countEvent)
-
-setattr(milliqanCuts, 'MuonEvent', MuonEvent)
-
-setattr(milliqanCuts, 'EmptyListFilter', EmptyListFilter)
-
-setattr(milliqanCuts, 'NbarsHitsCount',NbarsHitsCount)
-
-setattr(milliqanCuts, 'BarNPERatioCalculate',BarNPERatioCalculate)
-
-setattr(milliqanCuts, 'findCorrectTime',findCorrectTime)
-
-setattr(milliqanCuts,'LayerContraint',LayerContraint)
 
 
 #--------------------------------T3 condor job-----------------------------

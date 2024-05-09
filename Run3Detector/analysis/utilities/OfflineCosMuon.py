@@ -13,28 +13,6 @@ from milliqanPlotter import *
 import awkward as ak
 
 
-setattr(milliqanCuts, 'BarNPERatioCalculateV2' ,BarNPERatioCalculateV2)
-setattr(milliqanCuts, 'sudo_straight',sudo_straight)    
-
-setattr(milliqanCuts, 'adjLayerData' , adjLayerData)
-
-setattr(milliqanCuts, 'countEvent', countEvent)
-
-setattr(milliqanCuts, 'MuonEvent', MuonEvent)
-
-setattr(milliqanCuts, 'EmptyListFilter', EmptyListFilter)
-
-setattr(milliqanCuts, 'NbarsHitsCount',NbarsHitsCount)
-
-setattr(milliqanCuts, 'BarNPERatioCalculate',BarNPERatioCalculate)
-
-setattr(milliqanCuts, 'findCorrectTime',findCorrectTime)
-
-setattr(milliqanCuts,'LayerContraint',LayerContraint)
-
-setattr(milliqanCuts,'LayerContraint',LayerContraint)
-
-setattr(milliqanCuts,'offlinePreProcess',offlinePreProcess)
 
 branches = ["height","timeFit_module_calibrated","chan","runNumber","column","event","fileNumber",'boardsMatched',"pickupFlag","layer","nPE","type","row","area"]
 

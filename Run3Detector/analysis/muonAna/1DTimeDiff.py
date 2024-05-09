@@ -136,7 +136,7 @@ end_index = int(sys.argv[2])
 
 # define a file list to run over
 filelist = [
-    f"/mnt/hadoop/se/store/user/milliqan/trees/v34/1100/MilliQan_Run1118.{i}_v34.root"
+    f"/home/bpeng/muonAnalysis/MilliQan_Run1118.{i}_v34.root"
     for i in range(start_index, end_index + 1)
 ]
 

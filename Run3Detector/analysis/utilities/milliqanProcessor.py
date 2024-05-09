@@ -15,7 +15,7 @@ from processorConstants import *
 
 class milliqanProcessor():
 
-    def __init__(self, filelist, branches, schedule=None, cuts=None, plotter=None, max_events=None, qualityLevel="tight", verbosity='minimal'):
+    def __init__(self, filelist, branches, schedule=None, cuts=None, plotter=None, max_events=None, qualityLevel="tight", verbosity='minimal', fileCheckerEnable = True):
         self.script_dir = os.path.abspath(__file__).replace("milliqanProcessor.py", "")
         self.qualityLevelString = qualityLevel
         self.verbosityString = verbosity
@@ -23,8 +23,7 @@ class milliqanProcessor():
         
         #Checks the filelist against goodRuns.json
         self.filelist = filelist
-        self.fileChecker() 
-        
+        if fileCheckerEnable: self.fileChecker()
         self.branches = branches
         self.mqSchedule = schedule
         #self.mqCuts = cuts

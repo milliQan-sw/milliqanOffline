@@ -24,7 +24,13 @@ def getTimeDiff(self):
     max_heightsL1 = {}
     max_timeL1 = {}
 
-    time_diffs = []
+    max_heightsL2 = {}
+    max_timeL2 = {}
+
+    max_heightsL3 = {}
+    max_timeL3 = {}
+    
+    time_diffsL10 = []
 
     for row in range(4):
         for column in range(4):
@@ -42,12 +48,20 @@ def getTimeDiff(self):
             # select events on straight line passes then select layers
             mask0 = event_mask & pulse_maskL0
             mask1 = event_mask & pulse_maskL1
+            mask2 = event_mask & pulse_maskL2
+            mask3 = event_mask & pulse_maskL3
 
             heightsL0 = self.events['height'][mask0 & height_mask]  # 2D heights in one channel on layer 0
             timeL0 = self.events['timeFit_module_calibrated'][mask0 & height_mask]  # 2D times in one channel on layer 0
 
             heightsL1 = self.events['height'][mask1 & height_mask]
             timeL1 = self.events['timeFit_module_calibrated'][mask1 & height_mask]
+
+            heightsL2 = self.events['height'][mask2 & height_mask]
+            timeL2 = self.events['timeFit_module_calibrated'][mask2 & height_mask]
+
+            heightsL3 = self.events['height'][mask3 & height_mask]
+            timeL3 = self.events['timeFit_module_calibrated'][mask3 & height_mask]
 
             key = (row, column)
             
@@ -69,8 +83,26 @@ def getTimeDiff(self):
                 for sublist in ak.to_list(raw_max_timesL1)
             ])
 
-            if ak.max(max_timeL1[key]) is not None and ak.max(max_timeL0[key]) is not None:
-                time_diffs.append(ak.max(max_timeL1[key]) - ak.max(max_timeL0[key]))
+            max_heightsL2[key] = ak.max(heightsL2, axis = -1)
+            max_maskL2 = (heightsL2 == ak.broadcast_arrays(max_heightsL2[key], heightsL2)[0])
+            raw_max_timesL2 = ak.mask(timeL2, max_maskL2)
+            max_timeL2[key] = ak.Array([
+                next((item for item in sublist if item is not None), None) 
+                if sublist is not None else None
+                for sublist in ak.to_list(raw_max_timesL2)
+            ])
+
+            max_heightsL3[key] = ak.max(heightsL3, axis = -1)
+            max_maskL3 = (heightsL3 == ak.broadcast_arrays(max_heightsL3[key], heightsL3)[0])
+            raw_max_timesL3 = ak.mask(timeL3, max_maskL3)
+            max_timeL3[key] = ak.Array([
+                next((item for item in sublist if item is not None), None) 
+                if sublist is not None else None
+                for sublist in ak.to_list(raw_max_timesL3)
+            ])
+
+            if ak.max(max_timeL0[key]) is not None and ak.max(max_timeL1[key]) is not None and ak.max(max_timeL2[key]) is not None and ak.max(max_timeL3[key]) is not None:
+                time_diffsL10.append(ak.max(max_timeL1[key]) - ak.max(max_timeL0[key]))
 
 
     for key in max_heightsL0:
@@ -83,12 +115,12 @@ def getTimeDiff(self):
 
     print()
 
-    print(time_diffs)
+    print(time_diffsL10)
 
-    num_nones = 1000 - len(time_diffs)
-    time_diffs.extend([None] * num_nones)
+    num_nones = 1000 - len(time_diffsL10)
+    time_diffsL10.extend([None] * num_nones)
 
-    self.events['timeDiff'] = time_diffs
+    self.events['timeDiff'] = time_diffsL10
 
 # add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)

@@ -651,7 +651,7 @@ class milliqanCuts():
                 else: lay3Muon = lay3Muon | path
                 
         
-        #tag the pulses that has is in the layer where muon event can be found
+        #tag the bar pulses at layerX where muon event can be found
         l0Arr = (lay0Muon) & ((self.events["layer"]==0) & (self.events["barCut"]))
         l1Arr = (lay1Muon) & ((self.events["layer"]==1)  & (self.events["barCut"]))
         l2Arr = (lay2Muon) & ((self.events["layer"]==2)  & (self.events["barCut"]))
@@ -674,8 +674,8 @@ class milliqanCuts():
         self.events["MuonL1"] = l1Arr      
         self.events["MuonL2"] = l2Arr      
         self.events["MuonL3"] = l3Arr
-        self.events["MuonLayers"] = l0Arr | l1Arr | l2Arr | l3Arr   #pulse based tag.
-        self.events["otherlayer"] = ~self.events["MuonLayers"] #layers that can't find the muon event.
+        self.events["MuonLayers"] = l0Arr | l1Arr | l2Arr | l3Arr   #pulse based tag. it is used to collect all of the bar channel pulses at the muon event layer
+        self.events["otherlayer"] = ~self.events["MuonLayers"] #tag for layers that can't find the muon event.
         self.events["MuonADJL0"] = (self.events["layer"]==0) & (adj0)
         self.events["MuonADJL1"] = (self.events["layer"]==1) & (adj1)      
         self.events["MuonADJL2"] = (self.events["layer"]==2) & (adj2)      

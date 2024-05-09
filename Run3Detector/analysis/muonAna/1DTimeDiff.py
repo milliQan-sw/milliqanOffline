@@ -127,7 +127,7 @@ setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)
 
 # check if command line arguments are provided
 if len(sys.argv) != 3:
-    print("Usage: python3 [script] [start_file_index] [end_file_index]")
+    print("Usage: python3 [file_name] [start_file_index] [end_file_index]")
     sys.exit(1)
 
 # assign start and end indices from command line

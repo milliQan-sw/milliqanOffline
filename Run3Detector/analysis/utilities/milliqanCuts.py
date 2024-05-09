@@ -708,9 +708,7 @@ class milliqanCuts():
 
     def findMaxNPE(self):
         """
-        Can we use max pulse npe from bar channel to tag muon?
-
-        since the performance of each pmt are different, it would be great to be able to make 2 d plot  chan vs max npe for associate channel.
+        find the max pulse NPE for each channel or max pulse bar NPE for each event
         """
         self.events["MaxNPE"] = ak.max(self.events["nPE"][self.events["barCut"]], axis = 1)
         

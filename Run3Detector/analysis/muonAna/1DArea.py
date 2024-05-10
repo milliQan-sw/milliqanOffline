@@ -125,7 +125,7 @@ def getArea(self):
     self.events['areas'] = areas
 
 # add our custom function to milliqanCuts
-setattr(milliqanCuts, 'getTimeDiff', getArea)
+setattr(milliqanCuts, 'getArea', getArea)
 
 # check if command line arguments are provided
 if len(sys.argv) != 3:

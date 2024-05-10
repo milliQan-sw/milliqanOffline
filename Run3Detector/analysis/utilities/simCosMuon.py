@@ -48,45 +48,79 @@ print(outputPath)
 #----------------------------------section for using analysis tool----------------------
 branches = ["column","time","chan","runNumber","event","layer","nPE","type","row","muonHit"]
 
+DW_Muon_count = mycuts.getCut(mycuts.countEvent,'placeholder', Countobject= 'downwardPath')
+OL_sudo_straight = mycuts.getCut(mycuts.sudo_straight,'StraghtCosmic', NPEcut = 20,time = "timeFit_module_calibrated")
 cleanMuon_count = mycuts.getCut(mycuts.countEvent,'placeholder', Countobject= 'Clean_MuonEvent')
-clean_Muon_layer = mycuts.getCut(mycuts.combineCuts, 'clean_Muon_layer', ["MuonLayers","Clean_MuonEvent"])
-clean_Muon_adj_layer = mycuts.getCut(mycuts.combineCuts, 'clean_Muon_adj_layer', ["MuonADJLayers","Clean_MuonEvent"])
-clean_Muon_Dt = mycuts.getCut(mycuts.findCorrectTime, 'placeholder',cut = None,timeData = "time")
-M_NPE_C = r.TH1F("M_NPE_C", "nPE muon event layer", 100, 0, 100)
-M_adj_NPE_C = r.TH1F("M_adj_NPE_C", "nPE muon event adjacnet layer", 100, 0, 100)
-myplotter.addHistograms(M_NPE_C, 'nPE', 'clean_Muon_layer')
-myplotter.addHistograms(M_adj_NPE_C	, 'nPE', 'clean_Muon_adj_layer')
-NuniqueBar_C = r.TH1F("NuniqueBar_C" , "NuniqueBar;number of unique bar;events",50,0,50)
-myplotter.addHistograms(NuniqueBar_C, 'NBarsHits', 'Clean_MuonEvent')
+
+Bar_NPE_DW = r.TH1F("Bar_NPE_DW", "nPE bar; nPE ; bar", 500, 0, 1000)
+Bar_NPE_St = r.TH1F("Bar_NPE_St", "nPE bar; nPE ; bar", 500, 0, 1000)
+Bar_NPE_CL = r.TH1F("Bar_NPE_CL", "nPE bar; nPE ; bar", 500, 0, 1000)
 
 
 
-NpeRatio_adj = r.TH1F("NpeRatio_adj","NPE ratio;max NPE/min NPE;Events",5000,0,5000)
-NpeRatio_adj_tag= mycuts.getCut(mycuts.BarNPERatioCalculateV2, "NpeRatio_adj_tag",cut = "MuonADJLayers") 
-myplotter.addHistograms(NpeRatio_adj, 'NpeRatio_adj_tag', 'Clean_MuonEvent')
+NuniqueBar_DW = r.TH1F("NuniqueBar_DW" , "NuniqueBar DW;number of unique bar;events",50,0,50)
+NuniqueBar_CL = r.TH1F("NuniqueBar_CL" , "NuniqueBar CL;number of unique bar;events",50,0,50)
+NuniqueBar_ST = r.TH1F("NuniqueBar_ST" , "NuniqueBar ST;number of unique bar;events",50,0,50)
 
-#non- muon layer
-NpeRatio_ot_tag= mycuts.getCut(mycuts.BarNPERatioCalculateV2, "NpeRatio_ot_tag",cut = "MuonADJLayers")
-NpeRatio_ot = r.TH1F("NpeRatio_ot","NPE ratio;max NPE/min NPE;Events",5000,0,5000)
-myplotter.addHistograms(NpeRatio_ot, 'NpeRatio_ot_tag', 'Clean_MuonEvent')
-
-
-
-#extra histogram for Offline data
-CorrectTime_OL =  r.TH1F("CorrectTime_OL" , "D_t Max with correction w;D_t Max; Events",6000,-3000,3000)
-myplotter.addHistograms(CorrectTime_OL, 'DTL0L3', 'Clean_MuonEvent') 
-#CorrectTime_default_OL is to check what does CorrectTime should look like without the Clean muon cut
-CorrectTime_default_OL =  r.TH1F("CorrectTime_default_OL" , "D_t Max with correction w;D_t Max; Events",6000,-3000,3000)
-myplotter.addHistograms(CorrectTime_default_OL, 'DTL0L3', 'StraghtCosmic') 
+myplotter.addHistograms(NuniqueBar_DW, 'NBarsHits', 'downwardPath')
+myplotter.addHistograms(NuniqueBar_ST, 'NBarsHits', 'StraghtCosmic')
+myplotter.addHistograms(NuniqueBar_CL, 'NBarsHits', 'Clean_MuonEvent')
 
 
 
-NPERatio_C = r.TH1F("NPERatio_C","NPE ratio;max NPE/min NPE;Events",5000,0,5000)
-myplotter.addHistograms(NPERatio_C, 'BarNPERatio', 'Clean_MuonEvent')
-cutflow7 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.BarNPERatioCalculate,mycuts.NbarsHitsCount,mycuts.sudo_straight,NpeRatio_adj_tag,NpeRatio_ot_tag,clean_Muon_layer,clean_Muon_adj_layer,cleanMuon_count,clean_Muon_Dt,myplotter.dict['M_NPE_C'],myplotter.dict['M_adj_NPE_C'],myplotter.dict["NuniqueBar_C"],myplotter.dict["NPERatio_C"],myplotter.dict["CorrectTime_OL"],myplotter.dict["CorrectTime_default_OL"],myplotter.dict["NpeRatio_adj"],myplotter.dict["NpeRatio_ot"]]    
+#adding combine cuts for downwardPath
+dw_bar_cf8 = mycuts.getCut(mycuts.combineCuts, 'dw_bar_cf8', ["downwardPath", "barCut"])
+dw_panel_cf8 = mycuts.getCut(mycuts.combineCuts, 'dw_panel_cf8', ["downwardPath", "panelCut"])
+
+#adding combine cuts for StraghtCosmic
+St_bar_cf8 = mycuts.getCut(mycuts.combineCuts, 'St_bar_cf8', ["StraghtCosmic", "barCut"])
+St_panel_cf8 = mycuts.getCut(mycuts.combineCuts, 'St_panel_cf8', ["StraghtCosmic", "panelCut"])
+
+#adding combine cuts for Clean_MuonEvent
+CL_bar_cf8 = mycuts.getCut(mycuts.combineCuts, 'CL_bar_cf8', ["Clean_MuonEvent", "barCut"])
+CL_panel_cf8 = mycuts.getCut(mycuts.combineCuts, 'CL_panel_cf8', ["Clean_MuonEvent", "panelCut"])
+
+myplotter.addHistograms(Bar_NPE_DW, 'nPE', 'dw_bar_cf8')
+myplotter.addHistograms(Bar_NPE_St, 'nPE', 'St_bar_cf8')
+myplotter.addHistograms(Bar_NPE_CL, 'nPE', 'CL_bar_cf8')
+
+#-----------------plots for NPE and NPE ratio with layer constaints and time difference----------------
+Dt = mycuts.getCut(mycuts.findCorrectTime, 'placeholder',cut = None,timeData = "timeFit_module_calibrated",offlineMode = True)
+
+Dt_CL =  r.TH1F("Dt_CL" , "D_t CL;D_t ns; Events",6000,-3000,3000)
+Dt_ST =  r.TH1F("Dt_ST" , "D_t ST;D_t ns; Events",6000,-3000,3000)
+Dt_DW =  r.TH1F("Dt_DW" , "D_t ST;D_t ns; Events",6000,-3000,3000)
+
+myplotter.addHistograms(Dt_ST, 'DTL0L3', 'StraghtCosmic') 
+myplotter.addHistograms(Dt_DW, 'DTL0L3', 'downwardPath') 
+myplotter.addHistograms(Dt_CL, 'DTL0L3', 'Clean_MuonEvent') 
+
+Muon_adj_layer_CL = mycuts.getCut(mycuts.combineCuts, 'Muon_adj_layer_CL', ["MuonADJLayers","Clean_MuonEvent"])
+Muon_adj_layer_ST = mycuts.getCut(mycuts.combineCuts, 'Muon_adj_layer_ST', ["MuonADJLayers","StraghtCosmic"])
+Muon_adj_layer_DW = mycuts.getCut(mycuts.combineCuts, 'Muon_adj_layer_DW', ["MuonADJLayers_DW","downwardPath"])
 
 
-cutflow = cutflow7
+adj_NPE_CL = r.TH1F("adj_NPE_CL", "nPE muon event adjacnet layer CL", 100, 0, 100)
+myplotter.addHistograms(adj_NPE_CL	, 'nPE', 'Muon_adj_layer_CL')
+
+adj_NPE_DW = r.TH1F("adj_NPE_DW", "nPE muon event adjacnet layer CL", 100, 0, 100)
+myplotter.addHistograms(adj_NPE_DW	, 'nPE', 'Muon_adj_layer_DW')
+
+adj_NPE_ST = r.TH1F("adj_NPE_ST", "nPE muon event adjacnet layer ST", 100, 0, 100)
+myplotter.addHistograms(adj_NPE_ST	, 'nPE', 'Muon_adj_layer_ST')
+
+NpeRatio_adj_tag= mycuts.getCut(mycuts.BarNPERatioCalculateV2, "NpeRatio_adj_tag",cut = "MuonADJLayers") #The tag "NpeRatio_adj_tag" can be used to extract the NPE ratio for ST and CL event.
+NpeRatio_adj_DW_tag= mycuts.getCut(mycuts.BarNPERatioCalculateV2, "NpeRatio_adj_DW_tag",cut = "MuonADJLayers_DW")
+NPERatio_CL = r.TH1F("NPERatio_CL","NPE ratio CL adj;max NPE/min NPE;Events",5000,0,5000)
+NPERatio_DW = r.TH1F("NPERatio_DW","NPE ratio DW adj;max NPE/min NPE;Events",5000,0,5000)
+NPERatio_ST = r.TH1F("NPERatio_ST","NPE ratio ST adj;max NPE/min NPE;Events",5000,0,5000)
+myplotter.addHistograms(NPERatio_CL, 'NpeRatio_adj_tag', 'Clean_MuonEvent')
+myplotter.addHistograms(NPERatio_ST, 'NpeRatio_adj_tag', 'StraghtCosmic')
+myplotter.addHistograms(NPERatio_DW, 'NpeRatio_adj_DW_tag', 'downwardPath')
+
+cutflow8 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.NbarsHitsCount,OL_sudo_straight,dw_bar_cf8,dw_panel_cf8,St_bar_cf8,St_panel_cf8,CL_bar_cf8,CL_panel_cf8,DW_Muon_count,cleanMuon_count,myplotter.dict['NuniqueBar_DW'],myplotter.dict['NuniqueBar_ST'],myplotter.dict['NuniqueBar_CL'],myplotter.dict['Bar_Area_DW'],myplotter.dict['Bar_NPE_DW'],myplotter.dict['Slab_Area_DW'],myplotter.dict['Bar_NPE_Area_DW'],myplotter.dict['Bar_Area_St'],myplotter.dict['Bar_NPE_St'],myplotter.dict['Bar_NPE_CL'], Dt, myplotter.dict['Dt_ST'], myplotter.dict['Dt_DW'],myplotter.dict['Dt_CL'],Muon_adj_layer_CL,Muon_adj_layer_ST,Muon_adj_layer_DW , myplotter.dict['adj_NPE_CL'], myplotter.dict['adj_NPE_DW'],myplotter.dict['adj_NPE_ST'],NpeRatio_adj_tag,NpeRatio_adj_DW_tag,myplotter.dict['NPERatio_CL'],myplotter.dict['NPERatio_DW'],myplotter.dict['NPERatio_ST'] ]
+
+cutflow = cutflow8
 myschedule = milliQanScheduler(cutflow, mycuts)
 myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts,fileCheckerEnable = False)
 #-----------------------------save the txt and root file without condor job-------------------

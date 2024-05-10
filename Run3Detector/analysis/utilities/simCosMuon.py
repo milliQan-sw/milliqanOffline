@@ -84,7 +84,7 @@ myplotter.addHistograms(Bar_NPE_St, 'nPE', 'St_bar_cf8')
 myplotter.addHistograms(Bar_NPE_CL, 'nPE', 'CL_bar_cf8')
 
 #-----------------plots for NPE and NPE ratio with layer constaints and time difference----------------
-Dt = mycuts.getCut(mycuts.findCorrectTime, 'placeholder',cut = None,timeData = "time",offlineMode = True)
+Dt = mycuts.getCut(mycuts.findCorrectTime, 'placeholder',cut = None,timeData = "time",offlineMode = False)
 
 Dt_CL =  r.TH1F("Dt_CL" , "D_t CL;D_t ns; Events",6000,-3000,3000)
 Dt_ST =  r.TH1F("Dt_ST" , "D_t ST;D_t ns; Events",6000,-3000,3000)

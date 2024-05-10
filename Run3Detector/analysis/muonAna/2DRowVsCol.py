@@ -15,9 +15,6 @@ from milliqanScheduler import *
 from milliqanCuts import *
 from milliqanPlotter import *
 
-# add our custom function to milliqanCuts
-setattr(milliqanCuts, 'getArea', getArea)
-
 # check if command line arguments are provided
 if len(sys.argv) != 3:
     print("Usage: python3 [file_name] [start_file_index] [end_file_index]")

@@ -30,7 +30,7 @@ def getTimeDiff(self):
     max_heightsL3 = {}
     max_timeL3 = {}
     
-    time_diffsL10 = []
+    time_diffsL30 = []
 
     for row in range(4):
         for column in range(4):
@@ -102,7 +102,7 @@ def getTimeDiff(self):
             ])
 
             if ak.max(max_timeL0[key]) is not None and ak.max(max_timeL1[key]) is not None and ak.max(max_timeL2[key]) is not None and ak.max(max_timeL3[key]) is not None:
-                time_diffsL10.append(ak.max(max_timeL1[key]) - ak.max(max_timeL0[key]))
+                time_diffsL10.append(ak.max(max_timeL3[key]) - ak.max(max_timeL0[key]))
 
 
     for key in max_heightsL0:
@@ -110,17 +110,17 @@ def getTimeDiff(self):
 
     print()
 
-    for key in max_heightsL1:
-        print(key, "layer 1 Max Height: ", ak.max(max_heightsL1[key]))
+    for key in max_heightsL3:
+        print(key, "layer 3 Max Height: ", ak.max(max_heightsL3[key]))
 
     print()
 
-    print(time_diffsL10)
+    print(time_diffsL30)
 
-    num_nones = 1000 - len(time_diffsL10)
-    time_diffsL10.extend([None] * num_nones)
+    num_nones = 1000 - len(time_diffsL30)
+    time_diffsL30.extend([None] * num_nones)
 
-    self.events['timeDiff'] = time_diffsL10
+    self.events['timeDiff'] = time_diffsL30
 
 # add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)
@@ -159,8 +159,8 @@ fourLayerCut = mycuts.getCut(mycuts.fourLayerCut, 'fourLayerCut', cut=False)
 myplotter = milliqanPlotter()
 
 # create a 1D root histogram
-h_1d = r.TH1F("h_1d", "timeFit_module_calibrated Differences between layer 0 and 1", 60, -30, 30)
-h_1d.GetXaxis().SetTitle("time difference (TimeLayer1 - TimeLayer0)")
+h_1d = r.TH1F("h_1d", "timeFit_module_calibrated Differences between layer 3 and 0", 200, -100, 100)
+h_1d.GetXaxis().SetTitle("time difference (TimeLayer3 - TimeLayer0)")
 
 # add root histogram to plotter
 myplotter.addHistograms(h_1d, 'timeDiff')

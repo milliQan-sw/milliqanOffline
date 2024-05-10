@@ -476,8 +476,9 @@ class milliqanCuts():
         diff1 = TimeArrayL3_min - TimeArrayL0_min
     
         
-        #change array strturn for np concatination
+        #change array struture for np concatination
         diff1 = [[x] for x in diff1]
+        #-6000 will not appears in Dt histogram
         diff1=ak.fill_none(diff1,-6000.0)
     
         self.events["DTL0L3"] = diff1

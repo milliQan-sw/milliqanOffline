@@ -517,7 +517,7 @@ class milliqanCuts():
         else:
             print(f"current available events : {ak.count_nonzero(self.events['None_empty_event'])}")
 
-    def sudo_straight(self, cutName = "StraghtCosmic",NPEcut = 20,time = "time"):
+    def sudo_straight(self, cutName = "StraghtCosmic",NPEcut = 20,time = "time", offlineData = True):
         """
         This function creates 3 event-based tags for cosmic muon events. When doing analysis with offline data offlinePreProcess is required before creating this tag.
         The first two tags only check the first bit hit from bars but the last one also check the big hit on top cosmic panels.
@@ -531,43 +531,56 @@ class milliqanCuts():
         eventList = []
         DownEventList = [] #save the save event that pass the downward tags.
     
-    
-    
-        for layer in range(4):
-            for row in range(4):
-                for column in range(4):
-                    #channel tag
-                    lxArr[f"L{layer}_r{row}_c{column}_pre"]=(lxArr["layer"] == layer) & (lxArr["column"] == column) & (lxArr["row"] == row) & (lxArr["barCut"]) #if you see none in this array, then it means there is no hit in this array.
-                    #use channel tag to get the time
-                    ChanTime = lxArr[time][lxArr[f"L{layer}_r{row}_c{column}_pre"]]
-                    #find the the time for first hit of associate channel
-    
-                    FirstHitTime = ak.min(ChanTime,axis = 1) 
-                    #check if the first hit pass the npe cut
-                    #assuming there is no two pulses can have same time. if FirstHitTime < 0 then it suggest this channel has no reading. 
-                    lxArr[f"L{layer}_r{row}_c{column}"]=(lxArr["nPE"] >= NPEcut) & (lxArr[f"L{layer}_r{row}_c{column}_pre"]) & (lxArr[time] == FirstHitTime) & (FirstHitTime > 0)
-                    #fill none. The none appears when the selected channel has no pulse.
-                    lxArr[f"L{layer}_r{row}_c{column}"]  = ak.fill_none( lxArr[f"L{layer}_r{row}_c{column}"] , [False], axis =0) 
-               
-    
-        #tag for big hit at the top cosmic panel. Channel is the old offline  channel mapping
-        #top cosmic panel that covers layer 0 and layer 1
-        lxArr[f"CosP01_pre"] = (lxArr["chan"] == 68)
-        P01_Time = lxArr[time][lxArr[f"CosP01_pre"]]
-        P01_FirstHitTime = ak.min(P01_Time , axis = 1)
-        lxArr["Pre_CosP01"] =  (lxArr[f"CosP01_pre"]) & (lxArr["nPE"] >= (NPEcut/12))  &  (lxArr[time] == P01_FirstHitTime) & (P01_FirstHitTime > 0) 
-        lxArr["Pre_CosP01"] = ak.fill_none(lxArr["Pre_CosP01"],[False], axis = 0) 
-        lxArr["CosP01"] = ak.any ( lxArr["Pre_CosP01"],axis = 1)
+        #For the data in sim flat tree, there is at most one "pulse"  for each channel.
+        if offlineData:
+            for layer in range(4):
+                for row in range(4):
+                    for column in range(4):
+                        #channel tag
+                        lxArr[f"L{layer}_r{row}_c{column}_pre"]=(lxArr["layer"] == layer) & (lxArr["column"] == column) & (lxArr["row"] == row) & (lxArr["barCut"]) #if you see none in this array, then it means there is no hit in this array.
+                        #use channel tag to get the time
+                        ChanTime = lxArr[time][lxArr[f"L{layer}_r{row}_c{column}_pre"]]
+                        #find the the time for first hit of associate channel
         
+                        FirstHitTime = ak.min(ChanTime,axis = 1) 
+                        #check if the first hit pass the npe cut
+                        #assuming there is no two pulses can have same time. if FirstHitTime < 0 then it suggest this channel has no reading. 
+                        lxArr[f"L{layer}_r{row}_c{column}"]=(lxArr["nPE"] >= NPEcut) & (lxArr[f"L{layer}_r{row}_c{column}_pre"]) & (lxArr[time] == FirstHitTime) & (FirstHitTime > 0)
+                        #fill none. The none appears when the selected channel has no pulse.
+                        lxArr[f"L{layer}_r{row}_c{column}"]  = ak.fill_none( lxArr[f"L{layer}_r{row}_c{column}"] , [False], axis =0) 
+                
         
-        #top cosmic panel that covers layer 2 and layer 3
-        lxArr[f"CosP23_pre"] = (lxArr["chan"] == 72)
-        P23_Time = lxArr[time][lxArr[f"CosP23_pre"]]
-        P23_FirstHitTime = ak.min(P23_Time , axis = 1)
-        lxArr["Pre_CosP23"] = (lxArr[f"CosP23_pre"]) & (lxArr["nPE"] >= (NPEcut/12))  &  (lxArr[time] == P23_FirstHitTime) & (P23_FirstHitTime  > 0)  
-        lxArr["Pre_CosP23"] = ak.fill_none(lxArr["Pre_CosP23"],[False], axis = 0) 
-        lxArr["CosP23"] = ak.any ( lxArr["Pre_CosP23"] , axis = 1)
-    
+            #tag for big hit at the top cosmic panel. Channel is the old offline  channel mapping
+            #top cosmic panel that covers layer 0 and layer 1
+            lxArr[f"CosP01_pre"] = (lxArr["chan"] == 68)
+            P01_Time = lxArr[time][lxArr[f"CosP01_pre"]]
+            P01_FirstHitTime = ak.min(P01_Time , axis = 1)
+            lxArr["Pre_CosP01"] =  (lxArr[f"CosP01_pre"]) & (lxArr["nPE"] >= (NPEcut/12))  &  (lxArr[time] == P01_FirstHitTime) & (P01_FirstHitTime > 0) 
+            lxArr["Pre_CosP01"] = ak.fill_none(lxArr["Pre_CosP01"],[False], axis = 0) 
+            lxArr["CosP01"] = ak.any ( lxArr["Pre_CosP01"],axis = 1)
+            
+            
+            #top cosmic panel that covers layer 2 and layer 3
+            lxArr[f"CosP23_pre"] = (lxArr["chan"] == 72)
+            P23_Time = lxArr[time][lxArr[f"CosP23_pre"]]
+            P23_FirstHitTime = ak.min(P23_Time , axis = 1)
+            lxArr["Pre_CosP23"] = (lxArr[f"CosP23_pre"]) & (lxArr["nPE"] >= (NPEcut/12))  &  (lxArr[time] == P23_FirstHitTime) & (P23_FirstHitTime  > 0)  
+            lxArr["Pre_CosP23"] = ak.fill_none(lxArr["Pre_CosP23"],[False], axis = 0) 
+            lxArr["CosP23"] = ak.any ( lxArr["Pre_CosP23"] , axis = 1)
+
+        #FIXME:When I use script at above to find the muon event. I can't find any event that can pass the muon tag. So I decide to use the sudo_straight at https://github.com/milliQan-sw/milliqanOffline/commit/a2916b31d4484d5979042c9625ef8102d9e4b5ba
+        else:
+            for layer in range(4):
+                for row in range(4):
+                    for column in range(4):
+                        lxArr[f"L{layer}_r{row}_c{column}"]=(lxArr["nPE"] >= NPEcut) & (lxArr["layer"] == layer) & (lxArr["column"] == column) & (lxArr["row"] == row) & (lxArr["barCut"])
+
+            lxArr["Pre_CosP01"] = (lxArr["chan"] == 68) & (lxArr["nPE"] >= (NPEcut/12))
+            lxArr["CosP01"] = ak.any ( lxArr["Pre_CosP01"],axis = 1)
+
+            lxArr["Pre_CosP23"] = (lxArr["chan"] == 72) & (lxArr["nPE"] >= (NPEcut/12))
+            lxArr["CosP23"] = ak.any ( lxArr["Pre_CosP23"],axis = 1)
+
         for layer in range(4):
     
             #case 1: for muon passing straight across the detector and leave the hits along same column but different rows.

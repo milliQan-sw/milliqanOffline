@@ -50,7 +50,7 @@ branches = ["column","time","chan","runNumber","event","layer","nPE","type","row
 
 DW_Muon_count = mycuts.getCut(mycuts.countEvent,'placeholder', Countobject= 'downwardPath')
 cleanMuon_count = mycuts.getCut(mycuts.countEvent,'placeholder', Countobject= 'Clean_MuonEvent')
-
+SIM_sudo_straight = mycuts.getCut(mycuts.sudo_straight,'StraghtCosmic', NPEcut = 20,time = "time", offlineData = False)
 Bar_NPE_DW = r.TH1F("Bar_NPE_DW", "nPE bar; nPE ; bar", 500, 0, 1000)
 Bar_NPE_St = r.TH1F("Bar_NPE_St", "nPE bar; nPE ; bar", 500, 0, 1000)
 Bar_NPE_CL = r.TH1F("Bar_NPE_CL", "nPE bar; nPE ; bar", 500, 0, 1000)
@@ -117,7 +117,7 @@ myplotter.addHistograms(NPERatio_CL, 'NpeRatio_adj_tag', 'Clean_MuonEvent')
 myplotter.addHistograms(NPERatio_ST, 'NpeRatio_adj_tag', 'StraghtCosmic')
 myplotter.addHistograms(NPERatio_DW, 'NpeRatio_adj_DW_tag', 'downwardPath')
 
-cutflow8 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.NbarsHitsCount,mycuts.sudo_straight,dw_bar_cf8,dw_panel_cf8,St_bar_cf8,St_panel_cf8,CL_bar_cf8,CL_panel_cf8,DW_Muon_count,cleanMuon_count,myplotter.dict['NuniqueBar_DW'],myplotter.dict['NuniqueBar_ST'],myplotter.dict['NuniqueBar_CL'],myplotter.dict['Bar_NPE_DW'],myplotter.dict['Bar_NPE_St'],myplotter.dict['Bar_NPE_CL'], Dt, myplotter.dict['Dt_ST'], myplotter.dict['Dt_DW'],myplotter.dict['Dt_CL'],Muon_adj_layer_CL,Muon_adj_layer_ST,Muon_adj_layer_DW , myplotter.dict['adj_NPE_CL'], myplotter.dict['adj_NPE_DW'],myplotter.dict['adj_NPE_ST'],NpeRatio_adj_tag,NpeRatio_adj_DW_tag,myplotter.dict['NPERatio_CL'],myplotter.dict['NPERatio_DW'],myplotter.dict['NPERatio_ST'] ]
+cutflow8 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.NbarsHitsCount,SIM_sudo_straight,dw_bar_cf8,dw_panel_cf8,St_bar_cf8,St_panel_cf8,CL_bar_cf8,CL_panel_cf8,DW_Muon_count,cleanMuon_count,myplotter.dict['NuniqueBar_DW'],myplotter.dict['NuniqueBar_ST'],myplotter.dict['NuniqueBar_CL'],myplotter.dict['Bar_NPE_DW'],myplotter.dict['Bar_NPE_St'],myplotter.dict['Bar_NPE_CL'], Dt, myplotter.dict['Dt_ST'], myplotter.dict['Dt_DW'],myplotter.dict['Dt_CL'],Muon_adj_layer_CL,Muon_adj_layer_ST,Muon_adj_layer_DW , myplotter.dict['adj_NPE_CL'], myplotter.dict['adj_NPE_DW'],myplotter.dict['adj_NPE_ST'],NpeRatio_adj_tag,NpeRatio_adj_DW_tag,myplotter.dict['NPERatio_CL'],myplotter.dict['NPERatio_DW'],myplotter.dict['NPERatio_ST'] ]
 
 cutflow = cutflow8
 myschedule = milliQanScheduler(cutflow, mycuts)
@@ -139,14 +139,21 @@ else:
     sys.stdout = sys.__stdout__
     
     f_out = r.TFile(f"{outputPath}/Run{numRun}CutFlow7.root", "RECREATE")
-    M_adj_NPE_C.Write()
-    M_NPE_C.Write()
-    NPERatio_C.Write()
-    CorrectTime_OL.Write()
-    CorrectTime_default_OL.Write()
-    NpeRatio_adj.Write()
-    NpeRatio_ot.Write()
-    NuniqueBar_C.Write()
+    Bar_NPE_DW.Write()
+    Bar_NPE_St.Write()
+    Bar_NPE_CL.Write()
+    NuniqueBar_DW.Write()
+    NuniqueBar_CL.Write()
+    NuniqueBar_ST.Write()
+    Dt_CL.Write()
+    Dt_ST.Write()
+    Dt_DW.Write()
+    adj_NPE_CL.Write()
+    adj_NPE_DW.Write()
+    adj_NPE_ST.Write()
+    NPERatio_CL.Write()
+    NPERatio_DW.Write()
+    NPERatio_ST.Write()
     f_out.Close()
 
 

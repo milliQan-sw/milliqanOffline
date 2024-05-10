@@ -15,8 +15,23 @@ from milliqanScheduler import *
 from milliqanCuts import *
 from milliqanPlotter import *
 
+# add our custom function to milliqanCuts
+setattr(milliqanCuts, 'getArea', getArea)
+
+# check if command line arguments are provided
+if len(sys.argv) != 3:
+    print("Usage: python3 [file_name] [start_file_index] [end_file_index]")
+    sys.exit(1)
+
+# assign start and end indices from command line
+start_index = int(sys.argv[1])
+end_index = int(sys.argv[2])
+
 # define a file list to run over
-filelist = ['/mnt/hadoop/se/store/user/milliqan/trees/v34/1000/MilliQan_Run1006.4_v34.root:t']
+filelist = [
+    f"/home/bpeng/muonAnalysis/MilliQan_Run1118.{i}_v34.root"
+    for i in range(start_index, end_index + 1)
+]
 
 # define the necessary branches to run over
 branches = ['pickupFlag', 'boardsMatched', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type']

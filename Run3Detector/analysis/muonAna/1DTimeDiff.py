@@ -180,11 +180,8 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts, myplotter
 # run the milliqan processor
 myiterator.run()
 
-# create the output file name based on the file indices
-output_filename = f"1DhistTimeDiff.root"
-
 # create a new TFile
-f = r.TFile(output_filename, "recreate")
+f = r.TFile("1DhistTimeDiff.root", "recreate")
 
 # write the histograms to the file
 h_1d.Write()

@@ -34,15 +34,13 @@ def getArea(self):
     for row in range(4):
         for column in range(4):
             # 2D True/False masks determined by channels (at current channel?)
-            pulse_maskL0 = (self.events['row'] == row) & (self.events['column'] == column) & (self.events['layer'] == 0)
-            pulse_maskL1 = (self.events['row'] == row) & (self.events['column'] == column) & (self.events['layer'] == 1)
-            pulse_maskL2 = (self.events['row'] == row) & (self.events['column'] == column) & (self.events['layer'] == 2)
-            pulse_maskL3 = (self.events['row'] == row) & (self.events['column'] == column) & (self.events['layer'] == 3)
+            pulse_maskL0 = (self.events['row'] == row) & (self.events['column'] == column) & (self.events['layer'] == 0) & (self.events['height'] > 1000)
+            pulse_maskL1 = (self.events['row'] == row) & (self.events['column'] == column) & (self.events['layer'] == 1) & (self.events['height'] > 1000)
+            pulse_maskL2 = (self.events['row'] == row) & (self.events['column'] == column) & (self.events['layer'] == 2) & (self.events['height'] > 1000)
+            pulse_maskL3 = (self.events['row'] == row) & (self.events['column'] == column) & (self.events['layer'] == 3) & (self.events['height'] > 1000)
 
             # 1D True/False mask determined by event (any straight line pass?)
             event_mask = ak.any(pulse_maskL0, axis=1) & ak.any(pulse_maskL1, axis=1) & ak.any(pulse_maskL2, axis=1) & ak.any(pulse_maskL3, axis=1)
-            
-            height_mask = self.events['height'] > 1000
 
             # select events on straight line passes then select layers
             mask0 = event_mask & pulse_maskL0
@@ -50,17 +48,17 @@ def getArea(self):
             mask2 = event_mask & pulse_maskL2
             mask3 = event_mask & pulse_maskL3
 
-            heightsL0 = self.events['height'][mask0 & height_mask]  # 2D heights in one channel on layer 0
-            areaL0 = self.events['area'][mask0 & height_mask]  # 2D areas in one channel on layer 0
+            heightsL0 = self.events['height'][mask0]  # 2D heights in one channel on layer 0
+            areaL0 = self.events['area'][mask0]  # 2D areas in one channel on layer 0
 
-            heightsL1 = self.events['height'][mask1 & height_mask]
-            areaL1 = self.events['area'][mask1 & height_mask]
+            heightsL1 = self.events['height'][mask1]
+            areaL1 = self.events['area'][mask1]
 
-            heightsL2 = self.events['height'][mask2 & height_mask]
-            areaL2 = self.events['area'][mask2 & height_mask]
+            heightsL2 = self.events['height'][mask2]
+            areaL2 = self.events['area'][mask2]
 
-            heightsL3 = self.events['height'][mask3 & height_mask]
-            areaL3 = self.events['area'][mask3 & height_mask]
+            heightsL3 = self.events['height'][mask3]
+            areaL3 = self.events['area'][mask3]
 
             key = (row, column)
             

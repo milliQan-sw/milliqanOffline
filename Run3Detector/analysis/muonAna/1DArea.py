@@ -161,7 +161,7 @@ fourLayerCut = mycuts.getCut(mycuts.fourLayerCut, 'fourLayerCut', cut=False)
 myplotter = milliqanPlotter()
 
 # create a 1D root histogram
-h_1d = r.TH1F("h_1d", "area", 2000, -1000, 1000)
+h_1d = r.TH1F("h_1d", "area", 1000000, 0, 1000000)
 h_1d.GetXaxis().SetTitle("area of straight line pulses with >1000 heights (maximum at each channel)")
 
 # add root histogram to plotter

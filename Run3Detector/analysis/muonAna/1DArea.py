@@ -181,7 +181,7 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts, myplotter
 myiterator.run()
 
 # create the output file name based on the file indices
-output_filename = f"1DhistTimeDiff.root"
+output_filename = f"1DhistTimeDiff_{start_index}_to_{end_index}.root"
 
 # create a new TFile
 f = r.TFile(output_filename, "recreate")

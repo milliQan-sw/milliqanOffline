@@ -1,3 +1,19 @@
+"""
+usage for condor job: uncomment the section for "T3 condor job" and comment out the "non-condor job" section.
+see the usage at the very top in Sim_Condor.py to summit condor job. 
+
+python3 run_jobs.py -i inputFileDiretory -o outputFileDiretory -s OfflineCosMuon.py
+
+usage for not using condor job: comment out the section for "T3 condor job" and uncomment  the "non-condor job" section.
+modified the script in OfflineRun.sh to analyse multiple files and specify output location.
+
+you can test the script by using "python3 simCosMuon.py RunNumber FileNumber '' ". By using the option, there is no root file will be created but you can see the pring message.
+
+"""
+
+
+
+
 import math
 
 
@@ -17,7 +33,7 @@ import awkward as ak
 branches = ["height","timeFit_module_calibrated","chan","runNumber","column","event","fileNumber",'boardsMatched',"pickupFlag","layer","nPE","type","row","area"]
 
 
-#--------------------------------T3 condor job-----------------------------
+#--------------------------------T3 condor job sec 1-----------------------------
 """
 #need to check this one.
 def getFile(processNum, fileList):
@@ -33,19 +49,19 @@ def getFile(processNum, fileList):
     fileList = sys.argv[2]
 
 
-    #get the filename to run over
-    filename = getFile(processNum, fileList)
+#get the filename to run over
+filename = getFile(processNum, fileList)
 
-    if('.root' in filename and 'output' in filename):
-        numRun = filename.split('_')[1].split('.')[0].replace('Run', '')
+if('.root' in filename and 'output' in filename):
+    numRun = filename.split('_')[1].split('.')[0].replace('Run', '')
 
-    #filelist =['/mnt/hadoop/se/store/user/czheng/SimFlattree/offlinefile/output_1.root:t']
-    filelist =[f'{filename}:t']
+filelist =[f'{filename}:t']
 
 """
+#----------------------------end of T3 condor job sec 1--------------------
 
 
-#--------------------------------Non condor job--------------------------------
+#--------------------------------Non condor job sec 1--------------------------------
 numRun = str(sys.argv[1])
 fileNum = str(sys.argv[2])
 filelist =[f'/home/czheng/SimCosmicFlatTree/offlinefile/MilliQan_Run{numRun}.{fileNum}_v34.root:t']
@@ -55,7 +71,7 @@ outputPath = str(sys.argv[3]) # the path is used at the very end for the output 
 print(outputPath)
 
 
-#-------------------------------------------------------------------------
+#------------------------------------end Non condor job sec 1-------------------------
 mycuts = milliqanCuts()
 
 myplotter = milliqanPlotter()
@@ -185,8 +201,8 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts,fileChecke
 
 #myiterator.run() # comment this out when checking cut efficiency
 
-#--------------section for using to check cut efficiency-----------------------------
-print(outputPath)
+#--------------Non condor job sec 2-----------------------------
+
 if outputPath == '':
     myiterator.run()
 
@@ -203,16 +219,7 @@ else:
     sys.stdout = sys.__stdout__
 
     f_out = r.TFile(f"{outputPath}/Run{numRun}_file{fileNum}_CutFlow8.root", "RECREATE")
-    """#histograms for cutflow 7
-    M_adj_NPE_C.Write()
-    M_NPE_C.Write()
-    NPERatio_C.Write()
-    CorrectTime_OL.Write()
-    CorrectTime_default_OL.Write()
-    NpeRatio_adj.Write()
-    NpeRatio_ot.Write()
-    NuniqueBar_C.Write()
-    """
+
     Bar_Area_DW.Write()
     Bar_NPE_DW.Write()
     Slab_Area_DW.Write()
@@ -240,3 +247,40 @@ else:
 
 
     f_out.Close()
+#--------------end Non condor job sec 2-----------------------------
+
+#--------------------------------T3 condor job sec 2-----------------------------
+"""
+
+myiterator.run()
+f_out = r.TFile(f"Run{numRun}CutFlow8.root", "RECREATE")
+Bar_Area_DW.Write()
+Bar_NPE_DW.Write()
+Slab_Area_DW.Write()
+Bar_NPE_Area_DW.Write()
+Bar_Area_St.Write()
+Bar_NPE_St.Write()
+Slab_Area_St.Write()
+Bar_NPE_Area_St.Write()
+Bar_Area_CL.Write()
+Bar_NPE_CL.Write()
+Slab_Area_CL.Write()
+Bar_NPE_Area_CL.Write()
+NuniqueBar_DW.Write()
+NuniqueBar_ST.Write()
+NuniqueBar_CL.Write()
+Dt_CL.Write()
+Dt_ST.Write()
+Dt_DW.Write()
+adj_NPE_CL.Write()
+adj_NPE_DW.Write()
+adj_NPE_ST.Write()
+NPERatio_CL.Write()
+NPERatio_DW.Write()
+NPERatio_ST.Write()
+
+f_out.Close()
+
+"""
+
+#--------------------------------end of T3 condor job sec 2-----------------------------

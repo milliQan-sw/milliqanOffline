@@ -15,19 +15,33 @@ import awkward as ak
 
 
 #--------------------------------T3 condor job-----------------------------
-"""
-filelist = []
+#"""
+def getFile(processNum, fileList):
 
-def appendRun(filelist):
-    directory = "/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhoton/"
-    for filename in os.listdir(directory):
-        if filename.startswith("output") and filename.endswith(".root"):
-            filelist.append(directory+filename+":t")
+        filelist = open(fileList)
+        files = json.load(filelist)['filelist']
+        filelist.close()
+
+        return files[processNum]
+
+    #run number, filelist
+processNum = int(sys.argv[1])
+fileList = sys.argv[2]
 
 
-appendRun(filelist)
+#condor debug
+print(f"processNum {processNum}")
 
-"""
+
+
+#get the filename to run over
+filename = getFile(processNum, fileList)
+
+if('.root' in filename and 'output' in filename):
+    numRun = filename.split('_')[1].split('.')[0]
+
+filelist =[f'{filename}:t']
+#"""
 
 mycuts = milliqanCuts()
 
@@ -35,14 +49,14 @@ myplotter = milliqanPlotter()
 
 #--------------------------------non-condor job-----------------------------
 
-
+"""
 numRun = str(sys.argv[1])
 filelist =[f'/home/czheng/SimCosmicFlatTree/withPhotonMuontag/output_{numRun}.root:t']
 print(filelist)
 
 outputPath = str(sys.argv[2]) # the path is used at the very end for the output txt file
 print(outputPath)
-
+"""
 
 
 #----------------------------------section for using analysis tool----------------------
@@ -122,6 +136,9 @@ cutflow8 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelC
 cutflow = cutflow8
 myschedule = milliQanScheduler(cutflow, mycuts)
 myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts,fileCheckerEnable = False)
+
+myiterator.run()
+"""
 #-----------------------------save the txt and root file without condor job-------------------
 if outputPath == '':
     myiterator.run()
@@ -155,7 +172,7 @@ else:
     NPERatio_DW.Write()
     NPERatio_ST.Write()
     f_out.Close()
-
+"""
 
 #---------------------------save the files when using condor jobs------------------------
 #the print satement will be save to out file.

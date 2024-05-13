@@ -16,7 +16,7 @@ def checkProcessedFiles(outputDir):
     alreadyProcessedFiles = []
     for filename in os.listdir(outputDir):
         if('.root' in filename and 'output' in filename):
-            numRun = filename.split('_')[1].split('.')[0].replace('Run', '')
+            numRun = filename.split('_')[1].split('.')[0]
             alreadyProcessedFiles.append([numRun])
     return alreadyProcessedFiles
 
@@ -24,7 +24,7 @@ def getFilesToProcess(dataDir, alreadyProcessedFiles, reprocessAllFiles=False, c
     files = []
     for filename in os.listdir(dataDir):
         if('.root' in filename and 'output' in filename):
-            numRun = filename.split('_')[1].split('.')[0].replace('Run', '')
+            numRun = filename.split('_')[1].split('.')[0]
             if(not reprocessAllFiles):
                 if([numRun] in alreadyProcessedFiles): continue
             if checkFiles:

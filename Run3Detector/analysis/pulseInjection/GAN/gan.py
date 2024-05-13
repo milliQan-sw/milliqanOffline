@@ -2,32 +2,35 @@ from typing import Tuple
 
 import numpy as np
 import tensorflow as tf
-from tensorflow.keras.layers import (Input, Dense, LeakyReLU, Embedding, Flatten, Dropout, Conv1D,
-                                     Concatenate, Reshape, Activation, Normalization, BatchNormalization)
+from tensorflow.keras.layers import (Input, Dense, LeakyReLU, Embedding, Flatten,
+                                     Concatenate, Reshape, Activation, Normalization)
 from tensorflow.keras.models import Model
 
 
 def build_generator(latent_dim, output_shape, embed_dim, num_classes):
     noise = Input((latent_dim), name="noise_input")
-    noise = Flatten()(noise)
-    
+    x = Dense(256, name="gen_dense0")(noise)
+    x = LeakyReLU(0.2, name="gen_relu0")(x)
+
     label = Input((1), name="label")
-    l = Embedding(num_classes, embed_dim)(label)
+    l = Embedding(num_classes, embed_dim, input_length=1)(label)
     l = Flatten()(l)
 
-    x = Concatenate()([noise, l])
-    x = Dense(256)(x)
-    x = BatchNormalization()(x)
+    x = Concatenate()([x, l])
+    x = Dense(256, name="gen_dense1")(x)
+    x = LeakyReLU(0.2, name="gen_relu1")(x)
+    x = Dense(128)(x)
+    x = LeakyReLU(0.2)(x)
     x = Dense(64)(x)
-    x = BatchNormalization()(x)
+    x = LeakyReLU(0.2)(x)
+    output = Dense(output_shape, activation='tanh')(x)
 
-    output = Activation("tanh")(x)
-    output = Dense(output_shape)(output)
     return Model([noise, label], output, name="generator")
 
 
 def build_discriminator(embed_dim, input_shape, num_classes, extra_info_shape):
     data_input = Input(input_shape, name="data_input")
+    
     x = Flatten()(data_input)
 
     # Label input
@@ -44,11 +47,11 @@ def build_discriminator(embed_dim, input_shape, num_classes, extra_info_shape):
         [x, label_embedding, extra_info_flat])
 
     # Discriminator layers
-    x = Dense(256, name="disc_dense0", activation='leaky_relu')(concatenated_inputs)
-    x = Dropout(0.9)(x)
-    x = Dense(64, activation='leaky_relu')(x)
-    x = Dropout(0.9)(x)
-    output = Dense(1, name="disc_dense1", activation="sigmoid")(x)
+    x = Dense(256, name="disc_dense0")(concatenated_inputs)
+    x = LeakyReLU(0.2, name="disc_relu0")(x)
+    x = Dense(64)(x)
+    x = LeakyReLU(0.2)(x)
+    output = Dense(1, name="disc_dense1")(x)
 
     # Create and compile the discriminator model
     discriminator = Model(
@@ -68,7 +71,7 @@ def calculate_extra_metrics(waveform):
 # the loss should not go to 0, it will meet in the middle somewhere
 def train_step(real_waveforms, real_labels, latent_dim, num_classes, generator, discriminator, g_opt, d_opt, batch_size):
     batch_size = tf.shape(real_waveforms)[0]
-    cross_entropy = tf.keras.losses.BinaryCrossentropy()
+    cross_entropy = tf.keras.losses.BinaryCrossentropy(from_logits=True)
 
     noise = tf.random.normal([batch_size, latent_dim])
 

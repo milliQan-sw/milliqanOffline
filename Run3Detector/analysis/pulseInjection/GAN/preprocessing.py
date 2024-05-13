@@ -22,6 +22,11 @@ from scipy.signal import find_peaks
 import tensorflow as tf
 
 logging.basicConfig(level=logging.ERROR)
+def normalize_data(input_data:npt.ArrayLike) ->npt.ArrayLike:
+    for i, waveform in enumerate(input_data):
+        max_abs_value = np.max(np.abs(waveform))
+        input_data[i] = np.divide(waveform, max_abs_value)
+    return input_data
 
 def fix_imbalanced_data(input_data:npt.ArrayLike,
                         input_labels:npt.ArrayLike,

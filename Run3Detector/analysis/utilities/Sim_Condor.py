@@ -1,5 +1,5 @@
 #This file is modified based on run_jobs.py
-
+# useage:  python3 Sim_Condor.py -i /mnt/hadoop/se/store/user/czheng/SimFlattree/withPhotonCondorTest/ -o /mnt/hadoop/se/store/user/czheng/SimFlattree/withPhotonCondorTest -s simCosMuon.py
 import pickle
 import os,re
 import sys
@@ -15,36 +15,27 @@ import argparse
 def checkProcessedFiles(outputDir):
     alreadyProcessedFiles = []
     for filename in os.listdir(outputDir):
-        if('.root' in filename and 'output_result' in filename):   #what is the name of output root file?
+        if('.root' in filename and 'output_result' in filename):
             numRun = filename.split('_')[1].split('.')[0]
-            #print(numRun)#debug
             alreadyProcessedFiles.append([numRun])
     return alreadyProcessedFiles
 
 def getFilesToProcess(dataDir, alreadyProcessedFiles, reprocessAllFiles=True, checkFiles=False):
     files = []
     for filename in os.listdir(dataDir):
-        print(f"filename {filename}")#debug
         if('.root' in filename and 'output' in filename):
             numRun = filename.split('_')[1].split('.')[0]
-            print(numRun)#debug
             if(not reprocessAllFiles):
                 if([numRun] in alreadyProcessedFiles): 
-                    print("quit 1")
                     continue
             if checkFiles:
                 myfile = TFile.Open(dataDir+filename)
                 if myfile.IsZombie():
-                     print("quit 2")
                      continue
             files.append(dataDir + filename)
-            print(f"dataDir {dataDir}") #debug
-            print(f"filename {filename}") #debug
     return files
 
 def createJson(files, listName):
-    print(f"files {files}") #debug
-    print(f"listName {listName}") #debug
     filelist = listName
     file_dict = {'filelist':files}
     fout = open(filelist, 'w')

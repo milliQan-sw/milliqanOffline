@@ -155,7 +155,6 @@ class mqLumiList():
                 if id > 0: break
             print("Working on id {}, directory {}".format(id, directory))
             if len(files) == 0: continue
-            if id > 20: break #TODO remove this line after reprocessing
             self.initializeDataframe(directory.replace(self.rawPath, ''), files)
             self.setFileTimes()
             self.setMQLumis()
@@ -204,8 +203,10 @@ class mqLumiList():
             return lastRun, lastFile
         else:
             #option to reprocess anything less than one day old, some files may be ongoing since list fill -> update info
-            prevLumis['start'] = pd.to_datetime(prevLumis['start'], unit='ms')
-            one_day_ago = datetime.utcnow() - timedelta(days=1)
+            #prevLumis['start'] = pd.to_datetime(prevLumis['start'], unit='ms', errors='coerce')
+            prevLumis['start'] = pd.to_datetime(prevLumis['start'], errors='coerce')
+
+            one_day_ago = pd.Timestamp(datetime.utcnow() - timedelta(days=1), tz=pytz.UTC)
             result = prevLumis[prevLumis['start'] >= one_day_ago]
             if len(result) == 0:
                 return lastRun, lastFile
@@ -251,12 +252,17 @@ class mqLumiList():
         
     def openLumis(self):
         #try:
+
         self.lumiList = self.getOMSInfo()
+        print("Debugging 2", self.lumiList[self.lumiList['fill_number'] == 9029][['start_stable_beam', 'end_stable_beam']])
+
         self.lumiList['end_time'] = pd.to_datetime(self.lumiList['end_time'], errors='coerce', utc=True, format='%Y-%m-%dT%H:%M:%SZ')
         self.lumiList['start_time'] = pd.to_datetime(self.lumiList['start_time'], errors='coerce', utc=True, format='%Y-%m-%dT%H:%M:%SZ')
-        self.lumiList['start_stable_beam'] = pd.to_datetime(self.lumiList['start_stable_beam'], errors='coerce', utc=True, format='%Y-%m-%dT%H:%M:%SZ')
+        self.lumiList['start_stable_beam'] = pd.to_datetime(self.lumiList['start_stable_beam'], errors='coerce', utc=True) #for some reason format was causing issues for this...
         self.lumiList['end_stable_beam'] = pd.to_datetime(self.lumiList['end_stable_beam'], errors='coerce', utc=True, format='%Y-%m-%dT%H:%M:%SZ')
         self.lumiList = self.lumiList.sort_values(by='start_time')
+
+        print("Debugging 3", self.lumiList[self.lumiList['fill_number'] == 9029][['start_stable_beam', 'end_stable_beam']])
 
         '''except:
             print("Error: unable to get lumi info from OMS, defaulting to local luminosity file", os.path.dirname(os.path.realpath(__file__))+'/../configuration/' + self.rawLumis)
@@ -289,6 +295,8 @@ class mqLumiList():
         self.mqLumis[['start', 'stop']] = self.mqLumis.apply(lambda x: self.getFileTime(x.dir + '/' + x.filename) if pd.isnull(x.start) else (x.start, x.stop), axis='columns', result_type='expand')
         
     def addDatetimes(self):
+        print("Debugging 1", self.lumiList[self.lumiList['fill_number'] == 9029]['start_stable_beam'])
+
         self.lumiList['start_time'] = self.lumiList['start_time'].where(pd.notnull(self.lumiList['start_time']), None)
         self.lumiList['end_time'] = self.lumiList['end_time'].where(pd.notnull(self.lumiList['end_time']), None)
         self.lumiList['start_stable_beam'] = self.lumiList['start_stable_beam'].astype(object).where(pd.notnull(self.lumiList['start_stable_beam']), None)
@@ -304,6 +312,8 @@ class mqLumiList():
         
         self.lumiList['start_stable_beam'].replace({pd.NaT: None}, inplace=True)
         self.lumiList['end_stable_beam'].replace({pd.NaT: None}, inplace=True)
+
+        print("Debugging", self.lumiList[self.lumiList['fill_number'] == 9029]['start_stable_beam'])
         
     def findLumiStart(self, start, stop):
     
@@ -410,7 +420,7 @@ class mqLumiList():
                 #print('fill {}, lumi {}, stable beam start {}, stable beam stop {}, start {}, stop {}, mqLumi {}'.format(x.fill_number, x.delivered_lumi, x.start_stable_beam, x.end_stable_beam, start, stop, mqLumi))
                 if pd.isna(x.delivered_lumi_stablebeams) or x.delivered_lumi_stablebeams == 0: continue
                 #print(start, x.end_stable_beam, x.fill_number, x.delivered_lumi_stablebeams)
-
+                print(start, x)
                 if start > x.end_stable_beam: continue
                 if start < x.start_stable_beam: #milliqan run starts before fill
                     if stop < x.start_stable_beam: continue
@@ -442,14 +452,15 @@ class mqLumiList():
 
     def updateJson(self):
         existing = pd.read_json(self.outputFile, orient = 'split', compression = 'infer')
+        existing['start'] = pd.to_datetime(existing['start'])
         existing = existing.sort_values(by='start')
-        self.mqLumis = self.mqLumis.sort_values(by='start')
         self.mqLumis['run'] = self.mqLumis['run'].astype(int)
         self.mqLumis['file'] = self.mqLumis['file'].astype(int)
         self.mqLumis = pd.concat([existing, self.mqLumis], ignore_index=True)
         #print("Total entries after merge {}".format(len(self.mqLumis)))
         #print("Number of duplicates ", len(self.mqLumis[self.mqLumis.duplicated(subset=['run', 'file'])]))
         self.mqLumis = self.mqLumis.drop_duplicates(subset=['run', 'file'], keep='last')
+        self.mqLumis = self.mqLumis.sort_values(by='start')
         #print("Total entries after drop {}".format(len(self.mqLumis)))
         if self.debug:
             self.saveJson(name='mqLumisDebug.json')
@@ -473,9 +484,9 @@ if __name__ == "__main__":
 
     try:
         update=True
-        debug=False
+        debug=True
 
-        startingRun = 1500
+        startingRun = 1110
         startingFile = 1
 
         mylumiList = mqLumiList()

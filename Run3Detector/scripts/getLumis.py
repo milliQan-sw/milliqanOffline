@@ -17,7 +17,7 @@ class lumiDict:
         self.lumis = None
         self.fill = None
         self.beam = None
-        self.beamInRun = None
+        self.beamInFill = None
         self.dir = None
         self.filename = None
         self.start = None
@@ -30,7 +30,7 @@ class mqLumiList():
         self.rawPath = '/store/user/milliqan/run3/bar/'
         self.outputFile = '/eos/experiment/milliqan/Configs/mqLumis.json'
         self.rawLumis = 'Run3_2024Lumis.csv'
-        self.mqLumis = pd.DataFrame(columns=['run', 'file', 'lumis', 'fill', 'beam', 'beamInRun', 'dir', 'filename', 'start', 'stop'])
+        self.mqLumis = pd.DataFrame(columns=['run', 'file', 'lumis', 'fill', 'beam', 'beamInFill', 'dir', 'filename', 'start', 'stop'])
         self.debug = False
         
     def looper(self):
@@ -122,8 +122,6 @@ class mqLumiList():
                 rawLumis.at[rawLumis.index[-1], 'end_time'] = current_datetime
             if rawLumis.iloc[-1]['end_stable_beam'] is None:
                 rawLumis.at[rawLumis.index[-1], 'end_stable_beam'] = current_datetime
-
-            print("End lumis no updates", rawLumis['end_time'])
             return rawLumis
 
         if len(dataframe) > 0:
@@ -131,7 +129,7 @@ class mqLumiList():
             if dataframe.iloc[-1]['end_time'] is None:
                 dataframe.at[dataframe.index[-1], 'end_time'] = current_datetime
             if dataframe.iloc[-1]['end_stable_beam'] is None:
-                dataframe.at[dataframe.index[-1], 'end_time'] = current_datetime
+                dataframe.at[dataframe.index[-1], 'end_stable_beam'] = current_datetime
 
             dataframe['start_time'] = pd.to_datetime(dataframe['start_time'])
             dataframe['end_time'] = pd.to_datetime(dataframe['end_time'])
@@ -220,7 +218,7 @@ class mqLumiList():
         fileCnt = 0
         if fileList is not None:
             for fileCnt, filename in enumerate(fileList):
-                if self.debug and fileCnt > 200: break
+                if self.debug and fileCnt > 100: break
                 if fileCnt % 1000 == 0: print("Working on processing file {}".format(fileCnt))
                 print("Processing", fileCnt, filename)
                 runNum_, fileNum_ = self.getRunFile(filename)
@@ -254,16 +252,12 @@ class mqLumiList():
         #try:
 
         self.lumiList = self.getOMSInfo()
-        print("Debugging 2", self.lumiList[self.lumiList['fill_number'] == 9029][['start_stable_beam', 'end_stable_beam']])
 
         self.lumiList['end_time'] = pd.to_datetime(self.lumiList['end_time'], errors='coerce', utc=True, format='%Y-%m-%dT%H:%M:%SZ')
         self.lumiList['start_time'] = pd.to_datetime(self.lumiList['start_time'], errors='coerce', utc=True, format='%Y-%m-%dT%H:%M:%SZ')
         self.lumiList['start_stable_beam'] = pd.to_datetime(self.lumiList['start_stable_beam'], errors='coerce', utc=True) #for some reason format was causing issues for this...
-        self.lumiList['end_stable_beam'] = pd.to_datetime(self.lumiList['end_stable_beam'], errors='coerce', utc=True, format='%Y-%m-%dT%H:%M:%SZ')
+        self.lumiList['end_stable_beam'] = pd.to_datetime(self.lumiList['end_stable_beam'], errors='coerce', utc=True)
         self.lumiList = self.lumiList.sort_values(by='start_time')
-
-        print("Debugging 3", self.lumiList[self.lumiList['fill_number'] == 9029][['start_stable_beam', 'end_stable_beam']])
-
         '''except:
             print("Error: unable to get lumi info from OMS, defaulting to local luminosity file", os.path.dirname(os.path.realpath(__file__))+'/../configuration/' + self.rawLumis)
             self.lumiList = pd.read_csv(os.path.dirname(os.path.realpath(__file__))+'/../configuration/' + self.rawLumis)'''
@@ -295,8 +289,6 @@ class mqLumiList():
         self.mqLumis[['start', 'stop']] = self.mqLumis.apply(lambda x: self.getFileTime(x.dir + '/' + x.filename) if pd.isnull(x.start) else (x.start, x.stop), axis='columns', result_type='expand')
         
     def addDatetimes(self):
-        print("Debugging 1", self.lumiList[self.lumiList['fill_number'] == 9029]['start_stable_beam'])
-
         self.lumiList['start_time'] = self.lumiList['start_time'].where(pd.notnull(self.lumiList['start_time']), None)
         self.lumiList['end_time'] = self.lumiList['end_time'].where(pd.notnull(self.lumiList['end_time']), None)
         self.lumiList['start_stable_beam'] = self.lumiList['start_stable_beam'].astype(object).where(pd.notnull(self.lumiList['start_stable_beam']), None)
@@ -312,8 +304,6 @@ class mqLumiList():
         
         self.lumiList['start_stable_beam'].replace({pd.NaT: None}, inplace=True)
         self.lumiList['end_stable_beam'].replace({pd.NaT: None}, inplace=True)
-
-        print("Debugging", self.lumiList[self.lumiList['fill_number'] == 9029]['start_stable_beam'])
         
     def findLumiStart(self, start, stop):
     
@@ -329,12 +319,12 @@ class mqLumiList():
             beamEnergy = None
             betaStar = None 
             beamOn = False #if there is stable beams at time of milliqan run
-            beamInRun = False #if there are any stable beams in the run
+            beamInFill = False #if there are any stable beams in the run
             fillStart = None 
             fillEnd = None
             startStableBeam = None
             endStableBeam = None
-            return lumis, fillId, beamType, beamEnergy, betaStar, beamOn, beamInRun, fillStart, fillEnd, startStableBeam, endStableBeam, mqLumi
+            return lumis, fillId, beamType, beamEnergy, betaStar, beamOn, beamInFill, fillStart, fillEnd, startStableBeam, endStableBeam, mqLumi
         
         #if milliqan run starts after all runs in lumi list
         if start > self.lumiList.start_time.max() or stop < self.lumiList.start_time.min():
@@ -345,12 +335,12 @@ class mqLumiList():
             beamEnergy = None
             betaStar = None 
             beamOn = False 
-            beamInRun = False
+            beamInFill = False
             fillStart = None 
             fillEnd = None
             startStableBeam = None
             endStableBeam = None
-            return lumis, fillId, beamType, beamEnergy, betaStar, beamOn, beamInRun, fillStart, fillEnd, startStableBeam, endStableBeam, mqLumi
+            return lumis, fillId, beamType, beamEnergy, betaStar, beamOn, beamInFill, fillStart, fillEnd, startStableBeam, endStableBeam, mqLumi
         
         for i, st in enumerate(self.lumiList.start_time):
             if start < st: 
@@ -386,29 +376,31 @@ class mqLumiList():
             startStableBeam = self.lumiList['start_stable_beam'][startId]
             endStableBeam = self.lumiList['end_stable_beam'][startId]
             beamOn = False
-            beamInRun = False
+            beamInFill = False
             if not pd.isna(self.lumiList['start_stable_beam'][startId]):
-                beamOn = True
-            if not pd.isna(self.lumiList['start_time'][startId]):
-                beamInRun = True
+                beamInFill = True
+            '''if not pd.isna(self.lumiList['start_time'][startId]):
+                beamInFill = True'''
             
             mqLumi = 0
-            if beamOn:
+            if beamInFill:
                 totalLumi = self.lumiList['delivered_lumi_stablebeams'][startId]
                 totalFillTime = self.lumiList['duration'][startId]
                 totalMQTime = (stop-start).total_seconds()
                 frac = totalMQTime / totalFillTime
                 mqLumi = totalLumi * frac
+            
+            if mqLumi > 0:
+                beamOn = True
                 
         else:
-            #print("ids", startId, stopId)
-            #print("start fill {0}, stop fill {1}".format(self.lumiList['fill_number'][startId], self.lumiList['fill_number'][stopId]))
             fillId = self.lumiList['fill_number'][startId:stopId+1].to_list()
             beamType = self.lumiList['fill_type_runtime'][startId:stopId+1].to_list()
             beamEnergy = self.lumiList['energy'][startId:stopId+1].to_list()
             betaStar = self.lumiList['beta_star'][startId:stopId+1].to_list()
-            beamOn = [False if pd.isna(x) else True for x in self.lumiList['start_stable_beam'][startId:stopId+1]]
-            beamInRun = [False if pd.isna(x) else True for x in self.lumiList['start_time'][startId:stopId+1]]
+            beamInFill = [False if pd.isna(x) else True for x in self.lumiList['start_stable_beam'][startId:stopId+1]]
+            beamOn = False
+            #beamInFill = [False if pd.isna(x) else True for x in self.lumiList['start_time'][startId:stopId+1]]
             fillStart = self.lumiList['start_time'][startId:stopId+1].to_list()
             fillEnd = self.lumiList['end_time'][startId:stopId+1].to_list()
             lumis = self.lumiList['delivered_lumi_stablebeams'][startId:stopId+1].to_list()
@@ -417,10 +409,8 @@ class mqLumiList():
             mqLumi = 0
             for i in range(startId, stopId+1):
                 x = self.lumiList[['start_time', 'end_time', 'start_stable_beam', 'end_stable_beam', 'delivered_lumi_stablebeams', 'duration', 'fill_number']].iloc[i]
-                #print('fill {}, lumi {}, stable beam start {}, stable beam stop {}, start {}, stop {}, mqLumi {}'.format(x.fill_number, x.delivered_lumi, x.start_stable_beam, x.end_stable_beam, start, stop, mqLumi))
                 if pd.isna(x.delivered_lumi_stablebeams) or x.delivered_lumi_stablebeams == 0: continue
-                #print(start, x.end_stable_beam, x.fill_number, x.delivered_lumi_stablebeams)
-                print(start, x)
+                print("start {}, stop {}, fill {}, end stable {}".format(start, stop, x.fill_number, x.end_stable_beam))
                 if start > x.end_stable_beam: continue
                 if start < x.start_stable_beam: #milliqan run starts before fill
                     if stop < x.start_stable_beam: continue
@@ -432,7 +422,6 @@ class mqLumiList():
                         mqLumi += frac * x.delivered_lumi_stablebeams
                 elif start > x.start_stable_beam: #milliqan run starts after fill
                     if stop >= x.end_stable_beam: #milliqan run ends after fill
-                        #print(start.tzinfo, x.end_stable_beam.tzinfo)
                         total_time = (x.end_stable_beam - start).total_seconds()
                         frac = total_time / x.duration
                         mqLumi += frac * x.delivered_lumi_stablebeams
@@ -441,11 +430,14 @@ class mqLumiList():
                         print("Error: This should be handled already!")
                 else:
                     print("Error: Bug in code, this case isn't handled")
+
+            if mqLumi > 0:
+                beamOn = True
                         
-        return lumis, fillId, beamType, beamEnergy, betaStar, beamOn, beamInRun, fillStart, fillEnd, startStableBeam, endStableBeam, mqLumi
+        return lumis, fillId, beamType, beamEnergy, betaStar, beamOn, beamInFill, fillStart, fillEnd, startStableBeam, endStableBeam, mqLumi
     
     def setMQLumis(self):
-        self.mqLumis[['lumis', 'fill', 'beamType', 'beamEnergy', 'betaStar', 'beam', 'beamInRun', 'fillStart', 'fillEnd', 'startStableBeam', 'endStableBeam', 'lumiEst']] = self.mqLumis.apply(lambda x: self.findLumiStart(x.start, x.stop) if x.lumis is None else (x.lumis, x.fill, x.beamType, x.beamEnergy, x.betaStar, x.beam, x.beamInRun, x.fillStart, x.fillEnd, x.startStableBeam, x.endStableBeam, x.lumiEst), axis='columns', result_type='expand')
+        self.mqLumis[['lumis', 'fill', 'beamType', 'beamEnergy', 'betaStar', 'beam', 'beamInFill', 'fillStart', 'fillEnd', 'startStableBeam', 'endStableBeam', 'lumiEst']] = self.mqLumis.apply(lambda x: self.findLumiStart(x.start, x.stop) if x.lumis is None else (x.lumis, x.fill, x.beamType, x.beamEnergy, x.betaStar, x.beam, x.beamInFill, x.fillStart, x.fillEnd, x.startStableBeam, x.endStableBeam, x.lumiEst), axis='columns', result_type='expand')
 
     def saveJson(self, name='mqLumisUpdate.json'):
         self.mqLumis.to_json(name, orient = 'split', compression = 'infer', index = 'true', date_format='iso')
@@ -457,11 +449,8 @@ class mqLumiList():
         self.mqLumis['run'] = self.mqLumis['run'].astype(int)
         self.mqLumis['file'] = self.mqLumis['file'].astype(int)
         self.mqLumis = pd.concat([existing, self.mqLumis], ignore_index=True)
-        #print("Total entries after merge {}".format(len(self.mqLumis)))
-        #print("Number of duplicates ", len(self.mqLumis[self.mqLumis.duplicated(subset=['run', 'file'])]))
         self.mqLumis = self.mqLumis.drop_duplicates(subset=['run', 'file'], keep='last')
         self.mqLumis = self.mqLumis.sort_values(by='start')
-        #print("Total entries after drop {}".format(len(self.mqLumis)))
         if self.debug:
             self.saveJson(name='mqLumisDebug.json')
         else:
@@ -484,10 +473,10 @@ if __name__ == "__main__":
 
     try:
         update=True
-        debug=True
+        debug=False
 
-        startingRun = 1110
-        startingFile = 1
+        startingRun = None
+        startingFile = None
 
         mylumiList = mqLumiList()
         mylumiList.debug = debug

@@ -103,7 +103,10 @@ def getArea(self):
             # iterate over events
             for event in range(len(max_areaL0[key])):
                 if max_areaL0[key][event] is not None and max_areaL1[key][event] is not None and max_areaL2[key][event] is not None and max_areaL3[key][event] is not None:
-                    areas.append()
+                    areas.append(max_areaL0[key][event])
+                    areas.append(max_areaL1[key][event])
+                    areas.append(max_areaL2[key][event])
+                    areas.append(max_areaL3[key][event])
 
     print(areas)
 

@@ -100,8 +100,10 @@ def getTimeDiff(self):
                 for sublist in ak.to_list(raw_max_timesL3)
             ])
 
-            if ak.max(max_timeL0[key]) is not None and ak.max(max_timeL1[key]) is not None and ak.max(max_timeL2[key]) is not None and ak.max(max_timeL3[key]) is not None:
-                time_diffsL30.append(ak.max(max_timeL3[key]) - ak.max(max_timeL0[key]))
+            # iterate over events
+            for event in max_timeL0[key]:
+                if max_timeL0[key][event] is not None and max_timeL1[key][event] is not None and max_timeL2[key][event] is not None and max_timeL3[key][event] is not None:
+                    time_diffsL30.append(max_timeL3[key][event] - max_timeL0[key][event])
 
     print(time_diffsL30)
 

@@ -15,6 +15,7 @@ from milliqanScheduler import *
 from milliqanCuts import *
 from milliqanPlotter import *
 
+# define the function to get the areas of each pulse that has passed the cuts
 def getArea(self):
 
     max_heightsL0 = {}
@@ -31,25 +32,26 @@ def getArea(self):
 
     areas = []
 
+# iterate over straight line passes
     for row in range(4):
         for column in range(4):
-            # 2D True/False masks determined by channels (at current channel?)
+            # pulse_based 2D boolean masks determined by channel and height
             pulse_maskL0 = (self.events['row'] == row) & (self.events['column'] == column) & (self.events['layer'] == 0) & (self.events['height'] > 1000)
             pulse_maskL1 = (self.events['row'] == row) & (self.events['column'] == column) & (self.events['layer'] == 1) & (self.events['height'] > 1000)
             pulse_maskL2 = (self.events['row'] == row) & (self.events['column'] == column) & (self.events['layer'] == 2) & (self.events['height'] > 1000)
             pulse_maskL3 = (self.events['row'] == row) & (self.events['column'] == column) & (self.events['layer'] == 3) & (self.events['height'] > 1000)
 
-            # 1D True/False mask determined by event (any straight line pass?)
+            # event_based 1D boolean mask determined by event
             event_mask = ak.any(pulse_maskL0, axis=1) & ak.any(pulse_maskL1, axis=1) & ak.any(pulse_maskL2, axis=1) & ak.any(pulse_maskL3, axis=1)
 
-            # select events on straight line passes then select layers
+            # select pulses in current straight line pass on different layers
             mask0 = event_mask & pulse_maskL0
             mask1 = event_mask & pulse_maskL1
             mask2 = event_mask & pulse_maskL2
             mask3 = event_mask & pulse_maskL3
 
-            heightsL0 = self.events['height'][mask0]  # 2D heights in one channel on layer 0
-            areaL0 = self.events['area'][mask0]  # 2D areas in one channel on layer 0
+            heightsL0 = self.events['height'][mask0]  # 2D heights at current channel on layer 0
+            areaL0 = self.events['area'][mask0]  # 2D areas at current channel on layer 0
 
             heightsL1 = self.events['height'][mask1]
             areaL1 = self.events['area'][mask1]
@@ -62,10 +64,10 @@ def getArea(self):
 
             key = (row, column)
             
-            max_heightsL0[key] = ak.max(heightsL0, axis = -1)  # 1D max heights of each event in one channel
+            max_heightsL0[key] = ak.max(heightsL0, axis = -1)  # 1D max heights of each event in current straight line pass on layer 0
             max_maskL0 = (heightsL0 == ak.broadcast_arrays(max_heightsL0[key], heightsL0)[0])
             raw_max_areasL0 = ak.mask(areaL0, max_maskL0)
-            max_areaL0[key] = ak.Array([  # 1D max times of each event in one channel
+            max_areaL0[key] = ak.Array([  # 1D max areas of each event in current straight line pass on layer 0
                 next((item for item in sublist if item is not None), None) 
                 if sublist is not None else None
                 for sublist in ak.to_list(raw_max_areasL0)
@@ -98,11 +100,10 @@ def getArea(self):
                 for sublist in ak.to_list(raw_max_areasL3)
             ])
 
-            if ak.max(max_areaL0[key]) is not None and ak.max(max_areaL1[key]) is not None and ak.max(max_areaL2[key]) is not None and ak.max(max_areaL3[key]) is not None:
-                areas.append(ak.max(max_areaL0[key]))
-                areas.append(ak.max(max_areaL1[key]))
-                areas.append(ak.max(max_areaL2[key]))
-                areas.append(ak.max(max_areaL3[key]))
+            # iterate over events
+            for event in range(len(max_areaL0[key])):
+                if max_areaL0[key][event] is not None and max_areaL1[key][event] is not None and max_areaL2[key][event] is not None and max_areaL3[key][event] is not None:
+                    areas.append()
 
     print(areas)
 

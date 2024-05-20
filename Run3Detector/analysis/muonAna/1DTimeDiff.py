@@ -73,8 +73,6 @@ def getTimeDiff(self):
                 for sublist in ak.to_list(raw_max_timesL0)
             ])
 
-            print(max_timeL0[key])
-
             max_heightsL1[key] = ak.max(heightsL1, axis = 1)
             max_maskL1 = (heightsL1 == ak.broadcast_arrays(max_heightsL1[key], heightsL1)[0])
             raw_max_timesL1 = ak.mask(timeL1, max_maskL1)
@@ -105,7 +103,6 @@ def getTimeDiff(self):
             if ak.max(max_timeL0[key]) is not None and ak.max(max_timeL1[key]) is not None and ak.max(max_timeL2[key]) is not None and ak.max(max_timeL3[key]) is not None:
                 time_diffsL30.append(ak.max(max_timeL3[key]) - ak.max(max_timeL0[key]))
 
-    '''
     for key in max_heightsL0:
         print(key, "layer 0 Max Height: ", ak.max(max_heightsL0[key]))
 
@@ -117,7 +114,6 @@ def getTimeDiff(self):
     print()
 
     print(time_diffsL30)
-    '''
 
     num_nones = 1000 - len(time_diffsL30)
     time_diffsL30.extend([None] * num_nones)

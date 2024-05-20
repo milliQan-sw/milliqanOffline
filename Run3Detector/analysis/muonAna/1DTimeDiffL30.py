@@ -15,22 +15,22 @@ from milliqanScheduler import *
 from milliqanCuts import *
 from milliqanPlotter import *
 
-# define the function to get the areas of each pulse that has passed the cuts
-def getArea(self):
+# define the function to get the time differences for the max heights of events in each channel between layer 0 and layer 3
+def getTimeDiff(self):
 
     max_heightsL0 = {}
-    max_areaL0 = {}
+    max_timeL0 = {}
 
     max_heightsL1 = {}
-    max_areaL1 = {}
+    max_timeL1 = {}
 
     max_heightsL2 = {}
-    max_areaL2 = {}
+    max_timeL2 = {}
 
     max_heightsL3 = {}
-    max_areaL3 = {}
-
-    areas = []
+    max_timeL3 = {}
+    
+    time_diffsL30 = []
 
 # iterate over straight line passes
     for row in range(4):
@@ -42,7 +42,7 @@ def getArea(self):
             pulse_maskL3 = (self.events['row'] == row) & (self.events['column'] == column) & (self.events['layer'] == 3) & (self.events['height'] > 1000)
 
             # event_based 1D boolean mask determined by event
-            event_mask = ak.any(pulse_maskL0, axis=1) & ak.any(pulse_maskL1, axis=1) & ak.any(pulse_maskL2, axis=1) & ak.any(pulse_maskL3, axis=1)
+            event_mask = ak.any(pulse_maskL0, axis = 1) & ak.any(pulse_maskL1, axis = 1) & ak.any(pulse_maskL2, axis = 1) & ak.any(pulse_maskL3, axis = 1)
 
             # select pulses in current straight line pass on different layers
             mask0 = event_mask & pulse_maskL0
@@ -51,72 +51,69 @@ def getArea(self):
             mask3 = event_mask & pulse_maskL3
 
             heightsL0 = self.events['height'][mask0]  # 2D heights at current channel on layer 0
-            areaL0 = self.events['area'][mask0]  # 2D areas at current channel on layer 0
+            timeL0 = self.events['timeFit_module_calibrated'][mask0]  # 2D times at current channel on layer 0
 
             heightsL1 = self.events['height'][mask1]
-            areaL1 = self.events['area'][mask1]
+            timeL1 = self.events['timeFit_module_calibrated'][mask1]
 
             heightsL2 = self.events['height'][mask2]
-            areaL2 = self.events['area'][mask2]
+            timeL2 = self.events['timeFit_module_calibrated'][mask2]
 
             heightsL3 = self.events['height'][mask3]
-            areaL3 = self.events['area'][mask3]
+            timeL3 = self.events['timeFit_module_calibrated'][mask3]
 
             key = (row, column)
             
-            max_heightsL0[key] = ak.max(heightsL0, axis = -1)  # 1D max heights of each event in current straight line pass on layer 0
+            max_heightsL0[key] = ak.max(heightsL0, axis = 1)  # 1D max heights of each event in current straight line pass on layer 0
             max_maskL0 = (heightsL0 == ak.broadcast_arrays(max_heightsL0[key], heightsL0)[0])
-            raw_max_areasL0 = ak.mask(areaL0, max_maskL0)
-            max_areaL0[key] = ak.Array([  # 1D max areas of each event in current straight line pass on layer 0
+            raw_max_timesL0 = ak.mask(timeL0, max_maskL0)
+            max_timeL0[key] = ak.Array([  # 1D max times of each event in current straight line pass on layer 0
                 next((item for item in sublist if item is not None), None) 
                 if sublist is not None else None
-                for sublist in ak.to_list(raw_max_areasL0)
+                for sublist in ak.to_list(raw_max_timesL0)
             ])
 
-            max_heightsL1[key] = ak.max(heightsL1, axis = -1)
+            max_heightsL1[key] = ak.max(heightsL1, axis = 1)
             max_maskL1 = (heightsL1 == ak.broadcast_arrays(max_heightsL1[key], heightsL1)[0])
-            raw_max_areasL1 = ak.mask(areaL1, max_maskL1)
-            max_areaL1[key] = ak.Array([
+            raw_max_timesL1 = ak.mask(timeL1, max_maskL1)
+            max_timeL1[key] = ak.Array([
                 next((item for item in sublist if item is not None), None) 
                 if sublist is not None else None
-                for sublist in ak.to_list(raw_max_areasL1)
+                for sublist in ak.to_list(raw_max_timesL1)
             ])
 
-            max_heightsL2[key] = ak.max(heightsL2, axis = -1)
+            max_heightsL2[key] = ak.max(heightsL2, axis = 1)
             max_maskL2 = (heightsL2 == ak.broadcast_arrays(max_heightsL2[key], heightsL2)[0])
-            raw_max_areasL2 = ak.mask(areaL2, max_maskL2)
-            max_areaL2[key] = ak.Array([
+            raw_max_timesL2 = ak.mask(timeL2, max_maskL2)
+            max_timeL2[key] = ak.Array([
                 next((item for item in sublist if item is not None), None) 
                 if sublist is not None else None
-                for sublist in ak.to_list(raw_max_areasL2)
+                for sublist in ak.to_list(raw_max_timesL2)
             ])
 
-            max_heightsL3[key] = ak.max(heightsL3, axis = -1)
+            max_heightsL3[key] = ak.max(heightsL3, axis = 1)
             max_maskL3 = (heightsL3 == ak.broadcast_arrays(max_heightsL3[key], heightsL3)[0])
-            raw_max_areasL3 = ak.mask(areaL3, max_maskL3)
-            max_areaL3[key] = ak.Array([
+            raw_max_timesL3 = ak.mask(timeL3, max_maskL3)
+            max_timeL3[key] = ak.Array([
                 next((item for item in sublist if item is not None), None) 
                 if sublist is not None else None
-                for sublist in ak.to_list(raw_max_areasL3)
+                for sublist in ak.to_list(raw_max_timesL3)
             ])
 
             # iterate over events
-            for event in range(len(max_areaL0[key])):
-                if max_areaL0[key][event] is not None and max_areaL1[key][event] is not None and max_areaL2[key][event] is not None and max_areaL3[key][event] is not None:
-                    areas.append(max_areaL0[key][event])
-                    areas.append(max_areaL1[key][event])
-                    areas.append(max_areaL2[key][event])
-                    areas.append(max_areaL3[key][event])
+            for event in range(len(max_timeL0[key])):
+                if max_timeL0[key][event] is not None and max_timeL1[key][event] is not None and max_timeL2[key][event] is not None and max_timeL3[key][event] is not None:
+                    time_diffsL30.append(max_timeL3[key][event] - max_timeL0[key][event])
 
-    print(areas)
+    print(time_diffsL30)
 
-    num_nones = 1000 - len(areas)
-    areas.extend([None] * num_nones)
+    num_nones = 1000 - len(time_diffsL30)
+    time_diffsL30.extend([None] * num_nones)
 
-    self.events['areas'] = areas
+    self.events['timeDiff'] = time_diffsL30
 
 # add our custom function to milliqanCuts
-setattr(milliqanCuts, 'getArea', getArea)
+setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)
 
 # check if command line arguments are provided
 if len(sys.argv) != 3:
@@ -152,14 +149,14 @@ fourLayerCut = mycuts.getCut(mycuts.fourLayerCut, 'fourLayerCut', cut=False)
 myplotter = milliqanPlotter()
 
 # create a 1D root histogram
-h_1d = r.TH1F("h_1d", "area", 1000000, 0, 1000000)
-h_1d.GetXaxis().SetTitle("area of straight line pulses with >1000 heights (maximum at each channel)")
+h_1d = r.TH1F("h_1d", "Time Differences between Layer 3 and 0", 200, -100, 100)
+h_1d.GetXaxis().SetTitle("Time Differences")
 
 # add root histogram to plotter
-myplotter.addHistograms(h_1d, 'areas')
+myplotter.addHistograms(h_1d, 'timeDiff')
 
 # defining the cutflow
-cutflow = [boardMatchCut, pickupCut, mycuts.layerCut, mycuts.straightLineCut, mycuts.getArea, myplotter.dict['h_1d']]
+cutflow = [boardMatchCut, pickupCut, mycuts.layerCut, mycuts.straightLineCut, mycuts.getTimeDiff, myplotter.dict['h_1d']]
 
 # create a schedule of the cuts
 myschedule = milliQanScheduler(cutflow, mycuts, myplotter)
@@ -174,7 +171,7 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts, myplotter
 myiterator.run()
 
 # create a new TFile
-f = r.TFile("1DhistArea.root", "recreate")
+f = r.TFile("1DhistTimeDiffL30.root", "recreate")
 
 # write the histograms to the file
 h_1d.Write()

@@ -64,7 +64,7 @@ def getTimeDiff(self):
 
             key = (row, column)
             
-            max_heightsL0[key] = ak.max(heightsL0, axis = -1)  # 1D max heights of each event in current straight line pass on layer 0
+            max_heightsL0[key] = ak.max(heightsL0, axis = 1)  # 1D max heights of each event in current straight line pass on layer 0
             max_maskL0 = (heightsL0 == ak.broadcast_arrays(max_heightsL0[key], heightsL0)[0])
             raw_max_timesL0 = ak.mask(timeL0, max_maskL0)
             max_timeL0[key] = ak.Array([  # 1D max times of each event in current straight line pass on layer 0
@@ -73,7 +73,7 @@ def getTimeDiff(self):
                 for sublist in ak.to_list(raw_max_timesL0)
             ])
 
-            max_heightsL1[key] = ak.max(heightsL1, axis = -1)
+            max_heightsL1[key] = ak.max(heightsL1, axis = 1)
             max_maskL1 = (heightsL1 == ak.broadcast_arrays(max_heightsL1[key], heightsL1)[0])
             raw_max_timesL1 = ak.mask(timeL1, max_maskL1)
             max_timeL1[key] = ak.Array([
@@ -82,7 +82,7 @@ def getTimeDiff(self):
                 for sublist in ak.to_list(raw_max_timesL1)
             ])
 
-            max_heightsL2[key] = ak.max(heightsL2, axis = -1)
+            max_heightsL2[key] = ak.max(heightsL2, axis = 1)
             max_maskL2 = (heightsL2 == ak.broadcast_arrays(max_heightsL2[key], heightsL2)[0])
             raw_max_timesL2 = ak.mask(timeL2, max_maskL2)
             max_timeL2[key] = ak.Array([
@@ -91,7 +91,7 @@ def getTimeDiff(self):
                 for sublist in ak.to_list(raw_max_timesL2)
             ])
 
-            max_heightsL3[key] = ak.max(heightsL3, axis = -1)
+            max_heightsL3[key] = ak.max(heightsL3, axis = 1)
             max_maskL3 = (heightsL3 == ak.broadcast_arrays(max_heightsL3[key], heightsL3)[0])
             raw_max_timesL3 = ak.mask(timeL3, max_maskL3)
             max_timeL3[key] = ak.Array([

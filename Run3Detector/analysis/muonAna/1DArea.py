@@ -104,17 +104,6 @@ def getArea(self):
                 areas.append(ak.max(max_areaL2[key]))
                 areas.append(ak.max(max_areaL3[key]))
 
-
-    for key in max_heightsL0:
-        print(key, "layer 0 Max Height: ", ak.max(max_heightsL0[key]))
-
-    print()
-
-    for key in max_heightsL3:
-        print(key, "layer 3 Max Height: ", ak.max(max_heightsL3[key]))
-
-    print()
-
     print(areas)
 
     num_nones = 1000 - len(areas)

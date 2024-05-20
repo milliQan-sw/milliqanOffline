@@ -32,7 +32,7 @@ def getTimeDiff(self):
     
     time_diffsL30 = []
 
-# iterate over each straight line
+# iterate over straight line passes
     for row in range(4):
         for column in range(4):
             # pulse_based 2D boolean masks determined by channel and height
@@ -44,14 +44,14 @@ def getTimeDiff(self):
             # event_based 1D boolean mask determined by event
             event_mask = ak.any(pulse_maskL0, axis=1) & ak.any(pulse_maskL1, axis=1) & ak.any(pulse_maskL2, axis=1) & ak.any(pulse_maskL3, axis=1)
 
-            # select events on straight line passes then select layers
+            # select pulses on current straight line pass then select layers
             mask0 = event_mask & pulse_maskL0
             mask1 = event_mask & pulse_maskL1
             mask2 = event_mask & pulse_maskL2
             mask3 = event_mask & pulse_maskL3
 
-            heightsL0 = self.events['height'][mask0]  # 2D heights in one channel on layer 0
-            timeL0 = self.events['timeFit_module_calibrated'][mask0]  # 2D times in one channel on layer 0
+            heightsL0 = self.events['height'][mask0]  # 2D heights at current channel on layer 0
+            timeL0 = self.events['timeFit_module_calibrated'][mask0]  # 2D times at current channel on layer 0
 
             heightsL1 = self.events['height'][mask1]
             timeL1 = self.events['timeFit_module_calibrated'][mask1]

@@ -101,7 +101,7 @@ def getTimeDiff(self):
             ])
 
             # iterate over events
-            for event in max_timeL0[key]:
+            for event in range(len(max_timeL0[key])):
                 if max_timeL0[key][event] is not None and max_timeL1[key][event] is not None and max_timeL2[key][event] is not None and max_timeL3[key][event] is not None:
                     time_diffsL30.append(max_timeL3[key][event] - max_timeL0[key][event])
 

@@ -47,7 +47,7 @@ def getTimeDiff(self):
             # pick out pulses of type 0
             type_mask = self.events['type'] == 0
 
-            # select pulses in current straight line pass on different layers with the type 0
+            # select pulses in current straight line pass on different layers with type 0
             mask0 = event_mask & pulse_maskL0 & type_mask
             mask1 = event_mask & pulse_maskL1 & type_mask
             mask2 = event_mask & pulse_maskL2 & type_mask

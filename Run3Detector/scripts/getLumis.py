@@ -218,7 +218,7 @@ class mqLumiList():
         fileCnt = 0
         if fileList is not None:
             for fileCnt, filename in enumerate(fileList):
-                if self.debug and fileCnt > 100: break
+                if self.debug and fileCnt > 2000: break
                 if fileCnt % 1000 == 0: print("Working on processing file {}".format(fileCnt))
                 print("Processing", fileCnt, filename)
                 runNum_, fileNum_ = self.getRunFile(filename)
@@ -263,10 +263,12 @@ class mqLumiList():
             self.lumiList = pd.read_csv(os.path.dirname(os.path.realpath(__file__))+'/../configuration/' + self.rawLumis)'''
 
     def convertDatetime(self, time):
-        geneva_tz = pytz.timezone('Europe/Zurich')
+        #geneva_tz = pytz.timezone('Europe/Zurich')
+        utc_tz = pytz.timezone('UTC')
         dt_ = datetime.strptime(time, '%Y-%m-%d_%Hh%Mm%Ss')
-        dt_ = geneva_tz.localize(dt_)
-        dt_ = dt_.astimezone(pytz.UTC)
+        #dt_ = geneva_tz.localize(dt_)
+        dt_ = utc_tz.localize(dt_)
+        #dt_ = dt_.astimezone(pytz.UTC)
         return dt_   
 
     def getFileTime(self, file):
@@ -351,7 +353,7 @@ class mqLumiList():
             #print(startId, i, st, et)
             if stop < st: 
                 stopId = startId + i - 1
-                print('case 2 start {}, stop {}, st {}, et {}'.format(start, stop, st, et))
+                #print('case 2 start {}, stop {}, st {}, et {}'.format(start, stop, st, et))
 
                 break
             elif stop < et:
@@ -366,6 +368,7 @@ class mqLumiList():
                 
         #print("startID: {}, stopID: {}, start {}, max start {}, min start {}".format(startId, stopId, start, self.lumiList.start_time.max(), self.lumiList.start_time.min()))
         if startId == stopId:
+            #print("single fill mq file")
             fillId = self.lumiList['fill_number'][startId]
             beamType = self.lumiList['fill_type_runtime'][startId]
             beamEnergy = self.lumiList['energy'][startId]
@@ -384,12 +387,37 @@ class mqLumiList():
             
             mqLumi = 0
             if beamInFill:
-                totalLumi = self.lumiList['delivered_lumi_stablebeams'][startId]
-                totalFillTime = self.lumiList['duration'][startId]
-                totalMQTime = (stop-start).total_seconds()
-                frac = totalMQTime / totalFillTime
-                mqLumi = totalLumi * frac
-            
+
+                l_start = 0
+                l_stop = 0
+                
+                #start1, end1 = range1 #(stable beam start, stable_beam_end)
+                #start2, end2 = range2 #(start, stop)
+                
+                # Check for no overlap
+                findLumis = True
+                if start < self.lumiList['start_stable_beam'][startId] and stop < self.lumiList['start_stable_beam'][startId]:
+                    findLumis = False
+                if start > self.lumiList['end_stable_beam'][startId] and stop > self.lumiList['end_stable_beam'][startId]:
+                    findLumis = False
+                
+                if findLumis:
+                    # Calculate overlap
+                    overlap_start = max(self.lumiList['start_stable_beam'][startId], start)
+                    overlap_end = min(self.lumiList['end_stable_beam'][startId], stop)
+                    overlap_duration = overlap_end - overlap_start
+                    
+                    # Convert overlap duration to seconds
+                    overlap_seconds = max(0, overlap_duration.total_seconds())
+
+                    totalLumi = self.lumiList['delivered_lumi_stablebeams'][startId]
+                    totalFillTime = self.lumiList['duration'][startId]
+                    totalMQTime = (stop-start).total_seconds()
+                    frac = overlap_seconds / totalFillTime
+                    mqLumi = totalLumi * frac
+                    #print("case 0, startstart {}, stop {}, fillId {}, mqLumis {}, lumis {}, fill time {}, mqTime {}".format(start, stop, fillId, mqLumi, lumis, totalFillTime, overlap_seconds))
+
+            #print('mqlumi', mqLumi)
             if mqLumi > 0:
                 beamOn = True
                 
@@ -410,21 +438,24 @@ class mqLumiList():
             for i in range(startId, stopId+1):
                 x = self.lumiList[['start_time', 'end_time', 'start_stable_beam', 'end_stable_beam', 'delivered_lumi_stablebeams', 'duration', 'fill_number']].iloc[i]
                 if pd.isna(x.delivered_lumi_stablebeams) or x.delivered_lumi_stablebeams == 0: continue
-                print("start {}, stop {}, fill {}, end stable {}".format(start, stop, x.fill_number, x.end_stable_beam))
                 if start > x.end_stable_beam: continue
                 if start < x.start_stable_beam: #milliqan run starts before fill
                     if stop < x.start_stable_beam: continue
                     if stop >= x.end_stable_beam: #milliqan run spans entire fill
                         mqLumi += x.delivered_lumi_stablebeams
+                        #print("case 1, startstart {}, stop {}, fillId {}, mqLumis {}, lumis {}".format(start, stop, fillId, mqLumi, lumis))
                     elif stop < x.end_stable_beam: #milliqan run stops before end of fill
                         total_time = (stop - x.start_stable_beam).total_seconds()
                         frac = total_time / x.duration
                         mqLumi += frac * x.delivered_lumi_stablebeams
+                        #print("case 2, startstart {}, stop {}, fillId {}, mqLumis {}, lumis {}".format(start, stop, fillId, mqLumi, lumis))
+
                 elif start > x.start_stable_beam: #milliqan run starts after fill
                     if stop >= x.end_stable_beam: #milliqan run ends after fill
                         total_time = (x.end_stable_beam - start).total_seconds()
                         frac = total_time / x.duration
                         mqLumi += frac * x.delivered_lumi_stablebeams
+                        #print("case 3, startstart {}, stop {}, fillId {}, mqLumis {}, lumis {}".format(start, stop, fillId, mqLumi, lumis))
                     elif stop < x.end_stable_beam: #milliqan run ends before fill
                         print('start {}, stop {}, start stable {}, stop stable {}'.format(start, stop, x.start_stable_beam, x.end_stable_beam))
                         print("Error: This should be handled already!")

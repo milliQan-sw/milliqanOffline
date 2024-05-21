@@ -67,9 +67,15 @@ def getArea(self):
 
             # store heights and times into dictionaries
             key = (row, column)
-            
+
+            # 1D max heights of each event
             max_heightsL0[key] = ak.max(heightsL0, axis = -1)  # 1D max heights of each event
+
+            # broadcast to get a 2D list with every pulse being max height
+            # then get a 2D boolean list to pick out which pulse has the max height so we can extract its time later
             max_maskL0 = (heightsL0 == ak.broadcast_arrays(max_heightsL0[key], heightsL0)[0])
+
+            # get a 2D list of the times for the pulses with max heights
             raw_max_areasL0 = ak.mask(areaL0, max_maskL0)
             max_areaL0[key] = ak.Array([  # 1D max areas of each event
                 next((item for item in sublist if item is not None), None) 
@@ -77,6 +83,7 @@ def getArea(self):
                 for sublist in ak.to_list(raw_max_areasL0)
             ])
 
+            # pull down the time of each sublist to get a 1D list of times
             max_heightsL1[key] = ak.max(heightsL1, axis = -1)
             max_maskL1 = (heightsL1 == ak.broadcast_arrays(max_heightsL1[key], heightsL1)[0])
             raw_max_areasL1 = ak.mask(areaL1, max_maskL1)
@@ -86,6 +93,7 @@ def getArea(self):
                 for sublist in ak.to_list(raw_max_areasL1)
             ])
 
+            # do the same for other 3 layers
             max_heightsL2[key] = ak.max(heightsL2, axis = -1)
             max_maskL2 = (heightsL2 == ak.broadcast_arrays(max_heightsL2[key], heightsL2)[0])
             raw_max_areasL2 = ak.mask(areaL2, max_maskL2)

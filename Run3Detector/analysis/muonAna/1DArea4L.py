@@ -34,17 +34,14 @@ def getArea(self):
 
     # remove events with panel pulses whose heights are more than 1000.
     panel_pulse_mask = (self.events['height'] > 1000) & (self.events['type'] == 2)
-    events_with_panel_pulses = ak.any(panel_pulse_mask, axis=1)
+    events_with_panel_pulses = ~ak.any(panel_pulse_mask, axis=1)
 
     # ensure that events have slab pulses whose heights are more than 1000.
     slab_pulse_mask = (self.events['height'] > 1000) & (self.events['type'] == 1)
-    events_without_slab_pulses = ~ak.any(slab_pulse_mask, axis=1)
+    events_without_slab_pulses = ak.any(slab_pulse_mask, axis=1)
 
-    # combine masks to get invalid events
-    invalid_events = events_with_panel_pulses | events_without_slab_pulses
-
-    # apply the mask to remove invalid events
-    valid_events_mask = ~invalid_events
+    # combine masks to get valid events
+    valid_events_mask = events_with_panel_pulses | events_without_slab_pulses
 
 # iterate over straight line passes
     for row in range(4):

@@ -29,7 +29,7 @@ class mqLumiList():
         self.lumi_csv = ''
         self.rawPath = '/store/user/milliqan/run3/bar/'
         self.outputFile = '/eos/experiment/milliqan/Configs/mqLumis.json'
-        self.rawLumis = 'Run3_2024Lumis.csv'
+        self.rawLumis = '/eos/experiment/milliqan/Configs/rawLumis.json'
         self.mqLumis = pd.DataFrame(columns=['run', 'file', 'lumis', 'fill', 'beam', 'beamInFill', 'dir', 'filename', 'start', 'stop'])
         self.debug = False
         
@@ -71,7 +71,7 @@ class mqLumiList():
                     'last_run_number': 'object',
                     'energy': 'object'}
 
-        rawLumis = pd.read_json('rawLumis.json', orient = 'split', compression = 'infer', dtype=dtype_dict)
+        rawLumis = pd.read_json(self.rawLumis, orient = 'split', compression = 'infer', dtype=dtype_dict)
         lastRun = rawLumis[(rawLumis['end_time'].isna()) & (~rawLumis['start_stable_beam'].isna())].head(1)['fill_number']
         if len(lastRun) == 0:
             lastRun = rawLumis.tail(1)['fill_number']
@@ -486,7 +486,9 @@ class mqLumiList():
             self.saveJson(name='mqLumisDebug.json')
         else:
             self.saveJson()
-        if not self.debug: os.system('rsync -rzh mqLumisUpdate.json {}'.format(self.outputFile))
+        if not self.debug: 
+            os.system('rsync -rzh mqLumisUpdate.json {}'.format(self.outputFile))
+            os.system('rsync -rzh rawLumis.json {}'.format(self.rawLumis))
 
 
 if __name__ == "__main__":

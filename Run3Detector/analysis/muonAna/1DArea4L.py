@@ -32,11 +32,11 @@ def getArea(self):
 
     areas = []
 
-    # remove events with panel pulses whose heights are more than 1000.
+    # remove events with panel pulses whose heights are more than 1000
     panel_pulse_mask = (self.events['height'] > 1000) & (self.events['type'] == 2)
     events_without_panel_pulses = ~ak.any(panel_pulse_mask, axis = 1)
 
-    # ensure that events have slab pulses whose heights are more than 1000.
+    # ensure that events have slab pulses whose heights are more than 1000
     slab_pulse_mask = (self.events['height'] > 1000) & (self.events['type'] == 1)
     events_with_slab_pulses = ak.any(slab_pulse_mask, axis = 1)
 

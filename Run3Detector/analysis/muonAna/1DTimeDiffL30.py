@@ -58,7 +58,7 @@ def getTimeDiff(self):
             # event_based 1D boolean mask determined by event
             event_mask = ak.any(pulse_maskL0, axis = 1) & ak.any(pulse_maskL1, axis = 1) & ak.any(pulse_maskL2, axis = 1) & ak.any(pulse_maskL3, axis = 1)
 
-            # select pulses in current straight line pass on different layers with type 0
+            # combine all the masks
             mask0 = event_mask & pulse_maskL0 & valid_events_mask
             mask1 = event_mask & pulse_maskL1 & valid_events_mask
             mask2 = event_mask & pulse_maskL2 & valid_events_mask

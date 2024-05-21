@@ -61,7 +61,7 @@ def getArea(self):
             # pick out pulses of type 0
             type_mask = self.events['type'] == 0
 
-            # select pulses in current straight line pass on different layers with type 0
+            # combine all the masks
             mask0 = event_mask & pulse_maskL0 & valid_events_mask
             mask1 = event_mask & pulse_maskL1 & valid_events_mask
             mask2 = event_mask & pulse_maskL2 & valid_events_mask
@@ -140,7 +140,7 @@ def getArea(self):
     num_events = len(self.events['height'])
     num_nones = num_events - len(areas)
     areas.extend([None] * num_nones)
-    
+
     # define custom branch
     self.events['areas'] = areas
 

@@ -53,8 +53,8 @@ def getArea(self):
             mask2 = event_mask & pulse_maskL2 & type_mask
             mask3 = event_mask & pulse_maskL3 & type_mask
 
-            heightsL0 = self.events['height'][mask0]  # 2D heights at current channel on layer 0
-            areaL0 = self.events['area'][mask0]  # 2D areas at current channel on layer 0
+            heightsL0 = self.events['height'][mask0]
+            areaL0 = self.events['area'][mask0]
 
             heightsL1 = self.events['height'][mask1]
             areaL1 = self.events['area'][mask1]

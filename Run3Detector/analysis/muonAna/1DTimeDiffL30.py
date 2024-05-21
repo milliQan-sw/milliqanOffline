@@ -53,8 +53,8 @@ def getTimeDiff(self):
             mask2 = event_mask & pulse_maskL2 & type_mask
             mask3 = event_mask & pulse_maskL3 & type_mask
 
-            heightsL0 = self.events['height'][mask0]  # 2D heights at current channel on layer 0
-            timeL0 = self.events['timeFit_module_calibrated'][mask0]  # 2D times at current channel on layer 0
+            heightsL0 = self.events['height'][mask0]
+            timeL0 = self.events['timeFit_module_calibrated'][mask0]
 
             heightsL1 = self.events['height'][mask1]
             timeL1 = self.events['timeFit_module_calibrated'][mask1]

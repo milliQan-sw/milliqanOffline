@@ -32,6 +32,20 @@ def getTimeDiff(self):
     
     time_diffsL30 = []
 
+    # remove events with panel pulses whose heights are more than 1000.
+    panel_pulse_mask = (self.events['height'] > 1000) & (self.events['type'] == 2)
+    events_with_panel_pulses = ak.any(panel_pulse_mask, axis=1)
+
+    # ensure that events have slab pulses whose heights are more than 1000.
+    slab_pulse_mask = (self.events['height'] > 1000) & (self.events['type'] == 1)
+    events_without_slab_pulses = ~ak.any(slab_pulse_mask, axis=1)
+
+    # combine masks to get invalid events
+    invalid_events = events_with_panel_pulses | events_without_slab_pulses
+
+    # apply the mask to remove invalid events
+    valid_events_mask = ~invalid_events
+
 # iterate over straight line passes
     for row in range(4):
         for column in range(4):
@@ -44,14 +58,11 @@ def getTimeDiff(self):
             # event_based 1D boolean mask determined by event
             event_mask = ak.any(pulse_maskL0, axis = 1) & ak.any(pulse_maskL1, axis = 1) & ak.any(pulse_maskL2, axis = 1) & ak.any(pulse_maskL3, axis = 1)
 
-            # pick out pulses of type 0
-            type_mask = self.events['type'] == 0
-
             # select pulses in current straight line pass on different layers with type 0
-            mask0 = event_mask & pulse_maskL0 & type_mask
-            mask1 = event_mask & pulse_maskL1 & type_mask
-            mask2 = event_mask & pulse_maskL2 & type_mask
-            mask3 = event_mask & pulse_maskL3 & type_mask
+            mask0 = event_mask & pulse_maskL0 & valid_events_mask
+            mask1 = event_mask & pulse_maskL1 & valid_events_mask
+            mask2 = event_mask & pulse_maskL2 & valid_events_mask
+            mask3 = event_mask & pulse_maskL3 & valid_events_mask
 
             heightsL0 = self.events['height'][mask0]
             timeL0 = self.events['timeFit_module_calibrated'][mask0]

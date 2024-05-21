@@ -67,16 +67,25 @@ def getTimeDiff(self):
 
             # store heights and times into dictionaries
             key = (row, column)
-            
-            max_heightsL0[key] = ak.max(heightsL0, axis = 1)  # 1D max heights of each event
+
+            # 1D max heights of each event
+            max_heightsL0[key] = ak.max(heightsL0, axis = 1)
+
+            # broadcast to get a 2D list with every pulse being max height
+            # then get a 2D boolean list to pick out which pulse has the max height so we can extract its time later
             max_maskL0 = (heightsL0 == ak.broadcast_arrays(max_heightsL0[key], heightsL0)[0])
+
+            # get a 2D list of the times for the pulses with max heights
             raw_max_timesL0 = ak.mask(timeL0, max_maskL0)
-            max_timeL0[key] = ak.Array([  # 1D max times of each event
+            
+            # pull down the time of each sublist to get a 1D list of times
+            max_timeL0[key] = ak.Array([  
                 next((item for item in sublist if item is not None), None) 
                 if sublist is not None else None
                 for sublist in ak.to_list(raw_max_timesL0)
             ])
 
+            # do the same for other 3 layers
             max_heightsL1[key] = ak.max(heightsL1, axis = 1)
             max_maskL1 = (heightsL1 == ak.broadcast_arrays(max_heightsL1[key], heightsL1)[0])
             raw_max_timesL1 = ak.mask(timeL1, max_maskL1)
@@ -104,16 +113,18 @@ def getTimeDiff(self):
                 for sublist in ak.to_list(raw_max_timesL3)
             ])
 
-            # iterate over events
+            # iterate over each event
             for event in range(len(max_timeL0[key])):
                 if max_timeL0[key][event] is not None and max_timeL1[key][event] is not None and max_timeL2[key][event] is not None and max_timeL3[key][event] is not None:
                     time_diffsL30.append(max_timeL3[key][event] - max_timeL0[key][event])
 
     print(time_diffsL30)
 
+    # extend the final list to 1000 sized to match branch size
     num_nones = 1000 - len(time_diffsL30)
     time_diffsL30.extend([None] * num_nones)
 
+    # define custom branch
     self.events['timeDiff'] = time_diffsL30
 
 # add our custom function to milliqanCuts

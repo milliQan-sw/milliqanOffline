@@ -131,8 +131,9 @@ def getTimeDiff(self):
 
     print(time_diffsL30)
 
-    # extend the final list to 1000 sized to match branch size
-    num_nones = 1000 - len(time_diffsL30)
+    # extend the final list to match the size of the current file
+    num_events = len(self.events['height'])
+    num_nones = num_events - len(time_diffsL30)
     time_diffsL30.extend([None] * num_nones)
 
     # define custom branch

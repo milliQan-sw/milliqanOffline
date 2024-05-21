@@ -65,12 +65,13 @@ def getTimeDiff(self):
             heightsL3 = self.events['height'][mask3]
             timeL3 = self.events['timeFit_module_calibrated'][mask3]
 
+            # store heights and times into dictionaries
             key = (row, column)
             
-            max_heightsL0[key] = ak.max(heightsL0, axis = 1)  # 1D max heights of each event in current straight line pass on layer 0
+            max_heightsL0[key] = ak.max(heightsL0, axis = 1)  # 1D max heights of each event
             max_maskL0 = (heightsL0 == ak.broadcast_arrays(max_heightsL0[key], heightsL0)[0])
             raw_max_timesL0 = ak.mask(timeL0, max_maskL0)
-            max_timeL0[key] = ak.Array([  # 1D max times of each event in current straight line pass on layer 0
+            max_timeL0[key] = ak.Array([  # 1D max times of each event
                 next((item for item in sublist if item is not None), None) 
                 if sublist is not None else None
                 for sublist in ak.to_list(raw_max_timesL0)

@@ -67,7 +67,7 @@ def parse_args():
     parser.add_argument('-d', '--dir', help='Main directory to check files in', type=str)
     parser.add_argument('-s', '--subdir', help='Subdirectory to check for files', type=str)
     parser.add_argument('-n', '--outputName', help='Name of the output json files', type=str)
-    parser.add_argument('-c', '--configDir', help='Path to config dir', type=str, default='../../configuration/barConfigs/')
+    parser.add_argument('-c', '--configDir', help='Path to config dir', type=str, default=os.path.dirname(os.path.abspath(__file__))+'/../../configuration/barConfigs/')
     parser.add_argument('-t', '--tag', help="Version of good run list (format v1p0)", type=str, default='v1p0')
     parser.add_argument('--debug', help='Option to run in debug mode', action='store_true')
     args = parser.parse_args()
@@ -75,7 +75,7 @@ def parse_args():
 
 class fileChecker():
     
-    def __init__(self, rawDir='/store/user/milliqan/run3/bar/', offlineDir='/store/user/milliqan/trees/v34/', configDir='../../configuration/barConfigs/'):
+    def __init__(self, rawDir='/store/user/milliqan/run3/bar/', offlineDir='/store/user/milliqan/trees/v34/', configDir=os.path.dirname(os.path.abspath(__file__))+'/../../configuration/barConfigs/'):
         self.min_run = 1200
         self.max_run = 1300
         self.rawDir = rawDir

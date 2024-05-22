@@ -357,20 +357,19 @@ class fileChecker():
                 self.finalChecks()
                 self.saveJson(jsonName)
 
-    def updateRunList(self, startingDir=None, startingFile=None):
+    def updateRunList(self, startingDir=None, startingFile=None, checkTrigs=True, checkOffline=True):
         print("Updating run lists")
-        filesToProcess = self.getFilesToProcess(startingDir, startingFile)
-        #for id, (directory, files) in enumerate(filesToProcess.items()):
-        #    if self.debug:
-        #        print("There are {} total directories to process".format(len(filesToProcess)))
-        #        if id > 3: continue
+        filesToProcess = self.getFilesToProcess(startingDir, startingFile, checkTrigs, checkOffline)
+        #print(filesToProcess)
+        '''for id, (directory, files) in enumerate(filesToProcess.items()):
+            print("There are {} total directories to process".format(len(filesToProcess)))'''
         self.getRawInfo(filesToProcess)
         self.getOfflineInfo()
         self.runCheckMatchedFiles()
         self.runCheckOfflineFiles()
         self.finalChecks()
 
-    def getFilesToProcess(self, lastRun=None, lastFile=None):
+    def getFilesToProcess(self, lastRun=None, lastFile=None, checkTrigs=True, checkOffline=True):
 
         filesToProcess = {}
 
@@ -379,6 +378,7 @@ class fileChecker():
         #this block gets all raw files that have yet to be added to the run list
         if lastRun is None and lastFile is None:
             lastRun, lastFile = self.getLastUpdate(prevFile)
+
         startingDir0 = math.floor(lastRun/100)*100
         startingDir1 = math.floor((lastRun-startingDir0)/10)
         
@@ -405,26 +405,34 @@ class fileChecker():
             startingDir = '{}{}/000{}'.format(self.rawDir, startingDir0, str(startingDir1))
 
         #this block checks for any files that have not been matched
-        unmatched = prevFile[pd.isnull(prevFile['matchFile'])]
-        unmatched = unmatched[['rawDir', 'daqFile']]
+        if checkTrigs:
+            unmatched = prevFile[pd.isnull(prevFile['matchFile'])]
+            unmatched = unmatched[['rawDir', 'daqFile']]
 
         #this block checks for files that have not had offline files produced (or offline files are unmatched)
-        missingOffline = prevFile[pd.isnull(prevFile['offlineFile'])]
-        missingOffline = missingOffline[['rawDir', 'daqFile']]
+        if checkOffline:
+            missingOffline = prevFile[pd.isnull(prevFile['offlineFile'])]
+            missingOffline = missingOffline[['rawDir', 'daqFile']]
 
-        unmatchedOffline = prevFile[prevFile['OfflineFilesTrigMatched']==False]
-        unmatchedOffline = unmatchedOffline[['rawDir', 'daqFile']]
+            unmatchedOffline = prevFile[prevFile['OfflineFilesTrigMatched']==False]
+            unmatchedOffline = unmatchedOffline[['rawDir', 'daqFile']]
 
-        reprocessOffline = pd.concat((missingOffline, unmatchedOffline), ignore_index=True)
+            reprocessOffline = pd.concat((missingOffline, unmatchedOffline), ignore_index=True)
 
-        reprocess = pd.concat((unmatched, reprocessOffline), ignore_index=True)
+        if checkOffline and checkTrigs:
+            reprocess = pd.concat((unmatched, reprocessOffline), ignore_index=True)
+        elif checkTrigs:
+            reprocess = unmatched
+        elif checkOffline:
+            reprocess = reprocessOffline
+        else:
+            return filesToProcess
+
         for index, row in reprocess.iterrows():
             if row['rawDir'] in filesToProcess:
                 filesToProcess[row['rawDir']].append(row['daqFile'])
             else:
                 filesToProcess[row['rawDir']] = [row['daqFile']]
-
-        #print("Files to process", filesToProcess)
 
         return filesToProcess
 
@@ -484,6 +492,8 @@ class fileChecker():
                 goodRuns = pd.concat([goodRunList, goodRuns], ignore_index=True)
                 goodRuns = goodRuns.drop_duplicates(subset=['run', 'file'], keep='last')
 
+                goodRuns = goodRuns.sort_values(by=['run', 'file'])
+
                 goodRuns.to_json('goodRunsListUpdate.json', orient = 'split', compression = 'infer', index = 'true')
                 if not self.debug: os.system('rsync -rzh goodRunsListUpdate.json {}'.format(outName))
 
@@ -494,6 +504,8 @@ class fileChecker():
                 checks = pd.read_json(checksName, orient='split')
                 checksUpdate = pd.concat([checks, self.runInfos], ignore_index=True)
                 checksUpdate = checksUpdate.drop_duplicates(subset=['run', 'file'], keep='last')
+
+                checksUpdate = checksUpdate.sort_values(by=['run', 'file'])
 
                 checksUpdate.to_json('checksMergedUpdate.json', orient = 'split', compression = 'infer', index = 'true')
                 if not self.debug: os.system('rsync -rzh checksMergedUpdate.json {}'.format(checksName))
@@ -567,19 +579,21 @@ if __name__ == "__main__":
     if not jsonName.endswith('.json'): jsonName += '.json'
     if not goodRunListName.endswith('.json'): goodRunListName += '.json'
 
-    print("Running on", args.dir, args.subdir)
-
     if update:
+        print("Updating the good runs list")
+
         os.system('~/accessEOS.sh')
         jsonName = 'checksMatchedUpdate.json'
         goodRunListName = 'goodRunListUpdate.json'
         myfileChecker = fileChecker()
-        myfileChecker.outputFile = '../../configuration/barConfigs/checksMerged.json'
+        myfileChecker.outputFile = '/eos/experiment/milliqan/Configs/checksMerged.json'
         myfileChecker.debug = False
-        myfileChecker.updateRunList()
+        myfileChecker.updateRunList(startingDir=None, startingFile=None, checkTrigs=False, checkOffline=False)
         myfileChecker.makeGoodRunList(update=True, tag=args.tag)
 
     else:
+        print("Running on", args.dir, args.subdir)
+
         myfileChecker = fileChecker(configDir=args.configDir)
         
         myfileChecker.debug = args.debug

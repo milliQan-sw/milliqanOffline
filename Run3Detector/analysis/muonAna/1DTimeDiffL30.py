@@ -101,6 +101,7 @@ def getTimeDiff(self):
             else:
                 max_timeL0[key] = [None] * len(self.events)
 
+            # do the same for other 3 layers
             if len(heightsL1) > 0:
                 max_heightsL1[key] = ak.max(heightsL1, axis=1)
                 max_maskL1 = (heightsL1 == ak.broadcast_arrays(max_heightsL1[key], heightsL1)[0])

@@ -46,7 +46,7 @@ def getTimeDiff(self):
     '''
 
     # combine masks to get valid events
-    valid_events_mask = events_without_panel_pulses #& high_pulse_count_mask
+    valid_events_mask = events_without_panel_pulses & high_pulse_count_mask
 
 # iterate over straight line passes
     for row in range(4):
@@ -93,9 +93,9 @@ def getTimeDiff(self):
             
             # pull down the time of each sublist to get a 1D list of times
             # when there are 2 pulses that have the same max height, pick the smaller time
-            max_timeL0[key] = ak.Array([  
-                min((item for item in sublist if item is not None), None) 
-                if sublist is not None else None
+            max_timeL0[key] = ak.Array([
+                min((item for item in sublist if item is not None), default=None)
+                if sublist else None
                 for sublist in ak.to_list(raw_max_timesL0)
             ])
 
@@ -104,27 +104,27 @@ def getTimeDiff(self):
             max_maskL1 = (heightsL1 == ak.broadcast_arrays(max_heightsL1[key], heightsL1)[0])
             raw_max_timesL1 = ak.mask(timeL1, max_maskL1)
             max_timeL1[key] = ak.Array([
-                min((item for item in sublist if item is not None), None) 
-                if sublist is not None else None
+                min((item for item in sublist if item is not None), default=None)
+                if sublist else None
                 for sublist in ak.to_list(raw_max_timesL1)
             ])
 
             max_heightsL2[key] = ak.max(heightsL2, axis = 1)
             max_maskL2 = (heightsL2 == ak.broadcast_arrays(max_heightsL2[key], heightsL2)[0])
             raw_max_timesL2 = ak.mask(timeL2, max_maskL2)
-            max_timeL2[key] = ak.Array([
-                min((item for item in sublist if item is not None), None) 
-                if sublist is not None else None
-                for sublist in ak.to_list(raw_max_timesL2)
+            max_timeL1[key] = ak.Array([
+                min((item for item in sublist if item is not None), default=None)
+                if sublist else None
+                for sublist in ak.to_list(raw_max_timesL1)
             ])
 
             max_heightsL3[key] = ak.max(heightsL3, axis = 1)
             max_maskL3 = (heightsL3 == ak.broadcast_arrays(max_heightsL3[key], heightsL3)[0])
             raw_max_timesL3 = ak.mask(timeL3, max_maskL3)
-            max_timeL3[key] = ak.Array([
-                min((item for item in sublist if item is not None), None) 
-                if sublist is not None else None
-                for sublist in ak.to_list(raw_max_timesL3)
+            max_timeL1[key] = ak.Array([
+                min((item for item in sublist if item is not None), default=None)
+                if sublist else None
+                for sublist in ak.to_list(raw_max_timesL1)
             ])
 
             # iterate over each event

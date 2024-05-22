@@ -31,18 +31,18 @@ def getTimeDiff(self):
     max_timeL3 = {}
     
     time_diffsL30 = []
-
+    '''
     # remove events with panel pulses that pass the height cut
     panel_pulse_mask = (self.events['type'] == 2) & (self.events['height'] > 1000)
     events_without_panel_pulses = ~ak.any(panel_pulse_mask, axis = 1)
-    '''
+    
     # ensure that events have slab pulses that pass the height cut
     slab_pulse_mask = (self.events['type'] == 1) & (self.events['height'] > 0)
     events_with_slab_pulses = ak.any(slab_pulse_mask, axis = 1)
-    '''
+    
     # combine masks to get valid events
     valid_events_mask = events_without_panel_pulses #& events_with_slab_pulses
-
+    '''
 # iterate over straight line passes
     for row in range(4):
         for column in range(4):
@@ -56,10 +56,10 @@ def getTimeDiff(self):
             event_mask = ak.any(pulse_maskL0, axis = 1) & ak.any(pulse_maskL1, axis = 1) & ak.any(pulse_maskL2, axis = 1) & ak.any(pulse_maskL3, axis = 1)
 
             # combine all the masks
-            mask0 = event_mask & pulse_maskL0 & valid_events_mask
-            mask1 = event_mask & pulse_maskL1 & valid_events_mask
-            mask2 = event_mask & pulse_maskL2 & valid_events_mask
-            mask3 = event_mask & pulse_maskL3 & valid_events_mask
+            mask0 = event_mask & pulse_maskL0 #& valid_events_mask
+            mask1 = event_mask & pulse_maskL1 #& valid_events_mask
+            mask2 = event_mask & pulse_maskL2 #& valid_events_mask
+            mask3 = event_mask & pulse_maskL3 #& valid_events_mask
 
             heightsL0 = self.events['height'][mask0]
             timeL0 = self.events['timeFit_module_calibrated'][mask0]

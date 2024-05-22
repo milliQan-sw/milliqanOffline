@@ -21,12 +21,12 @@ def getPanelHeight(self):
     panelHeight = []
 
     panelHeights = self.events['height'][self.events['type'] == 2]
-    flattened_list = panelHeights.flatten().tolist()
+    flattened_list = [item for sublist in panelHeights for item in sublist]
 
     num_events = len(self.events['height'])
     num_nones = num_events - len(flattened_list)
     panelHeight.extend([None] * num_nones)
-    
+
     self.events['panelHeight'] = panelHeight
 
 # add our custom function to milliqanCuts

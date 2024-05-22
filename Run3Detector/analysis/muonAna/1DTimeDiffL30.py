@@ -88,7 +88,7 @@ def getTimeDiff(self):
             
             # pull down the time of each sublist to get a 1D list of times
             max_timeL0[key] = ak.Array([  
-                next((item for item in sublist if item is not None), None) 
+                min((item for item in sublist if item is not None), None) 
                 if sublist is not None else None
                 for sublist in ak.to_list(raw_max_timesL0)
             ])
@@ -98,7 +98,7 @@ def getTimeDiff(self):
             max_maskL1 = (heightsL1 == ak.broadcast_arrays(max_heightsL1[key], heightsL1)[0])
             raw_max_timesL1 = ak.mask(timeL1, max_maskL1)
             max_timeL1[key] = ak.Array([
-                next((item for item in sublist if item is not None), None) 
+                min((item for item in sublist if item is not None), None) 
                 if sublist is not None else None
                 for sublist in ak.to_list(raw_max_timesL1)
             ])
@@ -107,7 +107,7 @@ def getTimeDiff(self):
             max_maskL2 = (heightsL2 == ak.broadcast_arrays(max_heightsL2[key], heightsL2)[0])
             raw_max_timesL2 = ak.mask(timeL2, max_maskL2)
             max_timeL2[key] = ak.Array([
-                next((item for item in sublist if item is not None), None) 
+                min((item for item in sublist if item is not None), None) 
                 if sublist is not None else None
                 for sublist in ak.to_list(raw_max_timesL2)
             ])
@@ -116,7 +116,7 @@ def getTimeDiff(self):
             max_maskL3 = (heightsL3 == ak.broadcast_arrays(max_heightsL3[key], heightsL3)[0])
             raw_max_timesL3 = ak.mask(timeL3, max_maskL3)
             max_timeL3[key] = ak.Array([
-                next((item for item in sublist if item is not None), None) 
+                min((item for item in sublist if item is not None), None) 
                 if sublist is not None else None
                 for sublist in ak.to_list(raw_max_timesL3)
             ])

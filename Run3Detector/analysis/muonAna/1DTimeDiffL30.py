@@ -35,11 +35,11 @@ def getTimeDiff(self):
     # remove events with panel pulses that pass the height cut
     panel_pulse_mask = (self.events['type'] == 2) & (self.events['height'] > 1000)
     events_without_panel_pulses = ~ak.any(panel_pulse_mask, axis = 1)
-
+    '''
     # ensure that events have slab pulses that pass the height cut
     slab_pulse_mask = (self.events['type'] == 1) & (self.events['height'] > 0)
     events_with_slab_pulses = ak.any(slab_pulse_mask, axis = 1)
-
+    '''
     # combine masks to get valid events
     valid_events_mask = events_without_panel_pulses #& events_with_slab_pulses
 

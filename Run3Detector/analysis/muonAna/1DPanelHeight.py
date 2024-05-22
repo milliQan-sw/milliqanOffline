@@ -25,8 +25,6 @@ def getPanelHeight(self):
     num_nones = num_events - len(flattened_list)
     flattened_list.extend([None] * num_nones)
 
-    print(flattened_list)
-
     self.events['panelHeight'] = flattened_list
 
 # add our custom function to milliqanCuts

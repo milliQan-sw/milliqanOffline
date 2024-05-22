@@ -36,7 +36,7 @@ def getTimeDiff(self):
     panel_pulse_mask = (self.events['type'] == 2) & (self.events['height'] > 1200)
     events_without_panel_pulses = ~ak.any(panel_pulse_mask, axis = 1)
 
-    # remove events that have more than 2 pulses whose heights are bigger than 1000
+    # keep only events that have less than 2 pulses whose heights are bigger than 1000
     high_pulse_count_mask = ak.sum(self.events['height'] > 1000, axis=1) <= 2
 
     '''      << Run1118 is not connected to slabs so we do not apply the slab cut. >>

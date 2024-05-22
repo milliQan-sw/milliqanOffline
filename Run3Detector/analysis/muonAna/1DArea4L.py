@@ -59,10 +59,10 @@ def getArea(self):
             type_mask = self.events['type'] == 0
 
             # combine all the masks
-            mask0 = event_mask & pulse_maskL0 & valid_events_mask
-            mask1 = event_mask & pulse_maskL1 & valid_events_mask
-            mask2 = event_mask & pulse_maskL2 & valid_events_mask
-            mask3 = event_mask & pulse_maskL3 & valid_events_mask
+            mask0 = event_mask & pulse_maskL0 #& valid_events_mask
+            mask1 = event_mask & pulse_maskL1 #& valid_events_mask
+            mask2 = event_mask & pulse_maskL2 #& valid_events_mask
+            mask3 = event_mask & pulse_maskL3 #& valid_events_mask
 
             heightsL0 = self.events['height'][mask0]
             areaL0 = self.events['area'][mask0]

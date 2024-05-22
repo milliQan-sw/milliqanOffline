@@ -17,13 +17,15 @@ from milliqanPlotter import *
 
 # define the function to get the time differences for the max heights of events in each channel between layer 0 and layer 3
 def getPanelHeight(self):
-    
+
     panelHeights = self.events['height'][self.events['type'] == 2]
     flattened_list = [item for sublist in panelHeights for item in sublist]
 
     num_events = len(self.events['height'])
     num_nones = num_events - len(flattened_list)
     flattened_list.extend([None] * num_nones)
+
+    print(flattened_list)
 
     self.events['panelHeight'] = flattened_list
 

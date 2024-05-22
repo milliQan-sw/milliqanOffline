@@ -87,7 +87,7 @@ def getTimeDiff(self):
             raw_max_timesL0 = ak.mask(timeL0, max_maskL0)
             
             # pull down the time of each sublist to get a 1D list of times
-            # when there are multiple pulses that have the same max height, pick the smaller time
+            # when there are 2 pulses that have the same max height, pick the smaller time
             max_timeL0[key] = ak.Array([  
                 min((item for item in sublist if item is not None), None) 
                 if sublist is not None else None

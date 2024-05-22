@@ -126,7 +126,7 @@ def getTimeDiff(self):
                 if max_timeL0[key][event] is not None and max_timeL1[key][event] is not None and max_timeL2[key][event] is not None and max_timeL3[key][event] is not None:
                     time_diffsL30.append(max_timeL3[key][event] - max_timeL0[key][event])
 
-    print(time_diffsL30)
+    #print(time_diffsL30)
 
     # extend the final list to match the size of the current file
     num_events = len(self.events['height'])

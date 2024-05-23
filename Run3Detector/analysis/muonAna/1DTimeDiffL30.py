@@ -48,6 +48,12 @@ def getTimeDiff(self):
     # Apply the valid events mask to the entire events dataset
     valid_events = self.events[valid_events_mask]
 
+    # Debugging: Print the values of relevant columns
+    print(f"valid_events['height']: {valid_events['height']}")
+    print(f"valid_events['row']: {valid_events['row']}")
+    print(f"valid_events['column']: {valid_events['column']}")
+    print(f"valid_events['layer']: {valid_events['layer']}")
+
     # Iterate over straight line passes
     for row in range(4):
         for column in range(4):
@@ -164,8 +170,9 @@ def getTimeDiff(self):
 
     # Extend the final list to match the size of the current file
     num_events = len(self.events)
-    num_nones = num_events - len(time_diffsL30)
-    time_diffsL30.extend([None] * num_nones)
+    self.timeDiffs.extend(time_diffsL30[:num_events])
+
+    print(f"Number of processed events {num_events}")
 
     # Define custom branch
     self.events['timeDiff'] = time_diffsL30

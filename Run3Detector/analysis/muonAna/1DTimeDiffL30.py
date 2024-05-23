@@ -39,6 +39,12 @@ def getTimeDiff(self):
     # Combine masks to get valid events
     valid_events_mask = events_without_panel_pulses & high_pulse_count_mask
 
+    # Print the number of events before and after applying the mask
+    num_events_before = len(self.events)
+    num_valid_events = ak.sum(valid_events_mask)
+    print(f"Number of events before filtering: {num_events_before}")
+    print(f"Number of valid events after filtering: {num_valid_events}")
+
     # Apply the valid events mask to the entire events dataset
     valid_events = self.events[valid_events_mask]
 

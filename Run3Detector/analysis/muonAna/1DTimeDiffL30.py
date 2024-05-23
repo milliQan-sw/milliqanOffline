@@ -37,20 +37,10 @@ def getTimeDiff(self):
     events_without_panel_pulses = ~ak.any(panel_pulse_mask, axis = 1)
 
     # keep only events that have less than 2 pulses whose heights are bigger than 1000 (1D boolean list)
-    high_pulse_count_mask = ak.sum(self.events['height'] > 1000, axis=1) > 2
+    high_pulse_count_mask = ak.sum(self.events['height'] > 1000, axis=1) <= 2
 
     # combine masks to get valid events (1D boolean list)
     conbined_mask = events_without_panel_pulses & high_pulse_count_mask
-
-    print(events_without_panel_pulses, 'size:', len(events_without_panel_pulses))
-    print(conbined_mask, 'size:', len(conbined_mask))
-
-    # count the number of True values in each mask
-    count_events_without_panel_pulses = np.sum(events_without_panel_pulses)
-    count_conbined_mask = np.sum(conbined_mask)
-
-    print("after events_without_panel_pulses:", count_events_without_panel_pulses)
-    print("after combined_mask):", count_conbined_mask)
 
 # iterate over row and column combinations
     for row in range(4):

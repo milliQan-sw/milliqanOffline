@@ -67,6 +67,9 @@ def getTimeDiff(self):
             mask2 = event_mask & pulse_maskL2 & valid_events_mask
             mask3 = event_mask & pulse_maskL3 & valid_events_mask
 
+            print(event_mask & pulse_maskL0)
+            print(mask0)
+
             heightsL0 = self.events['height'][mask0]
             timeL0 = self.events['timeFit_module_calibrated'][mask0]
 

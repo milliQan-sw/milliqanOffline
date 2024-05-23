@@ -29,7 +29,7 @@ def getTimeDiff(self):
 
     max_heightsL3 = {}
     max_timeL3 = {}
-    
+
     time_diffsL30 = []
 
     # remove events with panel pulses that pass the height cut (1D boolean list)

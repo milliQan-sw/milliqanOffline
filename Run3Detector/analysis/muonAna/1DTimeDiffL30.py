@@ -40,6 +40,7 @@ def getTimeDiff(self):
     high_pulse_count_mask = ak.sum(self.events['height'] > 1000, axis=1) <= 2
 
     print(ak.sum(self.events['height'] > 1000, axis=1))
+    print(high_pulse_count_mask)
 
     '''      << Run1118 is not connected to slabs so we do not apply the slab cut. >>
     # ensure that events have slab pulses that pass the height cut

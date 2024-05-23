@@ -50,7 +50,7 @@ def getTimeDiff(self):
     print("events_without_panel_pulses:", count_events_without_panel_pulses)
     print("combined_mask):", count_conbined_mask)
 
-# iterate over straight line passes
+# iterate over row and column combinations
     for row in range(4):
         for column in range(4):
             # pulse_based 2D boolean masks determined by channel and height
@@ -140,7 +140,7 @@ def getTimeDiff(self):
             else:
                 max_timeL3[key] = [None] * len(self.events)
 
-            # iterate over each event
+            # iterate over each event in current row and column combination
             for event in range(len(max_timeL0[key])):
                 if max_timeL0[key][event] is not None and max_timeL1[key][event] is not None and max_timeL2[key][event] is not None and max_timeL3[key][event] is not None:
                     time_diffsL30.append(max_timeL3[key][event] - max_timeL0[key][event])

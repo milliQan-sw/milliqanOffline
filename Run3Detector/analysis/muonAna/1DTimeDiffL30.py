@@ -44,7 +44,7 @@ def getTimeDiff(self):
     events_with_slab_pulses = ak.any(slab_pulse_mask, axis = 1)
 
     # combine masks to get valid events
-    valid_events_mask = events_without_panel_pulses
+    valid_events_mask = slab_pulse_mask
 
 # iterate over straight line passes
     for row in range(4):

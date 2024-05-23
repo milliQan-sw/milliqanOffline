@@ -20,111 +20,88 @@ def getTimeDiff(self):
 
     max_heightsL0 = {}
     max_timeL0 = {}
+
     max_heightsL1 = {}
     max_timeL1 = {}
+
     max_heightsL2 = {}
     max_timeL2 = {}
+
     max_heightsL3 = {}
     max_timeL3 = {}
-
+    
     time_diffsL30 = []
 
-    # Remove events with panel pulses that pass the height cut
+    # remove events with panel pulses that pass the height cut
     panel_pulse_mask = (self.events['type'] == 2) & (self.events['height'] > 1200)
-    events_without_panel_pulses = ~ak.any(panel_pulse_mask, axis=1)
+    events_without_panel_pulses = ~ak.any(panel_pulse_mask, axis = 1)
 
-    # Keep only events that have less than 2 pulses whose heights are bigger than 1000
+    # keep only events that have less than 2 pulses whose heights are bigger than 1000
     high_pulse_count_mask = ak.sum(self.events['height'] > 1000, axis=1) <= 2
 
-    # Combine masks to get valid events
+    '''      << Run1118 is not connected to slabs so we do not apply the slab cut. >>
+    # ensure that events have slab pulses that pass the height cut
+    slab_pulse_mask = (self.events['type'] == 1) & (self.events['height'] > 0)
+    events_with_slab_pulses = ak.any(slab_pulse_mask, axis = 1)
+    '''
+
+    # combine masks to get valid events
     valid_events_mask = events_without_panel_pulses & high_pulse_count_mask
 
-    # Print the number of events before and after applying the mask
-    num_events_before = len(self.events)
-    num_valid_events = ak.sum(valid_events_mask)
-    print(f"Number of events before filtering: {num_events_before}")
-    print(f"Number of valid events after filtering: {num_valid_events}")
-
-    # Apply the valid events mask to the entire events dataset
-    valid_events = self.events[valid_events_mask]
-
-    # Debugging: Print the values of relevant columns
-    print(f"valid_events['height']: {valid_events['height']}")
-    print(f"valid_events['row']: {valid_events['row']}")
-    print(f"valid_events['column']: {valid_events['column']}")
-    print(f"valid_events['layer']: {valid_events['layer']}")
-
-    # Iterate over straight line passes
+# iterate over straight line passes
     for row in range(4):
         for column in range(4):
-            # Pulse-based 2D boolean masks determined by channel and height
-            pulse_maskL0 = (valid_events['row'] == row) & (valid_events['column'] == column) & (valid_events['layer'] == 0) & (valid_events['height'] > 1000)
-            pulse_maskL1 = (valid_events['row'] == row) & (valid_events['column'] == column) & (valid_events['layer'] == 1) & (valid_events['height'] > 1000)
-            pulse_maskL2 = (valid_events['row'] == row) & (valid_events['column'] == column) & (valid_events['layer'] == 2) & (valid_events['height'] > 1000)
-            pulse_maskL3 = (valid_events['row'] == row) & (valid_events['column'] == column) & (valid_events['layer'] == 3) & (valid_events['height'] > 1000)
+            # pulse_based 2D boolean masks determined by channel and height
+            pulse_maskL0 = (self.events['row'] == row) & (self.events['column'] == column) & (self.events['layer'] == 0) & (self.events['height'] > 1000)
+            pulse_maskL1 = (self.events['row'] == row) & (self.events['column'] == column) & (self.events['layer'] == 1) & (self.events['height'] > 1000)
+            pulse_maskL2 = (self.events['row'] == row) & (self.events['column'] == column) & (self.events['layer'] == 2) & (self.events['height'] > 1000)
+            pulse_maskL3 = (self.events['row'] == row) & (self.events['column'] == column) & (self.events['layer'] == 3) & (self.events['height'] > 1000)
 
-            # Debugging: Print the pulse masks
-            print(f"Processing row {row}, column {column}")
-            print(f"pulse_maskL0: {pulse_maskL0}")
-            print(f"pulse_maskL1: {pulse_maskL1}")
-            print(f"pulse_maskL2: {pulse_maskL2}")
-            print(f"pulse_maskL3: {pulse_maskL3}")
+            # event_based 1D boolean mask determined by event
+            event_mask = ak.any(pulse_maskL0, axis = 1) & ak.any(pulse_maskL1, axis = 1) & ak.any(pulse_maskL2, axis = 1) & ak.any(pulse_maskL3, axis = 1)
 
-            # Event-based 1D boolean mask determined by event
-            event_mask = ak.any(pulse_maskL0, axis=1) & ak.any(pulse_maskL1, axis=1) & ak.any(pulse_maskL2, axis=1) & ak.any(pulse_maskL3, axis=1)
+            # combine all the masks
+            mask0 = event_mask & pulse_maskL0 & valid_events_mask
+            mask1 = event_mask & pulse_maskL1 & valid_events_mask
+            mask2 = event_mask & pulse_maskL2 & valid_events_mask
+            mask3 = event_mask & pulse_maskL3 & valid_events_mask
 
-            # Combine all the masks
-            mask0 = event_mask & pulse_maskL0
-            mask1 = event_mask & pulse_maskL1
-            mask2 = event_mask & pulse_maskL2
-            mask3 = event_mask & pulse_maskL3
+            heightsL0 = self.events['height'][mask0]
+            timeL0 = self.events['timeFit_module_calibrated'][mask0]
 
-            heightsL0 = valid_events['height'][mask0]
-            timeL0 = valid_events['timeFit_module_calibrated'][mask0]
+            heightsL1 = self.events['height'][mask1]
+            timeL1 = self.events['timeFit_module_calibrated'][mask1]
 
-            heightsL1 = valid_events['height'][mask1]
-            timeL1 = valid_events['timeFit_module_calibrated'][mask1]
+            heightsL2 = self.events['height'][mask2]
+            timeL2 = self.events['timeFit_module_calibrated'][mask2]
 
-            heightsL2 = valid_events['height'][mask2]
-            timeL2 = valid_events['timeFit_module_calibrated'][mask2]
+            heightsL3 = self.events['height'][mask3]
+            timeL3 = self.events['timeFit_module_calibrated'][mask3]
 
-            heightsL3 = valid_events['height'][mask3]
-            timeL3 = valid_events['timeFit_module_calibrated'][mask3]
-
-            # Debugging: Print the intermediate heights and times
-            print(f"heightsL0: {heightsL0}")
-            print(f"timeL0: {timeL0}")
-            print(f"heightsL1: {heightsL1}")
-            print(f"timeL1: {timeL1}")
-            print(f"heightsL2: {heightsL2}")
-            print(f"timeL2: {timeL2}")
-            print(f"heightsL3: {heightsL3}")
-            print(f"timeL3: {timeL3}")
-
-            # Store heights and times into dictionaries
+            # store heights and times into dictionaries
             key = (row, column)
 
             if len(heightsL0) > 0:
                 # 1D max heights of each event
                 max_heightsL0[key] = ak.max(heightsL0, axis=1)
 
-                # Broadcast to get a 2D list with every pulse being max height
-                # Then get a 2D boolean list to pick out which pulse has the max height so we can extract its time later
+                # broadcast to get a 2D list with every pulse being max height
+                # then get a 2D boolean list to pick out which pulse has the max height so we can extract its time later
                 max_maskL0 = (heightsL0 == ak.broadcast_arrays(max_heightsL0[key], heightsL0)[0])
 
-                # Get a 2D list of the times for the pulses with max heights
+                # get a 2D list of the times for the pulses with max heights
                 raw_max_timesL0 = ak.mask(timeL0, max_maskL0)
 
-                # Pull down the time of each sublist to get a 1D list of times
+                # pull down the time of each sublist to get a 1D list of times
                 max_timeL0[key] = ak.Array([
                     min((item for item in sublist if item is not None), default=None)
                     if sublist else None
                     for sublist in ak.to_list(raw_max_timesL0)
                 ])
             else:
-                max_timeL0[key] = [None] * len(valid_events)
+                max_timeL0[key] = [None] * len(self.events)
 
-            # Do the same for other 3 layers
+            # do the same for other 3 layers
             if len(heightsL1) > 0:
                 max_heightsL1[key] = ak.max(heightsL1, axis=1)
                 max_maskL1 = (heightsL1 == ak.broadcast_arrays(max_heightsL1[key], heightsL1)[0])
@@ -135,7 +112,7 @@ def getTimeDiff(self):
                     for sublist in ak.to_list(raw_max_timesL1)
                 ])
             else:
-                max_timeL1[key] = [None] * len(valid_events)
+                max_timeL1[key] = [None] * len(self.events)
 
             if len(heightsL2) > 0:
                 max_heightsL2[key] = ak.max(heightsL2, axis=1)
@@ -147,7 +124,7 @@ def getTimeDiff(self):
                     for sublist in ak.to_list(raw_max_timesL2)
                 ])
             else:
-                max_timeL2[key] = [None] * len(valid_events)
+                max_timeL2[key] = [None] * len(self.events)
 
             if len(heightsL3) > 0:
                 max_heightsL3[key] = ak.max(heightsL3, axis=1)
@@ -159,22 +136,21 @@ def getTimeDiff(self):
                     for sublist in ak.to_list(raw_max_timesL3)
                 ])
             else:
-                max_timeL3[key] = [None] * len(valid_events)
+                max_timeL3[key] = [None] * len(self.events)
 
-            # Iterate over each event
-            for event in range(len(valid_events)):
+            # iterate over each event
+            for event in range(len(max_timeL0[key])):
                 if max_timeL0[key][event] is not None and max_timeL1[key][event] is not None and max_timeL2[key][event] is not None and max_timeL3[key][event] is not None:
                     time_diffsL30.append(max_timeL3[key][event] - max_timeL0[key][event])
 
     print(time_diffsL30)
 
-    # Extend the final list to match the size of the current file
+    # extend the final list to match the size of the current file
     num_events = len(self.events)
-    self.timeDiffs.extend(time_diffsL30[:num_events])
+    num_nones = num_events - len(time_diffsL30)
+    time_diffsL30.extend([None] * num_nones)
 
-    print(f"Number of processed events {num_events}")
-
-    # Define custom branch
+    # define custom branch
     self.events['timeDiff'] = time_diffsL30
 
 # add our custom function to milliqanCuts

@@ -39,8 +39,12 @@ def getTimeDiff(self):
     # keep only events that have less than 2 pulses whose heights are bigger than 1000
     high_pulse_count_mask = ak.sum(self.events['height'] > 1000, axis=1) <= 2
 
+    # ensure that events have slab pulses that pass the height cut
+    slab_pulse_mask = (self.events['type'] == 1) & (self.events['height'] > 0)
+    events_with_slab_pulses = ak.any(slab_pulse_mask, axis = 1)
+
     # combine masks to get valid events
-    valid_events_mask = events_without_panel_pulses & high_pulse_count_mask
+    valid_events_mask = events_without_panel_pulses
 
 # iterate over straight line passes
     for row in range(4):

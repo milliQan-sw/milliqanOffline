@@ -49,7 +49,6 @@ def getTimeDiff(self):
 
     # print the counts
     print("events_without_panel_pulses:", count_events_without_panel_pulses)
-    print("high_pulse_count_mask:", count_high_pulse_count_mask)
     print("combined_mask):", count_conbined_mask)
 
 # iterate over straight line passes

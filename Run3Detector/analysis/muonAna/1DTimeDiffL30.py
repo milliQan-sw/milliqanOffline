@@ -47,8 +47,8 @@ def getTimeDiff(self):
     count_conbined_mask = np.sum(conbined_mask)
 
     # print the counts
-    print("events_without_panel_pulses:", count_events_without_panel_pulses)
-    print("combined_mask):", count_conbined_mask)
+    print("after events_without_panel_pulses:", count_events_without_panel_pulses)
+    print("after combined_mask):", count_conbined_mask)
 
 # iterate over row and column combinations
     for row in range(4):

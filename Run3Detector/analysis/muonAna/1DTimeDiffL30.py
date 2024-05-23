@@ -45,9 +45,17 @@ def getTimeDiff(self):
 
     # combine masks to get valid events (1D boolean list)
     valid_events_mask = events_without_panel_pulses
-    print(events_without_panel_pulses, len(events_without_panel_pulses))
-    print(high_pulse_count_mask, len(high_pulse_count_mask))
-    print(high_pulse_count_mask & events_without_panel_pulses, len(high_pulse_count_mask & events_without_panel_pulses))
+    # count the number of True values in each mask
+    count_events_without_panel_pulses = np.sum(events_without_panel_pulses)
+    count_high_pulse_count_mask = np.sum(high_pulse_count_mask)
+    count_events_with_slab_pulses = np.sum(events_with_slab_pulses)
+    count_valid_events_mask = np.sum(valid_events_mask)
+
+    # print the counts
+    print("Events without panel pulses:", count_events_without_panel_pulses)
+    print("Events with less than 2 pulses with heights > 1000:", count_high_pulse_count_mask)
+    print("Events with slab pulses:", count_events_with_slab_pulses)
+    print("Valid events (combined mask):", count_valid_events_mask)
 
 # iterate over straight line passes
     for row in range(4):

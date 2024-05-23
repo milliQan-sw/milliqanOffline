@@ -78,6 +78,17 @@ def getTimeDiff(self):
             heightsL3 = valid_events['height'][mask3]
             timeL3 = valid_events['timeFit_module_calibrated'][mask3]
 
+            # Debugging: Print the intermediate heights and times
+            print(f"Processing row {row}, column {column}")
+            print(f"heightsL0: {heightsL0}")
+            print(f"timeL0: {timeL0}")
+            print(f"heightsL1: {heightsL1}")
+            print(f"timeL1: {timeL1}")
+            print(f"heightsL2: {heightsL2}")
+            print(f"timeL2: {timeL2}")
+            print(f"heightsL3: {heightsL3}")
+            print(f"timeL3: {timeL3}")
+
             # Store heights and times into dictionaries
             key = (row, column)
 
@@ -137,13 +148,6 @@ def getTimeDiff(self):
                 ])
             else:
                 max_timeL3[key] = [None] * len(valid_events)
-
-            # Debug statements to check intermediate results
-            print(f"Processing row {row}, column {column}")
-            print(f"max_timeL0: {max_timeL0[key]}")
-            print(f"max_timeL1: {max_timeL1[key]}")
-            print(f"max_timeL2: {max_timeL2[key]}")
-            print(f"max_timeL3: {max_timeL3[key]}")
 
             # Iterate over each event
             for event in range(len(valid_events)):

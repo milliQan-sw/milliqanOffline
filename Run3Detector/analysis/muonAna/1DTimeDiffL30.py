@@ -40,17 +40,17 @@ def getTimeDiff(self):
     high_pulse_count_mask = ak.sum(self.events['height'] > 1000, axis=1) <= 2
 
     # combine masks to get valid events (1D boolean list)
-    valid_events_mask = events_without_panel_pulses & high_pulse_count_mask
+    conbined_mask = events_without_panel_pulses & high_pulse_count_mask
 
     # count the number of True values in each mask
     count_events_without_panel_pulses = np.sum(events_without_panel_pulses)
     count_high_pulse_count_mask = np.sum(high_pulse_count_mask)
-    count_valid_events_mask = np.sum(valid_events_mask)
+    count_conbined_mask = np.sum(conbined_mask)
 
     # print the counts
     print("events_without_panel_pulses:", count_events_without_panel_pulses)
     print("high_pulse_count_mask:", count_high_pulse_count_mask)
-    print("Valid events (combined mask):", count_valid_events_mask)
+    print("combined_mask):", count_conbined_mask)
 
 # iterate over straight line passes
     for row in range(4):

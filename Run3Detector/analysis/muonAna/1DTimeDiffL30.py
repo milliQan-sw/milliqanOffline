@@ -44,7 +44,6 @@ def getTimeDiff(self):
 
     # count the number of True values in each mask
     count_events_without_panel_pulses = np.sum(events_without_panel_pulses)
-    count_high_pulse_count_mask = np.sum(high_pulse_count_mask)
     count_conbined_mask = np.sum(conbined_mask)
 
     # print the counts

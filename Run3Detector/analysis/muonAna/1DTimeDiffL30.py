@@ -46,7 +46,7 @@ def getTimeDiff(self):
     '''
 
     # combine masks to get valid events
-    valid_events_mask = events_without_panel_pulses & high_pulse_count_mask
+    valid_events_mask = events_without_panel_pulses #& high_pulse_count_mask
     print(valid_events_mask)
 
 # iterate over straight line passes
@@ -66,11 +66,6 @@ def getTimeDiff(self):
             mask1 = event_mask & pulse_maskL1 & valid_events_mask
             mask2 = event_mask & pulse_maskL2 & valid_events_mask
             mask3 = event_mask & pulse_maskL3 & valid_events_mask
-
-            print(pulse_maskL0)
-            print(event_mask)
-            print(event_mask & pulse_maskL0)
-            print(mask0)
 
             heightsL0 = self.events['height'][mask0]
             timeL0 = self.events['timeFit_module_calibrated'][mask0]

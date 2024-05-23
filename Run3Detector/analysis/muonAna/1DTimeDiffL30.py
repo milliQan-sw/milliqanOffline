@@ -42,8 +42,8 @@ def getTimeDiff(self):
     # combine masks to get valid events (1D boolean list)
     conbined_mask = events_without_panel_pulses & high_pulse_count_mask
 
-    print(events_without_panel_pulses, 'size: ', len(events_without_panel_pulses))
-    print(conbined_mask, 'size: ', len(conbined_mask))
+    print(events_without_panel_pulses, 'size:', len(events_without_panel_pulses))
+    print(conbined_mask, 'size:', len(conbined_mask))
 
     # count the number of True values in each mask
     count_events_without_panel_pulses = np.sum(events_without_panel_pulses)

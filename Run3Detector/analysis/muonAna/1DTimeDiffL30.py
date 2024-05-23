@@ -45,6 +45,7 @@ def getTimeDiff(self):
 
     # combine masks to get valid events
     valid_events_mask = events_without_panel_pulses
+    print(valid_events_mask)
 
 # iterate over straight line passes
     for row in range(4):

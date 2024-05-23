@@ -57,6 +57,13 @@ def getTimeDiff(self):
             pulse_maskL2 = (valid_events['row'] == row) & (valid_events['column'] == column) & (valid_events['layer'] == 2) & (valid_events['height'] > 1000)
             pulse_maskL3 = (valid_events['row'] == row) & (valid_events['column'] == column) & (valid_events['layer'] == 3) & (valid_events['height'] > 1000)
 
+            # Debugging: Print the pulse masks
+            print(f"Processing row {row}, column {column}")
+            print(f"pulse_maskL0: {pulse_maskL0}")
+            print(f"pulse_maskL1: {pulse_maskL1}")
+            print(f"pulse_maskL2: {pulse_maskL2}")
+            print(f"pulse_maskL3: {pulse_maskL3}")
+
             # Event-based 1D boolean mask determined by event
             event_mask = ak.any(pulse_maskL0, axis=1) & ak.any(pulse_maskL1, axis=1) & ak.any(pulse_maskL2, axis=1) & ak.any(pulse_maskL3, axis=1)
 
@@ -79,7 +86,6 @@ def getTimeDiff(self):
             timeL3 = valid_events['timeFit_module_calibrated'][mask3]
 
             # Debugging: Print the intermediate heights and times
-            print(f"Processing row {row}, column {column}")
             print(f"heightsL0: {heightsL0}")
             print(f"timeL0: {timeL0}")
             print(f"heightsL1: {heightsL1}")

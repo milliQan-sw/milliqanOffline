@@ -138,6 +138,13 @@ def getTimeDiff(self):
             else:
                 max_timeL3[key] = [None] * len(valid_events)
 
+            # Debug statements to check intermediate results
+            print(f"Processing row {row}, column {column}")
+            print(f"max_timeL0: {max_timeL0[key]}")
+            print(f"max_timeL1: {max_timeL1[key]}")
+            print(f"max_timeL2: {max_timeL2[key]}")
+            print(f"max_timeL3: {max_timeL3[key]}")
+
             # Iterate over each event
             for event in range(len(valid_events)):
                 if max_timeL0[key][event] is not None and max_timeL1[key][event] is not None and max_timeL2[key][event] is not None and max_timeL3[key][event] is not None:

@@ -32,21 +32,22 @@ def getTimeDiff(self):
     
     time_diffsL30 = []
 
-    # remove events with panel pulses that pass the height cut
+    # remove events with panel pulses that pass the height cut (1D boolean list)
     panel_pulse_mask = (self.events['type'] == 2) & (self.events['height'] > 1200)
     events_without_panel_pulses = ~ak.any(panel_pulse_mask, axis = 1)
 
-    # keep only events that have less than 2 pulses whose heights are bigger than 1000
+    # keep only events that have less than 2 pulses whose heights are bigger than 1000 (1D boolean list)
     high_pulse_count_mask = ak.sum(self.events['height'] > 1000, axis=1) <= 2
 
-    # ensure that events have slab pulses that pass the height cut
+    # ensure that events have slab pulses that pass the height cut (1D boolean list)
     slab_pulse_mask = (self.events['type'] == 1) & (self.events['height'] > 0)
     events_with_slab_pulses = ak.any(slab_pulse_mask, axis = 1)
 
-    # combine masks to get valid events
+    # combine masks to get valid events (1D boolean list)
     valid_events_mask = events_without_panel_pulses
     print(events_without_panel_pulses)
-    #print(ak.num(high_pulse_count_mask))
+    print(high_pulse_count_mask)
+    print(high_pulse_count_mask & events_without_panel_pulses)
 
 # iterate over straight line passes
     for row in range(4):

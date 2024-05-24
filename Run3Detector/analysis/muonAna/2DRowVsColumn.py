@@ -145,7 +145,7 @@ def getRowColumn(self):
     output_path = '/home/bpeng/milliqanOffline/Run3Detector/analysis/muonAna/data.txt'
     print(f"Saving data to {output_path}")
 
-    with open(output_path, 'w') as file:
+    with open(output_path, 'a') as file:  # Use 'a' to append to the file
         for i in range(len(rows)):
             file.write(f"{columns[i]} {rows[i]}\n")
 

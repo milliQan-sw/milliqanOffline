@@ -188,10 +188,10 @@ fourLayerCut = mycuts.getCut(mycuts.fourLayerCut, 'fourLayerCut', cut=False)
 # define milliqan plotter
 myplotter = milliqanPlotter()
 
-# create a 1D root histogram
-h_2d = r.TH2F("h_2d", "Rows VS Columns")
-h_2d.GetXaxis().SetTitle("Column", 4, 0, 3)
-h_2d.GetYaxis().SetTitle("Row", 4, 0, 3)
+# create a 2D root histogram
+h_2d = r.TH2F("h_2d", "Rows VS Columns", 4, 0, 4, 4, 0, 4)
+h_2d.GetXaxis().SetTitle("Column")
+h_2d.GetYaxis().SetTitle("Row")
 
 # add root histogram to plotter
 myplotter.addHistograms(h_2d, 'columns', 'rows')

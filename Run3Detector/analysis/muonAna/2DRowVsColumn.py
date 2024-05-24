@@ -143,7 +143,7 @@ def getRowColumn(self):
     # save the rows and columns to a text file
     with open('/home/bpeng/milliqanOffline/Run3Detector/analysis/muonAna/data.txt', 'w') as file:
         for i in range(len(rows)):
-            file.write(columns[i], rows[i])
+            file.write(f"{columns[i]} {rows[i]}\n")
 
     # extend the final lists to match the size of the current file
     num_events = len(self.events)

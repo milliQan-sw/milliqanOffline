@@ -139,7 +139,7 @@ def getRowColumn(self):
                     rows.append(row)
                     columns.append(column)
 
-    for i in rows and columns:
+    for i in range(len(rows)):
         print(columns[i], rows[i])
 
     # extend the final lists to match the size of the current file

@@ -1,4 +1,3 @@
-# importing packages
 import os
 import ROOT as r
 import uproot
@@ -139,8 +138,10 @@ def getRowColumn(self):
                     rows.append(row)
                     columns.append(column)
 
-    for i in range(len(rows)):
-        print(columns[i], rows[i])
+    # save the rows and columns to a text file
+    with open('/Users/branchinpyjamas/Desktop/MilliQan/data.txt', 'w') as file:
+        for i in range(len(rows)):
+            file.write(f"{columns[i]} {rows[i]}\n")
 
     # extend the final lists to match the size of the current file
     num_events = len(self.events)

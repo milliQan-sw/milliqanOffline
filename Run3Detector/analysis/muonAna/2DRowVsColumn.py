@@ -138,12 +138,19 @@ def getRowColumn(self):
                     rows.append(row)
                     columns.append(column)
 
-    for i in range(len(rows)):
-            print(columns[i], rows[i])
+    # Debug: Print the number of rows and columns collected
+    print(f"Collected {len(rows)} rows and columns.")
+
     # save the rows and columns to a text file
-    with open('/home/bpeng/milliqanOffline/Run3Detector/analysis/muonAna/data.txt', 'w') as file:
+    output_path = '/home/bpeng/milliqanOffline/Run3Detector/analysis/muonAna/data.txt'
+    print(f"Saving data to {output_path}")
+
+    with open(output_path, 'w') as file:
         for i in range(len(rows)):
             file.write(f"{columns[i]} {rows[i]}\n")
+
+    # Debug: Confirm file writing
+    print(f"Data successfully written to {output_path}")
 
     # extend the final lists to match the size of the current file
     num_events = len(self.events)

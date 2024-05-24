@@ -217,8 +217,8 @@ def getRowColumn(self):
             # iterate over each event in current row and column combination
             for event in range(len(max_timeL0[key])):
                 if max_timeL0[key][event] is not None and max_timeL1[key][event] is not None and max_timeL2[key][event] is not None and max_timeL3[key][event] is not None:
-                    rows.append(max_rowL0[key])
-                    columns.append(max_columnL0[key])
+                    rows.append(max_rowL0[key][event])
+                    columns.append(max_columnL0[key][event])
 
     print('number:', len(rows))
 

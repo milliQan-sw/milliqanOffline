@@ -20,15 +20,23 @@ def getRowColumn(self):
 
     max_heightsL0 = {}
     max_timeL0 = {}
+    max_rowL0 = {}
+    max_columnL0 = {}
 
     max_heightsL1 = {}
     max_timeL1 = {}
+    max_rowL1 = {}
+    max_columnL1 = {}
 
     max_heightsL2 = {}
     max_timeL2 = {}
+    max_rowL2 = {}
+    max_columnL2 = {}
 
     max_heightsL3 = {}
     max_timeL3 = {}
+    max_rowL3 = {}
+    max_columnL3 = {}
 
     rows = []
     columns = []
@@ -63,15 +71,23 @@ def getRowColumn(self):
 
             heightsL0 = self.events['height'][mask0]
             timeL0 = self.events['timeFit_module_calibrated'][mask0]
+            rowL0 = self.events['row'][mask0]
+            columnL0 = self.events['row'][mask0]
 
             heightsL1 = self.events['height'][mask1]
             timeL1 = self.events['timeFit_module_calibrated'][mask1]
+            rowL1 = self.events['row'][mask1]
+            columnL1 = self.events['row'][mask1]
 
             heightsL2 = self.events['height'][mask2]
             timeL2 = self.events['timeFit_module_calibrated'][mask2]
+            rowL2 = self.events['row'][mask2]
+            columnL2 = self.events['row'][mask2]
 
             heightsL3 = self.events['height'][mask3]
             timeL3 = self.events['timeFit_module_calibrated'][mask3]
+            rowL3 = self.events['row'][mask3]
+            columnL3 = self.events['row'][mask3]
 
             # store heights and times into dictionaries
             key = (row, column)
@@ -93,8 +109,25 @@ def getRowColumn(self):
                     if sublist else None
                     for sublist in ak.to_list(raw_max_timesL0)
                 ])
+
+                # do the same for rows and columns
+                time_maskL0 = (timeL0 == ak.broadcast_arrays(max_timeL0[key], timeL0)[0])
+                raw_max_rowsL0 = ak.mask(rowL0, time_maskL0)
+                max_rowL0[key] = ak.Array([
+                    next((item for item in sublist if item is not None), default=None)
+                    if sublist else None
+                    for sublist in ak.to_list(raw_max_rowsL0)
+                ])
+                raw_max_columnL0 = ak.mask(columnL0, time_maskL0)
+                max_columnL0[key] = ak.Array([
+                    next((item for item in sublist if item is not None), default=None)
+                    if sublist else None
+                    for sublist in ak.to_list(raw_max_columnL0)
+                ])
+
             else:
-                max_timeL0[key] = [None] * len(self.events)
+                max_rowL0[key] = [None] * len(self.events)
+                max_columnL0[key] = [None] * len(self.events)
 
             # do the same for other 3 layers
             if len(heightsL1) > 0:
@@ -106,8 +139,24 @@ def getRowColumn(self):
                     if sublist else None
                     for sublist in ak.to_list(raw_max_timesL1)
                 ])
+
+                time_maskL1 = (timeL1 == ak.broadcast_arrays(max_timeL1[key], timeL1)[0])
+                raw_max_rowsL1 = ak.mask(rowL1, time_maskL1)
+                max_rowL1[key] = ak.Array([
+                    next((item for item in sublist if item is not None), default=None)
+                    if sublist else None
+                    for sublist in ak.to_list(raw_max_rowsL1)
+                ])
+                raw_max_columnL1 = ak.mask(columnL1, time_maskL1)
+                max_columnL1[key] = ak.Array([
+                    next((item for item in sublist if item is not None), default=None)
+                    if sublist else None
+                    for sublist in ak.to_list(raw_max_columnL1)
+                ])
+
             else:
-                max_timeL1[key] = [None] * len(self.events)
+                max_rowL1[key] = [None] * len(self.events)
+                max_columnL1[key] = [None] * len(self.events)
 
             if len(heightsL2) > 0:
                 max_heightsL2[key] = ak.max(heightsL2, axis=1)
@@ -118,8 +167,24 @@ def getRowColumn(self):
                     if sublist else None
                     for sublist in ak.to_list(raw_max_timesL2)
                 ])
+
+                time_maskL2 = (timeL2 == ak.broadcast_arrays(max_timeL2[key], timeL2)[0])
+                raw_max_rowsL2 = ak.mask(rowL2, time_maskL2)
+                max_rowL2[key] = ak.Array([
+                    next((item for item in sublist if item is not None), default=None)
+                    if sublist else None
+                    for sublist in ak.to_list(raw_max_rowsL2)
+                ])
+                raw_max_columnL2 = ak.mask(columnL2, time_maskL2)
+                max_columnL2[key] = ak.Array([
+                    next((item for item in sublist if item is not None), default=None)
+                    if sublist else None
+                    for sublist in ak.to_list(raw_max_columnL2)
+                ])
+
             else:
-                max_timeL2[key] = [None] * len(self.events)
+                max_rowL2[key] = [None] * len(self.events)
+                max_columnL2[key] = [None] * len(self.events)
 
             if len(heightsL3) > 0:
                 max_heightsL3[key] = ak.max(heightsL3, axis=1)
@@ -130,8 +195,24 @@ def getRowColumn(self):
                     if sublist else None
                     for sublist in ak.to_list(raw_max_timesL3)
                 ])
+
+                time_maskL3 = (timeL3 == ak.broadcast_arrays(max_timeL3[key], timeL3)[0])
+                raw_max_rowsL3 = ak.mask(rowL3, time_maskL3)
+                max_rowL3[key] = ak.Array([
+                    next((item for item in sublist if item is not None), default=None)
+                    if sublist else None
+                    for sublist in ak.to_list(raw_max_rowsL3)
+                ])
+                raw_max_columnL3 = ak.mask(columnL3, time_maskL3)
+                max_columnL3[key] = ak.Array([
+                    next((item for item in sublist if item is not None), default=None)
+                    if sublist else None
+                    for sublist in ak.to_list(raw_max_columnL3)
+                ])
+
             else:
-                max_timeL3[key] = [None] * len(self.events)
+                max_rowL3[key] = [None] * len(self.events)
+                max_columnL3[key] = [None] * len(self.events)
 
             # iterate over each event in current row and column combination
             for event in range(len(max_timeL0[key])):

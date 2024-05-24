@@ -194,7 +194,7 @@ h_2d.GetXaxis().SetTitle("Column")
 h_2d.GetYaxis().SetTitle("Row")
 
 # add root histogram to plotter
-myplotter.addHistograms(h_2d, 'columns', 'rows')
+myplotter.addHistograms(h_2d, ['columns', 'rows'], cut=None)
 
 # defining the cutflow
 cutflow = [boardMatchCut, pickupCut, mycuts.layerCut, mycuts.getRowColumn, myplotter.dict['h_2d']]

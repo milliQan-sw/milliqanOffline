@@ -222,7 +222,7 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts, myplotter
 myiterator.run()
 
 # create a new TFile
-f = r.TFile("2DhistRowVsColumn.root", "recreate")
+f = r.TFile("2DhistRowCol.root", "recreate")
 
 # write the histograms to the file
 h_2d.Write()

@@ -125,10 +125,6 @@ def getRowColumn(self):
                     for sublist in ak.to_list(raw_max_columnL0)
                 ])
 
-            else:
-                max_rowL0[key] = [None] * len(self.events)
-                max_columnL0[key] = [None] * len(self.events)
-
             # do the same for other 3 layers
             if len(heightsL1) > 0:
                 max_heightsL1[key] = ak.max(heightsL1, axis=1)
@@ -154,10 +150,6 @@ def getRowColumn(self):
                     for sublist in ak.to_list(raw_max_columnL1)
                 ])
 
-            else:
-                max_rowL1[key] = [None] * len(self.events)
-                max_columnL1[key] = [None] * len(self.events)
-
             if len(heightsL2) > 0:
                 max_heightsL2[key] = ak.max(heightsL2, axis=1)
                 max_maskL2 = (heightsL2 == ak.broadcast_arrays(max_heightsL2[key], heightsL2)[0])
@@ -182,10 +174,6 @@ def getRowColumn(self):
                     for sublist in ak.to_list(raw_max_columnL2)
                 ])
 
-            else:
-                max_rowL2[key] = [None] * len(self.events)
-                max_columnL2[key] = [None] * len(self.events)
-
             if len(heightsL3) > 0:
                 max_heightsL3[key] = ak.max(heightsL3, axis=1)
                 max_maskL3 = (heightsL3 == ak.broadcast_arrays(max_heightsL3[key], heightsL3)[0])
@@ -209,10 +197,6 @@ def getRowColumn(self):
                     if sublist else None
                     for sublist in ak.to_list(raw_max_columnL3)
                 ])
-
-            else:
-                max_rowL3[key] = [None] * len(self.events)
-                max_columnL3[key] = [None] * len(self.events)
 
             # iterate over each event in current row and column combination
             for event in range(len(max_timeL0[key])):

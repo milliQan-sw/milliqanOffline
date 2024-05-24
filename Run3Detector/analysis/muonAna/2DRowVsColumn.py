@@ -120,7 +120,7 @@ def getRowColumn(self):
                 ])
                 raw_max_columnL0 = ak.mask(columnL0, time_maskL0)
                 max_columnL0[key] = ak.Array([
-                    next((item for item in sublist if item is not None), default=None)
+                    min((item for item in sublist if item is not None), default=None)
                     if sublist else None
                     for sublist in ak.to_list(raw_max_columnL0)
                 ])
@@ -143,13 +143,13 @@ def getRowColumn(self):
                 time_maskL1 = (timeL1 == ak.broadcast_arrays(max_timeL1[key], timeL1)[0])
                 raw_max_rowsL1 = ak.mask(rowL1, time_maskL1)
                 max_rowL1[key] = ak.Array([
-                    next((item for item in sublist if item is not None), default=None)
+                    min((item for item in sublist if item is not None), default=None)
                     if sublist else None
                     for sublist in ak.to_list(raw_max_rowsL1)
                 ])
                 raw_max_columnL1 = ak.mask(columnL1, time_maskL1)
                 max_columnL1[key] = ak.Array([
-                    next((item for item in sublist if item is not None), default=None)
+                    min((item for item in sublist if item is not None), default=None)
                     if sublist else None
                     for sublist in ak.to_list(raw_max_columnL1)
                 ])
@@ -171,13 +171,13 @@ def getRowColumn(self):
                 time_maskL2 = (timeL2 == ak.broadcast_arrays(max_timeL2[key], timeL2)[0])
                 raw_max_rowsL2 = ak.mask(rowL2, time_maskL2)
                 max_rowL2[key] = ak.Array([
-                    next((item for item in sublist if item is not None), default=None)
+                    min((item for item in sublist if item is not None), default=None)
                     if sublist else None
                     for sublist in ak.to_list(raw_max_rowsL2)
                 ])
                 raw_max_columnL2 = ak.mask(columnL2, time_maskL2)
                 max_columnL2[key] = ak.Array([
-                    next((item for item in sublist if item is not None), default=None)
+                    min((item for item in sublist if item is not None), default=None)
                     if sublist else None
                     for sublist in ak.to_list(raw_max_columnL2)
                 ])
@@ -199,13 +199,13 @@ def getRowColumn(self):
                 time_maskL3 = (timeL3 == ak.broadcast_arrays(max_timeL3[key], timeL3)[0])
                 raw_max_rowsL3 = ak.mask(rowL3, time_maskL3)
                 max_rowL3[key] = ak.Array([
-                    next((item for item in sublist if item is not None), default=None)
+                    min((item for item in sublist if item is not None), default=None)
                     if sublist else None
                     for sublist in ak.to_list(raw_max_rowsL3)
                 ])
                 raw_max_columnL3 = ak.mask(columnL3, time_maskL3)
                 max_columnL3[key] = ak.Array([
-                    next((item for item in sublist if item is not None), default=None)
+                    min((item for item in sublist if item is not None), default=None)
                     if sublist else None
                     for sublist in ak.to_list(raw_max_columnL3)
                 ])

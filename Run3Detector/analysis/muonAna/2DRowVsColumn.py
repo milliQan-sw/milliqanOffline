@@ -114,7 +114,7 @@ def getRowColumn(self):
                 time_maskL0 = (timeL0 == ak.broadcast_arrays(max_timeL0[key], timeL0)[0])
                 raw_max_rowsL0 = ak.mask(rowL0, time_maskL0)
                 max_rowL0[key] = ak.Array([
-                    next((item for item in sublist if item is not None), default=None)
+                    min((item for item in sublist if item is not None), default=None)
                     if sublist else None
                     for sublist in ak.to_list(raw_max_rowsL0)
                 ])

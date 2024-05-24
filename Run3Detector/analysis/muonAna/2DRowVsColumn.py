@@ -220,8 +220,7 @@ def getRowColumn(self):
                     rows.append(max_rowL0[key])
                     columns.append(max_columnL0[key])
 
-    for i in range(len(rows)):
-        print('column:', columns[i], 'row:', rows[i])
+    print('column:', columns, 'row:', rows)
 
     # extend the final lists to match the size of the current file
     num_events = len(self.events)

@@ -149,8 +149,8 @@ def getRowColumn(self):
     columns.extend([None] * num_nones)
 
     # define custom branches
-    self.events['rows'] = rows
-    self.events['columns'] = columns
+    self.events['y'] = rows
+    self.events['x'] = columns
 
 # add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getRowColumn', getRowColumn)
@@ -194,7 +194,7 @@ h_2d.GetXaxis().SetTitle("Column")
 h_2d.GetYaxis().SetTitle("Row")
 
 # add root histogram to plotter
-myplotter.addHistograms(h_2d, ['columns', 'rows'], cut=None)
+myplotter.addHistograms(h_2d, ['x', 'y'], cut=None)
 
 # defining the cutflow
 cutflow = [boardMatchCut, pickupCut, mycuts.layerCut, mycuts.getRowColumn, myplotter.dict['h_2d']]

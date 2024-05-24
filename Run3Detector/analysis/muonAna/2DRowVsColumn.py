@@ -139,7 +139,7 @@ def getRowColumn(self):
                     columns.append(column)
 
     # save the rows and columns to a text file
-    with open('/Users/branchinpyjamas/Desktop/MilliQan/data.txt', 'w') as file:
+    with open('/home/bpeng/milliqanOffline/Run3Detector/analysis/muonAna/data.txt', 'w') as file:
         for i in range(len(rows)):
             file.write(f"{columns[i]} {rows[i]}\n")
 

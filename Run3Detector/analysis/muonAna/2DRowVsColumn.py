@@ -140,7 +140,7 @@ def getRowColumn(self):
                     columns.append(column)
 
     for i in range(len(rows)):
-        print(columns[i], rows[i])
+        print('column:', columns[i], 'row:', rows[i])
 
     # extend the final lists to match the size of the current file
     num_events = len(self.events)

@@ -8,6 +8,8 @@ modified the script in sim_Run.sh to analyse multiple files and specify output l
 
 you can test the script by using "python3 simCosMuon.py FileNumber '' ". By using the option, there is no root file will be created but you can see the pring message.
 
+
+
 """
 
 
@@ -18,7 +20,7 @@ import os
 import sys
 import time
 import json
-
+sys.path.append("/share/scratch0/czheng/myOfflineWorking/milliqanOffline/Run3Detector/analysis/utilities") #path of MQOffline at T3
 from milliqanProcessor import *
 from milliqanScheduler import *
 from milliqanCuts import *

@@ -167,6 +167,7 @@ end_index = int(sys.argv[2])
 filelist = [
     f"/home/bpeng/muonAnalysis/MilliQan_Run1541.{i}_v34.root"
     for i in range(start_index, end_index + 1)
+    if os.path.exists(f"/home/bpeng/muonAnalysis/MilliQan_Run1541.{i}_v34.root")
 ]
 
 # define the necessary branches to run over

@@ -16,7 +16,7 @@ from milliqanCuts import *
 from milliqanPlotter import *
 
 # define the function to get the rows and columns of straight lines
-def getRowColumn(self):
+def getRowColumn(self, ):
 
     max_heightsL0 = {}
     max_timeL0 = {}

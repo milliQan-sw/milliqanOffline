@@ -187,7 +187,7 @@ fourLayerCut = mycuts.getCut(mycuts.fourLayerCut, 'fourLayerCut', cut=False)
 myplotter = milliqanPlotter()
 
 # create a 2D root histogram
-h_2d = r.TH2F("h_2d", "TimeL3 VS TimeL0", 4, 0, 4, 4, 0, 4)
+h_2d = r.TH2F("h_2d", "TimeL3 VS TimeL0", 400, 1100, 1500, 400, 1100, 1500)
 h_2d.GetXaxis().SetTitle("TimeL3")
 h_2d.GetYaxis().SetTitle("TimeL0")
 

@@ -37,26 +37,26 @@ def getRowColumn(self):
     panel_pulse_mask = (self.events['type'] == 2) & (self.events['height'] > 1200)
     events_without_panel_pulses = ~ak.any(panel_pulse_mask, axis = 1)
 
-    # combine masks to get valid events (1D boolean list)
-    conbined_mask = events_without_panel_pulses 
+    # time cut
+    timeCut = (self.events['timeFit_module_calibrated'] > 1100) & (self.events['timeFit_module_calibrated'] < 1400)
 
 # iterate over row and column combinations
     for row in range(4):
         for column in range(4):
             # pulse_based 2D boolean masks determined by channel and height
-            pulse_maskL0 = (self.events['row'] == row) & (self.events['column'] == column) & (self.events['layer'] == 0) & (self.events['height'] > 1000) 
-            pulse_maskL1 = (self.events['row'] == row) & (self.events['column'] == column) & (self.events['layer'] == 1) & (self.events['height'] > 1000) 
-            pulse_maskL2 = (self.events['row'] == row) & (self.events['column'] == column) & (self.events['layer'] == 2) & (self.events['height'] > 1000)
-            pulse_maskL3 = (self.events['row'] == row) & (self.events['column'] == column) & (self.events['layer'] == 3) & (self.events['height'] > 1000)
+            pulse_maskL0 = (self.events['row'] == row) & (self.events['column'] == column) & (self.events['layer'] == 0) & (self.events['height'] > 1000) & timeCut
+            pulse_maskL1 = (self.events['row'] == row) & (self.events['column'] == column) & (self.events['layer'] == 1) & (self.events['height'] > 1000) & timeCut
+            pulse_maskL2 = (self.events['row'] == row) & (self.events['column'] == column) & (self.events['layer'] == 2) & (self.events['height'] > 1000) & timeCut
+            pulse_maskL3 = (self.events['row'] == row) & (self.events['column'] == column) & (self.events['layer'] == 3) & (self.events['height'] > 1000) & timeCut
 
             # event_based 1D boolean mask determined by event
             event_mask = ak.any(pulse_maskL0, axis = 1) & ak.any(pulse_maskL1, axis = 1) & ak.any(pulse_maskL2, axis = 1) & ak.any(pulse_maskL3, axis = 1)
 
             # combine all the masks
-            mask0 = event_mask & pulse_maskL0 & conbined_mask
-            mask1 = event_mask & pulse_maskL1 & conbined_mask
-            mask2 = event_mask & pulse_maskL2 & conbined_mask
-            mask3 = event_mask & pulse_maskL3 & conbined_mask
+            mask0 = event_mask & pulse_maskL0 & events_without_panel_pulses
+            mask1 = event_mask & pulse_maskL1 & events_without_panel_pulses
+            mask2 = event_mask & pulse_maskL2 & events_without_panel_pulses
+            mask3 = event_mask & pulse_maskL3 & events_without_panel_pulses
 
             heightsL0 = self.events['height'][mask0]
             timeL0 = self.events['timeFit_module_calibrated'][mask0]

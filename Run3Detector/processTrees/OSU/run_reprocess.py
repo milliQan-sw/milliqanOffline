@@ -52,8 +52,18 @@ def getRunsToMatch():
     print("There are {} raw files that need to be matched".format(len(match)))
 
     match = pd.DataFrame(match[:, [0, 3]], columns=['run', 'location'])
+    match['run'] = match['run'].astype(int)
     match = match.drop_duplicates(subset='run')
     match = match.sort_values(by='run')
+
+    #check if trigger files exist
+    run_values = match['run'].astype(int).tolist()
+    trigger_query = {'site': 'OSU', 'type': 'TriggerBoard', 'run': {'$in': run_values}}
+    trig_out = db.milliQanRawDatasets.find(trigger_query)
+    trig_files = np.array([int(x['run'])for x in trig_out])
+    trig_files = np.unique(trig_files)
+    trig_files = pd.DataFrame(trig_files, columns=['run'])
+    match = match.merge(trig_files[['run']], on='run')
 
     #TODO add another query to check if matching is under some threshold and rematch
 
@@ -64,7 +74,8 @@ def checkCondorJobs():
     current_jobs = {}
     for filename in os.listdir(logDir):
         with open(logDir+filename, 'r') as fin:
-            last_line = fin.readlines()[-1]
+            last_line = fin.readlines()[-1].strip()
+            if len(last_line) == 0: continue
             condor_job = last_line.split()[-1].replace('.', '')
             current_jobs[filename] = int(condor_job)
     return current_jobs
@@ -206,10 +217,10 @@ if __name__=="__main__":
     when_to_transfer_output = ON_EXIT
     transfer_input_files = {1}, {3}, {4}, offline.sif, update_wrapper.py, update.sh
     getenv = true
-    queue 1
+    queue {0}
     """.format(len(runsToProcess),filelist,logDir,milliDAQ,milliqanOffline,site)
 
     f.write(submitLines)
     f.close()
 
-    #os.system('condor_submit {} >& condorLogs/condor_log_{}.log'.format(condorFile, d.strftime('%m_%d_%H')))
+    os.system('condor_submit {} >& condorLogs/condor_log_{}.log'.format(condorFile, d.strftime('%m_%d_%H')))

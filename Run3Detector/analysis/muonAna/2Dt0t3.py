@@ -195,7 +195,7 @@ h_2d.GetYaxis().SetTitle("TimeL0")
 myplotter.addHistograms(h_2d, ['T0', 'T3'], cut=None)
 
 # defining the cutflow
-cutflow = [boardMatchCut, pickupCut, mycuts.layerCut, mycuts.getRowColumn, myplotter.dict['h_2d']]
+cutflow = [boardMatchCut, pickupCut, mycuts.layerCut, mycuts.getTime, myplotter.dict['h_2d']]
 
 # create a schedule of the cuts
 myschedule = milliQanScheduler(cutflow, mycuts, myplotter)

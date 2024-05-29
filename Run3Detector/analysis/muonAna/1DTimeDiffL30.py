@@ -52,10 +52,10 @@ def getTimeDiff(self):
             event_mask = ak.any(pulse_maskL0, axis = 1) & ak.any(pulse_maskL1, axis = 1) & ak.any(pulse_maskL2, axis = 1) & ak.any(pulse_maskL3, axis = 1)
 
             # combine all the masks
-            mask0 = event_mask & pulse_maskL0 & conbined_mask
-            mask1 = event_mask & pulse_maskL1 & conbined_mask
-            mask2 = event_mask & pulse_maskL2 & conbined_mask
-            mask3 = event_mask & pulse_maskL3 & conbined_mask
+            mask0 = event_mask & pulse_maskL0 & conbined_mask & (self.events['beamOn'] == True)
+            mask1 = event_mask & pulse_maskL1 & conbined_mask & (self.events['beamOn'] == True)
+            mask2 = event_mask & pulse_maskL2 & conbined_mask & (self.events['beamOn'] == True)
+            mask3 = event_mask & pulse_maskL3 & conbined_mask & (self.events['beamOn'] == True)
 
             heightsL0 = self.events['height'][mask0]
             timeL0 = self.events['timeFit_module_calibrated'][mask0]

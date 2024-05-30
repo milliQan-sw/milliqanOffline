@@ -245,15 +245,16 @@ void OfflineFactory::getLumis(std::string lumiFile){
             for (int index = 0; index < data.size(); index ++){
                 //TODO fix it so that the filenumber is an int
                 if ( data[index][0].asInt() == runNumber && stoi(data[index][1].asString()) == fileNumber){
-                    if (data[index][11].isArray()){
+                    if (data[index][3].isArray()){
                         std::cout << "Run split among multiple fills" << std::endl;
 
-                        for (int ifill=0; ifill < data[index][11].size(); ifill++){
+                        for (int ifill=0; ifill < data[index][3].size(); ifill++){
                             v_fillId.push_back(data[index][3][ifill].asInt());
-                            v_beamType.push_back(data[index][9][ifill].asString());
-                            v_fillStart.push_back(data[index][12][ifill].asUInt64());
-                            v_fillEnd.push_back(data[index][13][ifill].asUInt64());
-                            if (data[index][10][ifill].isNull() || data[index][11][ifill].isNull() || data[index][2][ifill].isNull()){
+                            v_beamType.push_back(data[index][10][ifill].asString());
+                            v_fillStart.push_back(data[index][13][ifill].asUInt64());
+                            v_fillEnd.push_back(data[index][14][ifill].asUInt64());
+                            v_beamInFill.push_back(data[index][5][ifill].asBool());
+                            if (data[index][11][ifill].isNull() || data[index][12][ifill].isNull() || data[index][2][ifill].isNull()){
                                 v_beamEnergy.push_back(-1);
                                 v_betaStar.push_back(-1);
                                 v_stableBeamStart.push_back(0);
@@ -261,10 +262,10 @@ void OfflineFactory::getLumis(std::string lumiFile){
                                 v_lumi.push_back(0);
                             }
                             else{
-                                v_beamEnergy.push_back(data[index][10][ifill].asFloat());
-                                v_betaStar.push_back(data[index][11][ifill].asFloat());
-                                v_stableBeamStart.push_back(data[index][14][ifill].asUInt64());
-                                v_stableBeamEnd.push_back(data[index][15][ifill].asUInt64());
+                                v_beamEnergy.push_back(data[index][11][ifill].asFloat());
+                                v_betaStar.push_back(data[index][12][ifill].asFloat());
+                                v_stableBeamStart.push_back(data[index][15][ifill].asUInt64());
+                                v_stableBeamEnd.push_back(data[index][16][ifill].asUInt64());
                                 v_lumi.push_back(data[index][2][ifill].asFloat());
                             }
                         }
@@ -272,13 +273,15 @@ void OfflineFactory::getLumis(std::string lumiFile){
                     else{
                         v_lumi.push_back(data[index][2].asFloat());
                         v_fillId.push_back(data[index][3].asInt());
-                        v_beamType.push_back(data[index][9].asString());
-                        v_beamEnergy.push_back(data[index][10].asFloat()); 
-                        v_betaStar.push_back(data[index][11].asFloat());
-                        v_fillStart.push_back(data[index][12].asUInt64()); 
-                        v_fillEnd.push_back(data[index][13].asUInt64());
-                        v_stableBeamStart.push_back(data[index][14].asUInt64());
-                        v_stableBeamEnd.push_back(data[index][15].asUInt64());
+                        v_beamType.push_back(data[index][10].asString());
+                        v_beamEnergy.push_back(data[index][11].asFloat()); 
+                        v_betaStar.push_back(data[index][12].asFloat());
+                        v_fillStart.push_back(data[index][13].asUInt64()); 
+                        v_fillEnd.push_back(data[index][14].asUInt64());
+                        v_stableBeamStart.push_back(data[index][15].asUInt64());
+                        v_stableBeamEnd.push_back(data[index][16].asUInt64());
+                        v_beamInFill.push_back(data[index][5].asBool());
+
                     }
                 }
             }
@@ -312,6 +315,7 @@ void OfflineFactory::getEventLumis(){
         outputTreeContents.betaStar = -1;
         outputTreeContents.fillStart = 0;
         outputTreeContents.fillEnd = 0;
+        outputTreeContents.beamInFill = false;
         if(firstWarning) {
             cout << "Warning some events occured after last fill time in mqLumis" << endl;
             firstWarning=false;
@@ -327,7 +331,8 @@ void OfflineFactory::getEventLumis(){
         outputTreeContents.beamEnergy = -1;
         outputTreeContents.betaStar = -1;
         outputTreeContents.fillStart = 0;
-        outputTreeContents.fillEnd = 0;        
+        outputTreeContents.fillEnd = 0;
+        outputTreeContents.beamInFill = false;        
         if(firstWarning){
             cout << "Warning some event occured before first fill time in mqLumis" << endl;
             firstWarning=false;
@@ -337,8 +342,8 @@ void OfflineFactory::getEventLumis(){
 
     for(int ifill=0; ifill < v_fillId.size(); ifill++){
         //cout << "event time: " << event_time << ", fill start: " << v_fillStart[ifill]/long(1e3) << ", fill end: " << v_fillEnd[ifill]/long(1e3) << endl;
-        if (event_time >= v_fillStart[ifill]/1e3 && event_time <= v_fillEnd[ifill]/1e3){
-            cout << "Found good fill" << endl;
+        if (event_time >= v_fillStart[ifill] && event_time <= v_fillEnd[ifill]){
+            //cout << "Found good fill" << endl;
             outputTreeContents.lumi = v_lumi[ifill];
             outputTreeContents.fillId = v_fillId[ifill];
             outputTreeContents.beamType = v_beamType[ifill];
@@ -346,7 +351,8 @@ void OfflineFactory::getEventLumis(){
             outputTreeContents.betaStar = v_betaStar[ifill];
             outputTreeContents.fillStart = v_fillStart[ifill];
             outputTreeContents.fillEnd = v_fillEnd[ifill];
-            if(event_time >= v_stableBeamStart[ifill]/1e3 && event_time <= v_stableBeamEnd[ifill]/1e3) outputTreeContents.beamOn=true;
+            outputTreeContents.beamInFill = v_beamInFill[ifill];
+            if(event_time >= v_stableBeamStart[ifill] && event_time <= v_stableBeamEnd[ifill]) outputTreeContents.beamOn=true;
             else outputTreeContents.beamOn=false;
             return;
         }
@@ -358,7 +364,8 @@ void OfflineFactory::getEventLumis(){
     outputTreeContents.beamEnergy = -1;
     outputTreeContents.betaStar = -1;
     outputTreeContents.fillStart = 0;
-    outputTreeContents.fillEnd = 0;    
+    outputTreeContents.fillEnd = 0;   
+    outputTreeContents.beamInFill = false; 
     if(firstWarning){
         cout << "Warning did not find matching fill time for some events" << endl;
         firstWarning=false;
@@ -373,7 +380,6 @@ void OfflineFactory::setTotalLumi(){
         else if (firstTDC_time > v_stableBeamEnd[ifill] && lastTDC_time > v_stableBeamEnd[ifill]) continue;
         else if (firstTDC_time < v_stableBeamStart[ifill] && lastTDC_time < v_stableBeamStart[ifill]) continue;
         else if (firstTDC_time < v_stableBeamStart[ifill] && lastTDC_time >= v_stableBeamEnd[ifill]){
-            cout << "case 1" << endl;
             totalLumi+=v_lumi[ifill];
         }
         else if(firstTDC_time < v_stableBeamStart[ifill] && lastTDC_time < v_stableBeamEnd[ifill]){
@@ -538,6 +544,7 @@ void OfflineFactory::prepareOutBranches(){
     outTree->Branch("beamOn",&outputTreeContents.beamOn);
     outTree->Branch("fillStart",&outputTreeContents.fillStart);
     outTree->Branch("fillEnd",&outputTreeContents.fillEnd);
+    outTree->Branch("beamInFill",&outputTreeContents.beamInFill);
 
     outTree->Branch("goodRunLoose", &outputTreeContents.goodRunLoose);
     outTree->Branch("goodRunMedium", &outputTreeContents.goodRunMedium);
@@ -1580,8 +1587,8 @@ void OfflineFactory::readWaveData(){
     }
     triggerFileMatched = false;
     if (friendFileName != "") {
-	addFriendTree();
-	triggerFileMatched = true;
+	  addFriendTree();
+	  triggerFileMatched = true;
     }
     loadBranches();
     // int maxEvents = 1;
@@ -1615,8 +1622,8 @@ void OfflineFactory::readWaveData(){
 
         setGoodRuns();
 
-        if (outputTreeContents.event_time_fromTDC*1e3 < firstTDC_time) firstTDC_time = outputTreeContents.event_time_fromTDC*1e3; 
-        if (outputTreeContents.event_time_fromTDC*1e3 > lastTDC_time) lastTDC_time = outputTreeContents.event_time_fromTDC*1e3;
+        if (outputTreeContents.event_time_fromTDC < firstTDC_time) firstTDC_time = outputTreeContents.event_time_fromTDC; 
+        if (outputTreeContents.event_time_fromTDC > lastTDC_time) lastTDC_time = outputTreeContents.event_time_fromTDC;
 
         outTree->Fill();
         //Totally necessary progress bar

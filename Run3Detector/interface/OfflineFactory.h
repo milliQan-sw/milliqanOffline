@@ -94,6 +94,7 @@ struct offline_tree_{
     bool beamOn; 
     ulong fillStart; //milliseconds since unix epoch
     ulong fillEnd; //milliseconds since unix epoch
+    bool beamInFill;
 
     //pulse vectors
     vector<int> v_pulseIndex;
@@ -269,6 +270,7 @@ private:
     vector<ulong> v_fillEnd;
     vector<ulong> v_stableBeamStart;
     vector<ulong> v_stableBeamEnd;
+    vector<bool> v_beamInFill;
 
     //Declare global variables
     double arrayVoltageDRS[100][1024];

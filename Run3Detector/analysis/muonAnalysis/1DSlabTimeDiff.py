@@ -64,7 +64,6 @@ def getTimeDiff(self):
     # define custom branch
     self.events['timeDiff'] = time_diffs
 
-
 # add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)
 

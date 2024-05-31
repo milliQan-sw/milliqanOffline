@@ -44,27 +44,36 @@ class milliqanCuts():
     def cutflowCounter(self, name):
         # Increments events passing each stage of the cutflow
         # Creates each stage during the first pass
+
+        #use fileNumber because it is never 0 (ex event) and it always exists
+
+        threshold = 1
+        if name == 'totalEventCounter': threshold = 0
+
         if name in self.cutflow:
-            remaining = ak.sum(self.events['event'], axis=1) > 0
-            remaining = self.events['event'][remaining]
-            self.cutflow[name] += len(remaining)
+
+            remaining = ak.sum(self.events['fileNumber'], axis=1) >= threshold
+            remaining = self.events['fileNumber'][remaining]
+            self.cutflow[name]['events'] += len(remaining)
+            self.cutflow[name]['pulses'] += len(ak.flatten(self.events['fileNumber']))
 
         else:
-            remaining = ak.sum(self.events['event'], axis=1) > 0
-            remaining = self.events['event'][remaining]
-            self.cutflow[name]=len(remaining)
+            remaining = ak.sum(self.events['fileNumber'], axis=1) >= threshold
+            remaining = self.events['fileNumber'][remaining]
+            this_cutflow = {'events': len(remaining), 'pulses': len(ak.flatten(self.events['fileNumber']))}
+            self.cutflow[name]=this_cutflow
         self.counter+=1
 
     def getCutflowCounts(self):
         # Prints the value after each batch of events
         # TODO: Only print at the very end
-        print("------------------Cutflow Table--------------------")
-        print ("{:<25} {:<10}".format('Cut', 'N Passing Events'))
-        print('---------------------------------------------------')
+        print("----------------------------------Cutflow Table------------------------------------")
+        print ("{:<25} {:<20} {:<10}".format('Cut', 'N Passing Events', 'N Passing Pulses'))
+        print('-----------------------------------------------------------------------------------')
         for key, value in self.cutflow.items():
             #print(i, len(self.cutflow))
-            print("{:<25} {:<10}".format(key, value))
-        print("----------------------------------------------------")
+            print("{:<25} {:<20} {:<10}".format(key, value['events'], value['pulses']))
+        print("-----------------------------------------------------------------------------------")
         # Resets the counter at the end of the cutflow
         self.counter=0
 
@@ -77,11 +86,11 @@ class milliqanCuts():
             else:
                 self.events[name] = self.events[cut]
 
-    # Dummy cut for use while construcing the cutflow mechanics
     @mqCut
-    def neverCut(self, cutName=None, cut=False):
-        if cut: self.events = self.events
-        self.cutflowCounter()
+    def totalEventCounter(self, cutName=None, cut=False):
+        #if cut: self.events = self.events
+        #dummy function to just count total events
+        dummy = False
 
     @mqCut
     def pickupCut(self, cutName=None, cut=False, tight=False, branches=None):
@@ -129,13 +138,14 @@ class milliqanCuts():
 
     #event level mask selecting events with hits in 4 layers
     @mqCut
-    def fourLayerCut(self, cutName=None, cut=False):
+    def fourLayerCut(self, cutName=None, cut=False, branches=None):
         self.events['fourLayerCut'] =(ak.any(self.events.layer==0, axis=1) & 
                                       ak.any(self.events.layer==1, axis=1) & 
                                       ak.any(self.events.layer==2, axis=1) & 
                                       ak.any(self.events.layer==3, axis=1))
-        if cut: self.events = self.events[self.events.fourLayerCut]
-        self.cutflowCounter()
+        if cut: 
+            for branch in branches:
+                self.events[branch] = self.events[branch][self.events.fourLayerCut]
 
     @mqCut
     def oneHitPerLayerCut(self, cutName=None, cut=False, multipleHits=False):
@@ -170,7 +180,6 @@ class milliqanCuts():
     @mqCut
     def areaCut(self, cutName='areaCut', areaCut=50000, cut=False, branches=None):
         self.events[cutName] = self.events.area >= int(areaCut)
-        print('area cut', cut)
         if cut:
             for branch in branches:
                 self.events[branch] = self.events[branch][self.events[cutName]]
@@ -187,19 +196,31 @@ class milliqanCuts():
     def firstChanPulse(self):
         self.events['firstChanPulse'] = self.events.ipulse == 0
 
-    def barCut(self):
-        self.events['barCut'] = self.events['type'] == 0
+    @mqCut
+    def barCut(self, cutName='barCut', cut=False, branches=None):
+        self.events[cutName] = self.events['type'] == 0
+        if cut:
+            for branch in branches:
+                self.events[branch] = self.events[branch][self.events[cutName]]
 
-    def panelCut(self):
-        self.events['panelCut'] = self.events['type'] == 2
+    @mqCut
+    def panelCut(self, cutName='panelCut', cut=False, branches=None):
+        self.events[cutName] = self.events['type'] == 2
+        if cut:
+            for branch in branches:
+                self.events[branch] = self.events[branch][self.events[cutName]]
 
-    def slabCut(self):
-        self.events['slabCut'] = self.events['type'] == 1
+    @mqCut
+    def slabCut(self, cutName='slabCut', cut=False, branches=None):
+        self.events[cutName] = self.events['type'] == 1
+        if cut:
+            for branch in branches:
+                self.events[branch] = self.events[branch][self.events[cutName]]
 
     #selection events that have hits in a straight path
     #option allowedMove will select events that only move one bar horizontally/vertically
     @mqCut
-    def straightLineCut(self, cutName='straightLineCut', allowedMove=False):
+    def straightLineCut(self, cutName='straightLineCut', allowedMove=False, cut=False, branches=None):
         
         #allowed combinations of moving
         combos = []
@@ -223,8 +244,6 @@ class milliqanCuts():
 
 
                 row_pass = ak.any(r_tmp0, axis=1) & ak.any(r_tmp1, axis=1) & ak.any(r_tmp2, axis=1) & ak.any(r_tmp3, axis=1)
-
-                print("Allowed move", allowedMove)
 
                 if allowedMove:
 
@@ -304,6 +323,11 @@ class milliqanCuts():
 
             self.events['moveOnePath'] = passing
 
+        if cut:
+            for branch in branches:
+                print(branch)
+                self.events[branch] = self.events[branch][self.events[cutName+'Pulse']]
+
     @mqCut
     def getPulseTimeDiff(self):
         times = self.events['timeFit_module_calibrated'][self.events['eventCuts']]
@@ -350,7 +374,38 @@ class milliqanCuts():
         board3 = self.events.v_groupTDC_g0[:, 3]
         board4 = self.events.v_groupTDC_g0[:, 4]
 
-        self.events['tdcMatch'] = (board0 == board1) & (board0 == board2) & (board0 == board3) & (board0 == board4)        
+        self.events['tdcMatch'] = (board0 == board1) & (board0 == board2) & (board0 == board3) & (board0 == board4) 
+
+    @mqCut
+    def centralTime(self, cutName='centralTime', cut=False, branches=None):
+        events = self.events
+        timeCut = (events['timeFit_module_calibrated'] > 1100) & (events['timeFit_module_calibrated'] < 1400)
+        drop_empty = ak.num(timeCut) > 0
+        newEvents = drop_empty & timeCut
+
+        if cut:
+            for branch in branches:
+                self.events[branch] = self.events[branch][newEvents]     
+
+    def to_binary(self, x):
+        return bin(int(x))[2:]
+
+    @mqCut
+    def triggerCut(self, cutName='triggerSelction', trigger=1, cut=False, branches=None):
+
+        triggers = ak.firsts(self.events['tTrigger'])
+        binary_trig = self.to_binary(trigger)
+
+        # Apply the conversion function to each element in the Awkward Array
+        triggers = ak.Array([self.to_binary(i) if i is not None else None for i in triggers])
+        selection = triggers == binary_trig
+
+        selection, _ = ak.broadcast_arrays(selection, self.events['tTrigger'])
+        self.events[cutName] = selection
+
+        if cut:
+            for branch in branches:
+                self.events[branch] = self.events[branch][selection]  
 
     def getCut(self, func, name, *args, **kwargs):
         if func.__name__ == 'combineCuts':

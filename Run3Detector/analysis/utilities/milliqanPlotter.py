@@ -14,7 +14,10 @@ class milliqanPlot():
     def plot(self, events):
         if isinstance(self.variables, list):
             if self.cut:
-                output = [ak.flatten(events[x][events[self.cut]],axis=None) for x in self.variables]
+                if self.cut == 'first': #cut to get just first pulse for plotting event level
+                    output = [ak.flatten(ak.firsts(events[x]),axis=None) for x in self.variables]
+                else:
+                    output = [ak.flatten(events[x][events[self.cut]],axis=None) for x in self.variables]
             else:
                 output = [ak.drop_none(events[x]) for x in self.variables]
                 output = [ak.flatten(y,axis=None) for y in output]
@@ -29,7 +32,10 @@ class milliqanPlot():
                 
         else:
             if self.cut:
-                output = ak.flatten(events[self.variables][events[self.cut]],axis=None)
+                if self.cut == 'first': #cut to get just first pulse for plotting event level
+                    output = ak.flatten(ak.firsts(events[self.variables]),axis=None)
+                else:
+                    output = ak.flatten(events[self.variables][events[self.cut]],axis=None)
             else:
                 output = ak.drop_none(events[self.variables])
                 output = ak.flatten(output,axis=None)
@@ -63,7 +69,7 @@ class milliqanPlotter():
         self.updateDict(h_)
 
     def saveHistograms(self, outputFile):
-        fout = TFile.Open(outputFile, 'recreate')
+        fout = TFile.Open(outputFile, 'RECREATE')
         fout.cd()
 
         for hist in self.histograms:

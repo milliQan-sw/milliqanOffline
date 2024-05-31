@@ -15,8 +15,30 @@ from milliqanScheduler import *
 from milliqanCuts import *
 from milliqanPlotter import *
 
+# define the function to get the time differences between layer 4 and layer -1
 def getTimeDiff(self):
 
+    # event cut (1D)
+    mask_layer_4 = (self.events['layer'] == 4) & (self.events['area'] > 100000)
+    mask_layer_neg1 = (self.events['layer'] == -1) & (self.events['area'] > 100000)
+    events_with_layer_4_pulses = ak.any(mask_layer_4, axis=1)
+    events_with_layer_neg1_pulses = ak.any(mask_layer_neg1, axis=1)
+    slab_mask = events_with_layer_4_pulses & events_with_layer_neg1_pulses
+
+    # remove events with panel pulses that pass the height cut (1D)
+    panel_pulse_mask = (self.events['type'] == 2) & (self.events['height'] > 1200)
+    events_without_panel_pulses = ~ak.any(panel_pulse_mask, axis = 1)
+
+    # central time cut (2D)
+    timeCut = (self.events['timeFit_module_calibrated'] > 1100) & (self.events['timeFit_module_calibrated'] < 1400)
+
+    # apply the final mask to select the desired events
+    selected_events = self.events[slab_mask]
+
+    for event in range(len(selected_events)):
+        self.events
+
+        
 
 
 

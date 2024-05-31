@@ -40,9 +40,9 @@ def getTimeDiff(self):
     layer_neg1_pulses = selected_events[(selected_events['layer'] == -1) & (selected_events['area'] > 100000)]
 
     # loop through each event and calculate the time differences
-    for i in range(len(selected_events)):
-        event_layer_4_pulses = layer_4_pulses[i]
-        event_layer_neg1_pulses = layer_neg1_pulses[i]
+    for event in range(len(selected_events)):
+        event_layer_4_pulses = layer_4_pulses[event]
+        event_layer_neg1_pulses = layer_neg1_pulses[event]
 
         # check if there are pulses in both layers
         if len(event_layer_4_pulses['timeFit_module_calibrated']) > 0 and len(event_layer_neg1_pulses['timeFit_module_calibrated']) > 0:

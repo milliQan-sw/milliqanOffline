@@ -20,7 +20,7 @@ def getTimeDiff(self):
 
     time_diffs = []
 
-    # event cut (1D)
+    # keep only events that have pulses on both layer 4 and -1 whose areas are bigger than the cut
     mask_layer_4 = (self.events['layer'] == 4) & (self.events['area'] > 100000)
     mask_layer_neg1 = (self.events['layer'] == -1) & (self.events['area'] > 100000)
     events_with_layer_4_pulses = ak.any(mask_layer_4, axis=1)

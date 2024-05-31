@@ -18,6 +18,8 @@ from milliqanPlotter import *
 # define the function to get the time differences between layer 4 and layer -1
 def getTimeDiff(self):
 
+    time_diffs = []
+
     # event cut (1D)
     mask_layer_4 = (self.events['layer'] == 4) & (self.events['area'] > 100000)
     mask_layer_neg1 = (self.events['layer'] == -1) & (self.events['area'] > 100000)
@@ -36,10 +38,19 @@ def getTimeDiff(self):
     selected_events = self.events[slab_mask]
 
     for event in range(len(selected_events)):
-        self.events
+        timeL4 = 
+        timeLn1 = 
+        time_diffs.append(timeL4 - timeLn1)
 
-        
+    print(time_diffs)
 
+# extend the final list to match the size of the current file
+    num_events = len(self.events)
+    num_nones = num_events - len(time_diffs)
+    time_diffs.extend([None] * num_nones)
+
+    # define custom branch
+    self.events['timeDiff'] = time_diffs
 
 
 # add our custom function to milliqanCuts

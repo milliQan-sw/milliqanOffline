@@ -48,6 +48,10 @@ def getTimeDiff(self):
         event_layer_4_pulses = layer_4_pulses_list[i]
         event_layer_neg1_pulses = layer_neg1_pulses_list[i]
 
+        # Diagnostic printing to understand the structure
+        print(f"Event {i}: Layer 4 pulses:", event_layer_4_pulses)
+        print(f"Event {i}: Layer -1 pulses:", event_layer_neg1_pulses)
+
         # Check if there are pulses in both layers
         if len(event_layer_4_pulses) > 0 and len(event_layer_neg1_pulses) > 0:
             timeL4 = min(event_layer_4_pulses, key=lambda x: x['timeFit_module_calibrated'])['timeFit_module_calibrated']

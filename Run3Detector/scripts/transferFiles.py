@@ -33,7 +33,7 @@ def FileIsGood(path):
     except:
         return False
 
-def checkMongoDB(db,allIds,allInputs,force):
+def checkMongoDB(db,allIds,allInputs,force,offline=False):
     nX = 0
     #Check for existing entry 
     idsOut = []
@@ -42,7 +42,11 @@ def checkMongoDB(db,allIds,allInputs,force):
     entriesInDB = []
     locationInDb = []
     currentLocation = []
-    for x in (db.milliQanRawDatasets.find({"_id" :{"$in": allIds}})):
+    if offline:
+        mongoDB = db.milliQanOfflineDatasets
+    else:
+        mongoDB = db.milliQanRawDatasets
+    for x in (mongoDB.find({"_id" :{"$in": allIds}})):
         indexInDb = allIds.index(x["_id"])
         indicesToSkip.append(indexInDb)
     for index in range(len(allIds)):
@@ -51,7 +55,7 @@ def checkMongoDB(db,allIds,allInputs,force):
         inputsOut.append(allInputs[index])
         if index in indicesToSkip:
             entriesInDB.append(1)
-            for x in (db.milliQanRawDatasets.find({"_id" : allIds[index]})):
+            for x in (monboDB.find({"_id" : allIds[index]})):
                 currentLocation.append(x["location"])
         else:
             entriesInDB.append(0)
@@ -80,7 +84,7 @@ def transferFiles(source,destinations,logFile,force=False):
     os.system("echo '" + time.strftime("%c") + " Attempting to transfer data files ...' >> " + logFile)
     allIds = []
     allInputs = []
-    for inputFile in sorted(glob.glob(source + "*.root"), key=os.path.getmtime):
+    for inputFile in sorted(glob.glob(source + "*.root"), key=os.path.getmtime, reverse=True):
         for site, destination in destinations.items():
             #Details for database entry
             runNumber = int(inputFile.split("/")[-1].split("Run")[-1].split(".")[0])
@@ -91,6 +95,9 @@ def transferFiles(source,destinations,logFile,force=False):
             allInputs.append(inputFile)
     idsOut,inputsOut,entriesInDB, currentLocations = checkMongoDB(db,allIds,allInputs,force)
     for _id,inputFile,entryInMongo,currentLocation in zip(idsOut,inputsOut,entriesInDB, currentLocations):
+        site = _id.split('_')[-1]
+        destination = destinations[site]
+        print(_id, site ,destination)
         nTransferred += 1
         sizeInMB = os.path.getsize(inputFile) / 1024.0 / 1024.0
         mbytesTransferred += sizeInMB
@@ -124,8 +131,10 @@ def transferFiles(source,destinations,logFile,force=False):
     os.system("echo 'Transferred {0:.2f} MB in {1} file(s).' >> {2}".format(mbytesTransferred, nTransferred, logFile))
 
 if __name__ == "__main__":
+
     source = "/home/milliqan/data/"
     logFile = "/home/milliqan/MilliDAQ_FileTransfers.log"
+    
+    destinations = {"UCSB":"milliqan@cms3.physics.ucsb.edu:/net/cms18/cms18r0/milliqan/run3/", "OSU":"milliqan@128.146.39.20:/store/user/milliqan/run3/", "lxplus":"/eos/experiment/milliqan/run3/bar/"}
 
-    destinations = {"UCSB":"milliqan@cms3.physics.ucsb.edu:/net/cms26/cms26r0/milliqan/Run3/", "OSU":"milliqan@128.146.39.20:/data/users/milliqan/run3/"} #temporary change to OSU ip address
     transferFiles(source,destinations,logFile,force=False)

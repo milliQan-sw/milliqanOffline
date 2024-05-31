@@ -1,0 +1,83 @@
+
+stages:
+  - setup
+  - compile
+  - offlineProduction
+  - analysis
+
+variables:
+    DOCKER_IMAGE: carriganm95/milliqan_uproot:latest
+  
+setup:
+    image: $CI_REGISTRY_IMAGE
+    stage: compile
+    rules:
+        - if: $CI_PIPELINE_SOURCE != "schedule"
+    variables:
+        GIT_SUBMODULE_STRATEGY: recursive
+    script:
+        - echo $Starting tests
+        - which root
+        - git submodule add --force ../MilliDAQ.git
+        - cd MilliDAQ/
+        - make clean && make shared
+        - cd ../
+        - cd Run3Detector
+        - sed -i '/thisroot.sh/d' setup.sh
+        - sed -i "s|/homes/milliqan/MilliDAQ|$PWD/../MilliDAQ|g" setup.sh
+        - sed -i "s|UCSB|GitLab|g" setup.sh
+        - sed -i 's/\.\.\///' setup.sh
+        - . setup.sh
+        - ./compile.sh test.exe
+    artifacts:
+      paths:
+        - Run3Detector/test.exe
+        - MilliDAQ/
+
+offlineProduction:
+    image: $CI_REGISTRY_IMAGE
+    stage: offlineProduction
+    dependencies:
+        - setup
+    rules:
+        - if: $CI_PIPELINE_SOURCE != "schedule"
+    variables:
+        GIT_SUBMODULE_STRATEGY: recursive
+    script:  
+        - cd Run3Detector
+        - . setup.sh
+        - curl -o MilliQan_Run1426.1_default.root https://cernbox.cern.ch/s/incyVcvuTXPx7m8/download/
+        - python3 scripts/runOfflineFactory.py --inputFile MilliQan_Run1426.1_default.root --outputFile MilliQan_Run1426.1_v35.root --exe ./test.exe
+
+analysis:
+    image: $DOCKER_IMAGE
+    stage: analysis
+    rules:
+        - if: $CI_PIPELINE_SOURCE != "schedule"
+    variables:
+        GIT_SUBMODULE_STRATEGY: recursive
+    script:  
+        - echo "Put analysis here!"
+        - pip list
+        - cd ~/bin
+        - source thisroot.sh
+        - cd -
+        - python3 analysisCI.py
+
+build image:
+    image: docker:24.0.5
+    stage: setup
+    services:
+        - name: docker:24.0.5-dind
+    rules:
+        - if: $CI_PIPELINE_SOURCE == "schedule"
+    variables:
+        DOCKER_HOST: tcp://docker:2375/
+        DOCKER_DRIVER: overlay2
+        DOCKER_TLS_CERTDIR: ""
+    script:
+        - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER $CI_REGISTRY --password-stdin
+        - docker build -t $CI_REGISTRY_IMAGE .
+        - docker push $CI_REGISTRY_IMAGE
+        - echo $CI_REGISTRY_IMAGE
+        

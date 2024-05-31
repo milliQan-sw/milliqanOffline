@@ -2,6 +2,7 @@
 import os, sys, re
 import json
 import ROOT as r
+r.gROOT.SetBatch()
 import glob
 import math
 from subprocess import call
@@ -30,6 +31,7 @@ def parse_args():
     parser.add_argument("-c","--configurations",help="JSON Configuration files or string",type=str,nargs="+")
     parser.add_argument("--drs",help="DRS input",action="store_true",default=False)
     parser.add_argument("--display",help="Display events",type=int,nargs="+")
+    parser.add_argument("--slab", help="Forces slab detector configuration", action="store_true", default=False)
     args = parser.parse_args()
     return args
 def validateOutput(outputFile,runNumber=-1,fileNumber=-1):
@@ -45,7 +47,8 @@ def validateOutput(outputFile,runNumber=-1,fileNumber=-1):
         tagObj = f1.Get("tag")
         if not tagObj:
             tagObj = f1.Get("tag_{}_{}".format(runNumber,fileNumber))
-        tag = tagObj.GetTitle();
+        tag = tagObj.GetTitle()
+        f1.Close()
     except Exception as ex:
         msg = traceback.format_exc()
         if "EDProductGetter" not in msg:
@@ -54,7 +57,7 @@ def validateOutput(outputFile,runNumber=-1,fileNumber=-1):
         print ("removing output file because it does not deserve to live (result will not be published)")
         os.system("rm "+outputFile)
     return tag 
-def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publish,database,appendToTag,mergedTriggerFile,drs,display,runNumber=None,fileNumber=None):
+def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publish,database,appendToTag,mergedTriggerFile,drs,display, slab,runNumber=None,fileNumber=None):
     if force_publish:
         publish = True
     if runNumber == None:
@@ -64,7 +67,8 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
                 fileNumber = 0
             else:
                 runNumber = int(inputFile.split("/")[-1].split("Run")[-1].split(".")[0])
-                fileNumber = int(inputFile.split("/")[-1].split(".")[1].split("_")[0])    
+                fileNumber = int(inputFile.split("/")[-1].split(".")[1].split("_")[0]) 
+                print("Run, {}, File, {}".format(inputFile.split("/")[-1].split("Run")[-1].split(".")[0], inputFile.split("/")[-1].split(".")[1].split("_")[0]))   
         except:
             if publish:
                 print ("Could not identify file and/or run number so cannot publish")
@@ -79,8 +83,14 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
         offlineDir = os.getenv("OFFLINEDIR")
         if drs:
             configurations = [offlineDir+"/configuration/pulseFinding/pulseFindingDRS.json"]
+        if slab:
+            chanConfig = offlineDir + "/configuration/slabConfigs/" + getConfigs(runNumber, offlineDir+'/configuration/slabConfigs') + '.json'
+            print("Using the chan config", chanConfig)
+            configurations = [chanConfig, offlineDir+"/configuration/pulseFinding/pulseFindingTest.json"]
         else:
-            configurations = [offlineDir+"/configuration/chanMaps/fullSuperModuleMap.json",offlineDir+"/configuration/pulseFinding/pulseFindingTest.json",offlineDir+"/configuration/calibrations/firstSupermodulesCalibration.json"]
+            chanConfig = offlineDir + "/configuration/barConfigs/" + getConfigs(runNumber, offlineDir+'/configuration/barConfigs') + '.json'
+            print("Using the chan config", chanConfig)
+            configurations = [chanConfig,offlineDir+"/configuration/pulseFinding/pulseFindingTest.json"]
 
     if "{" in configurations and "}" in configurations:
         configurationsJSONString = configurations
@@ -102,6 +112,8 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
         argList.append("--drs")
     if display:
         argList.append("--display "+",".join([str(x) for x in display]))
+    if slab:
+        argList.append("--slab")
     args = " ".join(argList)
 
     # from subprocess import Popen, PIPE, CalledProcessError
@@ -176,6 +188,22 @@ def publishDataset(configurationsJSON,inputFile,outputFile,fileNumber,runNumber,
         if not quiet:
             print ("Added new entry in database")
     return True
+
+def getConfigs(runNum, offlineDir):
+    if runNum == -1 and 'barConfigs' in offlineDir: return 'configRun1296_present'
+    elif runNum == -1 and 'slabConfigs' in offlineDir: return 'configRun0_present'
+    fin = open(offlineDir+"/runInfo.json")
+    runs = json.load(fin)
+    fin.close()
+    for key, value in runs.items():
+        if len(value) > 1:
+            if runNum in range(value[0], value[1]): return key
+        else:
+            print(runNum)
+            if runNum >= value[0]: return key
+    print("Did not find the correct channel map")
+    sys.exit(1)
+
 
 if __name__ == "__main__":
     valid = runOfflineFactory(**vars(parse_args()))

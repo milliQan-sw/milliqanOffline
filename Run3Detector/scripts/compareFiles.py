@@ -1,6 +1,10 @@
 import os
 import sys
 
+#################################################################################################
+## Script will check multiple locations and look for differences in what files are saved there
+##################################################################################################
+
 files = {"milliDAQ" : '/home/milliqan/tmp/fileList.txt', "OSU" : '/home/milliqan/tmp/fileListOSU.txt', "UCSB" : '/home/milliqan/tmp/fileListUCSB.txt'}
 
 destinations = {"UCSB":"milliqan@cms17.physics.ucsb.edu:/net/cms26/cms26r0/milliqan/Run3/", "OSU":"milliqan@128.146.39.20:/store/user/milliqan/run3/"} #temporary change to OSU ip address

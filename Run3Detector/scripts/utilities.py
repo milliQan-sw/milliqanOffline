@@ -5,6 +5,9 @@ import json
 from mongoConnect import mongoConnect
 from transferFiles import checkMongoDB, get_lock
 
+fileTypes = ['MilliQan', 'MilliQanSlab', 'TriggerBoard', 'TriggerBoardSlab', 'MatchedEvents', 'MatchedEventsSlab']
+
+
 def updateLocation(inputFile, destination, site, force=False):
 
     db = mongoConnect()
@@ -17,7 +20,7 @@ def updateLocation(inputFile, destination, site, force=False):
     runNumber = int(inputFile.split("/")[-1].split("Run")[-1].split(".")[0])
     fileNumber = int(inputFile.split("/")[-1].split(".")[1].split("_")[0])
     dataType = inputFile.split("/")[-1].split("_")[0]
-    version = inputFile.split('/')[-1].split("_")[2]
+    version = inputFile.split('/')[-1].split("_")[2].split(".")[0]
     _id = "{}_{}_{}_{}_{}".format(runNumber,fileNumber,version,dataType,site)
     allIds.append(_id)
     allInputs.append(inputFile)

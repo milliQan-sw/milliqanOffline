@@ -38,9 +38,22 @@ def getTimeDiff(self):
     selected_events = self.events[slab_mask]
 
     for event in range(len(selected_events)):
-        timeL4 = 
-        timeLn1 = 
-        time_diffs.append(timeL4 - timeLn1)
+
+        layer_4_pulses = event[mask_layer_4]
+        if len(layer_4_pulses) > 0:
+            timeL4 = ak.min(layer_4_pulses['timeFit_module_calibrated'])
+        else:
+            timeL4 = None
+
+        layer_neg1_pulses = event[mask_layer_neg1]
+        if len(layer_neg1_pulses) > 0:
+            timeLn1 = ak.min(layer_neg1_pulses['timeFit_module_calibrated'])
+        else:
+            timeLn1 = None
+
+        # calculate the time difference if both times are found
+        if timeL4 is not None and timeLn1 is not None:
+            time_diffs.append(timeL4 - timeLn1)
 
     print(time_diffs)
 

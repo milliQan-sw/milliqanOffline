@@ -20,14 +20,14 @@ def getTimeDiff(self):
 
     time_diffs = []
 
-    # keep only events that have pulses on both layer 4 and -1 whose areas are bigger than the cut
+    # keep only events with slab pulses on both layer 4 and -1 whose areas are bigger than the cut value
     mask_layer_4 = (self.events['layer'] == 4) & (self.events['area'] > 100000)
     mask_layer_neg1 = (self.events['layer'] == -1) & (self.events['area'] > 100000)
     events_with_layer_4_pulses = ak.any(mask_layer_4, axis=1)
     events_with_layer_neg1_pulses = ak.any(mask_layer_neg1, axis=1)
     slab_mask = events_with_layer_4_pulses & events_with_layer_neg1_pulses
 
-    # remove events with panel pulses that pass the height cut (1D)
+    # remove events with panel pulses whose heights are bigger than the cut value
     panel_pulse_mask = (self.events['type'] == 2) & (self.events['height'] > 1200)
     events_without_panel_pulses = ~ak.any(panel_pulse_mask, axis=1)
 
@@ -35,7 +35,7 @@ def getTimeDiff(self):
     final_mask = slab_mask & events_without_panel_pulses
     selected_events = self.events[final_mask]
 
-    # filter for layer 4 and layer -1 pulses in selected events
+    # pick out the pulses on layer 4 and -1
     layer_4_pulses = selected_events[(selected_events['layer'] == 4) & (selected_events['area'] > 100000)]
     layer_neg1_pulses = selected_events[(selected_events['layer'] == -1) & (selected_events['area'] > 100000)]
 

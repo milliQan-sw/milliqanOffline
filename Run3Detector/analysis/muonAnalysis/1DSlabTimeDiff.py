@@ -32,7 +32,7 @@ def getTimeDiff(self):
     events_without_panel_pulses = ~ak.any(panel_pulse_mask, axis=1)
 
     # apply the final mask to select the desired events
-    final_mask = slab_mask & events_without_panel_pulses
+    final_mask = slab_mask #& events_without_panel_pulses
     selected_events = self.events[final_mask]
 
     # filter for layer 4 and layer -1 pulses in selected events

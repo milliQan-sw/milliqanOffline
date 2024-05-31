@@ -20,36 +20,31 @@ def getTimeDiff(self):
 
     time_diffs = []
 
-    # event cut (1D)
+    # Event cut (1D)
     mask_layer_4 = (self.events['layer'] == 4) & (self.events['area'] > 100000)
     mask_layer_neg1 = (self.events['layer'] == -1) & (self.events['area'] > 100000)
     events_with_layer_4_pulses = ak.any(mask_layer_4, axis=1)
     events_with_layer_neg1_pulses = ak.any(mask_layer_neg1, axis=1)
     slab_mask = events_with_layer_4_pulses & events_with_layer_neg1_pulses
 
-    # remove events with panel pulses that pass the height cut (1D)
+    # Remove events with panel pulses that pass the height cut (1D)
     panel_pulse_mask = (self.events['type'] == 2) & (self.events['height'] > 1200)
-    events_without_panel_pulses = ~ak.any(panel_pulse_mask, axis = 1)
+    events_without_panel_pulses = ~ak.any(panel_pulse_mask, axis=1)
 
-    # central time cut (2D)
-    timeCut = (self.events['timeFit_module_calibrated'] > 1100) & (self.events['timeFit_module_calibrated'] < 1400)
-
-    # apply the final mask to select the desired events
-    final_mask = slab_mask & events_without_panel_pulses & timeCut
+    # Apply the final mask to select the desired events
+    final_mask = slab_mask & events_without_panel_pulses
     selected_events = self.events[final_mask]
 
+    # Filter for layer 4 and layer -1 pulses in selected events
     layer_4_pulses = selected_events[(selected_events['layer'] == 4) & (selected_events['area'] > 100000)]
     layer_neg1_pulses = selected_events[(selected_events['layer'] == -1) & (selected_events['area'] > 100000)]
 
-    for event in selected_events:
-        timeL4 = None
-        timeLn1 = None
+    # Loop through each event and calculate the time differences
+    for i in range(len(selected_events)):
+        event_layer_4_pulses = layer_4_pulses[i]
+        event_layer_neg1_pulses = layer_neg1_pulses[i]
 
-        # get the pulses for this event
-        event_layer_4_pulses = layer_4_pulses[event]
-        event_layer_neg1_pulses = layer_neg1_pulses[event]
-
-        # check if there are pulses in both layers
+        # Check if there are pulses in both layers
         if ak.count(event_layer_4_pulses) > 0 and ak.count(event_layer_neg1_pulses) > 0:
             timeL4 = ak.min(event_layer_4_pulses['timeFit_module_calibrated'])
             timeLn1 = ak.min(event_layer_neg1_pulses['timeFit_module_calibrated'])

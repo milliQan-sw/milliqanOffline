@@ -35,24 +35,25 @@ def getTimeDiff(self):
     timeCut = (self.events['timeFit_module_calibrated'] > 1100) & (self.events['timeFit_module_calibrated'] < 1400)
 
     # apply the final mask to select the desired events
-    final_mask = slab_mask & timeCut & events_without_panel_pulses
-    selected_pulses = self.events[final_mask]
+    final_mask = slab_mask & events_without_panel_pulses
+    selected_events = self.events[final_mask]
 
-    for event in range(len(selected_pulses)):
+    layer_4_pulses = selected_events[mask_layer_4]
+    layer_neg1_pulses = selected_events[mask_layer_neg1]
 
-        layer_4_pulses = event[mask_layer_4]
-        if len(layer_4_pulses) > 0:
-            timeL4 = ak.min(layer_4_pulses['timeFit_module_calibrated'])
+    for event in range(len(selected_events)):
+
+        if len(layer_4_pulses[event]) > 0:
+            timeL4 = ak.min(layer_4_pulses['timeFit_module_calibrated'][event])
         else:
             timeL4 = None
 
         layer_neg1_pulses = event[mask_layer_neg1]
         if len(layer_neg1_pulses) > 0:
-            timeLn1 = ak.min(layer_neg1_pulses['timeFit_module_calibrated'])
+            timeLn1 = ak.min(layer_neg1_pulses['timeFit_module_calibrated'][event])
         else:
             timeLn1 = None
 
-        # calculate the time difference if both times are found
         if timeL4 is not None and timeLn1 is not None:
             time_diffs.append(timeL4 - timeLn1)
 

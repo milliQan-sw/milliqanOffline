@@ -42,11 +42,10 @@ def getTimeDiff(self):
     layer_neg1_pulses = selected_events[(selected_events['layer'] == -1) & (selected_events['area'] > 100000)]
 
     for event in range(len(selected_events)):
-
-        timeL4 = ak.min(layer_4_pulses['timeFit_module_calibrated'][event])
-        timeLn1 = ak.min(layer_neg1_pulses['timeFit_module_calibrated'][event])
-
-        time_diffs.append(timeL4 - timeLn1)
+        if len(layer_4_pulses[event]) > 0 and len(layer_neg1_pulses[event]) > 0:
+            timeL4 = ak.min(layer_4_pulses['timeFit_module_calibrated'][event])
+            timeLn1 = ak.min(layer_neg1_pulses['timeFit_module_calibrated'][event])
+            time_diffs.append(timeL4 - timeLn1)
 
     print(time_diffs)
 

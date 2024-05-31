@@ -20,34 +20,34 @@ def getTimeDiff(self):
 
     time_diffs = []
 
-    # Event cut (1D)
+    # event cut (1D)
     mask_layer_4 = (self.events['layer'] == 4) & (self.events['area'] > 100000)
     mask_layer_neg1 = (self.events['layer'] == -1) & (self.events['area'] > 100000)
     events_with_layer_4_pulses = ak.any(mask_layer_4, axis=1)
     events_with_layer_neg1_pulses = ak.any(mask_layer_neg1, axis=1)
     slab_mask = events_with_layer_4_pulses & events_with_layer_neg1_pulses
 
-    # Remove events with panel pulses that pass the height cut (1D)
+    # remove events with panel pulses that pass the height cut (1D)
     panel_pulse_mask = (self.events['type'] == 2) & (self.events['height'] > 1200)
     events_without_panel_pulses = ~ak.any(panel_pulse_mask, axis=1)
 
-    # Apply the final mask to select the desired events
+    # apply the final mask to select the desired events
     final_mask = slab_mask & events_without_panel_pulses
     selected_events = self.events[final_mask]
 
-    # Filter for layer 4 and layer -1 pulses in selected events
-    layer_4_pulses = selected_events[(selected_events['layer'] == 4) & (selected_events['area'] > 100000)]
-    layer_neg1_pulses = selected_events[(selected_events['layer'] == -1) & (selected_events['area'] > 100000)]
+    # filter for layer 4 and layer -1 pulses in selected events
+    layer_4_pulses = selected_events[(selected_events['layer'] == 4) & (selected_events['area'] > 100000)].to_list()
+    layer_neg1_pulses = selected_events[(selected_events['layer'] == -1) & (selected_events['area'] > 100000)].to_list()
 
-    # Loop through each event and calculate the time differences
+    # loop through each event and calculate the time differences
     for i in range(len(selected_events)):
         event_layer_4_pulses = layer_4_pulses[i]
         event_layer_neg1_pulses = layer_neg1_pulses[i]
 
-        # Check if there are pulses in both layers
-        if ak.count(event_layer_4_pulses) > 0 and ak.count(event_layer_neg1_pulses) > 0:
-            timeL4 = ak.min(event_layer_4_pulses['timeFit_module_calibrated'])
-            timeLn1 = ak.min(event_layer_neg1_pulses['timeFit_module_calibrated'])
+        # check if there are pulses in both layers
+        if len(event_layer_4_pulses) > 0 and len(event_layer_neg1_pulses) > 0:
+            timeL4 = min(event_layer_4_pulses, key=lambda x: x['timeFit_module_calibrated'])['timeFit_module_calibrated']
+            timeLn1 = min(event_layer_neg1_pulses, key=lambda x: x['timeFit_module_calibrated'])['timeFit_module_calibrated']
             time_diffs.append(timeL4 - timeLn1)
 
     print(time_diffs)

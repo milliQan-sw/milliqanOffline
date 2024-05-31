@@ -31,6 +31,9 @@ def getTimeDiff(self):
     panel_pulse_mask = (self.events['type'] == 2) & (self.events['height'] > 1200)
     events_without_panel_pulses = ~ak.any(panel_pulse_mask, axis=1)
 
+    # time cut
+    timeCut = (self.events['timeFit_module_calibrated'] > 1100) & (self.events['timeFit_module_calibrated'] < 1400)
+
     # apply the final mask to select the desired events
     final_mask = slab_mask & events_without_panel_pulses
     selected_events = self.events[final_mask]

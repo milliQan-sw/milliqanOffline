@@ -36,9 +36,9 @@ def getTimeDiff(self):
 
     # apply the final mask to select the desired events
     final_mask = slab_mask & events_without_panel_pulses & ak.any(timeCut, axis=1)
-    selected_events = self.events[final_mask]
+    selected_pulses = self.events[final_mask]
 
-    for event in range(len(selected_events)):
+    for event in range(len(selected_pulses)):
 
         layer_4_pulses = event[mask_layer_4]
         if len(layer_4_pulses) > 0:

@@ -17,7 +17,7 @@ from milliqanPlotter import *
 
 # define the function to get the areas of layer -1 and layer 0
 def getArea(self):
-    
+
     AreaLn1 = self.events['area'][self.events['layer'] == -1]
     self.events['AreaLn1'] = AreaLn1
 
@@ -62,7 +62,7 @@ fourLayerCut = mycuts.getCut(mycuts.fourLayerCut, 'fourLayerCut', cut=False)
 myplotter = milliqanPlotter()
 
 # create a 2D root histogram
-h_2d = r.TH2F("h_2d", "Areas of Layer 0 VS Layer -1", 140, 0, 500000, 140, 0, 500000)
+h_2d = r.TH2F("h_2d", "Areas of Layer 0 VS Layer -1", 180, 0, 180, 180, 0, 180)
 h_2d.GetXaxis().SetTitle("AreaL-1")
 h_2d.GetYaxis().SetTitle("AreaL0")
 

@@ -29,9 +29,6 @@ def getArea(self):
 
     max_heightsL3 = {}
     max_timeL3 = {}
-
-    slab_area = self.events['area'][self.events['type'] == 1]
-    print(len(slab_area))
     
     time_diffsL30 = []
 

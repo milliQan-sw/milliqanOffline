@@ -31,7 +31,6 @@ def getArea(self):
     flattened_listL4.extend([None] * num_nonesL4)
     self.events['AreaL4'] = flattened_listL4
     
-
 # add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getArea', getArea)
 

@@ -39,8 +39,8 @@ def getTimeDiff(self):
     selected_events = self.events[final_mask]
 
     # pick out the pulses on layer 4 and -1
-    layer_3_pulses = selected_events[(selected_events['layer'] == 3) & (selected_events['area'] > 50000)]
-    layer_0_pulses = selected_events[(selected_events['layer'] == 0) & (selected_events['area'] > 50000)]
+    layer_3_pulses = selected_events[selected_events['layer'] == 3]
+    layer_0_pulses = selected_events[selected_events['layer'] == 0]
 
     # loop through each event and calculate the time differences
     for event in range(len(selected_events)):

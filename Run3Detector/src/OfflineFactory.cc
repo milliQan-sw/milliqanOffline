@@ -1531,7 +1531,7 @@ vector<vector<pair<float,float>>> OfflineFactory::readWaveDataPerEvent(int i){
     for(int idig=0; idig < nDigitizers; idig++){
 
         //correct all pulses to the TDC time of digitizer 0
-        float thisCorrection = (float)5*((int64_t)evt->digitizers[0].TDC[0] - (int64_t)evt->digitizers[idig].TDC[0]);
+        float thisCorrection = (float)5*((int64_t)evt->digitizers[idig].TDC[0] - (int64_t)evt->digitizers[0].TDC[0]);
         tdcCorrection[idig] = thisCorrection; //5ns per TDC clock
         if(evt->digitizers[idig].TDC[0] == 0) {
             outputTreeContents.boardsMatched = false;

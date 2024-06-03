@@ -212,23 +212,30 @@ def getConfigs(runNum, offlineDir):
     sys.exit(1)
 
 def copyFromEOS(slab=False):
-    if not slab:
-        os.system('cp /eos/experiment/milliqan/Configs/mqLumis.json .')
-        os.system('cp /eos/experiment/milliqan/Configs/goodRunsList.json .')
+
+    if not os.path.exists('goodRunsList.json'): 
+        print("Warning (runOfflineFactory.py): goodRunsList.json is not available locally, trying to access from eos")
+        try:
+            if not slab:
+                os.system('cp /eos/experiment/milliqan/Configs/goodRunsList.json .')
+        except:
+            print("Error (runOfflineFactory.py): could not access the goodRunList.json on eos or locally")
     
-    #make datetimes into uint64 to be read by c++
-    lumis = pd.read_json('mqLumis.json', orient = 'split', compression = 'infer')
-    convert_cols = ['start', 'stop', 'fillStart', 'fillEnd', 'startStableBeam', 'endStableBeam']
-    #lumis[convert_cols] = lumis[convert_cols].apply(pd.to_datetime)
-    '''lumis['start_time'] = lumis['start_time'].apply(lambda x: datetime.strptime(x, '%Y-%m-%d %H:%M:%S') if x != None else x)
-    lumis['end_time'] = lumis['end_time'].apply(lambda x: datetime.strptime(x, '%Y-%m-%d %H:%M:%S') if x != None else x)
-    lumis['start_stable_beam'] = lumis['start_stable_beam'].apply(lambda x: datetime.strptime(x, '%Y-%m-%d %H:%M:%S') if x != None else x)
-    lumis['end_stable_beam'] = lumis['end_stable_beam'].apply(lambda x: datetime.strptime(x, '%Y-%m-%d %H:%M:%S') if x != None else x)
-    lumis[convert_cols] = lumis[convert_cols].apply(lambda col: col.astype('int64') // 10**9)
-    lumis[convert_cols] = lumis[convert_cols].apply(lambda col: col.astype('uint64'))'''
-    for col in convert_cols:
-        lumis[col] = convertTimes(lumis[col])
-    lumis.to_json('mqLumis.json', orient = 'split', compression = 'infer', index = 'true')
+    if not os.path.exists('mqLumis.json'):
+        print("Warning (runOfflineFactory.py): mqLumis.json is not available locally, trying to access from eos")
+        try:
+            if not slab:
+                os.system('cp /eos/experiment/milliqan/Configs/mqLumis.json .')
+            
+            #make datetimes into uint64 to be read by c++
+            lumis = pd.read_json('mqLumis.json', orient = 'split', compression = 'infer')
+            convert_cols = ['start', 'stop', 'fillStart', 'fillEnd', 'startStableBeam', 'endStableBeam']
+
+            for col in convert_cols:
+                lumis[col] = convertTimes(lumis[col])
+            lumis.to_json('mqLumis.json', orient = 'split', compression = 'infer', index = 'true')
+        except:
+            print("Error (runOfflineFactory.py): unable to access the mqLumis file on eos or locally")
 
 def convertTimes(input):
     input = input.apply(datetime_to_uint64)

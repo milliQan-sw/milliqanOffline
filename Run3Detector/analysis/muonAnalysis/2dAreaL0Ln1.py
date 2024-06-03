@@ -17,8 +17,7 @@ from milliqanPlotter import *
 
 # define the function to get the areas of layer -1 and layer 0
 def getArea(self):
-    num_events = len(self.events)
-
+    
     AreaLn1 = self.events['area'][self.events['layer'] == -1]
     self.events['AreaLn1'] = AreaLn1
 

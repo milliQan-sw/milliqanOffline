@@ -15,7 +15,7 @@ from milliqanScheduler import *
 from milliqanCuts import *
 from milliqanPlotter import *
 
-# define the function to get the time differences between layer 4 and layer -1
+# define the function to get the time differences between layer 3 and layer 0
 def getTimeDiff(self):
 
     time_diffs = []

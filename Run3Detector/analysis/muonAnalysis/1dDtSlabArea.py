@@ -29,8 +29,11 @@ def getArea(self):
 
     max_heightsL3 = {}
     max_timeL3 = {}
-    
-    time_diffsL30 = []
+
+    areaLn1 = self.events['area'][self.events['layer'] == -1]
+    areaL4 = self.events['area'][self.events['layer'] == 4]
+
+    SlabArea = []
 
     # panel mask (remove events with panel pulses that pass the height cut)
     panelPulseMask = (self.events['type'] == 2) & (self.events['height'] > 1200)
@@ -135,7 +138,8 @@ def getArea(self):
             # iterate over each event in current row and column combination
             for event in range(len(max_timeL0[key])):
                 if max_timeL0[key][event] is not None and max_timeL1[key][event] is not None and max_timeL2[key][event] is not None and max_timeL3[key][event] is not None:
-                    time_diffsL30.append(max_timeL3[key][event] - max_timeL0[key][event])
+                    SlabArea.append(areaLn1[event])
+                    SlabArea.append(areaL4[event])
 
     # extend the final list to match the size of the current file
     num_events = len(self.events)

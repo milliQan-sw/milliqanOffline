@@ -66,6 +66,7 @@ def getTimeDiff(self):
 # add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)
 
+'''
 # check if command line arguments are provided
 if len(sys.argv) != 3:
     print("Usage: python3 [file_name] [start_file_index] [end_file_index]")
@@ -81,6 +82,8 @@ filelist = [
     for i in range(start_index, end_index + 1)
     if os.path.exists(f"/home/bpeng/muonAnalysis/MilliQan_Run1118.{i}_v34.root")
 ]
+'''
+filelist = ['/home/bpeng/muonAnalysis/MilliQan_Run1000_v34_skim_correction.root']
 
 # define the necessary branches to run over
 branches = ['pickupFlag', 'boardsMatched', 'timeFit_module_calibrated', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type']

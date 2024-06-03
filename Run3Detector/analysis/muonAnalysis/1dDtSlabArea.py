@@ -143,11 +143,11 @@ def getArea(self):
 
     # extend the final list to match the size of the current file
     num_events = len(self.events)
-    num_nones = num_events - len(time_diffsL30)
-    time_diffsL30.extend([None] * num_nones)
+    num_nones = num_events - len(SlabArea)
+    SlabArea.extend([None] * num_nones)
 
     # define custom branch
-    self.events['SlabArea'] = time_diffsL30
+    self.events['SlabArea'] = SlabArea
 
 # add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getArea', getArea)

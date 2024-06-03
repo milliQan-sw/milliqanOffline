@@ -39,19 +39,19 @@ def getTimeDiff(self):
     selected_events = self.events[final_mask]
 
     # pick out the pulses on layer 4 and -1
-    layer_4_pulses = selected_events[(selected_events['layer'] == 4) & (selected_events['area'] > 80000)]
-    layer_neg1_pulses = selected_events[(selected_events['layer'] == -1) & (selected_events['area'] > 80000)]
+    layer_3_pulses = selected_events[(selected_events['layer'] == 3) & (selected_events['area'] > 80000)]
+    layer_0_pulses = selected_events[(selected_events['layer'] == 0) & (selected_events['area'] > 80000)]
 
     # loop through each event and calculate the time differences
     for event in range(len(selected_events)):
-        event_layer_4_pulses = layer_4_pulses[event]
-        event_layer_neg1_pulses = layer_neg1_pulses[event]
+        event_layer_3_pulses = layer_3_pulses[event]
+        event_layer_0_pulses = layer_0_pulses[event]
 
         # check if there are pulses in both layers
-        if len(event_layer_4_pulses['timeFit_module_calibrated']) > 0 and len(event_layer_neg1_pulses['timeFit_module_calibrated']) > 0:
-            timeL4 = min(event_layer_4_pulses['timeFit_module_calibrated'])
-            timeLn1 = min(event_layer_neg1_pulses['timeFit_module_calibrated'])
-            time_diffs.append(timeL4 - timeLn1)
+        if len(event_layer_3_pulses['timeFit_module_calibrated']) > 0 and len(event_layer_0_pulses['timeFit_module_calibrated']) > 0:
+            timeL3 = min(event_layer_3_pulses['timeFit_module_calibrated'])
+            timeL0 = min(event_layer_0_pulses['timeFit_module_calibrated'])
+            time_diffs.append(timeL3 - timeL0)
 
     print(time_diffs)
 

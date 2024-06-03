@@ -15,20 +15,25 @@ from milliqanScheduler import *
 from milliqanCuts import *
 from milliqanPlotter import *
 
-# define the function to get the heights of pulses on panels
-def getPanelHeight(self):
-
-    panelHeights = self.events['height'][self.events['type'] == 2]
-    flattened_list = [item for sublist in panelHeights for item in sublist]
-
+# define the function to get the areas of layer -1 and layer 0
+def getArea(self):
     num_events = len(self.events)
-    num_nones = num_events - len(flattened_list)
-    flattened_list.extend([None] * num_nones)
 
-    self.events['panelHeight'] = flattened_list
+    AreaLn1 = self.events['area'][self.events['layer'] == -1]
+    flattened_listLn1 = [item for sublist in AreaLn1 for item in sublist]
+    num_nonesLn1 = num_events - len(flattened_listLn1)
+    flattened_listLn1.extend([None] * num_nonesLn1)
+    self.events['AreaLn1'] = flattened_listLn1
+
+    AreaL4 = self.events['area'][self.events['layer'] == 4]
+    flattened_listL4 = [item for sublist in AreaL4 for item in sublist]
+    num_nonesL4 = num_events - len(flattened_listL4)
+    flattened_listL4.extend([None] * num_nonesL4)
+    self.events['AreaL4'] = flattened_listL4
+    
 
 # add our custom function to milliqanCuts
-setattr(milliqanCuts, 'getPanelHeight', getPanelHeight)
+setattr(milliqanCuts, 'getArea', getArea)
 
 # check if command line arguments are provided
 if len(sys.argv) != 3:
@@ -64,15 +69,16 @@ fourLayerCut = mycuts.getCut(mycuts.fourLayerCut, 'fourLayerCut', cut=False)
 # define milliqan plotter
 myplotter = milliqanPlotter()
 
-# create a 1D root histogram
-h_1d = r.TH1F("h_1d", "Heights", 2000, 0, 2000)
-h_1d.GetXaxis().SetTitle("Panel Heights")
+# create a 2D root histogram
+h_2d = r.TH2F("h_2d", "Areas of Layer 0 VS Layer -1", 140, 0, 500000, 140, 0, 500000)
+h_2d.GetXaxis().SetTitle("AreaL-1")
+h_2d.GetYaxis().SetTitle("AreaL0")
 
 # add root histogram to plotter
-myplotter.addHistograms(h_1d, 'panelHeight')
+myplotter.addHistograms(h_2d, ['AreaLn1', 'AreaL0'], cut=None)
 
 # defining the cutflow
-cutflow = [boardMatchCut, pickupCut, mycuts.layerCut, mycuts.getPanelHeight, myplotter.dict['h_1d']]
+cutflow = [boardMatchCut, pickupCut, mycuts.layerCut, mycuts.getArea, myplotter.dict['h_2d']]
 
 # create a schedule of the cuts
 myschedule = milliQanScheduler(cutflow, mycuts, myplotter)
@@ -87,10 +93,10 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts, myplotter
 myiterator.run()
 
 # create a new TFile
-f = r.TFile("1dHistPanelHeight.root", "recreate")
+f = r.TFile("2dHistAreaL0Ln1.root", "recreate")
 
 # write the histograms to the file
-h_1d.Write()
+h_2d.Write()
 
 # close the file
 f.Close()

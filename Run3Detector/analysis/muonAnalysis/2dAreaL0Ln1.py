@@ -20,16 +20,14 @@ def getArea(self):
     num_events = len(self.events)
 
     AreaLn1 = self.events['area'][self.events['layer'] == -1]
-    flattened_listLn1 = [item for sublist in AreaLn1 for item in sublist]
-    num_nonesLn1 = num_events - len(flattened_listLn1)
-    flattened_listLn1.extend([None] * num_nonesLn1)
-    self.events['AreaLn1'] = flattened_listLn1
+    num_nonesLn1 = num_events - len(AreaLn1)
+    AreaLn1.extend([None] * num_nonesLn1)
+    self.events['AreaLn1'] = AreaLn1
 
     AreaL0 = self.events['area'][self.events['layer'] == 0]
-    flattened_listL0 = [item for sublist in AreaL0 for item in sublist]
-    num_nonesL0 = num_events - len(flattened_listL0)
-    flattened_listL0.extend([None] * num_nonesL0)
-    self.events['AreaL0'] = flattened_listL0
+    num_nonesL0 = num_events - len(AreaL0)
+    AreaL0.extend([None] * num_nonesL0)
+    self.events['AreaL0'] = AreaL0
     
 # add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getArea', getArea)

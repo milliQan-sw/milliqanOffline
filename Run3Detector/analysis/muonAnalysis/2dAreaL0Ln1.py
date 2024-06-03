@@ -20,13 +20,9 @@ def getArea(self):
     num_events = len(self.events)
 
     AreaLn1 = self.events['area'][self.events['layer'] == -1]
-    num_nonesLn1 = num_events - len(AreaLn1)
-    AreaLn1.extend([None] * num_nonesLn1)
     self.events['AreaLn1'] = AreaLn1
 
     AreaL0 = self.events['area'][self.events['layer'] == 0]
-    num_nonesL0 = num_events - len(AreaL0)
-    AreaL0.extend([None] * num_nonesL0)
     self.events['AreaL0'] = AreaL0
     
 # add our custom function to milliqanCuts

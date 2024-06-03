@@ -21,8 +21,8 @@ def getArea(self):
     AreaLn1 = self.events['area'][self.events['layer'] == -1]
     self.events['AreaLn1'] = AreaLn1
 
-    AreaL0 = self.events['area'][self.events['layer'] == 0]
-    self.events['AreaL0'] = AreaL0
+    #AreaL0 = self.events['area'][self.events['layer'] == 0]
+    #self.events['AreaL0'] = AreaL0
     
 # add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getArea', getArea)
@@ -62,12 +62,17 @@ fourLayerCut = mycuts.getCut(mycuts.fourLayerCut, 'fourLayerCut', cut=False)
 myplotter = milliqanPlotter()
 
 # create a 2D root histogram
-h_2d = r.TH2F("h_2d", "Areas of Layer 0 VS Layer -1", 180, 0, 180, 180, 0, 180)
-h_2d.GetXaxis().SetTitle("AreaL-1")
-h_2d.GetYaxis().SetTitle("AreaL0")
+#h_2d = r.TH2F("h_2d", "Areas of Layer 0 VS Layer -1", 180, 0, 180, 180, 0, 180)
+#h_2d.GetXaxis().SetTitle("AreaL-1")
+#h_2d.GetYaxis().SetTitle("AreaL0")
+
+# create a 1D root histogram
+h_1d = r.TH1F("h_1d", "AreaL-1", 1000, 0, 100000)
+h_1d.GetXaxis().SetTitle("AreaL-1")
 
 # add root histogram to plotter
-myplotter.addHistograms(h_2d, ['AreaLn1', 'AreaL0'], cut=None)
+#myplotter.addHistograms(h_2d, ['AreaLn1', 'AreaL0'], cut=None)
+myplotter.addHistograms(h_1d, 'AreaLn1')
 
 # defining the cutflow
 cutflow = [boardMatchCut, pickupCut, mycuts.layerCut, mycuts.getArea, myplotter.dict['h_2d']]
@@ -85,7 +90,8 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts, myplotter
 myiterator.run()
 
 # create a new TFile
-f = r.TFile("2dHistAreaL0Ln1.root", "recreate")
+#f = r.TFile("2dHistAreaL0Ln1.root", "recreate")
+f = r.TFile("1dHistAreaLn1.root", "recreate")
 
 # write the histograms to the file
 h_2d.Write()

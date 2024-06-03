@@ -94,7 +94,7 @@ myiterator.run()
 f = r.TFile("1dHistAreaLn1.root", "recreate")
 
 # write the histograms to the file
-h_2d.Write()
+h_1d.Write()
 
 # close the file
 f.Close()

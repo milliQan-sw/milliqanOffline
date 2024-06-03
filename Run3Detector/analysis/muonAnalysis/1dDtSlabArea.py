@@ -15,8 +15,8 @@ from milliqanScheduler import *
 from milliqanCuts import *
 from milliqanPlotter import *
 
-# define the function to get the time differences for the max heights of events in each channel between layer 0 and layer 3
-def getTimeDiff(self):
+# define the function to get the area of passed pulses in slabs
+def getArea(self):
 
     max_heightsL0 = {}
     max_timeL0 = {}
@@ -145,10 +145,10 @@ def getTimeDiff(self):
     time_diffsL30.extend([None] * num_nones)
 
     # define custom branch
-    self.events['timeDiff'] = time_diffsL30
+    self.events['SlabArea'] = time_diffsL30
 
 # add our custom function to milliqanCuts
-setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)
+setattr(milliqanCuts, 'getArea', getArea)
 
 '''
 # check if command line arguments are provided
@@ -188,14 +188,14 @@ fourLayerCut = mycuts.getCut(mycuts.fourLayerCut, 'fourLayerCut', cut=False)
 myplotter = milliqanPlotter()
 
 # create a 1D root histogram
-h_1d = r.TH1F("h_1d", "Time Differences between Layer 3 and 0", 200, -100, 100)
-h_1d.GetXaxis().SetTitle("Time Differences")
+h_1d = r.TH1F("h_1d", "Area in slabs", 1000, 0, 1000000)
+h_1d.GetXaxis().SetTitle("Area")
 
 # add root histogram to plotter
-myplotter.addHistograms(h_1d, 'timeDiff')
+myplotter.addHistograms(h_1d, 'SlabArea')
 
 # defining the cutflow
-cutflow = [boardMatchCut, pickupCut, mycuts.layerCut, mycuts.getTimeDiff, myplotter.dict['h_1d']]
+cutflow = [boardMatchCut, pickupCut, mycuts.layerCut, mycuts.getArea, myplotter.dict['h_1d']]
 
 # create a schedule of the cuts
 myschedule = milliQanScheduler(cutflow, mycuts, myplotter)
@@ -210,7 +210,7 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts, myplotter
 myiterator.run()
 
 # create a new TFile
-f = r.TFile("1dHistDtL30.root", "recreate")
+f = r.TFile("1dHistDtSlabArea.root", "recreate")
 
 # write the histograms to the file
 h_1d.Write()

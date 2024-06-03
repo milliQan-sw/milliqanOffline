@@ -32,30 +32,33 @@ def getTimeDiff(self):
     
     time_diffsL30 = []
 
-    # remove events with panel pulses that pass the height cut (1D boolean list)
-    panel_pulse_mask = (self.events['type'] == 2) & (self.events['height'] > 1200)
-    events_without_panel_pulses = ~ak.any(panel_pulse_mask, axis = 1)
+    # panel mask (remove events with panel pulses that pass the height cut)
+    panelPulseMask = (self.events['type'] == 2) & (self.events['height'] > 1200)
+    panelMask = ~ak.any(panelPulseMask, axis = 1)
 
-    # time cut
-    timeCut = (self.events['timeFit_module_calibrated'] > 1100) & (self.events['timeFit_module_calibrated'] < 1400)
+    # central time mask
+    centralTimeMask = (self.events['timeFit_module_calibrated'] > 1100) & (self.events['timeFit_module_calibrated'] < 1400)
+
+    # height and area mask
+    heightAreaCut = (self.events['height'] > 1000) & (self.events['area'] > 500000)
 
 # iterate over row and column combinations
     for row in range(4):
         for column in range(4):
-            # pulse_based 2D boolean masks determined by channel and height
-            pulse_maskL0 = (self.events['row'] == row) & (self.events['column'] == column) & (self.events['layer'] == 0) & (self.events['height'] > 1000) & timeCut & (self.events['area'] > 500000)
-            pulse_maskL1 = (self.events['row'] == row) & (self.events['column'] == column) & (self.events['layer'] == 1) & (self.events['height'] > 1000) & timeCut & (self.events['area'] > 500000)
-            pulse_maskL2 = (self.events['row'] == row) & (self.events['column'] == column) & (self.events['layer'] == 2) & (self.events['height'] > 1000) & timeCut & (self.events['area'] > 500000)
-            pulse_maskL3 = (self.events['row'] == row) & (self.events['column'] == column) & (self.events['layer'] == 3) & (self.events['height'] > 1000) & timeCut & (self.events['area'] > 500000)
+            # straight line path location mask
+            pulse_maskL0 = (self.events['row'] == row) & (self.events['column'] == column) & (self.events['layer'] == 0)
+            pulse_maskL1 = (self.events['row'] == row) & (self.events['column'] == column) & (self.events['layer'] == 1)
+            pulse_maskL2 = (self.events['row'] == row) & (self.events['column'] == column) & (self.events['layer'] == 2)
+            pulse_maskL3 = (self.events['row'] == row) & (self.events['column'] == column) & (self.events['layer'] == 3)
 
-            # event_based 1D boolean mask determined by event
-            event_mask = ak.any(pulse_maskL0, axis = 1) & ak.any(pulse_maskL1, axis = 1) & ak.any(pulse_maskL2, axis = 1) & ak.any(pulse_maskL3, axis = 1)
+            # straight line mask
+            straightLineMask = ak.any(pulse_maskL0, axis = 1) & ak.any(pulse_maskL1, axis = 1) & ak.any(pulse_maskL2, axis = 1) & ak.any(pulse_maskL3, axis = 1)
 
             # combine all the masks
-            mask0 = event_mask & pulse_maskL0 & events_without_panel_pulses
-            mask1 = event_mask & pulse_maskL1 & events_without_panel_pulses
-            mask2 = event_mask & pulse_maskL2 & events_without_panel_pulses
-            mask3 = event_mask & pulse_maskL3 & events_without_panel_pulses
+            mask0 = pulse_maskL0 & straightLineMask & panelMask & centralTimeMask & heightAreaCut
+            mask1 = pulse_maskL1 & straightLineMask & panelMask & centralTimeMask & heightAreaCut
+            mask2 = pulse_maskL2 & straightLineMask & panelMask & centralTimeMask & heightAreaCut
+            mask3 = pulse_maskL3 & straightLineMask & panelMask & centralTimeMask & heightAreaCut
 
             heightsL0 = self.events['height'][mask0]
             timeL0 = self.events['timeFit_module_calibrated'][mask0]

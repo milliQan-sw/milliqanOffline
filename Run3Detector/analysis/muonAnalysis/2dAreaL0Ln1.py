@@ -75,7 +75,7 @@ h_1d.GetXaxis().SetTitle("AreaL-1")
 myplotter.addHistograms(h_1d, 'AreaLn1')
 
 # defining the cutflow
-cutflow = [boardMatchCut, pickupCut, mycuts.layerCut, mycuts.getArea, myplotter.dict['h_2d']]
+cutflow = [boardMatchCut, pickupCut, mycuts.layerCut, mycuts.getArea, myplotter.dict['h_1d']]
 
 # create a schedule of the cuts
 myschedule = milliQanScheduler(cutflow, mycuts, myplotter)

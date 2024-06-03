@@ -29,6 +29,9 @@ def getArea(self):
 
     max_heightsL3 = {}
     max_timeL3 = {}
+
+    slab_area = self.events['area'][self.events['type'] == 1]
+    print(len(slab_area))
     
     time_diffsL30 = []
 
@@ -134,7 +137,6 @@ def getArea(self):
 
             # iterate over each event in current row and column combination
             for event in range(len(max_timeL0[key])):
-                print(len(max_timeL0[key]))
                 if max_timeL0[key][event] is not None and max_timeL1[key][event] is not None and max_timeL2[key][event] is not None and max_timeL3[key][event] is not None:
                     time_diffsL30.append(max_timeL3[key][event] - max_timeL0[key][event])
 

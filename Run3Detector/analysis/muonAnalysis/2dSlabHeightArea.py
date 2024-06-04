@@ -1,4 +1,3 @@
-# importing packages
 import os
 import ROOT as r
 import uproot
@@ -17,14 +16,17 @@ from milliqanPlotter import *
 
 # define the function to get the area and height in slabs
 def getAreaHeight(self):
-    slab_area = self.events['area'][(self.events['layer'] == -1)|(self.events['layer'] == 4)]
-    slab_height = self.events['height'][(self.events['layer'] == -1)|(self.events['layer'] == 4)]
+    slab_area = self.events['area'][(self.events['layer'] == -1) | (self.events['layer'] == 4)]
+    slab_height = self.events['height'][(self.events['layer'] == -1) | (self.events['layer'] == 4)]
     self.events['SLABAREA'] = slab_area
     self.events['SLABHEIGHT'] = slab_height
+    for area, height in zip(slab_area, slab_height):
+        print(f"Area: {area}, Height: {height}")
 
 # add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getAreaHeight', getAreaHeight)
 
+# Commented out for script clarity
 '''
 # check if command line arguments are provided
 if len(sys.argv) != 3:

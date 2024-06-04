@@ -193,7 +193,7 @@ h_1d.GetXaxis().SetTitle("Time Differences")
 
 # add root histogram to plotter
 myplotter.addHistograms(h_1d, 'timeDiff')
-h_1d.Integral(-10, 10)
+print(h_1d.Integral(-10, 10))
 
 # defining the cutflow
 cutflow = [boardMatchCut, pickupCut, mycuts.layerCut, mycuts.getTimeDiff, myplotter.dict['h_1d']]

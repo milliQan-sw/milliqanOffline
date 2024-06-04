@@ -28,7 +28,7 @@ def getTimeDiff(self):
     slab_mask = events_with_layer_4_pulses & events_with_layer_neg1_pulses
 
     # central time cut
-    timeCut = (self.events['timeFit_module_calibrated'] > 1100) & (self.events['timeFit_module_calibrated'] < 1400)
+    timeCut = (self.events['timeFit_module_calibrated_corrected'] > 1100) & (self.events['timeFit_module_calibrated_corrected'] < 1400)
 
     # apply the final mask to select the desired events
     final_mask = slab_mask & timeCut
@@ -44,9 +44,9 @@ def getTimeDiff(self):
         event_layer_neg1_pulses = layer_neg1_pulses[event]
 
         # check if there are pulses in both layers
-        if len(event_layer_4_pulses['timeFit_module_calibrated']) > 0 and len(event_layer_neg1_pulses['timeFit_module_calibrated']) > 0:
-            timeL4 = min(event_layer_4_pulses['timeFit_module_calibrated'])
-            timeLn1 = min(event_layer_neg1_pulses['timeFit_module_calibrated'])
+        if len(event_layer_4_pulses['timeFit_module_calibrated_corrected']) > 0 and len(event_layer_neg1_pulses['timeFit_module_calibrated_corrected']) > 0:
+            timeL4 = min(event_layer_4_pulses['timeFit_module_calibrated_corrected'])
+            timeLn1 = min(event_layer_neg1_pulses['timeFit_module_calibrated_corrected'])
             time_diffs.append(timeL4 - timeLn1)
 
     print(time_diffs)
@@ -82,7 +82,7 @@ filelist = [
 filelist = ['/home/bpeng/muonAnalysis/MilliQan_Run1000_v34_skim_correction.root']
 
 # define the necessary branches to run over
-branches = ['pickupFlag', 'boardsMatched', 'timeFit_module_calibrated', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type']
+branches = ['pickupFlag', 'boardsMatched', 'timeFit_module_calibrated_corrected', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type']
 
 # define the milliqan cuts object
 mycuts = milliqanCuts()

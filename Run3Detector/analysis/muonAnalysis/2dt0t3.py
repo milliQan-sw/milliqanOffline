@@ -38,7 +38,7 @@ def getTime(self):
     events_without_panel_pulses = ~ak.any(panel_pulse_mask, axis = 1)
 
     # time cut
-    timeCut = (self.events['timeFit_module_calibrated'] > 1100) & (self.events['timeFit_module_calibrated'] < 1400)
+    timeCut = (self.events['timeFit_module_calibrated_corrected'] > 1100) & (self.events['timeFit_module_calibrated_corrected'] < 1400)
 
 # iterate over row and column combinations
     for row in range(4):
@@ -59,16 +59,16 @@ def getTime(self):
             mask3 = event_mask & pulse_maskL3 & events_without_panel_pulses
 
             heightsL0 = self.events['height'][mask0]
-            timeL0 = self.events['timeFit_module_calibrated'][mask0]
+            timeL0 = self.events['timeFit_module_calibrated_corrected'][mask0]
 
             heightsL1 = self.events['height'][mask1]
-            timeL1 = self.events['timeFit_module_calibrated'][mask1]
+            timeL1 = self.events['timeFit_module_calibrated_corrected'][mask1]
 
             heightsL2 = self.events['height'][mask2]
-            timeL2 = self.events['timeFit_module_calibrated'][mask2]
+            timeL2 = self.events['timeFit_module_calibrated_corrected'][mask2]
 
             heightsL3 = self.events['height'][mask3]
-            timeL3 = self.events['timeFit_module_calibrated'][mask3]
+            timeL3 = self.events['timeFit_module_calibrated_corrected'][mask3]
 
             # store heights and times into dictionaries
             key = (row, column)
@@ -172,7 +172,7 @@ filelist = [
 filelist = ['/home/bpeng/muonAnalysis/MilliQan_Run1000_v34_skim_correction.root']
 
 # define the necessary branches to run over
-branches = ['pickupFlag', 'boardsMatched', 'timeFit_module_calibrated', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type']
+branches = ['pickupFlag', 'boardsMatched', 'timeFit_module_calibrated_corrected', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type']
 
 # define the milliqan cuts object
 mycuts = milliqanCuts()

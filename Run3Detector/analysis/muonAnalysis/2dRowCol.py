@@ -38,7 +38,7 @@ def getRowColumn(self):
     panelMask = ~ak.any(panelPulseMask, axis = 1)
 
     # central time mask
-    centralTimeMask = (self.events['timeFit_module_calibrated'] > 1100) & (self.events['timeFit_module_calibrated'] < 1400)
+    centralTimeMask = (self.events['timeFit_module_calibrated_corrected'] > 1100) & (self.events['timeFit_module_calibrated_corrected'] < 1400)
 
     # height and area mask
     heightAreaCut = (self.events['height'] > 1000) & (self.events['area'] > 500000)
@@ -62,16 +62,16 @@ def getRowColumn(self):
             mask3 = pulse_maskL3 & straightLineMask & panelMask & centralTimeMask & heightAreaCut
 
             heightsL0 = self.events['height'][mask0]
-            timeL0 = self.events['timeFit_module_calibrated'][mask0]
+            timeL0 = self.events['timeFit_module_calibrated_corrected'][mask0]
 
             heightsL1 = self.events['height'][mask1]
-            timeL1 = self.events['timeFit_module_calibrated'][mask1]
+            timeL1 = self.events['timeFit_module_calibrated_corrected'][mask1]
 
             heightsL2 = self.events['height'][mask2]
-            timeL2 = self.events['timeFit_module_calibrated'][mask2]
+            timeL2 = self.events['timeFit_module_calibrated_corrected'][mask2]
 
             heightsL3 = self.events['height'][mask3]
-            timeL3 = self.events['timeFit_module_calibrated'][mask3]
+            timeL3 = self.events['timeFit_module_calibrated_corrected'][mask3]
 
             # store heights and times into dictionaries
             key = (row, column)
@@ -175,7 +175,7 @@ filelist = [
 filelist = ['/home/bpeng/muonAnalysis/MilliQan_Run1000_v34_skim_correction.root']
 
 # define the necessary branches to run over
-branches = ['pickupFlag', 'boardsMatched', 'timeFit_module_calibrated', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type']
+branches = ['pickupFlag', 'boardsMatched', 'timeFit_module_calibrated_corrected', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type']
 
 # define the milliqan cuts object
 mycuts = milliqanCuts()

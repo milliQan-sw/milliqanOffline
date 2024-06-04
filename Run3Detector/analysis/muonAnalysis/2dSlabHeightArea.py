@@ -20,7 +20,7 @@ def getAreaHeight(self):
     slab_height = self.events['height'][(self.events['layer'] == -1) | (self.events['layer'] == 4)]
     self.events['SLABAREA'] = slab_area
     self.events['SLABHEIGHT'] = slab_height
-    for area, height in zip(slab_area, slab_height):
+    for area, height in zip(slab_area.to_list(), slab_height.to_list()):
         if area and height:
             print(f"{area} {height}")
 

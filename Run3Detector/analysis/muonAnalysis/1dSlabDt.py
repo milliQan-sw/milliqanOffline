@@ -27,10 +27,6 @@ def getTimeDiff(self):
     events_with_layer_neg1_pulses = ak.any(mask_layer_neg1, axis=1)
     slab_mask = events_with_layer_4_pulses & events_with_layer_neg1_pulses
 
-    # remove events with panel pulses whose heights are bigger than the cut value
-    panelPulseMask = (self.events['type'] == 2) & (self.events['height'] > 1200)
-    panelMask = ~ak.any(panelPulseMask, axis = 1)
-
     # central time cut
     timeCut = (self.events['timeFit_module_calibrated'] > 1100) & (self.events['timeFit_module_calibrated'] < 1400)
 

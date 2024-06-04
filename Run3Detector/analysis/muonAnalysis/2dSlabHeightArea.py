@@ -15,7 +15,7 @@ from milliqanScheduler import *
 from milliqanCuts import *
 from milliqanPlotter import *
 
-# define the function to 
+# define the function to get the area and height in slabs
 def getAreaHeight(self):
     slab_area = self.events['area'][self.events['type'] == 1]
     slab_height = self.events['height'][self.events['type'] == 1]

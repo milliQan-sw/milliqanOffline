@@ -21,8 +21,8 @@ def getAreaHeight(self):
     self.events['SLABAREA'] = slab_area
     self.events['SLABHEIGHT'] = slab_height
     for area, height in zip(slab_area.to_list(), slab_height.to_list()):
-        if area and height:
-            print(f"{area} {height}")
+        for a, h in zip(area, height):
+            print(f"{a} {h}")
 
 # add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getAreaHeight', getAreaHeight)

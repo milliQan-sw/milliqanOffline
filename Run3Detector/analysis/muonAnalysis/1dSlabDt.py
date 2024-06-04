@@ -28,7 +28,7 @@ def getTimeDiff(self):
     slab_mask = events_with_layer_4_pulses & events_with_layer_neg1_pulses
 
     # central time cut
-    timeCut = (self.events['timeFit_module_calibrated_corrected'] > 1100) & (self.events['timeFit_module_calibrated_corrected'] < 1400)
+    timeCut = (self.events['timeFit_module_calibrated'] > 1100) & (self.events['timeFit_module_calibrated'] < 1400)
 
     # apply the final mask to select the desired events
     final_mask = slab_mask & timeCut
@@ -44,9 +44,9 @@ def getTimeDiff(self):
         event_layer_neg1_pulses = layer_neg1_pulses[event]
 
         # check if there are pulses in both layers
-        if len(event_layer_4_pulses['timeFit_module_calibrated_corrected']) > 0 and len(event_layer_neg1_pulses['timeFit_module_calibrated_corrected']) > 0:
-            timeL4 = min(event_layer_4_pulses['timeFit_module_calibrated_corrected'])
-            timeLn1 = min(event_layer_neg1_pulses['timeFit_module_calibrated_corrected'])
+        if len(event_layer_4_pulses['timeFit_module_calibrated']) > 0 and len(event_layer_neg1_pulses['timeFit_module_calibrated']) > 0:
+            timeL4 = min(event_layer_4_pulses['timeFit_module_calibrated'])
+            timeLn1 = min(event_layer_neg1_pulses['timeFit_module_calibrated'])
             time_diffs.append(timeL4 - timeLn1)
 
     print(time_diffs)
@@ -62,10 +62,26 @@ def getTimeDiff(self):
 # add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)
 
-filelist = ['/home/bpeng/muonAnalysis/MilliQan_Run1000_v34_skim_correction.root']
+#filelist = ['/home/bpeng/muonAnalysis/MilliQan_Run1000_v34_skim_correction.root']
+
+# check if command line arguments are provided
+if len(sys.argv) != 3:
+    print("Usage: python3 [file_name] [start_file_index] [end_file_index]")
+    sys.exit(1)
+
+# assign start and end indices from command line
+start_index = int(sys.argv[1])
+end_index = int(sys.argv[2])
+
+# define a file list to run over
+filelist = [
+    f"/home/bpeng/muonAnalysis/MilliQan_Run1541.{i}_v34.root"
+    for i in range(start_index, end_index + 1)
+    if os.path.exists(f"/home/bpeng/muonAnalysis/MilliQan_Run1541.{i}_v34.root")
+]
 
 # define the necessary branches to run over
-branches = ['pickupFlag', 'boardsMatched', 'timeFit_module_calibrated_corrected', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type']
+branches = ['pickupFlag', 'boardsMatched', 'timeFit_module_calibrated', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type']
 
 # define the milliqan cuts object
 mycuts = milliqanCuts()

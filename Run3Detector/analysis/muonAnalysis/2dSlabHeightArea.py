@@ -17,8 +17,8 @@ from milliqanPlotter import *
 
 # define the function to get the area and height in slabs
 def getAreaHeight(self):
-    slab_area = self.events['area'][self.events['type'] == 1]
-    slab_height = self.events['height'][self.events['type'] == 1]
+    slab_area = self.events['area'][(self.events['layer'] == -1)|(self.events['layer'] == 4)]
+    slab_height = self.events['height'][(self.events['layer'] == -1)|(self.events['layer'] == 4)]
     self.events['SLABAREA'] = slab_area
     self.events['SLABHEIGHT'] = slab_height
 

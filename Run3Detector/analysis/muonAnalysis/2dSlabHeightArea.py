@@ -21,7 +21,8 @@ def getAreaHeight(self):
     self.events['SLABAREA'] = slab_area
     self.events['SLABHEIGHT'] = slab_height
     for area, height in zip(slab_area, slab_height):
-        print(f"Area: {area}, Height: {height}")
+        if area and height:
+            print(f"{area} {height}")
 
 # add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getAreaHeight', getAreaHeight)
@@ -86,7 +87,7 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts, myplotter
 
 # run the milliqan processor
 myiterator.run()
-
+'''
 # create a new TFile
 f = r.TFile("2dHistSlabHeightArea.root", "recreate")
 
@@ -95,3 +96,4 @@ h_2d.Write()
 
 # close the file
 f.Close()
+'''

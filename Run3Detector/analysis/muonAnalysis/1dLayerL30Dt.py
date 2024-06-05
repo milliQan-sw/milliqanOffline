@@ -48,7 +48,6 @@ def getTimeDiff(self):
     for event in range(len(self.events)):
         if timeL0_min[event] is not None and timeL1_min[event] is not None and timeL2_min[event] is not None and timeL3_min[event] is not None:
             time_diffsL30.append(timeL3_min - timeL0_min)
-
     
     print(time_diffsL30)
 

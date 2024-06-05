@@ -29,10 +29,27 @@ def getTimeDiff(self):
     finalPulseMask = centralTimeMask & heightAreaMask
 
     # require events to have big pulses in all 4 layers within the time window
-    left_time = self.events['timeFit_module_calibrated_corrected'][finalPulseMask]
-    print(len(left_time))
+    masked_time = self.events['timeFit_module_calibrated_corrected'][finalPulseMask]
 
-    '''
+    timeL0 = masked_time[self.events['layer'] == 0]
+    timeL1 = masked_time[self.events['layer'] == 1]
+    timeL2 = masked_time[self.events['layer'] == 2]
+    timeL3 = masked_time[self.events['layer'] == 3]
+
+    def minTime(pulse_times):
+        filtered_times = [time for time in pulse_times if time is not None]
+        return min(filtered_times) if filtered_times else None
+
+    timeL0_min = [minTime(pulse_times) for pulse_times in timeL0]
+    timeL1_min = [minTime(pulse_times) for pulse_times in timeL1]
+    timeL2_min = [minTime(pulse_times) for pulse_times in timeL2]
+    timeL3_min = [minTime(pulse_times) for pulse_times in timeL3]
+
+    for event in range(len(self.events)):
+        if timeL0_min[event] is not None and timeL1_min[event] is not None and timeL2_min[event] is not None and timeL3_min[event] is not None:
+            time_diffsL30.append(timeL3_min - timeL0_min)
+
+    
     print(time_diffsL30)
 
     # extend the final list to match the size of the current file
@@ -42,7 +59,6 @@ def getTimeDiff(self):
 
     # define custom branch
     self.events['timeDiff'] = time_diffsL30
-    '''
 
 # add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)

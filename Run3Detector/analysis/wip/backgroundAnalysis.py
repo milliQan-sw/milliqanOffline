@@ -1,3 +1,6 @@
+
+
+
 import sys
 
 sys.path.append('/root/lib/')
@@ -116,7 +119,7 @@ if __name__ == "__main__":
 
     beam = False
 
-    dataDir = '/store/user/milliqan/trees/v34/1500/'
+    dataDir = '/store/user/milliqan/trees/v34/1300/'
 
     for ifile, filename in enumerate(os.listdir(dataDir)):
         
@@ -126,24 +129,24 @@ if __name__ == "__main__":
         fileNum = int(filename.split('.')[1].split('_')[0])
             
         goodRun = goodRuns['goodRunTight'].loc[(goodRuns['run'] == runNum) & (goodRuns['file'] == fileNum)]
-        beamOn = lumis['beam'].loc[(lumis['run'] == runNum) & (lumis['file'] == fileNum)]
+        beamOn = lumis['beamInFill'].loc[(lumis['run'] == runNum) & (lumis['file'] == fileNum)] #note make harder condition of beamInFill
 
-        #if len(goodRun) == 0 or len(beamOn) == 0: continue #temporary
-        if len(beamOn) == 0: continue
+        if len(goodRun) == 0 or len(beamOn) == 0: continue #temporary
+        #if len(beamOn) == 0: continue
 
         #print(filename, runNum, fileNum, beamOn.item(), goodRun.item())
         
         if beam:
-            #if goodRun.item() and beamOn.item(): files.append(dataDir+filename)
-            if beamOn.item(): files.append(dataDir+filename)
+            if goodRun.item() and beamOn.item(): files.append(dataDir+filename)
+            #if beamOn.item(): files.append(dataDir+filename)
         else:
-            #if goodRun.item() and not beamOn.item(): files.append(dataDir+filename)
-            if not beamOn.item(): files.append(dataDir+filename)
+            if goodRun.item() and not beamOn.item(): files.append(dataDir+filename)
+            #if not beamOn.item(): files.append(dataDir+filename)
 
     print("Found {} files to run over".format(len(files)))
 
 #define a file list to run over
-filelist = files[:1000]
+filelist = files
 print("Running on files {}".format(filelist))
 
 #find the luminosity of files in filelist
@@ -531,6 +534,6 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, step_size=10000)
 myiterator.run()
 
 #save plots
-myplotter.saveHistograms("test.root")
+myplotter.saveHistograms("bgAnalysis_1300_noBeamInFill.root")
 
 mycuts.getCutflowCounts()

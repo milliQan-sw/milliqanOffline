@@ -8,6 +8,9 @@ import math
 import sys
 from omsapi import OMSAPI
 
+#using omsapi client https://gitlab.cern.ch/cmsoms/oms-api-client/-/tree/master
+
+
 class lumiDict:
     
     def __init__(self):

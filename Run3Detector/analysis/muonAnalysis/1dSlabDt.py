@@ -21,8 +21,8 @@ def getTimeDiff(self):
     time_diffs = []
 
     # keep only events with slab pulses on both layer 4 and -1 whose areas are bigger than the cut value
-    mask_layer_4 = (self.events['layer'] == 4) & (self.events['area'] > 200000)
-    mask_layer_neg1 = (self.events['layer'] == -1) & (self.events['area'] > 200000)
+    mask_layer_4 = (self.events['layer'] == 4) & (self.events['area'] > 70000)
+    mask_layer_neg1 = (self.events['layer'] == -1) & (self.events['area'] > 70000)
     events_with_layer_4_pulses = ak.any(mask_layer_4, axis=1)
     events_with_layer_neg1_pulses = ak.any(mask_layer_neg1, axis=1)
     slab_mask = events_with_layer_4_pulses & events_with_layer_neg1_pulses
@@ -35,8 +35,8 @@ def getTimeDiff(self):
     selected_events = self.events[final_mask]
 
     # pick out the pulses on layer 4 and -1
-    layer_4_pulses = selected_events[(selected_events['layer'] == 4) & (selected_events['area'] > 200000)]
-    layer_neg1_pulses = selected_events[(selected_events['layer'] == -1) & (selected_events['area'] > 200000)]
+    layer_4_pulses = selected_events[(selected_events['layer'] == 4) & (selected_events['area'] > 70000)]
+    layer_neg1_pulses = selected_events[(selected_events['layer'] == -1) & (selected_events['area'] > 70000)]
 
     # loop through each event and calculate the time differences
     for event in range(len(selected_events)):

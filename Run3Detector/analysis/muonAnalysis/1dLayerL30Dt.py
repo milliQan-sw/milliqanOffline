@@ -28,28 +28,28 @@ def getTimeDiff(self):
 
     finalPulseMask = centralTimeMask & heightAreaMask
 
-    # Apply the finalPulseMask
+    # apply the finalPulseMask
     masked_time = self.events['timeFit_module_calibrated_corrected'][finalPulseMask]
     masked_layer = self.events['layer'][finalPulseMask]
 
-    # Masked times per layer
+    # masked times per layer
     timeL0 = masked_time[masked_layer == 0]
     timeL1 = masked_time[masked_layer == 1]
     timeL2 = masked_time[masked_layer == 2]
     timeL3 = masked_time[masked_layer == 3]
 
-    # Function to get minimum time per event handling None values
+    # function to get minimum time per event handling None values
     def minTime(pulse_times):
         filtered_times = [time for time in pulse_times if time is not None]
         return min(filtered_times) if filtered_times else None
 
-    # Extract minimum times for each layer
+    # extract minimum times for each layer
     timeL0_min = [minTime(event) for event in ak.to_list(timeL0)]
     timeL1_min = [minTime(event) for event in ak.to_list(timeL1)]
     timeL2_min = [minTime(event) for event in ak.to_list(timeL2)]
     timeL3_min = [minTime(event) for event in ak.to_list(timeL3)]
 
-    # Calculate time differences only for events with valid times in all layers
+    # calculate time differences only for events with valid times in all layers
     for i in range(len(timeL0_min)):
         if timeL0_min[i] is not None and timeL1_min[i] is not None and timeL2_min[i] is not None and timeL3_min[i] is not None:
             time_diffsL30.append(timeL3_min[i] - timeL0_min[i])

@@ -15,8 +15,8 @@ from milliqanScheduler import *
 from milliqanCuts import *
 from milliqanPlotter import *
 
-# define the function to get the rows and columns of straight lines
-def getRowColumn(self):
+# define the function to get the time differences for the max heights of events in each channel between layer 0 and layer 3
+def getTimeDiff(self):
 
     max_heightsL0 = {}
     max_timeL0 = {}
@@ -30,8 +30,7 @@ def getRowColumn(self):
     max_heightsL3 = {}
     max_timeL3 = {}
     
-    rows = []
-    columns = []
+    time_diffsL30 = []
 
     # panel mask (remove events with panel pulses that pass the height cut)
     panelPulseMask = (self.events['type'] == 2) & (self.events['height'] > 1200)
@@ -136,24 +135,20 @@ def getRowColumn(self):
             # iterate over each event in current row and column combination
             for event in range(len(max_timeL0[key])):
                 if max_timeL0[key][event] is not None and max_timeL1[key][event] is not None and max_timeL2[key][event] is not None and max_timeL3[key][event] is not None:
-                    rows.append(row)
-                    columns.append(column)
+                    time_diffsL30.append(max_timeL3[key][event] - max_timeL0[key][event])
 
-    for i in range(len(rows)):
-        print(columns[i], rows[i])    
+    print(time_diffsL30)
 
-    # extend the final lists to match the size of the current file
+    # extend the final list to match the size of the current file
     num_events = len(self.events)
-    num_nones = num_events - len(rows)
-    rows.extend([None] * num_nones)
-    columns.extend([None] * num_nones)
+    num_nones = num_events - len(time_diffsL30)
+    time_diffsL30.extend([None] * num_nones)
 
-    # define custom branches
-    self.events['ROWS'] = rows
-    self.events['COLUMNS'] = columns
+    # define custom branch
+    self.events['timeDiff'] = time_diffsL30
 
 # add our custom function to milliqanCuts
-setattr(milliqanCuts, 'getRowColumn', getRowColumn)
+setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)
 
 '''
 # check if command line arguments are provided
@@ -192,16 +187,15 @@ fourLayerCut = mycuts.getCut(mycuts.fourLayerCut, 'fourLayerCut', cut=False)
 # define milliqan plotter
 myplotter = milliqanPlotter()
 
-# create a 2D root histogram
-h_2d = r.TH2F("h_2d", "Rows VS Columns", 4, 0, 4, 4, 0, 4)
-h_2d.GetXaxis().SetTitle("Column")
-h_2d.GetYaxis().SetTitle("Row")
+# create a 1D root histogram
+h_1d = r.TH1F("h_1d", "Time Differences between Layer 3 and 0", 200, -100, 100)
+h_1d.GetXaxis().SetTitle("Time Differences")
 
 # add root histogram to plotter
-myplotter.addHistograms(h_2d, ['COLUMNS', 'ROWS'], cut=None)
+myplotter.addHistograms(h_1d, 'timeDiff')
 
 # defining the cutflow
-cutflow = [boardMatchCut, pickupCut, mycuts.layerCut, mycuts.getRowColumn, myplotter.dict['h_2d']]
+cutflow = [boardMatchCut, pickupCut, mycuts.layerCut, mycuts.getTimeDiff, myplotter.dict['h_1d']]
 
 # create a schedule of the cuts
 myschedule = milliQanScheduler(cutflow, mycuts, myplotter)
@@ -214,13 +208,12 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts, myplotter
 
 # run the milliqan processor
 myiterator.run()
-"""
+
 # create a new TFile
-f = r.TFile("2dHistRowCol.root", "recreate")
+f = r.TFile("1dStraightL30Dt.root", "recreate")
 
 # write the histograms to the file
-h_2d.Write()
+h_1d.Write()
 
 # close the file
 f.Close()
-"""

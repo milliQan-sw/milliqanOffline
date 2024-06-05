@@ -87,13 +87,3 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts, myplotter
 
 # run the milliqan processor
 myiterator.run()
-'''
-# create a new TFile
-f = r.TFile("2dHistSlabHeightArea.root", "recreate")
-
-# write the histograms to the file
-h_2d.Write()
-
-# close the file
-f.Close()
-'''

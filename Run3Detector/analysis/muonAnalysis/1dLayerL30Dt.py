@@ -28,18 +28,15 @@ def getTimeDiff(self):
 
     finalPulseMask = centralTimeMask & heightAreaMask
 
-    # require events to have big pulses in all 4 layers within the time window
+    # Apply the finalPulseMask
     masked_time = self.events['timeFit_module_calibrated_corrected'][finalPulseMask]
-
-    # Ensure masked_time and layers have the same length
-    if len(masked_time) != len(self.events['layer']):
-        raise ValueError("Length of masked_time and layer arrays must be equal")
+    masked_layer = self.events['layer'][finalPulseMask]
 
     # Masked times per layer
-    timeL0 = masked_time[self.events['layer'] == 0]
-    timeL1 = masked_time[self.events['layer'] == 1]
-    timeL2 = masked_time[self.events['layer'] == 2]
-    timeL3 = masked_time[self.events['layer'] == 3]
+    timeL0 = masked_time[masked_layer == 0]
+    timeL1 = masked_time[masked_layer == 1]
+    timeL2 = masked_time[masked_layer == 2]
+    timeL3 = masked_time[masked_layer == 3]
 
     # Function to get minimum time per event handling None values
     def minTime(pulse_times):
@@ -47,15 +44,15 @@ def getTimeDiff(self):
         return min(filtered_times) if filtered_times else None
 
     # Extract minimum times for each layer
-    timeL0_min = [minTime(pulse_times) for pulse_times in timeL0]
-    timeL1_min = [minTime(pulse_times) for pulse_times in timeL1]
-    timeL2_min = [minTime(pulse_times) for pulse_times in timeL2]
-    timeL3_min = [minTime(pulse_times) for pulse_times in timeL3]
+    timeL0_min = [minTime(event) for event in ak.to_list(timeL0)]
+    timeL1_min = [minTime(event) for event in ak.to_list(timeL1)]
+    timeL2_min = [minTime(event) for event in ak.to_list(timeL2)]
+    timeL3_min = [minTime(event) for event in ak.to_list(timeL3)]
 
     # Calculate time differences only for events with valid times in all layers
-    for event in range(len(self.events)):
-        if timeL0_min[event] is not None and timeL1_min[event] is not None and timeL2_min[event] is not None and timeL3_min[event] is not None:
-            time_diffsL30.append(timeL3_min[event] - timeL0_min[event])
+    for i in range(len(timeL0_min)):
+        if timeL0_min[i] is not None and timeL1_min[i] is not None and timeL2_min[i] is not None and timeL3_min[i] is not None:
+            time_diffsL30.append(timeL3_min[i] - timeL0_min[i])
     
     print(time_diffsL30)
 

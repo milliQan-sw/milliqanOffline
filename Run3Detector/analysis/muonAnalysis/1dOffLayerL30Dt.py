@@ -21,7 +21,7 @@ def getTimeDiff(self):
     time_diffsL30 = []
 
     # central time mask
-    centralTimeMask = (self.events['timeFit_module_calibrated_corrected'] > 1100) & (self.events['timeFit_module_calibrated_corrected'] < 1400)
+    centralTimeMask = (self.events['timeFit_module_calibrated'] > 1100) & (self.events['timeFit_module_calibrated'] < 1400)
 
     # height and area mask
     heightAreaMask = (self.events['height'] > 1000) & (self.events['area'] > 500000)
@@ -29,7 +29,7 @@ def getTimeDiff(self):
     finalPulseMask = centralTimeMask & heightAreaMask
 
     # apply the finalPulseMask
-    masked_time = self.events['timeFit_module_calibrated_corrected'][finalPulseMask]
+    masked_time = self.events['timeFit_module_calibrated'][finalPulseMask]
     masked_layer = self.events['layer'][finalPulseMask]
 
     # masked times per layer
@@ -67,7 +67,6 @@ def getTimeDiff(self):
 # add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)
 
-'''
 # check if command line arguments are provided
 if len(sys.argv) != 3:
     print("Usage: python3 [file_name] [start_file_index] [end_file_index]")
@@ -83,11 +82,9 @@ filelist = [
     for i in range(start_index, end_index + 1)
     if os.path.exists(f"/home/bpeng/muonAnalysis/MilliQan_Run1541.{i}_v34.root")
 ]
-'''
-filelist = ['/home/bpeng/muonAnalysis/MilliQan_Run1000_v34_skim_correction.root']
 
 # define the necessary branches to run over
-branches = ['pickupFlag', 'boardsMatched', 'timeFit_module_calibrated_corrected', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type']
+branches = ['pickupFlag', 'boardsMatched', 'timeFit_module_calibrated', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type']
 
 # define the milliqan cuts object
 mycuts = milliqanCuts()
@@ -136,8 +133,8 @@ h_1d.Write()
 f.Close()
 
 # calculate the finite integral within a certain range
-bin_min = h_1d.FindBin(-8)
-bin_max = h_1d.FindBin(9)
+bin_min = h_1d.FindBin(-5)
+bin_max = h_1d.FindBin(7)
 integral = h_1d.Integral(bin_min, bin_max)
 
-print(f"Integral of the histogram from -8 to 9: {integral}")
+print(f"Integral of the histogram from -5 to 7: {integral}")

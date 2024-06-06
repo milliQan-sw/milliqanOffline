@@ -11,6 +11,9 @@ import traceback
 from pprint import pprint
 from mongoConnect import mongoConnect
 from subprocess import Popen, PIPE
+import pandas as pd
+import numpy as np
+from datetime import datetime
 
 site = os.getenv("OFFLINESITE")
 if not site:
@@ -40,6 +43,7 @@ def validateOutput(outputFile,runNumber=-1,fileNumber=-1):
         f1 = r.TFile(outputFile,"READ")
         t = f1.Get("t")
         nevts = t.GetEntries()
+        print("Output file {} has {} events".format(outputFile, nevts))
         # print "[RSR] ntuple has %i events and expected %i" % (t.GetEntries(), expectednevts)
         # if int(expectednevts) > 0 and int(t.GetEntries()) != int(expectednevts):
         #     print "[RSR] nevents mismatch"
@@ -79,6 +83,9 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
         print("Can't publish in display mode!")
         exit()
     
+    #copy files from eos
+    copyFromEOS()
+
     if not configurations:
         offlineDir = os.getenv("OFFLINEDIR")
         if drs:
@@ -204,6 +211,44 @@ def getConfigs(runNum, offlineDir):
     print("Did not find the correct channel map")
     sys.exit(1)
 
+def copyFromEOS(slab=False):
+
+    if not os.path.exists('goodRunsList.json'): 
+        print("Warning (runOfflineFactory.py): goodRunsList.json is not available locally, trying to access from eos")
+        try:
+            if not slab:
+                os.system('cp /eos/experiment/milliqan/Configs/goodRunsList.json .')
+        except:
+            print("Error (runOfflineFactory.py): could not access the goodRunList.json on eos or locally")
+    
+    if not os.path.exists('mqLumis.json'):
+        print("Warning (runOfflineFactory.py): mqLumis.json is not available locally, trying to access from eos")
+        try:
+            if not slab:
+                os.system('cp /eos/experiment/milliqan/Configs/mqLumis.json .')
+            
+            #make datetimes into uint64 to be read by c++
+            lumis = pd.read_json('mqLumis.json', orient = 'split', compression = 'infer')
+            convert_cols = ['start', 'stop', 'fillStart', 'fillEnd', 'startStableBeam', 'endStableBeam']
+
+            for col in convert_cols:
+                lumis[col] = convertTimes(lumis[col])
+            lumis.to_json('mqLumis.json', orient = 'split', compression = 'infer', index = 'true')
+        except:
+            print("Error (runOfflineFactory.py): unable to access the mqLumis file on eos or locally")
+
+def convertTimes(input):
+    input = input.apply(datetime_to_uint64)
+    return input
+
+def datetime_to_uint64(x):
+    if isinstance(x, str):  # If x is a string
+        dt = datetime.strptime(x, '%Y-%m-%dT%H:%M:%S.%fZ')
+        return np.uint64(dt.timestamp())
+    elif isinstance(x, list):  # If x is a list
+        timestamps = [datetime_to_uint64(item) for item in x]
+        return timestamps
+    return x  # Return unchanged if x is None or some other non-string value
 
 if __name__ == "__main__":
     valid = runOfflineFactory(**vars(parse_args()))

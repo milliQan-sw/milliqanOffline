@@ -6,8 +6,10 @@ from decimal import Decimal
 import glob
 import subprocess
 import numpy as np
-import datetime
+import pandas as pd
+from datetime import datetime
 import argparse
+import json
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -15,7 +17,7 @@ def parse_args():
     parser.add_argument('-s', '--subDir', type=str, help='Subdirectory to be processed')
     parser.add_argument('-a', '--all', action='store_true', help='Find all non processed files and create offline trees')
     parser.add_argument('-f', '--reprocess', action='store_true', help='Reprocess all files')
-    parser.add_argument('-v', '--version', type=str, default='34', help='Set the version of offline trees')
+    parser.add_argument('-v', '--version', type=str, default='35', help='Set the version of offline trees')
     parser.add_argument('-S', '--single', type=str, default='-1', help='Single file to be submitted')
     parser.add_argument('-R', '--run', type=str, help='Single run to be submitted')
     parser.add_argument('-o', '--outputDir', type=str, help='Output directory for files')
@@ -24,12 +26,39 @@ def parse_args():
     args = parser.parse_args()
     return args
 
+def copyFromEOS(slab=False):
+    if not slab:
+        os.system('cp /eos/experiment/milliqan/Configs/mqLumis.json .')
+        os.system('cp /eos/experiment/milliqan/Configs/goodRunsList.json .')
+    
+    #make datetimes into uint64 to be read by c++
+    lumis = pd.read_json('mqLumis.json', orient = 'split', compression = 'infer')
+    convert_cols = ['start', 'stop', 'fillStart', 'fillEnd', 'startStableBeam', 'endStableBeam']
+
+    for col in convert_cols:
+        lumis[col] = convertTimes(lumis[col])
+    lumis.to_json('mqLumis.json', orient = 'split', compression = 'infer', index = 'true')
+
+def convertTimes(input):
+    input = input.apply(datetime_to_uint64)
+    return input
+
+def datetime_to_uint64(x):
+    if isinstance(x, str):  # If x is a string
+        dt = datetime.strptime(x, '%Y-%m-%dT%H:%M:%S.%fZ')
+        return np.uint64(dt.timestamp())
+    elif isinstance(x, list):  # If x is a list
+        timestamps = [datetime_to_uint64(item) for item in x]
+        return timestamps
+    return x  # Return unchanged if x is None or some other non-string value
+
 def singleRun():
+
     subName = 'v' + args.version
 
     runOnSlabs = 'true' if args.slab else 'false'
 
-    now = datetime.datetime.now()
+    now = datetime.now()
 
     milliqanOffline = 'milliqanOffline_v' + args.version + '.tar.gz'
 
@@ -70,7 +99,7 @@ def singleRun():
     error                   = {6}error_$(PROCESS).txt
     should_transfer_files   = Yes
     when_to_transfer_output = ON_EXIT
-    transfer_input_files = wrapper.sh, tree_wrapper.py, MilliDAQ.tar.gz, {4}, offline.sif, compile.sh
+    transfer_input_files = wrapper.sh, tree_wrapper.py, MilliDAQ.tar.gz, {4}, mqLumis.json, goodRunsList.json, compile.sh
     getenv = true
     priority = 15
     queue 1
@@ -109,7 +138,7 @@ def main(runNum, subRun, swVersion, reprocessAllFiles=False):
   
     runOnSlabs = 'true' if args.slab else 'false'
     
-    now = datetime.datetime.now()
+    now = datetime.now()
 
     milliqanOffline = 'milliqanOffline_v' + swVersion + '.tar.gz'
     #milliqanOffline = 'milliqanOffline_lumi.tar.gz'
@@ -141,8 +170,9 @@ def main(runNum, subRun, swVersion, reprocessAllFiles=False):
             alreadyProcessedFiles.append([numRun,numFile])
     
     counter = 0
+    njobs = 0
     print("Already processed {0} files".format(len(alreadyProcessedFiles)))
-    files = []
+    files = {}
     print("Looking for raw files in dataDir", dataDir)
     for filename in os.listdir(dataDir):
         if('.root' in filename and "MilliQan" in filename):
@@ -156,12 +186,19 @@ def main(runNum, subRun, swVersion, reprocessAllFiles=False):
                 if([numRun,numFile] in alreadyProcessedFiles): 
                     counter+=1
                     continue
-            files.append([numRun, numFile]) 
+            print("filename", filename)
+            if numRun in files.keys():
+                files[numRun].append([numRun, numFile])
+            else:
+                files[numRun] = [[numRun, numFile]]
+
     print("Already processed {0} files".format(counter))
     print("Going to submit {0} jobs".format(len(files)))
     print(files)
-    filelist = 'fileLists/filelist_{0}_{1}.txt'.format(runNum, subRun)
-    np.savetxt(filelist,files)
+    filelist = 'fileLists/filelist_{0}_{1}.json'.format(runNum, subRun)
+    with open(filelist, 'w') as fout:
+        json.dump(files, fout)
+    #np.savetxt(filelist,files)
 
     condor_file = 'subs/run_trees.sub'
 
@@ -180,7 +217,7 @@ def main(runNum, subRun, swVersion, reprocessAllFiles=False):
     error                   = {6}error_$(PROCESS).txt
     should_transfer_files   = Yes
     when_to_transfer_output = ON_EXIT
-    transfer_input_files = {2}, wrapper.sh, tree_wrapper.py, MilliDAQ.tar.gz, {4}, offline.sif, compile.sh
+    transfer_input_files = {2}, wrapper.sh, tree_wrapper.py, MilliDAQ.tar.gz, {4}, mqLumis.json, goodRunsList.json, compile.sh
     getenv = true
     priority = 15
     queue {0}
@@ -223,7 +260,7 @@ def reprocess(reprocessList):
     error                   = {6}error_$(PROCESS).txt
     should_transfer_files   = Yes
     when_to_transfer_output = ON_EXIT
-    transfer_input_files = {2}, wrapper.sh, tree_wrapper.py, MilliDAQ.tar.gz, {4}, offline.sif, compile.sh
+    transfer_input_files = {2}, wrapper.sh, tree_wrapper.py, MilliDAQ.tar.gz, {4}, mqLumis.json, goodRunsList.json, compile.sh
     getenv = true
     priority = 15
     queue {0}
@@ -232,11 +269,13 @@ def reprocess(reprocessList):
     f.write(submitLines)
     f.close()
 
-    os.system('condor_submit {0}'.format(condor_file)) 
+    #os.system('condor_submit {0}'.format(condor_file)) 
 
 if __name__=="__main__":
 
     args = parse_args()
+
+    copyFromEOS()
 
     if args.all:
         runAll()
@@ -250,6 +289,4 @@ if __name__=="__main__":
     else:
         print("Error need to provide either run and subrun or option '--all'")
         sys.exit(1)
-
-    print('Running on slab', args.slab)
 

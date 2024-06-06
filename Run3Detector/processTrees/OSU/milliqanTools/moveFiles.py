@@ -2,6 +2,7 @@ import os
 import sys
 import shutil
 import subprocess
+from datetime import datetime
 
 sys.path.append('/share/scratch0/milliqan/milliqanOffline/Run3Detector/scripts/')
 sys.path.append('/share/scratch0/milliqan/processTrees/')
@@ -49,8 +50,10 @@ if __name__ == "__main__":
         outputDir += '/' + subdir2 + '/'
         if not os.path.exists(outputDir): os.mkdir(outputDir)
 
+        ctime = datetime.fromtimestamp(os.path.getctime(dataDir+filename))
+
         db.milliQanRawDatasets.update_one({ "run" : runNumber, "file" : fileNumber, "site" : site, "type" : fileType},
-                                          { '$set': {"location" : outputDir}})
+                                          { '$set': {"location" : outputDir, "date" : ctime}})
 
         print("Moving file {0} to directory {1}".format(dataDir+filename, outputDir+filename))
 

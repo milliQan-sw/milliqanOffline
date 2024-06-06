@@ -5,6 +5,7 @@ import os
 import time
 import socket
 import sys
+import math
 from ROOT import TFile
 from mongoConnect import mongoConnect
 from bson.objectid import ObjectId
@@ -30,8 +31,9 @@ def transferOfflineFiles(input, destination, site, version, logFile, force=False
         file = inputFile.split('/')[-1]
         subdir = inputFile.split(file)[0]
         #for file in files:
-        runNumber, fileNumber, dataType = getFileDetails(inputFile)
+        runNumber, fileNumber, dataType = getFileDetails(file)
         _id = "{}_{}_{}_{}_{}".format(runNumber,fileNumber,version,dataType,site)
+        print("ID", _id)
         allIds.append(_id)
         allInputs.append(os.path.join(subdir, file))
 
@@ -44,12 +46,14 @@ def transferOfflineFiles(input, destination, site, version, logFile, force=False
             if currentLocation != "":
                 currentLocation = currentLocation.split(inputFile.split("/")[-1])[0]
                 if currentLocation != destination.split(":")[-1]: destination = destination.split(":")[0] + ":" + currentLocation
-            fileAtDestAndDB = checkFileAtDest(inputFile,destination)
+            destinationMod = destination + str(math.floor(int(_id.split('_')[0])/100)*100) + '/'
+            print("changed destination", destinationMod)
+            fileAtDestAndDB = checkFileAtDest(inputFile,destinationMod)
             #Don't transfer files that have already been sent (unless forced)
             if fileAtDestAndDB and entryInMongo and not force:
                 print (("File {0} exists at destination and database (skipping)").format(inputFile))
                 continue
-            command = "rsync -zh " + inputFile + " " + destination + " >> " + logFile
+            command = "rsync -zh " + inputFile + " " + destinationMod + " >> " + logFile
             print(command)
             transfer = os.system(command)
 
@@ -66,7 +70,7 @@ def transferOfflineFiles(input, destination, site, version, logFile, force=False
                     milliQanOfflineDataset = {}
                     milliQanOfflineDataset['_id'] = _id
                     milliQanOfflineDataset['site'] = site
-                    milliQanOfflineDataset['location'] = destination.split(':')[-1]
+                    milliQanOfflineDataset['location'] = destinationMod.split(':')[-1]
                     milliQanOfflineDataset['type'] = dataType
                     milliQanOfflineDataset['file'] = fileNumber
                     milliQanOfflineDataset['run'] = runNumber
@@ -74,7 +78,7 @@ def transferOfflineFiles(input, destination, site, version, logFile, force=False
                 else:
                     milliQanOfflineDataset['_id'] = _id
                     milliQanOfflineDataset['site'] = site
-                    milliQanOfflineDataset['location'] = destination.split(':')[-1]
+                    milliQanOfflineDataset['location'] = destinationMod.split(':')[-1]
                     db.milliQanOfflineDatasets.insert_one(milliQanOfflineDataset)
 
     os.system("echo 'Transferred {0:.2f} MB in {1} file(s).' >> {2}".format(mbytesTransferred, nTransferred, logFile))
@@ -106,4 +110,8 @@ if __name__ == '__main__':
 
     version = args.input.split('/')[5]
 
-    transferOfflineFiles(args.input, args.destination, site, version, args.logFile, force=args.force, debug=args.debug)
+    os.system('bash ~/accessEOS.sh')
+
+    #transferOfflineFiles(args.input, args.destination, site, version, args.logFile, force=args.force, debug=args.debug)
+    transferOfflineFiles(args.input, '/eos/experiment/milliqan/trees/v34/', 'lxplus', version, args.logFile, force=args.force, debug=args.debug)
+

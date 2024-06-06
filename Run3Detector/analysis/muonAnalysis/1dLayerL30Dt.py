@@ -52,7 +52,7 @@ def getTimeDiff(self):
     # calculate time differences only for events with valid times in all layers
     for i in range(len(timeL0_min)):
         if timeL0_min[i] is not None and timeL1_min[i] is not None and timeL2_min[i] is not None and timeL3_min[i] is not None:
-            time_diffsL30.append(timeL2_min[i] - timeL1_min[i])
+            time_diffsL30.append(timeL1_min[i] - timeL0_min[i])
     
     print(time_diffsL30)
 
@@ -127,7 +127,7 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts, myplotter
 myiterator.run()
 
 # create a new TFile
-f = r.TFile("SkimLayerL21Dt.root", "recreate")
+f = r.TFile("SkimLayerL10Dt.root", "recreate")
 
 # write the histograms to the file
 h_1d.Write()

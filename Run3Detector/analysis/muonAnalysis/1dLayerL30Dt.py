@@ -105,7 +105,7 @@ fourLayerCut = mycuts.getCut(mycuts.fourLayerCut, 'fourLayerCut', cut=False)
 myplotter = milliqanPlotter()
 
 # create a 1D root histogram
-h_1d = r.TH1F("h_1d", "Time Differences between Layer 3 and 0", 200, -50, 50)
+h_1d = r.TH1F("h_1d", "Time Differences between Layer 3 and 0", 100, -50, 50)
 h_1d.GetXaxis().SetTitle("Time Differences")
 
 # add root histogram to plotter

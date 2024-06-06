@@ -127,7 +127,7 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts, myplotter
 myiterator.run()
 
 # create a new TFile
-f = r.TFile("SkimLayerL10Dt.root", "recreate")
+f = r.TFile("S1000LayerL10Dt.root", "recreate")
 
 # write the histograms to the file
 h_1d.Write()

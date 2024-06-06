@@ -105,7 +105,7 @@ fourLayerCut = mycuts.getCut(mycuts.fourLayerCut, 'fourLayerCut', cut=False)
 myplotter = milliqanPlotter()
 
 # create a 1D root histogram
-h_1d = r.TH1F("h_1d", "Time Differences between Layer 3 and 0", 200, -100, 100)
+h_1d = r.TH1F("h_1d", "Time Differences between Layer 3 and 0", 200, -50, 50)
 h_1d.GetXaxis().SetTitle("Time Differences")
 
 # add root histogram to plotter
@@ -135,7 +135,7 @@ h_1d.Write()
 # close the file
 f.Close()
 
-# Calculate the finite integral within a certain range, e.g., -50 to 50
+# calculate the finite integral within a certain range, e.g., -50 to 50
 bin_min = h_1d.FindBin(-8)
 bin_max = h_1d.FindBin(9)
 integral = h_1d.Integral(bin_min, bin_max)

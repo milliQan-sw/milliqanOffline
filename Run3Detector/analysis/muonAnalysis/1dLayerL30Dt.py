@@ -134,3 +134,10 @@ h_1d.Write()
 
 # close the file
 f.Close()
+
+# Calculate the finite integral within a certain range, e.g., -50 to 50
+bin_min = h_1d.FindBin(-8)
+bin_max = h_1d.FindBin(9)
+integral = h_1d.Integral(bin_min, bin_max)
+
+print(f"Integral of the histogram from -8 to 9: {integral}")

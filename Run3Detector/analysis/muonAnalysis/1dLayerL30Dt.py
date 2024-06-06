@@ -84,7 +84,7 @@ filelist = [
     if os.path.exists(f"/home/bpeng/muonAnalysis/MilliQan_Run1541.{i}_v34.root")
 ]
 '''
-filelist = ['/home/bpeng/muonAnalysis/MilliQan_Run1100_v34_skim_correction.root']
+filelist = ['/home/bpeng/muonAnalysis/MilliQan_Run1200_v34_skim_correction.root']
 
 # define the necessary branches to run over
 branches = ['pickupFlag', 'boardsMatched', 'timeFit_module_calibrated_corrected', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type']
@@ -127,7 +127,7 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts, myplotter
 myiterator.run()
 
 # create a new TFile
-f = r.TFile("S1100LayerL30Dt.root", "recreate")
+f = r.TFile("S1200LayerL30Dt.root", "recreate")
 
 # write the histograms to the file
 h_1d.Write()

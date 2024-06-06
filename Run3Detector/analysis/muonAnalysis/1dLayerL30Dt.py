@@ -26,7 +26,7 @@ def getTimeDiff(self):
     # height and area mask
     heightAreaMask = (self.events['height'] > 1000) & (self.events['area'] > 500000)
 
-    finalPulseMask = centralTimeMask & heightAreaMask
+    finalPulseMask = centralTimeMask & heightAreaMask & (self.events['ipulse'] == 0)
 
     # apply the finalPulseMask
     masked_time = self.events['timeFit_module_calibrated_corrected'][finalPulseMask]

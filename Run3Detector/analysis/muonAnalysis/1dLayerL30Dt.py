@@ -126,7 +126,6 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts, myplotter
 # run the milliqan processor
 myiterator.run()
 
-'''
 # create a new TFile
 f = r.TFile("S1000LayerL30Dt.root", "recreate")
 
@@ -135,4 +134,3 @@ h_1d.Write()
 
 # close the file
 f.Close()
-'''

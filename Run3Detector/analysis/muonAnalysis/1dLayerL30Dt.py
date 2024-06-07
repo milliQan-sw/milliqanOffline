@@ -141,6 +141,12 @@ def fit_histogram(hist, root_file):
     gaus1.Draw("same")
     gaus2.Draw("same")
 
+    # add the integrated number as text on the plot
+    text = r.TText()
+    text.SetNDC()
+    text.SetTextSize(0.03)
+    text.DrawText(0.15, 0.85, f"Integral of the right peak: {integral_right_peak:.2f}")
+
     # save the canvas to the ROOT file
     root_file.cd()
     c.Write("TimeDiffs_Fit_Canvas")

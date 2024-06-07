@@ -129,8 +129,8 @@ def fit_histogram(hist, root_file):
     gaus2.SetParameters(140, 0, 6)
 
     # fit the histogram
-    hist.Fit(gaus2, "R")
-    hist.Fit(gaus1, "R+")
+    hist.Fit(gaus1, "R")
+    hist.Fit(gaus2, "R+")
 
     # integrate the right peak
     integral_right_peak = gaus2.Integral(-14, 14)

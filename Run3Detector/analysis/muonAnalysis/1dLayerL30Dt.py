@@ -136,6 +136,7 @@ h_1d.Write()
 # close the file
 f.Close()
 
+'''
 # fit the histogram with a combined model of two Gaussian functions and save the canvas to the ROOT file
 def fit_histogram(hist, root_file):
     # define the combined Gaussian model
@@ -192,3 +193,4 @@ print("Integral of the right peak:", integral_right_peak)
 # close the files
 f_fit.Close()
 f_orig.Close()
+'''

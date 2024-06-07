@@ -52,7 +52,7 @@ def getTimeDiff(self):
     # calculate time differences only for events with valid times in all layers
     for i in range(len(timeL0_min)):
         if timeL0_min[i] is not None and timeL1_min[i] is not None and timeL2_min[i] is not None and timeL3_min[i] is not None:
-            time_diffsL30.append(timeL1_min[i] - timeL0_min[i])
+            time_diffsL30.append(timeL3_min[i] - timeL0_min[i])
     
     print(time_diffsL30)
 
@@ -84,7 +84,7 @@ filelist = [
     if os.path.exists(f"/home/bpeng/muonAnalysis/MilliQan_Run1541.{i}_v34.root")
 ]
 '''
-filelist = ['/home/bpeng/muonAnalysis/MilliQan_Run1500_v34_skim_correction.root']
+filelist = ['/home/bpeng/muonAnalysis/MilliQan_Run1000_v34_skim_correction.root']
 
 # define the necessary branches to run over
 branches = ['pickupFlag', 'boardsMatched', 'timeFit_module_calibrated_corrected', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type']
@@ -105,7 +105,7 @@ fourLayerCut = mycuts.getCut(mycuts.fourLayerCut, 'fourLayerCut', cut=False)
 myplotter = milliqanPlotter()
 
 # create a 1D root histogram
-h_1d = r.TH1F("h_1d", "Time Differences between Layer 1 and 0", 100, -50, 50)
+h_1d = r.TH1F("h_1d", "Time Differences between Layer 3 and 0", 100, -50, 50)
 h_1d.GetXaxis().SetTitle("Time Differences")
 
 # add root histogram to plotter
@@ -126,20 +126,13 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts, myplotter
 # run the milliqan processor
 myiterator.run()
 
+'''
 # create a new TFile
-f = r.TFile("S1500LayerL10Dt.root", "recreate")
+f = r.TFile("S1000LayerL30Dt.root", "recreate")
 
 # write the histograms to the file
 h_1d.Write()
 
 # close the file
 f.Close()
-
-'''
-# calculate the finite integral within a certain range
-bin_min = h_1d.FindBin(-8)
-bin_max = h_1d.FindBin(9)
-integral = h_1d.Integral(bin_min, bin_max)
-
-print(f"Integral of the histogram from -8 to 9: {integral}")
 '''

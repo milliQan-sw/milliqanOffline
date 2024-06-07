@@ -125,8 +125,8 @@ def fit_histogram(hist, root_file):
     gaus2 = r.TF1("gaus2", "gaus", -14, 14)
 
     # initial parameter estimates
-    gaus1.SetParameters(hist.GetMaximum(), -17, 6)
-    gaus2.SetParameters(hist.GetMaximum(), 0, 6)
+    gaus1.SetParameters(45, -17, 6)
+    gaus2.SetParameters(140, 0, 6)
 
     # fit the histogram
     hist.Fit(gaus1, "R")

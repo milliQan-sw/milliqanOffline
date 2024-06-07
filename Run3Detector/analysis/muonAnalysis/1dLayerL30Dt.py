@@ -187,7 +187,6 @@ h_1d = f_orig.Get("h_1d")
 
 # fit the histogram and get the integral of the right peak
 integral_right_peak = fit_histogram(h_1d, f_fit)
-print("Integral of the right peak:", integral_right_peak)
 
 # close the files
 f_fit.Close()

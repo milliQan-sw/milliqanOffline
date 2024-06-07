@@ -147,11 +147,9 @@ def fit_histogram(hist, root_file):
     # fit the histogram with the combined model
     hist.Fit(combined_gaus, "R")
 
-    # define two Gaussian functions
+    # extract the individual Gaussian functions from the combined model
     gaus1 = r.TF1("gaus1", "gaus", -31, -3)
     gaus2 = r.TF1("gaus2", "gaus", -14, 14)
-
-    # extract the parameters from the combined Gaussian function and set them to two separate Gaussian functions
     for i in range(3):
         gaus1.SetParameter(i, combined_gaus.GetParameter(i))
         gaus2.SetParameter(i, combined_gaus.GetParameter(i + 3))
@@ -159,9 +157,10 @@ def fit_histogram(hist, root_file):
     # integrate the right peak
     integral_right_peak = gaus2.Integral(-14, 14)
 
-    # draw the histogram and fits
+    # draw the histogram and individual fits
     c = r.TCanvas()
     hist.Draw()
+    # do not draw the combined Gaussian
     gaus1.SetLineColor(r.kRed)
     gaus1.Draw("same")
     gaus2.SetLineColor(r.kBlue)
@@ -188,6 +187,7 @@ h_1d = f_orig.Get("h_1d")
 
 # fit the histogram and get the integral of the right peak
 integral_right_peak = fit_histogram(h_1d, f_fit)
+print("Integral of the right peak:", integral_right_peak)
 
 # close the files
 f_fit.Close()

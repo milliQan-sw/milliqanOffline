@@ -67,7 +67,7 @@ def getTimeDiff(self):
 # add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)
 
-filelist = ['/home/bpeng/muonAnalysis/MilliQan_Run1100_v34_skim_correction.root']
+filelist = ['/home/bpeng/muonAnalysis/MilliQan_Run1500_v34_skim_correction.root']
 
 # define the necessary branches to run over
 branches = ['pickupFlag', 'boardsMatched', 'timeFit_module_calibrated_corrected', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type']
@@ -110,7 +110,7 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts, myplotter
 myiterator.run()
 
 # create a new TFile
-f = r.TFile("S1100LayerL30Dt.root", "recreate")
+f = r.TFile("S1500LayerL30Dt.root", "recreate")
 
 # write the histograms to the file
 h_1d.Write()
@@ -121,11 +121,11 @@ f.Close()
 # fit the histogram with two Gaussian functions and save the canvas to the ROOT file
 def fit_histogram(hist, root_file):
     # define two Gaussian functions
-    gaus1 = r.TF1("gaus1", "gaus", -25, -9)
-    gaus2 = r.TF1("gaus2", "gaus", -8, 9)
+    gaus1 = r.TF1("gaus1", "gaus", -31, -3)
+    gaus2 = r.TF1("gaus2", "gaus", -14, 14)
 
     # initial parameter estimates
-    gaus1.SetParameters(hist.GetMaximum(), -15, 5)
+    gaus1.SetParameters(hist.GetMaximum(), -17, 5)
     gaus2.SetParameters(hist.GetMaximum(), 0, 5)
 
     # fit the histogram
@@ -133,7 +133,7 @@ def fit_histogram(hist, root_file):
     hist.Fit(gaus2, "R+")
 
     # integrate the right peak
-    integral_right_peak = gaus2.Integral(-8, 9)
+    integral_right_peak = gaus2.Integral(-14, 14)
 
     # draw the histogram and fits
     c = r.TCanvas()
@@ -154,10 +154,10 @@ def fit_histogram(hist, root_file):
     return integral_right_peak
 
 # create a new TFile for the fitted histogram and canvas
-f_fit = r.TFile("S1100LayerL30DtFit.root", "recreate")
+f_fit = r.TFile("S1500LayerL30DtFit.root", "recreate")
 
 # open the original ROOT file and retrieve the histogram
-f_orig = r.TFile("S1100LayerL30Dt.root")
+f_orig = r.TFile("S1500LayerL30Dt.root")
 h_1d = f_orig.Get("h_1d")
 
 # fit the histogram and get the integral of the right peak

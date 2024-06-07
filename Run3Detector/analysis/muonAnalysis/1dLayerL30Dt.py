@@ -138,8 +138,8 @@ f.Close()
 # fit the histogram with two Gaussian functions
 def fit_histogram(hist):
     # define two Gaussian functions
-    gaus1 = r.TF1("gaus1", "gaus", -50, 0)
-    gaus2 = r.TF1("gaus2", "gaus", 0, 50)
+    gaus1 = r.TF1("gaus1", "gaus", -24, -9)
+    gaus2 = r.TF1("gaus2", "gaus", -8, 9)
 
     # initial parameter estimates
     gaus1.SetParameters(hist.GetMaximum(), -15, 5)
@@ -150,14 +150,7 @@ def fit_histogram(hist):
     hist.Fit(gaus2, "R+")
 
     # integrate the right peak
-    integral_right_peak = gaus2.Integral(-50, 50)
-
-    # draw the histogram and fits
-    c = r.TCanvas()
-    hist.Draw()
-    gaus1.Draw("same")
-    gaus2.Draw("same")
-    c.SaveAs("TimeDiffs_Fit.png")
+    integral_right_peak = gaus2.Integral(-8, 9)
 
     return integral_right_peak
 
@@ -166,8 +159,8 @@ f = r.TFile("S1000LayerL30Dt.root")
 h_1d = f.Get("h_1d")
 
 # fit the histogram and get the integral of the right peak
-integral_right_peak = fit_histogram(h_1d)
-print("Integral of the right peak:", integral_right_peak)
+integral_muon_peak = fit_histogram(h_1d)
+print("Integral of the muon peak:", integral_muon_peak)
 
 # close the file
 f.Close()

@@ -1,10 +1,16 @@
 import time
+import datetime
 import sys
+import os
+import cProfile
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 
 import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
 
+from preprocessing import WaveformProcessor
+import gan 
 
 # Data Preprocessing Constants
 WAVEFORM_BOUNDS = (1200, 1600)
@@ -14,13 +20,13 @@ NS_PER_MEASUREMENT = 2.5
 # Model Constants
 LATENT_DIM = 500
 BATCH_SIZE = 128
-EPOCHS = 100000
+EPOCHS = 100
 EVAL_EPOCH = 2000  # How often you should get output during training
 
 PLOT = False
 
 # Preprocess Waveform Data
-INPUT_FILE = ("/home/ryan/Documents/Research/Data/MilliQanWaveforms/"
+INPUT_FILE = ("/home/ryan/Documents/Data/MilliQan/"
               "outputWaveforms_812_2p5V.root")
 processor = WaveformProcessor(INPUT_FILE)
 
@@ -33,10 +39,9 @@ static_bounds = {key: np.array([[np.where(processor.times == WAVEFORM_BOUNDS[0])
 # Isolate Waveforms
 isolated_peaks = processor.isolate_waveforms(static_bounds)
 peak_heights = np.max(isolated_peaks, axis=1)
-utilities.plot_histogram(peak_heights, 100, 0, 300,
-                         write_to_existing_file=True,
-                         file_path="height.root")
-one_npe_fit = TF1("g1", "gaus", 
+#utilities.plot_histogram(peak_heights, 100, 0, 300,
+#                         write_to_existing_file=True,
+#                         file_path="height.root")
 
 # Create Height Classification
 
@@ -65,10 +70,10 @@ if PLOT:
         plt.savefig(f"Plots/isolated_peak_{i}.png")
 
 # # Defining GAN
-discriminator = gan.build_discriminator(embed_dim=128, input_shape=201,
+discriminator = gan.build_discriminator(embed_dim=128, input_shape=500,
                                           num_classes=NUM_CLASSES+1)
 
-generator = gan.build_generator(LATENT_DIM, output_shape=201, embed_dim=16,
+generator = gan.build_generator(LATENT_DIM, output_shape=500, embed_dim=16,
                                   num_classes=NUM_CLASSES+1)
 
 print(generator.summary())
@@ -78,6 +83,12 @@ disc_opt = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
 
 d_loss_values = []
 g_loss_values = [] 
+
+
+# Create summaries for tensorboard
+current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+train_log_dir = 'logs/gradient_tape/' + current_time + '/train'
+train_summary_writer = tf.summary.create_file_writer(train_log_dir)
 
 start = time.time()
 for epoch in range(EPOCHS):
@@ -90,10 +101,10 @@ for epoch in range(EPOCHS):
     assert dataset is not None, "Error in setting up dataset"
     for waveform_batch, label_batch in dataset:
         i+=1
-        generator_opt, disc_opt, d_batch_loss, g_batch_loss = gan.train_step(waveform_batch, label_batch,
-                                                      LATENT_DIM,
-                                                      generator, discriminator,
-                                                      generator_opt, disc_opt)
+        d_batch_loss, g_batch_loss = gan.train_step(waveform_batch, label_batch,
+                                                    LATENT_DIM,
+                                                    generator, discriminator,
+                                                    generator_opt, disc_opt)
         d_loss += d_batch_loss
         g_loss += g_batch_loss
 
@@ -101,10 +112,13 @@ for epoch in range(EPOCHS):
     g_loss /= i
     d_loss_values.append(d_loss)
     g_loss_values.append(g_loss)
+
+    with train_summary_writer.as_default():
+        tf.summary.scalar('d_loss', d_loss, step=epoch)
+        tf.summary.scalar('g_loss', g_loss, step=epoch)
+
+            
 end = time.time()
 
-plot_loss(d_loss_values, g_loss_values, save_location=f"Plots/loss_{EPOCHS}.png")
-
 print(f"Training took {end - start} seconds to complete.")
-discriminator.save(f"TrainedModels/discriminator_{EPOCHS}.keras")
-generator.save(f"TrainedModels/generator_{EPOCHS}.keras")
+

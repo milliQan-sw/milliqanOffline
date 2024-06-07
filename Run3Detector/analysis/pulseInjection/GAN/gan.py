@@ -4,11 +4,11 @@ from tensorflow.keras.layers import (Input, Dense, LeakyReLU, Embedding, Flatten
 from tensorflow.keras.models import Model
 
 def build_generator(latent_dim, output_shape, embed_dim, num_classes):
-    noise = Input((latent_dim), name="noise_input")
+    noise = Input((latent_dim,), name="noise_input")
     x = Dense(256, name="gen_dense0")(noise)
     x = LeakyReLU(0.2, name="gen_relu0")(x)
 
-    label = Input((1), name="label")
+    label = Input((1,), name="label")
     l = Embedding(num_classes, embed_dim, input_length=1)(label)
     l = Flatten()(l)
 
@@ -23,11 +23,11 @@ def build_generator(latent_dim, output_shape, embed_dim, num_classes):
     return Model([noise, label], output, name="generator")
 
 def build_discriminator(embed_dim, input_shape, num_classes):
-    waveform = Input((input_shape), name="discriminator_input")
+    waveform = Input((input_shape,), name="discriminator_input")
     x = Dense(64)(waveform)
     x = LeakyReLU(0.2)(x)
 
-    label = Input((1), name="class_label")
+    label = Input((1,), name="class_label")
     l = Embedding(num_classes, embed_dim)(label)
     l = Flatten()(l)
 
@@ -41,7 +41,9 @@ def build_discriminator(embed_dim, input_shape, num_classes):
 # how often the generated data is caught by the discriminator. Even ideally,
 # the loss should not go to 0, it will meet in the middle somewhere
 @tf.function
-def train_step (real_waveforms, real_labels, latent_dim, num_classes, generator, discriminator, g_opt, d_opt):
+def train_step (real_waveforms, real_labels, latent_dim, generator, discriminator, g_opt, d_opt):
+    d_loss = 0
+    g_loss = 0
     batch_size = tf.shape(real_waveforms)[0]
     bce_loss = tf.keras.losses.BinaryCrossentropy(from_logits=True, label_smoothing=0.1)
 
@@ -57,16 +59,10 @@ def train_step (real_waveforms, real_labels, latent_dim, num_classes, generator,
             real_output = discriminator([real_waveforms, real_labels], training=True)
             fake_output = discriminator([generated_waveforms, real_labels], training=True)
 
-<<<<<<< HEAD
             # The loss of the GAN is the cumulative loss on the real and fake data
             d_real_loss = bce_loss(tf.ones_like(real_output), real_output)
             d_fake_loss = bce_loss(tf.zeros_like(fake_output), fake_output)
             d_loss = d_real_loss + d_fake_loss
-=======
-    label = Input((1), name="class_label")
-    l = Embedding(num_classes, embed_dim)(label)
-    l = Flatten()(l)
->>>>>>> 9fcedb0d0479721003f4e7df26a44ff5ea15285b
 
         d_grad = dtape.gradient(d_loss, discriminator.trainable_variables)
         d_opt.apply_gradients(zip(d_grad, discriminator.trainable_variables))

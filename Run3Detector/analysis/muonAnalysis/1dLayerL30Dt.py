@@ -69,6 +69,24 @@ setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)
 
 filelist = ['/home/bpeng/muonAnalysis/MilliQan_Run1500_v34_skim_correction.root']
 
+'''
+# check if command line arguments are provided
+if len(sys.argv) != 3:
+    print("Usage: python3 [file_name] [start_file_index] [end_file_index]")
+    sys.exit(1)
+
+# assign start and end indices from command line
+start_index = int(sys.argv[1])
+end_index = int(sys.argv[2])
+
+# define a file list to run over
+filelist = [
+    f"/home/bpeng/muonAnalysis/MilliQan_Run1541.{i}_v34.root"
+    for i in range(start_index, end_index + 1)
+    if os.path.exists(f"/home/bpeng/muonAnalysis/MilliQan_Run1541.{i}_v34.root")
+]
+'''
+
 # define the necessary branches to run over
 branches = ['pickupFlag', 'boardsMatched', 'timeFit_module_calibrated_corrected', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type']
 

@@ -147,9 +147,11 @@ def fit_histogram(hist, root_file):
     # fit the histogram with the combined model
     hist.Fit(combined_gaus, "R")
 
-    # extract the individual Gaussian functions from the combined model
+    # define two Gaussian functions
     gaus1 = r.TF1("gaus1", "gaus", -31, -3)
     gaus2 = r.TF1("gaus2", "gaus", -14, 14)
+
+    # extract the parameters from the combined Gaussian function and set them to two separate Gaussian functions
     for i in range(3):
         gaus1.SetParameter(i, combined_gaus.GetParameter(i))
         gaus2.SetParameter(i, combined_gaus.GetParameter(i + 3))
@@ -160,7 +162,6 @@ def fit_histogram(hist, root_file):
     # draw the histogram and fits
     c = r.TCanvas()
     hist.Draw()
-    combined_gaus.Draw("same")
     gaus1.SetLineColor(r.kRed)
     gaus1.Draw("same")
     gaus2.SetLineColor(r.kBlue)

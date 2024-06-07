@@ -118,19 +118,23 @@ h_1d.Write()
 # close the file
 f.Close()
 
-# fit the histogram with two Gaussian functions and save the canvas to the ROOT file
+# fit the histogram with a combined model of two Gaussian functions and save the canvas to the ROOT file
 def fit_histogram(hist, root_file):
-    # define two Gaussian functions
+    # define the combined Gaussian model
+    combined_gaus = r.TF1("combined_gaus", "gaus(0) + gaus(3)", -50, 50)
+    
+    # initial parameter estimates for the two Gaussian functions
+    combined_gaus.SetParameters(45, -17, 6, 140, 0, 6)
+
+    # fit the histogram with the combined model
+    hist.Fit(combined_gaus, "R")
+
+    # extract the individual Gaussian functions from the combined model
     gaus1 = r.TF1("gaus1", "gaus", -31, -3)
     gaus2 = r.TF1("gaus2", "gaus", -14, 14)
-
-    # initial parameter estimates
-    gaus1.SetParameters(45, -17, 6)
-    gaus2.SetParameters(140, 0, 6)
-
-    # fit the histogram
-    hist.Fit(gaus1, "R")
-    hist.Fit(gaus2, "R+")
+    for i in range(3):
+        gaus1.SetParameter(i, combined_gaus.GetParameter(i))
+        gaus2.SetParameter(i, combined_gaus.GetParameter(i + 3))
 
     # integrate the right peak
     integral_right_peak = gaus2.Integral(-14, 14)
@@ -138,7 +142,10 @@ def fit_histogram(hist, root_file):
     # draw the histogram and fits
     c = r.TCanvas()
     hist.Draw()
+    combined_gaus.Draw("same")
+    gaus1.SetLineColor(r.kRed)
     gaus1.Draw("same")
+    gaus2.SetLineColor(r.kBlue)
     gaus2.Draw("same")
 
     # add the integrated number as text on the plot

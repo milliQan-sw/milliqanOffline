@@ -67,23 +67,6 @@ def getTimeDiff(self):
 # add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)
 
-'''
-# check if command line arguments are provided
-if len(sys.argv) != 3:
-    print("Usage: python3 [file_name] [start_file_index] [end_file_index]")
-    sys.exit(1)
-
-# assign start and end indices from command line
-start_index = int(sys.argv[1])
-end_index = int(sys.argv[2])
-
-# define a file list to run over
-filelist = [
-    f"/home/bpeng/muonAnalysis/MilliQan_Run1541.{i}_v34.root"
-    for i in range(start_index, end_index + 1)
-    if os.path.exists(f"/home/bpeng/muonAnalysis/MilliQan_Run1541.{i}_v34.root")
-]
-'''
 filelist = ['/home/bpeng/muonAnalysis/MilliQan_Run1000_v34_skim_correction.root']
 
 # define the necessary branches to run over
@@ -135,8 +118,8 @@ h_1d.Write()
 # close the file
 f.Close()
 
-# fit the histogram with two Gaussian functions
-def fit_histogram(hist):
+# fit the histogram with two Gaussian functions and save the canvas to the ROOT file
+def fit_histogram(hist, root_file):
     # define two Gaussian functions
     gaus1 = r.TF1("gaus1", "gaus", -24, -9)
     gaus2 = r.TF1("gaus2", "gaus", -8, 9)
@@ -157,17 +140,24 @@ def fit_histogram(hist):
     hist.Draw()
     gaus1.Draw("same")
     gaus2.Draw("same")
-    c.SaveAs("TimeDiffs_Fit.png")
+
+    # save the canvas to the ROOT file
+    root_file.cd()
+    c.Write("TimeDiffs_Fit_Canvas")
 
     return integral_right_peak
 
-# open the ROOT file and retrieve the histogram
-f = r.TFile("S1000LayerL30Dt.root")
-h_1d = f.Get("h_1d")
+# create a new TFile for the fitted histogram and canvas
+f_fit = r.TFile("S1000LayerL30DtFit.root", "recreate")
+
+# open the original ROOT file and retrieve the histogram
+f_orig = r.TFile("S1000LayerL30Dt.root")
+h_1d = f_orig.Get("h_1d")
 
 # fit the histogram and get the integral of the right peak
-integral_right_peak = fit_histogram(h_1d)
+integral_right_peak = fit_histogram(h_1d, f_fit)
 print("Integral of the right peak:", integral_right_peak)
 
-# close the file
-f.Close()
+# close the files
+f_fit.Close()
+f_orig.Close()

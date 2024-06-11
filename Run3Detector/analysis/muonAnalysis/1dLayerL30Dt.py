@@ -26,6 +26,7 @@ def getTimeDiff(self):
     # height and area mask
     heightAreaMask = (self.events['height'] > 1000) & (self.events['area'] > 500000)
 
+    # require ipulse == 0
     finalPulseMask = centralTimeMask & heightAreaMask & (self.events['ipulse'] == 0)
 
     # apply the finalPulseMask
@@ -49,9 +50,10 @@ def getTimeDiff(self):
     timeL2_min = [minTime(event) for event in ak.to_list(timeL2)]
     timeL3_min = [minTime(event) for event in ak.to_list(timeL3)]
 
-    # calculate time differences only for events with valid times in all layers
     for i in range(len(timeL0_min)):
+        # require pulses in all 4 layers for one event
         if timeL0_min[i] is not None and timeL1_min[i] is not None and timeL2_min[i] is not None and timeL3_min[i] is not None:
+            # calculate time differences only for events with valid times in all layers
             time_diffsL30.append(timeL3_min[i] - timeL0_min[i])
     
     print(time_diffsL30)
@@ -67,7 +69,7 @@ def getTimeDiff(self):
 # add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)
 
-filelist = ['/home/bpeng/muonAnalysis/MilliQan_Run1500_v34_skim_correction.root']
+filelist = ['/home/bpeng/muonAnalysis/MilliQan_Run1000_v34_skim_correction.root']
 
 '''
 # check if command line arguments are provided

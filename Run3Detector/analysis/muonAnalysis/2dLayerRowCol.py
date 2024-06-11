@@ -128,7 +128,7 @@ def getRowCol(self):
 # add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getRowCol', getRowCol)
 
-filelist = ['/home/bpeng/muonAnalysis/MilliQan_Run1300_v34_skim_correction.root']
+filelist = ['/home/bpeng/muonAnalysis/MilliQan_Run1000_v34_skim_correction.root']
 
 '''
 # check if command line arguments are provided

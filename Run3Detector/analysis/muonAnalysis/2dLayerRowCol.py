@@ -113,7 +113,7 @@ def getRowCol(self):
             colL3_Tmin.append(colL3_min[i])
     
     for i in range(len(rowL0_Tmin)):
-        print(rowL3_Tmin[i], colL3_Tmin[i])
+        print(rowL0_Tmin[i], colL0_Tmin[i])
 
     # extend the final list to match the size of the current file
     num_events = len(self.events)
@@ -128,7 +128,7 @@ def getRowCol(self):
 # add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getRowCol', getRowCol)
 
-filelist = ['/home/bpeng/muonAnalysis/MilliQan_Run1100_v34_skim_correction.root']
+filelist = ['/home/bpeng/muonAnalysis/MilliQan_Run1200_v34_skim_correction.root']
 
 '''
 # check if command line arguments are provided

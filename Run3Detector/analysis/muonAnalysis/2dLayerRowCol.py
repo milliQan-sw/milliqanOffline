@@ -113,7 +113,7 @@ def getRowCol(self):
             colL3_Tmin.append(colL3_min[i])
     
     for i in range(len(rowL0_Tmin)):
-        print(rowL2_Tmin[i], colL2_Tmin[i])
+        print(rowL3_Tmin[i], colL3_Tmin[i])
 
     # extend the final list to match the size of the current file
     num_events = len(self.events)

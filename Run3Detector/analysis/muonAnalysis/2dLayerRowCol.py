@@ -71,30 +71,30 @@ def getRowCol(self):
     timeL0_min = [minTime(event) for event in ak.to_list(timeL0)]
     maskL0_min = (timeL0_min == ak.broadcast_arrays(timeL0, timeL0_min)[0])
     raw_rowL0 = ak.mask(rowL0, maskL0_min)
-    rowL0_min = ak.Array([next((item for item in sublist if item is not None), default=None) if sublist else None for sublist in ak.to_list(raw_rowL0)])
+    rowL0_min = ak.Array([next((item for item in sublist if item is not None), None) if sublist else None for sublist in ak.to_list(raw_rowL0)])
     raw_colL0 = ak.mask(colL0, maskL0_min)
-    colL0_min = ak.Array([next((item for item in sublist if item is not None), default=None) if sublist else None for sublist in ak.to_list(raw_colL0)])
+    colL0_min = ak.Array([next((item for item in sublist if item is not None), None) if sublist else None for sublist in ak.to_list(raw_colL0)])
 
     timeL1_min = [minTime(event) for event in ak.to_list(timeL1)]
     maskL1_min = (timeL1_min == ak.broadcast_arrays(timeL1, timeL1_min)[0])
     raw_rowL1 = ak.mask(rowL1, maskL1_min)
-    rowL1_min = ak.Array([next((item for item in sublist if item is not None), default=None) if sublist else None for sublist in ak.to_list(raw_rowL1)])
+    rowL1_min = ak.Array([next((item for item in sublist if item is not None), None) if sublist else None for sublist in ak.to_list(raw_rowL1)])
     raw_colL1 = ak.mask(colL1, maskL1_min)
-    colL1_min = ak.Array([next((item for item in sublist if item is not None), default=None) if sublist else None for sublist in ak.to_list(raw_colL1)])
+    colL1_min = ak.Array([next((item for item in sublist if item is not None), None) if sublist else None for sublist in ak.to_list(raw_colL1)])
 
     timeL2_min = [minTime(event) for event in ak.to_list(timeL2)]
     maskL2_min = (timeL2_min == ak.broadcast_arrays(timeL2, timeL2_min)[0])
     raw_rowL2 = ak.mask(rowL2, maskL2_min)
-    rowL2_min = ak.Array([next((item for item in sublist if item is not None), default=None) if sublist else None for sublist in ak.to_list(raw_rowL2)])
+    rowL2_min = ak.Array([next((item for item in sublist if item is not None), None) if sublist else None for sublist in ak.to_list(raw_rowL2)])
     raw_colL2 = ak.mask(colL2, maskL2_min)
-    colL2_min = ak.Array([next((item for item in sublist if item is not None), default=None) if sublist else None for sublist in ak.to_list(raw_colL2)])
+    colL2_min = ak.Array([next((item for item in sublist if item is not None), None) if sublist else None for sublist in ak.to_list(raw_colL2)])
 
     timeL3_min = [minTime(event) for event in ak.to_list(timeL3)]
     maskL3_min = (timeL3_min == ak.broadcast_arrays(timeL3, timeL3_min)[0])
     raw_rowL3 = ak.mask(rowL3, maskL3_min)
-    rowL3_min = ak.Array([next((item for item in sublist if item is not None), default=None) if sublist else None for sublist in ak.to_list(raw_rowL3)])
+    rowL3_min = ak.Array([next((item for item in sublist if item is not None), None) if sublist else None for sublist in ak.to_list(raw_rowL3)])
     raw_colL3 = ak.mask(colL3, maskL3_min)
-    colL3_min = ak.Array([next((item for item in sublist if item is not None), default=None) if sublist else None for sublist in ak.to_list(raw_colL3)])
+    colL3_min = ak.Array([next((item for item in sublist if item is not None), None) if sublist else None for sublist in ak.to_list(raw_colL3)])
 
     for i in range(len(timeL0_min)):
         # require pulses in all 4 layers for one event

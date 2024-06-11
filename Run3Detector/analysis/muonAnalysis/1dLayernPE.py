@@ -80,9 +80,6 @@ def getnPE(self):
             nPE_min.append(nPEL1_min[i])
             nPE_min.append(nPEL2_min[i])
             nPE_min.append(nPEL3_min[i])
-    
-    for i in range(len(nPE_min)):
-        print(nPE_min)
 
     # extend the final list to match the size of the current file
     num_events = len(self.events)
@@ -137,7 +134,7 @@ h_1d = r.TH1F("h_1d", "nPE", 500, 0, 5000)
 h_1d.GetXaxis().SetTitle("nPE")
 
 # add root histogram to plotter
-myplotter.addHistograms(h_1d, 'iheight')
+myplotter.addHistograms(h_1d, 'nPE_min')
 
 # defining the cutflow
 cutflow = [boardMatchCut, pickupCut, mycuts.layerCut, mycuts.getnPE, myplotter.dict['h_1d']]

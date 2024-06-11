@@ -15,10 +15,20 @@ from milliqanScheduler import *
 from milliqanCuts import *
 from milliqanPlotter import *
 
-# define the function to get the time differences for the max heights of events in each channel between layer 0 and layer 3
-def getTimeDiff(self):
+# define the function to get the row and column
+def getRowCol(self):
     
-    time_diffsL30 = []
+    rowL0_Tmin = []
+    colL0_Tmin = []
+
+    rowL1_Tmin = []
+    colL1_Tmin = []
+
+    rowL2_Tmin = []
+    colL2_Tmin = []
+
+    rowL3_Tmin = []
+    colL3_Tmin = []
 
     # central time mask
     centralTimeMask = (self.events['timeFit_module_calibrated_corrected'] > 1100) & (self.events['timeFit_module_calibrated_corrected'] < 1400)
@@ -32,42 +42,91 @@ def getTimeDiff(self):
     # apply the finalPulseMask
     masked_time = self.events['timeFit_module_calibrated_corrected'][finalPulseMask]
     masked_layer = self.events['layer'][finalPulseMask]
+    masked_row = self.events['row'][finalPulseMask]
+    masked_col = self.events['column'][finalPulseMask]
 
-    # masked times per layer
+    # masked times/rows/columns per layer
     timeL0 = masked_time[masked_layer == 0]
-    timeL1 = masked_time[masked_layer == 1]
-    timeL2 = masked_time[masked_layer == 2]
-    timeL3 = masked_time[masked_layer == 3]
+    rowL0 = masked_row[masked_layer == 0]
+    colL0 = masked_col[masked_layer == 0]
 
-    # function to get minimum time per event handling None values
+    timeL1 = masked_time[masked_layer == 1]
+    rowL1 = masked_row[masked_layer == 1]
+    colL1 = masked_col[masked_layer == 1]
+
+    timeL2 = masked_time[masked_layer == 2]
+    rowL2 = masked_row[masked_layer == 2]
+    colL2 = masked_col[masked_layer == 2]
+
+    timeL3 = masked_time[masked_layer == 3]
+    rowL3 = masked_row[masked_layer == 3]
+    colL3 = masked_col[masked_layer == 3]
+
+    # function to get minimum time per event
     def minTime(pulse_times):
         filtered_times = [time for time in pulse_times if time is not None]
         return min(filtered_times) if filtered_times else None
 
-    # extract minimum times for each layer
+    # extract minimum time of each event, make a mask to get the row and column of corresponding pulse
     timeL0_min = [minTime(event) for event in ak.to_list(timeL0)]
+    maskL0_min = (timeL0_min == ak.broadcast_arrays(timeL0, timeL0_min)[0])
+    raw_rowL0 = ak.mask(rowL0, maskL0_min)
+    rowL0_min = ak.Array([next((item for item in sublist if item is not None), default=None) if sublist else None for sublist in ak.to_list(raw_rowL0)])
+    raw_colL0 = ak.mask(colL0, maskL0_min)
+    colL0_min = ak.Array([next((item for item in sublist if item is not None), default=None) if sublist else None for sublist in ak.to_list(raw_colL0)])
+
     timeL1_min = [minTime(event) for event in ak.to_list(timeL1)]
+    maskL1_min = (timeL1_min == ak.broadcast_arrays(timeL1, timeL1_min)[0])
+    raw_rowL1 = ak.mask(rowL1, maskL1_min)
+    rowL1_min = ak.Array([next((item for item in sublist if item is not None), default=None) if sublist else None for sublist in ak.to_list(raw_rowL1)])
+    raw_colL1 = ak.mask(colL1, maskL1_min)
+    colL1_min = ak.Array([next((item for item in sublist if item is not None), default=None) if sublist else None for sublist in ak.to_list(raw_colL1)])
+
     timeL2_min = [minTime(event) for event in ak.to_list(timeL2)]
+    maskL2_min = (timeL2_min == ak.broadcast_arrays(timeL2, timeL2_min)[0])
+    raw_rowL2 = ak.mask(rowL2, maskL2_min)
+    rowL2_min = ak.Array([next((item for item in sublist if item is not None), default=None) if sublist else None for sublist in ak.to_list(raw_rowL2)])
+    raw_colL2 = ak.mask(colL2, maskL2_min)
+    colL2_min = ak.Array([next((item for item in sublist if item is not None), default=None) if sublist else None for sublist in ak.to_list(raw_colL2)])
+
     timeL3_min = [minTime(event) for event in ak.to_list(timeL3)]
+    maskL3_min = (timeL3_min == ak.broadcast_arrays(timeL3, timeL3_min)[0])
+    raw_rowL3 = ak.mask(rowL3, maskL3_min)
+    rowL3_min = ak.Array([next((item for item in sublist if item is not None), default=None) if sublist else None for sublist in ak.to_list(raw_rowL3)])
+    raw_colL3 = ak.mask(colL3, maskL3_min)
+    colL3_min = ak.Array([next((item for item in sublist if item is not None), default=None) if sublist else None for sublist in ak.to_list(raw_colL3)])
 
     for i in range(len(timeL0_min)):
         # require pulses in all 4 layers for one event
         if timeL0_min[i] is not None and timeL1_min[i] is not None and timeL2_min[i] is not None and timeL3_min[i] is not None:
-            # calculate time differences only for events with valid times in all layers
-            time_diffsL30.append(timeL3_min[i] - timeL0_min[i])
+
+            rowL0_Tmin.append(rowL0_min[i])
+            colL0_Tmin.append(colL0_min[i])
+
+            rowL1_Tmin.append(rowL1_min[i])
+            colL1_Tmin.append(colL1_min[i])
+
+            rowL2_Tmin.append(rowL2_min[i])
+            colL2_Tmin.append(colL2_min[i])
+
+            rowL3_Tmin.append(rowL3_min[i])
+            colL3_Tmin.append(colL3_min[i])
     
-    print(time_diffsL30)
+    for i in range(len(rowL0_Tmin)):
+        print(rowL0_Tmin[i], colL0_Tmin[i])
 
     # extend the final list to match the size of the current file
     num_events = len(self.events)
-    num_nones = num_events - len(time_diffsL30)
-    time_diffsL30.extend([None] * num_nones)
+    num_nones = num_events - len(rowL0_Tmin)
 
-    # define custom branch
-    self.events['timeDiff'] = time_diffsL30
+    rowL0_Tmin.extend([None] * num_nones)
+    colL0_Tmin.extend([None] * num_nones)
+
+    self.events['rowL0'] = rowL0_Tmin
+    self.events['colL0'] = colL0_Tmin
 
 # add our custom function to milliqanCuts
-setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)
+setattr(milliqanCuts, 'getRowCol', getRowCol)
 
 filelist = ['/home/bpeng/muonAnalysis/MilliQan_Run1000_v34_skim_correction.root']
 
@@ -107,15 +166,16 @@ fourLayerCut = mycuts.getCut(mycuts.fourLayerCut, 'fourLayerCut', cut=False)
 # define milliqan plotter
 myplotter = milliqanPlotter()
 
-# create a 1D root histogram
-h_1d = r.TH1F("h_1d", "Time Differences between Layer 3 and 0", 100, -50, 50)
-h_1d.GetXaxis().SetTitle("Time Differences")
+# create a 2D root histogram
+h_2d = r.TH2F("h_2d", "Rows VS Columns", 4, 0, 4, 4, 0, 4)
+h_2d.GetXaxis().SetTitle("Column")
+h_2d.GetYaxis().SetTitle("Row")
 
 # add root histogram to plotter
-myplotter.addHistograms(h_1d, 'timeDiff')
+myplotter.addHistograms(h_2d, ['colL0', 'rowL0'], cut=None)
 
 # defining the cutflow
-cutflow = [boardMatchCut, pickupCut, mycuts.layerCut, mycuts.getTimeDiff, myplotter.dict['h_1d']]
+cutflow = [boardMatchCut, pickupCut, mycuts.layerCut, mycuts.getRowCol, myplotter.dict['h_2d']]
 
 # create a schedule of the cuts
 myschedule = milliQanScheduler(cutflow, mycuts, myplotter)
@@ -129,6 +189,7 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts, myplotter
 # run the milliqan processor
 myiterator.run()
 
+'''
 # create a new TFile
 f = r.TFile("S1500LayerL30Dt.root", "recreate")
 
@@ -138,7 +199,6 @@ h_1d.Write()
 # close the file
 f.Close()
 
-'''
 # fit the histogram with a combined model of two Gaussian functions and save the canvas to the ROOT file
 def fit_histogram(hist, root_file):
     # define the combined Gaussian model

@@ -62,7 +62,7 @@ fourLayerCut = mycuts.getCut(mycuts.fourLayerCut, 'fourLayerCut', cut=False)
 myplotter = milliqanPlotter()
 
 # create a 1D root histogram
-h_1d = r.TH1F("h_1d", "Height(ipulse == 0)", 500, 0, 5000)
+h_1d = r.TH1F("h_1d", "Height(ipulse == 0)", 300, 0, 3000)
 h_1d.GetXaxis().SetTitle("Height")
 
 # add root histogram to plotter

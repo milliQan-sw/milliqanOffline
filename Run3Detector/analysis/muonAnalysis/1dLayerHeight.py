@@ -23,7 +23,7 @@ def getHeight(self):
 # add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getHeight', getHeight)
 
-filelist = ['/home/bpeng/muonAnalysis/MilliQan_Run1400_v34_skim_correction.root']
+filelist = ['/home/bpeng/muonAnalysis/MilliQan_Run1500_v34_skim_correction.root']
 
 '''
 # check if command line arguments are provided
@@ -84,7 +84,7 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts, myplotter
 myiterator.run()
 
 # create a new TFile
-f = r.TFile("S1400LayerHeight.root", "recreate")
+f = r.TFile("S1500LayerHeight.root", "recreate")
 
 # write the histograms to the file
 h_1d.Write()

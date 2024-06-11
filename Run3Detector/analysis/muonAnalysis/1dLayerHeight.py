@@ -18,7 +18,7 @@ from milliqanPlotter import *
 # define the function to get the height
 def getHeight(self):
     iheight = self.events['height'][self.events['ipulse'] == 0]
-    self.event['iheight'] = iheight
+    self.events['iheight'] = iheight
 
 # add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getHeight', getHeight)

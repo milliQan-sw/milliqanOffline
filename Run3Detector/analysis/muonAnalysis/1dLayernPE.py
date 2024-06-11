@@ -130,7 +130,7 @@ fourLayerCut = mycuts.getCut(mycuts.fourLayerCut, 'fourLayerCut', cut=False)
 myplotter = milliqanPlotter()
 
 # create a 1D root histogram
-h_1d = r.TH1F("h_1d", "nPE", 500, 0, 5000)
+h_1d = r.TH1F("h_1d", "nPE", 100, 0, 1000)
 h_1d.GetXaxis().SetTitle("nPE")
 
 # add root histogram to plotter

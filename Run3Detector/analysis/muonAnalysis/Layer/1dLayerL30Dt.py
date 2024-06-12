@@ -15,6 +15,11 @@ script_dir = os.path.dirname(os.path.abspath('/home/bpeng/milliqanOffline/Run3De
 parent_dir = os.path.abspath(os.path.join(script_dir, os.pardir))
 sys.path.append(parent_dir)
 
+# debugging: Print the directories
+print("Script Directory:", script_dir)
+print("Parent Directory:", parent_dir)
+print("Sys Path:", sys.path)
+
 from milliqanProcessor import *
 from milliqanScheduler import *
 from milliqanCuts import *

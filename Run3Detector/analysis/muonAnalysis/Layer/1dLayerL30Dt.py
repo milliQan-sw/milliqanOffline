@@ -10,20 +10,24 @@ import pandas as pd
 import array as arr
 import sys
 
-# add the parent directory to the Python path
-script_dir = os.path.dirname(os.path.abspath('/home/bpeng/milliqanOffline/Run3Detector/analysis/utilities'))
-parent_dir = os.path.abspath(os.path.join(script_dir, os.pardir))
-sys.path.append(parent_dir)
+# Add the utilities directory to the Python path
+script_dir = os.path.dirname(os.path.abspath(__file__))
+utilities_dir = os.path.abspath(os.path.join(script_dir, '..', 'utilities'))
+sys.path.append(utilities_dir)
 
-# debugging: Print the directories
+# Debugging: Print the directories
 print("Script Directory:", script_dir)
-print("Parent Directory:", parent_dir)
+print("Utilities Directory:", utilities_dir)
 print("Sys Path:", sys.path)
 
-from milliqanProcessor import *
-from milliqanScheduler import *
-from milliqanCuts import *
-from milliqanPlotter import *
+try:
+    from milliqanProcessor import *
+    from milliqanScheduler import *
+    from milliqanCuts import *
+    from milliqanPlotter import *
+except ModuleNotFoundError as e:
+    print("Module not found error:", e)
+    sys.exit(1)
 
 # define the function to get the time differences for the max heights of events in each channel between layer 0 and layer 3
 def getTimeDiff(self):

@@ -23,11 +23,11 @@ def getTimeDiff(self):
     # central time mask
     centralTimeMask = (self.events['time'] > 1100) & (self.events['time'] < 1400)
 
-    # height and area mask
-    heightAreaMask = (self.events['height'] > 1000) & (self.events['area'] > 500000)
+    # nPE mask to replace height and area mask
+    nPEMask = self.events['nPE'] > 200
 
-    # require ipulse == 0
-    finalPulseMask = centralTimeMask & heightAreaMask & (self.events['ipulse'] == 0)
+    # make final cut
+    finalPulseMask = centralTimeMask & nPEMask
 
     # apply the finalPulseMask
     masked_time = self.events['time'][finalPulseMask]

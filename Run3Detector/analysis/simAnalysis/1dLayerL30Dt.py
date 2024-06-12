@@ -26,7 +26,7 @@ def getTimeDiff(self):
     time_diffsL30 = []
 
     # central time mask
-    centralTimeMask = (self.events['timeFit_module_calibrated_corrected'] > 1100) & (self.events['timeFit_module_calibrated_corrected'] < 1400)
+    centralTimeMask = (self.events['time'] > 1100) & (self.events['time'] < 1400)
 
     # height and area mask
     heightAreaMask = (self.events['height'] > 1000) & (self.events['area'] > 500000)
@@ -35,7 +35,7 @@ def getTimeDiff(self):
     finalPulseMask = centralTimeMask & heightAreaMask & (self.events['ipulse'] == 0)
 
     # apply the finalPulseMask
-    masked_time = self.events['timeFit_module_calibrated_corrected'][finalPulseMask]
+    masked_time = self.events['time'][finalPulseMask]
     masked_layer = self.events['layer'][finalPulseMask]
 
     # masked times per layer
@@ -74,7 +74,7 @@ def getTimeDiff(self):
 # add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)
 
-filelist = ['/home/bpeng/muonAnalysis/MilliQan_Run1000_v34_skim_correction.root']
+filelist = ['/home/bpeng/muonAnalysis/dy_nophoton_flat.root']
 
 '''
 # check if command line arguments are provided
@@ -95,16 +95,10 @@ filelist = [
 '''
 
 # define the necessary branches to run over
-branches = ['pickupFlag', 'boardsMatched', 'timeFit_module_calibrated_corrected', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type']
+branches = ['time', 'nPe', 'layer', 'chan']
 
 # define the milliqan cuts object
 mycuts = milliqanCuts()
-
-# require pulses are not pickup
-pickupCut = mycuts.getCut(mycuts.pickupCut, 'pickupCut', cut=True, branches=branches)
-
-# require that all digitizer boards are matched
-boardMatchCut = mycuts.getCut(mycuts.boardsMatched, 'boardMatchCut', cut=True, branches=branches)
 
 # add four layer cut
 fourLayerCut = mycuts.getCut(mycuts.fourLayerCut, 'fourLayerCut', cut=False)
@@ -120,7 +114,7 @@ h_1d.GetXaxis().SetTitle("Time Differences")
 myplotter.addHistograms(h_1d, 'timeDiff')
 
 # defining the cutflow
-cutflow = [boardMatchCut, pickupCut, mycuts.layerCut, mycuts.getTimeDiff, myplotter.dict['h_1d']]
+cutflow = [mycuts.layerCut, mycuts.getTimeDiff, myplotter.dict['h_1d']]
 
 # create a schedule of the cuts
 myschedule = milliQanScheduler(cutflow, mycuts, myplotter)

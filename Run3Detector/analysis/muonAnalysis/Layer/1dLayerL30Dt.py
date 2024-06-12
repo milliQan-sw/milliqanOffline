@@ -11,7 +11,7 @@ import array as arr
 import sys
 
 # add the parent directory to the Python path
-script_dir = os.path.dirname(os.path.abspath(__file__))
+script_dir = os.path.dirname(os.path.abspath('/home/bpeng/milliqanOffline/Run3Detector/analysis/utilities'))
 parent_dir = os.path.abspath(os.path.join(script_dir, os.pardir))
 sys.path.append(parent_dir)
 

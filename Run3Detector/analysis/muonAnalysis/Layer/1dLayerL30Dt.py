@@ -9,7 +9,12 @@ import numpy as np
 import pandas as pd
 import array as arr
 import sys
-sys.path.append('../utilities')
+
+# add the parent directory to the Python path
+script_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.abspath(os.path.join(script_dir, os.pardir))
+sys.path.append(parent_dir)
+
 from milliqanProcessor import *
 from milliqanScheduler import *
 from milliqanCuts import *

@@ -12,7 +12,7 @@ import sys
 
 # Add the utilities directory to the Python path
 script_dir = os.path.dirname(os.path.abspath(__file__))
-utilities_dir = os.path.abspath(os.path.join(script_dir, '..', 'utilities'))
+utilities_dir = os.path.join(script_dir, '..', '..', 'utilities')
 sys.path.append(utilities_dir)
 
 # Debugging: Print the directories

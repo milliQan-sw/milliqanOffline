@@ -19,7 +19,7 @@ from milliqanPlotter import *
 def getTimeDiff(self):
     
     time_diffsL30 = []
-    
+
     # nPE mask to replace height and area mask
     nPEMask = self.events['hit_nPE'] > 200
 
@@ -121,7 +121,7 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts, myplotter
 myiterator.run()
 
 # create a new TFile
-f = r.TFile("S1000LayerL30Dt.root", "recreate")
+f = r.TFile("SimLayerL30Dt.root", "recreate")
 
 # write the histograms to the file
 h_1d.Write()

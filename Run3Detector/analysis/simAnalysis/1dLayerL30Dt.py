@@ -98,9 +98,6 @@ branches = ['hit_hitTime_ns', 'hit_nPE', 'hit_layer', 'hit_chan', 'hit_particleN
 # define the milliqan cuts object
 mycuts = milliqanCuts()
 
-# add four layer cut
-fourLayerCut = mycuts.getCut(mycuts.fourLayerCut, 'fourLayerCut', cut=False)
-
 # define milliqan plotter
 myplotter = milliqanPlotter()
 
@@ -112,7 +109,7 @@ h_1d.GetXaxis().SetTitle("Time Differences")
 myplotter.addHistograms(h_1d, 'timeDiff')
 
 # defining the cutflow
-cutflow = [mycuts.layerCut, mycuts.getTimeDiff, myplotter.dict['h_1d']]
+cutflow = [mycuts.getTimeDiff, myplotter.dict['h_1d']]
 
 # create a schedule of the cuts
 myschedule = milliQanScheduler(cutflow, mycuts, myplotter)

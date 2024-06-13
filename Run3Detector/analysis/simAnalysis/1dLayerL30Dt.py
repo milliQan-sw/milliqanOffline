@@ -19,10 +19,7 @@ from milliqanPlotter import *
 def getTimeDiff(self):
     
     time_diffsL30 = []
-
-    # central time mask
-    centralTimeMask = (self.events['hit_hitTime_ns'] > 1100) & (self.events['hit_hitTime_ns'] < 1400)
-
+    
     # nPE mask to replace height and area mask
     nPEMask = self.events['hit_nPE'] > 200
 
@@ -30,7 +27,7 @@ def getTimeDiff(self):
     muonMask = self.events['hit_particleName'] == 13
 
     # make final cut
-    finalPulseMask = centralTimeMask & nPEMask & muonMask
+    finalPulseMask = nPEMask & muonMask
 
     # apply the finalPulseMask
     masked_time = self.events['hit_hitTime_ns'][finalPulseMask]

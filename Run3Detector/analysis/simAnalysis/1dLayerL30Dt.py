@@ -24,7 +24,7 @@ def getTimeDiff(self):
     nPEMask = self.events['hit_nPE'] > 200
 
     # muon mask
-    muonMask = abs(self.events['hit_particleName']) != 13
+    muonMask = abs(self.events['hit_particleName']) == 13
 
     # make final mask
     finalPulseMask = muonMask & nPEMask
@@ -121,7 +121,7 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts, myplotter
 myiterator.run()
 
 # create a new TFile
-f = r.TFile("SimNLayerL30Dt.root", "recreate")
+f = r.TFile("SimLayerL30Dt.root", "recreate")
 
 # write the histograms to the file
 h_1d.Write()

@@ -83,7 +83,7 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts, myplotter
 myiterator.run()
 
 # create a new TFile
-f = r.TFile("SimMuonNum.root", "recreate")
+f = r.TFile("TotalMuonNum.root", "recreate")
 
 # write the histograms to the file
 h_1d.Write()

@@ -18,10 +18,14 @@ from milliqanPlotter import *
 # define the function to get the number of muons
 def getMuonNum(self):
     
-    total_events = len(self.events['hit_particleName'])
-    muons = self.events[self.events['hit_particleName'] == 13]
-    num_muons = len(muons)
-    print(num_muons)
+    count = 0
+    muons = self.events['hit_particleName'][self.events['hit_particleName'] == 13]
+    print(len(self.events['hit_particleName']), len(muons))
+
+    for i in range(len(muons)):
+        if muons[i] is not None:
+            count = count + 1
+
 
 # add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getMuonNum', getMuonNum)

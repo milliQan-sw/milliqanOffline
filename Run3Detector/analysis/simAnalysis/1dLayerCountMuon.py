@@ -17,15 +17,17 @@ from milliqanPlotter import *
 
 # define the function to get the number of muons
 def getMuonNum(self):
-    
-    count = 0
+
+    countMuon = []
+
     muons = self.events['hit_particleName'][self.events['hit_particleName'] == 13]
 
     for i in range(len(muons)):
         if muons[i] is not None:
-            count = count + 1
+            countMuon.append(muons[i])
 
-    print(count)
+    print(countMuon)
+    self.events['countMuon'] = countMuon
 
 # add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getMuonNum', getMuonNum)
@@ -64,7 +66,7 @@ h_1d = r.TH1F("h_1d", "Number of Muons", 5000, 0, 5000)
 h_1d.GetXaxis().SetTitle("Number of Muons")
 
 # add root histogram to plotter
-myplotter.addHistograms(h_1d, 'timeDiff')
+myplotter.addHistograms(h_1d, 'countMuon')
 
 # defining the cutflow
 cutflow = [mycuts.getMuonNum, myplotter.dict['h_1d']]

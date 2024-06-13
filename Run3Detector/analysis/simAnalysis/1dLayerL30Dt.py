@@ -27,7 +27,7 @@ def getTimeDiff(self):
     muonMask = self.events['hit_particleName'] == 13
 
     # make final cut
-    finalPulseMask = muonMask & nPEMask
+    finalPulseMask = muonMask #& nPEMask
 
     # apply the finalPulseMask
     masked_time = self.events['hit_hitTime_ns'][finalPulseMask]

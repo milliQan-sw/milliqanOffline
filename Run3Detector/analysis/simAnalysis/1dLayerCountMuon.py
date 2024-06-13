@@ -26,7 +26,6 @@ def getMuonNum(self):
         if muons[i] is not None:
             countMuon.append(muons[i])
 
-    print(countMuon)
     self.events['countMuon'] = countMuon
 
 # add our custom function to milliqanCuts
@@ -83,7 +82,6 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts, myplotter
 # run the milliqan processor
 myiterator.run()
 
-'''
 # create a new TFile
 f = r.TFile("SimMuonNum.root", "recreate")
 
@@ -92,7 +90,7 @@ h_1d.Write()
 
 # close the file
 f.Close()
-
+'''
 # fit the histogram with a combined model of two Gaussian functions and save the canvas to the ROOT file
 def fit_histogram(hist, root_file):
     # define the combined Gaussian model

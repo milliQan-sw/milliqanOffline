@@ -20,12 +20,12 @@ def getMuonNum(self):
     
     count = 0
     muons = self.events['hit_particleName'][self.events['hit_particleName'] == 13]
-    print(len(self.events['hit_particleName']), len(muons))
 
     for i in range(len(muons)):
         if muons[i] is not None:
             count = count + 1
 
+    print(count)
 
 # add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getMuonNum', getMuonNum)

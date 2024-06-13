@@ -22,12 +22,10 @@ def getTimeDiff(self):
 
     # nPE mask to replace height and area mask
     nPEMask = self.events['hit_nPE'] > 200
-    print(ak.num(nPEMask))
 
     # muon mask
     muonMask = self.events['hit_particleName'] == 13
-    print(ak.num(muonMask))
-    
+
     # make final cut
     finalPulseMask = muonMask #& nPEMask
 

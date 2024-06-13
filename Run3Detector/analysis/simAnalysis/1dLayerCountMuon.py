@@ -61,8 +61,8 @@ mycuts = milliqanCuts()
 myplotter = milliqanPlotter()
 
 # create a 1D root histogram
-h_1d = r.TH1F("h_1d", "Number of Muons", 5000, 0, 5000)
-h_1d.GetXaxis().SetTitle("Number of Muons")
+h_1d = r.TH1F("h_1d", "Number of Muons", 20, 0, 20)
+h_1d.GetXaxis().SetTitle("hit_particleName")
 
 # add root histogram to plotter
 myplotter.addHistograms(h_1d, 'countMuon')

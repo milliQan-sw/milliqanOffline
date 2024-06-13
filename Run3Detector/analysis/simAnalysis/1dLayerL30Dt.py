@@ -21,7 +21,7 @@ def getTimeDiff(self):
     time_diffsL30 = []
 
     # central time mask
-    centralTimeMask = (self.events['hit_time'] > 1100) & (self.events['hit_time'] < 1400)
+    centralTimeMask = (self.events['hit_hitTime_ns'] > 1100) & (self.events['hit_hitTime_ns'] < 1400)
 
     # nPE mask to replace height and area mask
     nPEMask = self.events['hit_nPE'] > 200
@@ -33,7 +33,7 @@ def getTimeDiff(self):
     finalPulseMask = centralTimeMask & nPEMask & muonMask
 
     # apply the finalPulseMask
-    masked_time = self.events['hit_time'][finalPulseMask]
+    masked_time = self.events['hit_hitTime_ns'][finalPulseMask]
     masked_layer = self.events['hit_layer'][finalPulseMask]
 
     # masked times per layer
@@ -93,7 +93,7 @@ filelist = [
 '''
 
 # define the necessary branches to run over
-branches = ['hit_time', 'hit_nPE', 'hit_layer', 'hit_chan', 'hit_particleName']
+branches = ['hit_hitTime_ns', 'hit_nPE', 'hit_layer', 'hit_chan', 'hit_particleName']
 
 # define the milliqan cuts object
 mycuts = milliqanCuts()

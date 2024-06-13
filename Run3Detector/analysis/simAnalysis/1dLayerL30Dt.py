@@ -26,8 +26,11 @@ def getTimeDiff(self):
     # nPE mask to replace height and area mask
     nPEMask = self.events['nPE'] > 200
 
+    # muon mask
+    muonMask = self.events['hit_particleName'] == 13
+
     # make final cut
-    finalPulseMask = centralTimeMask & nPEMask
+    finalPulseMask = centralTimeMask & nPEMask & muonMask
 
     # apply the finalPulseMask
     masked_time = self.events['time'][finalPulseMask]
@@ -52,7 +55,7 @@ def getTimeDiff(self):
 
     for i in range(len(timeL0_min)):
         # require pulses in all 4 layers for one event
-        if timeL0_min[i] is not None and timeL1_min[i] is not None and timeL2_min[i] is not None and timeL3_min[i] is not None:
+        if timeL3_min[i] is not None and timeL0_min[i] is not None:
             # calculate time differences only for events with valid times in all layers
             time_diffsL30.append(timeL3_min[i] - timeL0_min[i])
     
@@ -90,7 +93,7 @@ filelist = [
 '''
 
 # define the necessary branches to run over
-branches = ['time', 'nPE', 'layer', 'chan']
+branches = ['time', 'nPE', 'layer', 'chan', 'hit_particleName']
 
 # define the milliqan cuts object
 mycuts = milliqanCuts()

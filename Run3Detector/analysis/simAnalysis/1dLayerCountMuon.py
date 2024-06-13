@@ -20,7 +20,7 @@ def getMuonNum(self):
 
     countMuon = []
 
-    muons = self.events['hit_particleName'][self.events['hit_particleName'] == 13 | self.events['hit_particleName'] == -13]
+    muons = self.events['hit_particleName'][abs(self.events['hit_particleName']) == 13]
 
     for i in range(len(muons)):
         if muons[i] is not None:

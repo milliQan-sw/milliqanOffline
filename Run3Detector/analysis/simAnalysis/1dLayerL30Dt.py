@@ -52,7 +52,7 @@ def getTimeDiff(self):
 
     for i in range(len(timeL0_min)):
         # require pulses in all 4 layers for one event
-        if timeL3_min[i] is not None and timeL0_min[i] is not None:
+        if timeL0_min[i] is not None and timeL1_min[i] is not None and timeL2_min[i] is not None and timeL3_min[i] is not None:
             # calculate time differences only for events with valid times in all layers
             time_diffsL30.append(timeL3_min[i] - timeL0_min[i])
     

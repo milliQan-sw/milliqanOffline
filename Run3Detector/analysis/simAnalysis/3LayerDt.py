@@ -24,7 +24,7 @@ def getTimeDiff(self):
     nPEMask = self.events['hit_nPE'] > 200
 
     # muon mask
-    muonMask = abs(self.events['hit_particleName']) == 13
+    muonMask = abs(self.events['hit_particleName']) != 13
 
     # make final mask
     finalPulseMask = muonMask & nPEMask
@@ -52,9 +52,9 @@ def getTimeDiff(self):
 
     for i in range(len(timeL0_min)):
         # require pulses in all 4 layers for one event
-        if timeL0_min[i] is not None and timeL1_min[i] is not None and timeL2_min[i] is not None:
+        if timeL1_min[i] is not None and timeL2_min[i] is not None and timeL3_min[i] is not None:
             # calculate time differences only for events with valid times in all layers
-            time_diffsL30.append(timeL1_min[i] - timeL0_min[i])
+            time_diffsL30.append(timeL3_min[i] - timeL1_min[i])
     
     print(time_diffsL30)
 
@@ -121,7 +121,7 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts, myplotter
 myiterator.run()
 
 # create a new TFile
-f = r.TFile("3LayerDt3ExL10.root", "recreate")
+f = r.TFile("3LayerDt0ExL31.root", "recreate")
 
 # write the histograms to the file
 h_1d.Write()

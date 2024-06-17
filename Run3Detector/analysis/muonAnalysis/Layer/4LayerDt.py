@@ -20,7 +20,7 @@ from milliqanScheduler import *
 from milliqanCuts import *
 from milliqanPlotter import *
 
-# define the function to get the time differences for the max heights of events in each channel between layer 0 and layer 3
+# define the function to get the time differences
 def getTimeDiff(self):
     
     time_diffsL30 = []

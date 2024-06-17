@@ -54,7 +54,7 @@ def getTimeDiff(self):
         # require pulses in all 4 layers for one event
         if timeL1_min[i] is not None and timeL2_min[i] is not None and timeL3_min[i] is not None:
             # calculate time differences only for events with valid times in all layers
-            time_diffsL30.append(timeL3_min[i] - timeL1_min[i])
+            time_diffsL30.append(timeL3_min[i] - timeL2_min[i])
     
     print(time_diffsL30)
 
@@ -99,7 +99,7 @@ mycuts = milliqanCuts()
 myplotter = milliqanPlotter()
 
 # create a 1D root histogram
-h_1d = r.TH1F("h_1d", "Time Differences between Layer 3 and 1", 100, -50, 50)
+h_1d = r.TH1F("h_1d", "Time Differences between Layer 3 and 2", 100, -50, 50)
 h_1d.GetXaxis().SetTitle("Time Differences")
 
 # add root histogram to plotter
@@ -121,7 +121,7 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts, myplotter
 myiterator.run()
 
 # create a new TFile
-f = r.TFile("3LayerDt0ExL31.root", "recreate")
+f = r.TFile("3LayerDt0ExL32.root", "recreate")
 
 # write the histograms to the file
 h_1d.Write()

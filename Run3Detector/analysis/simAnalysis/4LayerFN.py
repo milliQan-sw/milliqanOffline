@@ -51,33 +51,33 @@ def getLayerCount(self):
     timeL3_min = [minTime(event) for event in ak.to_list(timeL3)]
 
     for i in range(len(timeL0_min)):
-    # Check pulses in all 4 layers for one event
-    if timeL0_min[i] is not None and timeL1_min[i] is not None and timeL2_min[i] is not None and timeL3_min[i] is not None:
-        # All layers have valid times
-        layerCount.append(4)
-    elif timeL0_min[i] is None and timeL1_min[i] is None and timeL2_min[i] is None and timeL3_min[i] is None:
-        # None of the layers have valid times
-        layerCount.append(0)
-    elif (timeL0_min[i] is not None and timeL1_min[i] is None and timeL2_min[i] is None and timeL3_min[i] is None) or \
-         (timeL0_min[i] is None and timeL1_min[i] is not None and timeL2_min[i] is None and timeL3_min[i] is None) or \
-         (timeL0_min[i] is None and timeL1_min[i] is None and timeL2_min[i] is not None and timeL3_min[i] is None) or \
-         (timeL0_min[i] is None and timeL1_min[i] is None and timeL2_min[i] is None and timeL3_min[i] is not None):
-        # Only one layer has a valid time
-        layerCount.append(1)
-    elif (timeL0_min[i] is not None and timeL1_min[i] is not None and timeL2_min[i] is None and timeL3_min[i] is None) or \
-         (timeL0_min[i] is not None and timeL1_min[i] is None and timeL2_min[i] is not None and timeL3_min[i] is None) or \
-         (timeL0_min[i] is not None and timeL1_min[i] is None and timeL2_min[i] is None and timeL3_min[i] is not None) or \
-         (timeL0_min[i] is None and timeL1_min[i] is not None and timeL2_min[i] is not None and timeL3_min[i] is None) or \
-         (timeL0_min[i] is None and timeL1_min[i] is not None and timeL2_min[i] is None and timeL3_min[i] is not None) or \
-         (timeL0_min[i] is None and timeL1_min[i] is None and timeL2_min[i] is not None and timeL3_min[i] is not None):
-        # Only two layers have valid times
-        layerCount.append(2)
-    elif (timeL0_min[i] is not None and timeL1_min[i] is not None and timeL2_min[i] is not None and timeL3_min[i] is None) or \
-         (timeL0_min[i] is not None and timeL1_min[i] is not None and timeL2_min[i] is None and timeL3_min[i] is not None) or \
-         (timeL0_min[i] is not None and timeL1_min[i] is None and timeL2_min[i] is not None and timeL3_min[i] is not None) or \
-         (timeL0_min[i] is None and timeL1_min[i] is not None and timeL2_min[i] is not None and timeL3_min[i] is not None):
-        # Only three layers have valid times
-        layerCount.append(3)
+    # check pulses in all 4 layers for one event
+        if timeL0_min[i] is not None and timeL1_min[i] is not None and timeL2_min[i] is not None and timeL3_min[i] is not None:
+            # all layers have valid times
+            layerCount.append(4)
+        elif timeL0_min[i] is None and timeL1_min[i] is None and timeL2_min[i] is None and timeL3_min[i] is None:
+            # none of the layers have valid times
+            layerCount.append(0)
+        elif (timeL0_min[i] is not None and timeL1_min[i] is None and timeL2_min[i] is None and timeL3_min[i] is None) or \
+            (timeL0_min[i] is None and timeL1_min[i] is not None and timeL2_min[i] is None and timeL3_min[i] is None) or \
+            (timeL0_min[i] is None and timeL1_min[i] is None and timeL2_min[i] is not None and timeL3_min[i] is None) or \
+            (timeL0_min[i] is None and timeL1_min[i] is None and timeL2_min[i] is None and timeL3_min[i] is not None):
+            # only one layer has a valid time
+            layerCount.append(1)
+        elif (timeL0_min[i] is not None and timeL1_min[i] is not None and timeL2_min[i] is None and timeL3_min[i] is None) or \
+            (timeL0_min[i] is not None and timeL1_min[i] is None and timeL2_min[i] is not None and timeL3_min[i] is None) or \
+            (timeL0_min[i] is not None and timeL1_min[i] is None and timeL2_min[i] is None and timeL3_min[i] is not None) or \
+            (timeL0_min[i] is None and timeL1_min[i] is not None and timeL2_min[i] is not None and timeL3_min[i] is None) or \
+            (timeL0_min[i] is None and timeL1_min[i] is not None and timeL2_min[i] is None and timeL3_min[i] is not None) or \
+            (timeL0_min[i] is None and timeL1_min[i] is None and timeL2_min[i] is not None and timeL3_min[i] is not None):
+            # only two layers have valid times
+            layerCount.append(2)
+        elif (timeL0_min[i] is not None and timeL1_min[i] is not None and timeL2_min[i] is not None and timeL3_min[i] is None) or \
+            (timeL0_min[i] is not None and timeL1_min[i] is not None and timeL2_min[i] is None and timeL3_min[i] is not None) or \
+            (timeL0_min[i] is not None and timeL1_min[i] is None and timeL2_min[i] is not None and timeL3_min[i] is not None) or \
+            (timeL0_min[i] is None and timeL1_min[i] is not None and timeL2_min[i] is not None and timeL3_min[i] is not None):
+            # only three layers have valid times
+            layerCount.append(3)
 
     # extend the final list to match the size of the current file
     num_events = len(self.events)

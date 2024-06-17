@@ -27,7 +27,7 @@ def getLayerCount(self):
     muonMask = abs(self.events['hit_particleName']) == 13
 
     # make final mask (to track false negetive)
-    finalPulseMask = ~nPEMask & muonMask
+    finalPulseMask = nPEMask & muonMask
 
     # apply the finalPulseMask
     masked_time = self.events['hit_hitTime_ns'][finalPulseMask]

@@ -21,7 +21,7 @@ def getTimeDiff(self):
     time_diffsL30 = []
 
     # nPE mask to replace height and area mask
-    nPEMask = self.events['hit_nPE'] > 200
+    nPEMask = self.events['nPE'] > 200
 
     # muon mask
     muonMask = abs(self.events['hit_particleName']) == 13
@@ -30,8 +30,8 @@ def getTimeDiff(self):
     finalPulseMask = muonMask & nPEMask
 
     # apply the finalPulseMask
-    masked_time = self.events['hit_hitTime_ns'][finalPulseMask]
-    masked_layer = self.events['hit_layer'][finalPulseMask]
+    masked_time = self.events['time'][finalPulseMask]
+    masked_layer = self.events['layer'][finalPulseMask]
 
     # masked times per layer
     timeL0 = masked_time[masked_layer == 0]

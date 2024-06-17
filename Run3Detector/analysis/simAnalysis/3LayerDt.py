@@ -24,7 +24,7 @@ def getTimeDiff(self):
     nPEMask = self.events['hit_nPE'] > 200
 
     # muon mask
-    muonMask = abs(self.events['hit_particleName']) != 13
+    muonMask = abs(self.events['hit_particleName']) == 13
 
     # make final mask
     finalPulseMask = muonMask & nPEMask
@@ -52,9 +52,9 @@ def getTimeDiff(self):
 
     for i in range(len(timeL0_min)):
         # require pulses in all 4 layers for one event
-        if timeL0_min[i] is not None and timeL1_min[i] is not None and timeL2_min[i] is not None:
+        if timeL1_min[i] is not None and timeL2_min[i] is not None and timeL3_min[i] is not None:
             # calculate time differences only for events with valid times in all layers
-            time_diffsL30.append(timeL2_min[i] - timeL0_min[i])
+            time_diffsL30.append(timeL1_min[i] - timeL3_min[i])
     
     print(time_diffsL30)
 
@@ -99,7 +99,7 @@ mycuts = milliqanCuts()
 myplotter = milliqanPlotter()
 
 # create a 1D root histogram
-h_1d = r.TH1F("h_1d", "Time Differences between Layer 1 and 0", 100, -50, 50)
+h_1d = r.TH1F("h_1d", "Time Differences between Layer 3 and 1", 100, -50, 50)
 h_1d.GetXaxis().SetTitle("Time Differences")
 
 # add root histogram to plotter

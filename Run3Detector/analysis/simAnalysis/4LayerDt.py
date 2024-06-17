@@ -90,7 +90,7 @@ filelist = [
 '''
 
 # define the necessary branches to run over
-branches = ['hit_hitTime_ns', 'hit_nPE', 'hit_layer', 'hit_chan', 'hit_particleName']
+branches = ['hit_hitTime_ns', 'hit_nPE', 'hit_layer', 'hit_particleName', 'layer', 'nPE', 'time']
 
 # define the milliqan cuts object
 mycuts = milliqanCuts()

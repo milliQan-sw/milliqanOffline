@@ -30,7 +30,7 @@ def getTimeDiff(self):
     hitMask = self.events['hit_exitPositionZ_cm'] != 0
 
     # make final mask
-    finalPulseMask = muonMask & nPEMask & hitMask
+    finalPulseMask = muonMask & nPEMask #& hitMask
 
     # apply the finalPulseMask
     masked_time = self.events['hit_hitTime_ns'][finalPulseMask]

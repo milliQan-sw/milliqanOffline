@@ -34,7 +34,7 @@ setattr(milliqanCuts, 'getMuonNum', getMuonNum)
 filelist = ['/home/bpeng/muonAnalysis/dy_nophoton_flat.root']
 
 # define the necessary branches to run over
-branches = ['hit_hitTime_ns', 'hit_nPE', 'hit_layer', 'hit_particleName', 'layer', 'nPE', 'time', 'hit_exitPositionZ_cm']
+branches = ['hit_hitTime_ns', 'hit_nPE', 'hit_layer', 'hit_particleName', 'hit_exitPositionZ_cm', 'layer', 'nPE', 'time']
 
 # define the milliqan cuts object
 mycuts = milliqanCuts()

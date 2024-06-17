@@ -21,7 +21,7 @@ def getLayerCount(self):
     layerCount = []
 
     # nPE mask to replace height and area mask
-    nPEMask = self.events['hit_nPE'] > 10
+    nPEMask = self.events['hit_nPE'] > 200
 
     # muon mask
     muonMask = abs(self.events['hit_particleName']) == 13

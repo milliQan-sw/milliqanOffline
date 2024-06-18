@@ -24,7 +24,7 @@ def getTimeDiff(self):
     nPEMask = self.events['hit_nPE'] > 200
 
     # muon mask
-    muonMask = abs(self.events['hit_particleName']) != 13
+    muonMask = abs(self.events['hit_particleName']) == 13
 
     # cut off muons that do not hit the detector
     hitMask = self.events['hit_hitPositionZ_cm'] != 0

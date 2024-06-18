@@ -20,7 +20,7 @@ def getMuonNum(self):
 
     countMuon = []
 
-    hit_muons = self.events['hit_particleName'][(abs(self.events['hit_particleName']) == 13) & (self.events['hit_hitPositionZ_cm'] != 0)]
+    hit_muons = self.events['hit_particleName'][(abs(self.events['hit_particleName']) == 13) & (self.events['chan'] != 0)]
 
     for i in range(len(hit_muons)):
         if hit_muons[i] is not None:
@@ -34,7 +34,7 @@ setattr(milliqanCuts, 'getMuonNum', getMuonNum)
 filelist = ['/home/bpeng/muonAnalysis/dy_nophoton_flat.root']
 
 # define the necessary branches to run over
-branches = ['hit_hitTime_ns', 'hit_nPE', 'hit_layer', 'hit_particleName', 'hit_hitPositionZ_cm', 'layer', 'nPE', 'time']
+branches = ['hit_hitTime_ns', 'hit_nPE', 'hit_layer', 'hit_particleName', 'hit_hitPositionZ_cm', 'layer', 'nPE', 'time', 'chan']
 
 # define the milliqan cuts object
 mycuts = milliqanCuts()

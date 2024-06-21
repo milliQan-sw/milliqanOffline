@@ -21,7 +21,7 @@ def getTimeDiff(self):
     time_diffsL30 = []
 
     # nPE mask to replace height and area mask
-    nPEMask = self.events['nPE'] > 200
+    nPEMask = self.events['nPE'] > 10000
 
     # make final mask
     finalPulseMask = nPEMask

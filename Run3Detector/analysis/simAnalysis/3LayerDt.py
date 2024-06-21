@@ -23,14 +23,8 @@ def getTimeDiff(self):
     # nPE mask to replace height and area mask
     nPEMask = self.events['nPE'] > 200
 
-    # muon mask
-    muonMask = abs(self.events['hit_particleName']) == 13
-
-    # cut off muons that do not hit the detector
-    hitMask = self.events['chan'] != 0
-
     # make final mask
-    finalPulseMask = muonMask & nPEMask & hitMask
+    finalPulseMask = nPEMask
 
     # apply the finalPulseMask
     masked_time = self.events['time'][finalPulseMask]
@@ -55,9 +49,9 @@ def getTimeDiff(self):
 
     for i in range(len(timeL0_min)):
         # require pulses in all 4 layers for one event
-        if timeL0_min[i] is not None and timeL1_min[i] is not None and timeL2_min[i] is not None:
+        if timeL0_min[i] is not None and timeL1_min[i] is not None and timeL2_min[i] is not None and timeL3_min[i] is not None:
             # calculate time differences only for events with valid times in all layers
-            time_diffsL30.append(timeL1_min[i] - timeL0_min[i])
+            time_diffsL30.append(timeL3_min[i] - timeL0_min[i])
     
     print(time_diffsL30)
 
@@ -75,7 +69,7 @@ setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)
 filelist = ['/home/bpeng/muonAnalysis/dy_nophoton_flat.root']
 
 # define the necessary branches to run over
-branches = ['hit_hitTime_ns', 'hit_nPE', 'hit_layer', 'hit_particleName', 'hit_hitPositionZ_cm', 'layer', 'nPE', 'time', 'chan']
+branches = ['hit_hitTime_ns', 'hit_nPE', 'hit_layer', 'hit_particleName', 'layer', 'nPE', 'time', 'chan']
 
 # define the milliqan cuts object
 mycuts = milliqanCuts()
@@ -84,7 +78,7 @@ mycuts = milliqanCuts()
 myplotter = milliqanPlotter()
 
 # create a 1D root histogram
-h_1d = r.TH1F("h_1d", "Time Differences between Layer 1 and 0", 100, -50, 50)
+h_1d = r.TH1F("h_1d", "Time Differences between Layer 3 and 0", 100, -50, 50)
 h_1d.GetXaxis().SetTitle("Time Differences")
 
 # add root histogram to plotter
@@ -106,7 +100,7 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts, myplotter
 myiterator.run()
 
 # create a new TFile
-f = r.TFile("3LayerDt3ExL10.root", "recreate")
+f = r.TFile("4LayerDtL30.root", "recreate")
 
 # write the histograms to the file
 h_1d.Write()

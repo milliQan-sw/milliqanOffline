@@ -23,14 +23,8 @@ def getTimeDiff(self):
     # nPE mask to replace height and area mask
     nPEMask = self.events['nPE'] > 200
 
-    # muon mask
-    muonMask = abs(self.events['hit_particleName']) == 13
-
-    # cut off muons that do not hit the detector
-    hitMask = self.events['chan'] != 0
-
     # make final mask
-    finalPulseMask = muonMask & nPEMask & hitMask
+    finalPulseMask = nPEMask
 
     # apply the finalPulseMask
     masked_time = self.events['time'][finalPulseMask]
@@ -75,7 +69,7 @@ setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)
 filelist = ['/home/bpeng/muonAnalysis/dy_nophoton_flat.root']
 
 # define the necessary branches to run over
-branches = ['hit_hitTime_ns', 'hit_nPE', 'hit_layer', 'hit_particleName', 'hit_hitPositionZ_cm', 'layer', 'nPE', 'time', 'chan']
+branches = ['hit_hitTime_ns', 'hit_nPE', 'hit_layer', 'hit_particleName', 'layer', 'nPE', 'time', 'chan']
 
 # define the milliqan cuts object
 mycuts = milliqanCuts()

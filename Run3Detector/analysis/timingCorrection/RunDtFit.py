@@ -146,9 +146,19 @@ f.Close()
 
 # fit the histogram with a combined model of two Gaussian functions and save the canvas to the ROOT file
 def fit_histogram(hist, root_file):
+    # get histogram statistics to use as initial parameter estimates
+    mean = hist.GetMean()
+    rms = hist.GetRMS()
+    max_bin = hist.GetMaximumBin()
+    max_bin_content = hist.GetBinContent(max_bin)
+    hist_max = hist.GetBinCenter(max_bin)
+
     # define the combined Gaussian model
     combined_gaus = r.TF1("combined_gaus", "gaus(0) + gaus(3)", -50, 50)
     
+    # Set initial parameters for the combined Gaussian
+    combined_gaus.SetParameters(max_bin_content, mean - rms, rms, max_bin_content, mean + rms, rms)
+
     # fit the histogram with the combined model
     hist.Fit(combined_gaus, "R")
 

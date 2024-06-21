@@ -147,7 +147,7 @@ f.Close()
 # fit the histogram with a combined model of two Gaussian functions and save the canvas to the ROOT file
 def fit_histogram(hist, root_file):
     # define the combined Gaussian model
-    combined_gaus = r.TF1("combined_gaus", "gaus1 + gaus2", -50, 50)
+    combined_gaus = r.TF1("combined_gaus", "gaus(0) + gaus(3)", -50, 50)
     
     # fit the histogram with the combined model
     hist.Fit(combined_gaus, "R")

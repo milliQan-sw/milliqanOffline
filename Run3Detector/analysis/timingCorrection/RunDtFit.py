@@ -91,7 +91,7 @@ for run_number in range(start_run_number, end_run_number + 1):
             consecutive_missing_files = 0
         else:
             consecutive_missing_files += 1
-            if consecutive_missing_files >= 5:
+            if consecutive_missing_files >= 10:
                 break
             file_number += 1
 

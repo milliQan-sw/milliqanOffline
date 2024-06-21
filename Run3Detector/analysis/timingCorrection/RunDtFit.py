@@ -183,10 +183,10 @@ def fit_histogram(hist, root_file):
     return mean_right_peak
 
 # create a new TFile for the fitted histogram and canvas
-f_fit = r.TFile("Run1000DtL30.root", "recreate")
+f_fit = r.TFile("Run1000DtL30Fit.root", "recreate")
 
 # open the original ROOT file and retrieve the histogram
-f_orig = r.TFile("Run1000DtL30Fit.root")
+f_orig = r.TFile("Run1000DtL30.root")
 h_1d = f_orig.Get("h_1d")
 
 # fit the histogram and get the mean of the right peak

@@ -15,10 +15,10 @@ from milliqanScheduler import *
 from milliqanCuts import *
 from milliqanPlotter import *
 
-# define the function to get the time differences
-def getTimeDiff(self):
+# define the function to get the number of events that have hits in any 3 layers
+def get3LNum(self):
     
-    time_diffsL30 = []
+    threeLcount = []
 
     # nPE mask to replace height and area mask
     nPEMask = self.events['nPE'] > 10000
@@ -49,22 +49,25 @@ def getTimeDiff(self):
 
     for i in range(len(timeL0_min)):
         # require pulses in all 4 layers for one event
-        if timeL0_min[i] is not None and timeL1_min[i] is not None and timeL2_min[i] is not None and timeL3_min[i] is not None:
-            # calculate time differences only for events with valid times in all layers
-            time_diffsL30.append(timeL3_min[i] - timeL0_min[i])
+        if (timeL0_min[i] is not None and timeL1_min[i] is not None and timeL2_min[i] is not None) or \
+           (timeL0_min[i] is not None and timeL1_min[i] is not None and timeL3_min[i] is not None) or \
+           (timeL0_min[i] is not None and timeL2_min[i] is not None and timeL3_min[i] is not None) or \
+           (timeL1_min[i] is not None and timeL2_min[i] is not None and timeL3_min[i] is not None):
+            # calculate time differences only for events with valid times in 3 layers
+            threeLcount.append(0)
     
-    print(time_diffsL30)
+    print(threeLcount)
 
     # extend the final list to match the size of the current file
     num_events = len(self.events)
-    num_nones = num_events - len(time_diffsL30)
-    time_diffsL30.extend([None] * num_nones)
+    num_nones = num_events - len(threeLcount)
+    threeLcount.extend([None] * num_nones)
 
     # define custom branch
-    self.events['timeDiff'] = time_diffsL30
+    self.events['threeLcount'] = threeLcount
 
 # add our custom function to milliqanCuts
-setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)
+setattr(milliqanCuts, 'get3LNum', get3LNum)
 
 filelist = ['/home/bpeng/muonAnalysis/dy_nophoton_flat.root']
 
@@ -78,14 +81,14 @@ mycuts = milliqanCuts()
 myplotter = milliqanPlotter()
 
 # create a 1D root histogram
-h_1d = r.TH1F("h_1d", "Time Differences between Layer 3 and 0", 100, -50, 50)
-h_1d.GetXaxis().SetTitle("Time Differences")
+h_1d = r.TH1F("h_1d", "Number of events that have hits in any 3 layers", 10, -5, 5)
+h_1d.GetXaxis().SetTitle("number")
 
 # add root histogram to plotter
-myplotter.addHistograms(h_1d, 'timeDiff')
+myplotter.addHistograms(h_1d, 'threeLcount')
 
 # defining the cutflow
-cutflow = [mycuts.getTimeDiff, myplotter.dict['h_1d']]
+cutflow = [mycuts.get3LNum, myplotter.dict['h_1d']]
 
 # create a schedule of the cuts
 myschedule = milliQanScheduler(cutflow, mycuts, myplotter)
@@ -100,7 +103,7 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts, myplotter
 myiterator.run()
 
 # create a new TFile
-f = r.TFile("4LayerDtL30.root", "recreate")
+f = r.TFile("3LayerCount.root", "recreate")
 
 # write the histograms to the file
 h_1d.Write()

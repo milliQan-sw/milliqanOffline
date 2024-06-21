@@ -71,15 +71,6 @@ setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)
 
 # check if command line arguments are provided
 if len(sys.argv) != 3:
-    print("Usage: python3 [file_name] [start_file_index] [end_file_index]")
-    sys.exit(1)
-
-# assign start and end indices from command line
-start_index = int(sys.argv[1])
-end_index = int(sys.argv[2])
-
-# check if command line arguments are provided
-if len(sys.argv) != 3:
     print("Usage: python3 [file_name] [start_run_number] [end_run_number]")
     sys.exit(1)
 
@@ -91,13 +82,18 @@ end_run_number = int(sys.argv[2])
 filelist = []
 for run_number in range(start_run_number, end_run_number + 1):
     file_number = 0
+    consecutive_missing_files = 0
     while True:
         file_path = f"/home/bpeng/muonAnalysis/MilliQan_Run{run_number}.{file_number}_v34.root"
         if os.path.exists(file_path):
             filelist.append(file_path)
             file_number += 1
+            consecutive_missing_files = 0  # Reset the counter
         else:
-            break
+            consecutive_missing_files += 1
+            if consecutive_missing_files >= 5:
+                break
+            file_number += 1
 
 # print the file list (for debugging purposes)
 for file in filelist:

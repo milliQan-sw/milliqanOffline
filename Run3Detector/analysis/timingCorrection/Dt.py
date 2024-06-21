@@ -78,12 +78,30 @@ if len(sys.argv) != 3:
 start_index = int(sys.argv[1])
 end_index = int(sys.argv[2])
 
+# check if command line arguments are provided
+if len(sys.argv) != 3:
+    print("Usage: python3 [file_name] [start_run_number] [end_run_number]")
+    sys.exit(1)
+
+# assign start and end indices from command line
+start_run_number = int(sys.argv[1])
+end_run_number = int(sys.argv[2])
+
 # define a file list to run over
-filelist = [
-    f"/home/bpeng/muonAnalysis/1000/MilliQan_Run1000.{i}_v34.root"
-    for i in range(start_index, end_index + 1)
-    if os.path.exists(f"/home/bpeng/muonAnalysis/1000/MilliQan_Run1000.{i}_v34.root")
-]
+filelist = []
+for run_number in range(start_run_number, end_run_number + 1):
+    file_number = 0
+    while True:
+        file_path = f"/home/bpeng/muonAnalysis/MilliQan_Run{run_number}.{file_number}_v34.root"
+        if os.path.exists(file_path):
+            filelist.append(file_path)
+            file_number += 1
+        else:
+            break
+
+# print the file list (for debugging purposes)
+for file in filelist:
+    print(file)
 
 # define the necessary branches to run over
 branches = ['pickupFlag', 'boardsMatched', 'timeFit_module_calibrated', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type']

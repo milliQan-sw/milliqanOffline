@@ -95,10 +95,6 @@ for run_number in range(start_run_number, end_run_number + 1):
                 break
             file_number += 1
 
-# print the file list (for debugging purposes)
-for file in filelist:
-    print(file)
-
 # define the necessary branches to run over
 branches = ['pickupFlag', 'boardsMatched', 'timeFit_module_calibrated', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type']
 

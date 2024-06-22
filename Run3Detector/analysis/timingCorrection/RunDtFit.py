@@ -16,7 +16,7 @@ from milliqanPlotter import *
 
 # define the function to get the time differences
 def getTimeDiff(self):
-    
+
     time_diffsL30 = []
 
     # central time mask
@@ -135,7 +135,7 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts, myplotter
 myiterator.run()
 
 # create a new TFile
-f = r.TFile("Run1000_1009DtL30.root", "recreate")######################################################################################################
+f = r.TFile("Run1010_1019DtL30.root", "recreate")######################################################################################################
 
 # write the histograms to the file
 h_1d.Write()
@@ -185,10 +185,10 @@ def fit_histogram(hist, root_file):
     return mean_right_peak
 
 # create a new TFile for the fitted histogram and canvas
-f_fit = r.TFile("Run1000_1009DtL30Fit.root", "recreate")######################################################################################################
+f_fit = r.TFile("Run1010_1019DtL30Fit.root", "recreate")######################################################################################################
 
 # open the original ROOT file and retrieve the histogram
-f_orig = r.TFile("Run1000_1009DtL30.root")######################################################################################################
+f_orig = r.TFile("Run1010_1019DtL30.root")######################################################################################################
 h_1d = f_orig.Get("h_1d")
 
 # fit the histogram and get the mean of the right peak

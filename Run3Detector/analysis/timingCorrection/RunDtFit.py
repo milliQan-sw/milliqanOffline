@@ -1,4 +1,3 @@
-# importing packages
 import os
 import ROOT as r
 import uproot
@@ -84,7 +83,7 @@ for run_number in range(start_run_number, end_run_number + 1):
     file_number = 0
     consecutive_missing_files = 0
     while True:
-        file_path = f"/home/bpeng/muonAnalysis/1000/MilliQan_Run{run_number}.{file_number}_v34.root"##############################################
+        file_path = f"/home/bpeng/muonAnalysis/1000/MilliQan_Run{run_number}.{file_number}_v34.root"######################################################################################################
         if os.path.exists(file_path):
             filelist.append(file_path)
             file_number += 1
@@ -136,7 +135,7 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts, myplotter
 myiterator.run()
 
 # create a new TFile
-f = r.TFile("Run1000_1009DtL30.root", "recreate")################################################################################################
+f = r.TFile("Run1000_1009DtL30.root", "recreate")######################################################################################################
 
 # write the histograms to the file
 h_1d.Write()
@@ -150,14 +149,14 @@ def fit_histogram(hist, root_file):
     combined_gaus = r.TF1("combined_gaus", "gaus(0) + gaus(3)", -50, 50)
     
     # initial parameter estimates for the two Gaussian functions
-    combined_gaus.SetParameters(4, -17, 3, 26, 0, 4) # peak mean stddev##################################################################
+    combined_gaus.SetParameters(4, -17, 3, 26, 0, 4)  # peak mean stddev######################################################################################################
 
     # fit the histogram with the combined model
     hist.Fit(combined_gaus, "R")
 
     # extract the individual Gaussian functions from the combined model
-    gaus1 = r.TF1("gaus1", "gaus", -24, -10)#range#########################################################################################################
-    gaus2 = r.TF1("gaus2", "gaus", -8, 9)#range#######################################################################################################
+    gaus1 = r.TF1("gaus1", "gaus", -24, -10)  # range######################################################################################################
+    gaus2 = r.TF1("gaus2", "gaus", -8, 9)  # range######################################################################################################
     for i in range(3):
         gaus1.SetParameter(i, combined_gaus.GetParameter(i))
         gaus2.SetParameter(i, combined_gaus.GetParameter(i + 3))
@@ -186,10 +185,10 @@ def fit_histogram(hist, root_file):
     return mean_right_peak
 
 # create a new TFile for the fitted histogram and canvas
-f_fit = r.TFile("Run1000_1009DtL30Fit.root", "recreate")###################################################################################################
+f_fit = r.TFile("Run1000_1009DtL30Fit.root", "recreate")######################################################################################################
 
 # open the original ROOT file and retrieve the histogram
-f_orig = r.TFile("Run1000_1009DtL30.root")###################################################################################################
+f_orig = r.TFile("Run1000_1009DtL30.root")######################################################################################################
 h_1d = f_orig.Get("h_1d")
 
 # fit the histogram and get the mean of the right peak

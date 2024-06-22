@@ -135,14 +135,14 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts, myplotter
 myiterator.run()
 
 # create a new TFile
-f = r.TFile("Run1020_1029DtL30.root", "recreate")######################################################################################################
+f = r.TFile("Run10?0-10?9DtL30.root", "recreate")######################################################################################################
 
 # write the histograms to the file
 h_1d.Write()
 
 # close the file
 f.Close()
-
+'''
 # fit the histogram with a combined model of two Gaussian functions and save the canvas to the ROOT file
 def fit_histogram(hist, root_file):
     # define the combined Gaussian model
@@ -198,3 +198,4 @@ print("Mean of the right peak:", mean_right_peak)
 # close the files
 f_fit.Close()
 f_orig.Close()
+'''

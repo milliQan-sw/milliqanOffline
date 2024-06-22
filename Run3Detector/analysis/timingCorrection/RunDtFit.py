@@ -163,8 +163,8 @@ def fit_histogram(hist, root_file):
     hist.Fit(combined_gaus, "R")
 
     # extract the individual Gaussian functions from the combined model
-    gaus1 = r.TF1("gaus1", "gaus", -50, 50)####################################################################################################
-    gaus2 = r.TF1("gaus2", "gaus", -50, 50)#####################################################################################################
+    gaus1 = r.TF1("gaus1", "gaus", -24, -10)####################################################################################################
+    gaus2 = r.TF1("gaus2", "gaus", -8, 9)#####################################################################################################
     for i in range(3):
         gaus1.SetParameter(i, combined_gaus.GetParameter(i))
         gaus2.SetParameter(i, combined_gaus.GetParameter(i + 3))

@@ -146,25 +146,18 @@ f.Close()
 
 # fit the histogram with a combined model of two Gaussian functions and save the canvas to the ROOT file
 def fit_histogram(hist, root_file):
-    # get histogram statistics to use as initial parameter estimates
-    mean = hist.GetMean()
-    rms = hist.GetRMS()
-    max_bin = hist.GetMaximumBin()
-    max_bin_content = hist.GetBinContent(max_bin)
-    hist_max = hist.GetBinCenter(max_bin)
-
     # define the combined Gaussian model
     combined_gaus = r.TF1("combined_gaus", "gaus(0) + gaus(3)", -50, 50)
     
-    # set initial parameters for the combined Gaussian
-    combined_gaus.SetParameters(max_bin_content, mean - rms, rms, max_bin_content, mean + rms, rms)
+    # initial parameter estimates for the two Gaussian functions
+    combined_gaus.SetParameters(45, -17, 6, 140, 0, 6) # peak min_range max_range##################################################################
 
     # fit the histogram with the combined model
     hist.Fit(combined_gaus, "R")
 
     # extract the individual Gaussian functions from the combined model
-    gaus1 = r.TF1("gaus1", "gaus", -24, -10)####################################################################################################
-    gaus2 = r.TF1("gaus2", "gaus", -8, 9)#####################################################################################################
+    gaus1 = r.TF1("gaus1", "gaus", -31, -3)##########################################################################################################
+    gaus2 = r.TF1("gaus2", "gaus", -14, 14)########################################################################################################
     for i in range(3):
         gaus1.SetParameter(i, combined_gaus.GetParameter(i))
         gaus2.SetParameter(i, combined_gaus.GetParameter(i + 3))
@@ -193,10 +186,10 @@ def fit_histogram(hist, root_file):
     return mean_right_peak
 
 # create a new TFile for the fitted histogram and canvas
-f_fit = r.TFile("Run1000_1009DtL30Fit.root", "recreate")############################################################################################
+f_fit = r.TFile("Run1000_1009DtL30Fit.root", "recreate")###################################################################################################
 
 # open the original ROOT file and retrieve the histogram
-f_orig = r.TFile("Run1000_1009DtL30.root")#############################################################################################################
+f_orig = r.TFile("Run1000_1009DtL30.root")###################################################################################################
 h_1d = f_orig.Get("h_1d")
 
 # fit the histogram and get the mean of the right peak

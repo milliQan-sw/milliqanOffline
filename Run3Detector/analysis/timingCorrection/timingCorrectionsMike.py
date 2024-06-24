@@ -42,6 +42,13 @@ for run in range(start_run, end_run + 1):
 entries = mychain.GetEntries()
 print(f"There are {entries} total entries in the chain")
 
+# Create the output root file
+fout = r.TFile(f"Run{start_run}to{end_run}timingCorrection.root", 'RECREATE')
+fout.cd()
+
+# Create an empty histogram
+h_timeDiff = r.TH1F("h_timeDiff", "Time Difference", 100, -50, 50)  # Adjust bins and range as needed
+
 # Ensure there are entries before proceeding
 if entries > 0:
     # Select only the events with hits in front and back slab with area > 100k
@@ -63,18 +70,6 @@ if entries > 0:
                 print(f"Number of entries in histogram: {h_timeDiff.GetEntries()}")  # Debug print to check histogram entries
                 if h_timeDiff.GetEntries() > 0:
                     c1.Draw()
-                    # Save the output in a root file
-                    # Create the output root file
-                    fout = r.TFile(f"Run{start_run}to{end_run}timingCorrection.root", 'RECREATE')
-                    
-                    # Switch to our root file for writing
-                    fout.cd()
-
-                    # Write the plot to the file
-                    h_timeDiff.Write()
-
-                    # Close the file
-                    fout.Close()
                 else:
                     print("The histogram has no entries.")
             else:
@@ -85,3 +80,9 @@ if entries > 0:
         print("Failed to create entry list.")
 else:
     print("No entries in the TChain.")
+
+# Write the plot to the file
+h_timeDiff.Write()
+
+# Close the file
+fout.Close()

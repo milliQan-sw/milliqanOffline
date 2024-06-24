@@ -38,7 +38,6 @@ print("There are {} total entries in the chain".format(entries))
 # Select only the events with hits in front and back slab with area > 100k
 mychain.Draw(">>eList", "MaxIf$(area, chan==74) > 100000 && MaxIf$(area, chan==75) > 100000", "entryList")
 eList = r.gDirectory.Get("eList")
-print(f"Number of selected entries: {eList.GetN()}")  # Debug print to check selected entries
 mychain.SetEntryList(eList)
 
 if eList.GetN() > 0:

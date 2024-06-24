@@ -75,6 +75,6 @@ if entries > 0:
         else:
             print("No entries matched the selection criteria.")
     else:
-        print("Failed to create entry list; check selection criteria.")
+        print("Failed to create entry list.")
 else:
-    print("No entries in the TChain; check if files were added correctly.")
+    print("No entries in the TChain.")

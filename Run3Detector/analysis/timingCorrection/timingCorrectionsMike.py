@@ -17,24 +17,19 @@ def checkBeam(mqLumis, filename):
 # Define the range of runs
 start_run = 1000
 end_run = 1010
-dataDir = '/store/user/milliqan/trees/v34/'  # Base directory for data
+dataDir = '/store/user/milliqan/trees/v34/1000/'
 
 # Create tchain that will read in tree with name t
 mychain = r.TChain('t')
 
 # Loop through the range of runs and add files to the TChain
 for run in range(start_run, end_run + 1):
-    runDir = f'{dataDir}{run}/'
-    if not os.path.exists(runDir):
-        print(f"Directory {runDir} does not exist.")
-        continue
-
-    for filename in os.listdir(runDir):
+    for filename in os.listdir(dataDir):
         if not filename.endswith('.root'): continue
         if f'Run{run}' in filename:
             print(f"Adding file {filename} from run {run} to the chain")
             if checkBeam(mqLumis, filename):
-                mychain.Add(runDir + filename)
+                mychain.Add(dataDir + filename)
 
 # Print the number of entries in my tchain
 entries = mychain.GetEntries()

@@ -56,7 +56,7 @@ if entries > 0:
     eList = r.gDirectory.Get("eList")
 
     # Check if eList is valid
-    if eList:
+    if eList and isinstance(eList, r.TEntryList):
         print(f"Number of selected entries: {eList.GetN()}")  # Debug print to check selected entries
         mychain.SetEntryList(eList)
 
@@ -64,20 +64,13 @@ if entries > 0:
             # Create a canvas and draw the time difference 
             c1 = r.TCanvas("c1", "c1", 600, 600)
             mychain.Draw("MaxIf$(timeFit_module_calibrated, chan==75&&area==MaxIf$(area,chan==75)) - MaxIf$(timeFit_module_calibrated, chan==74&&area==MaxIf$(area,chan==74)) >> h_timeDiff")
-            h_timeDiff = r.gDirectory.Get('h_timeDiff')
+            c1.Draw()
 
-            if h_timeDiff:
-                print(f"Number of entries in histogram: {h_timeDiff.GetEntries()}")  # Debug print to check histogram entries
-                if h_timeDiff.GetEntries() > 0:
-                    c1.Draw()
-                else:
-                    print("The histogram has no entries.")
-            else:
-                print("The histogram 'h_timeDiff' was not created.")
+            print(f"Number of entries in histogram: {h_timeDiff.GetEntries()}")  # Debug print to check histogram entries
         else:
             print("No entries matched the selection criteria.")
     else:
-        print("Failed to create entry list.")
+        print("Failed to create entry list or eList is not a TEntryList object.")
 else:
     print("No entries in the TChain.")
 

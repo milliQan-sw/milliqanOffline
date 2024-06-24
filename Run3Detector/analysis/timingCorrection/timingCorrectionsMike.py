@@ -10,9 +10,14 @@ shutil.copy('/eos/experiment/milliqan/Configs/mqLumis.json', os.getcwd())
 mqLumis = pd.read_json('mqLumis.json', orient='split', compression='infer')
 
 def checkBeam(mqLumis, filename):
-    run = int(filename.split('Run')[1].split('.')[0])
-    file = int(filename.split('.')[1].split('_')[0])
-    return mqLumis['beam'].loc[(mqLumis['run'] == run) & (mqLumis['file'] == file)].values[0]
+    try:
+        run = int(filename.split('Run')[1].split('.')[0])
+        file = int(filename.split('.')[1].split('_')[0])
+        beam_value = mqLumis['beam'].loc[(mqLumis['run'] == run) & (mqLumis['file'] == file)].values[0]
+        return beam_value
+    except Exception as e:
+        print(f"Error in checkBeam for file {filename}: {e}")
+        return False
 
 # Define the range of runs
 start_run = 1040
@@ -30,6 +35,8 @@ for run in range(start_run, end_run + 1):
             print(f"Adding file {filename} from run {run} to the chain")
             if checkBeam(mqLumis, filename):
                 mychain.Add(dataDir + filename)
+            else:
+                print(f"Beam check failed for file {filename}")
 
 # Print the number of entries in the TChain
 entries = mychain.GetEntries()

@@ -5,7 +5,7 @@ import ROOT as r
 import pandas as pd
 import json
 import shutil
-%jsroot on
+#%jsroot on
 
 shutil.copy('/eos/experiment/milliqan/Configs/mqLumis.json', os.getcwd())
 mqLumis = pd.read_json('mqLumis.json', orient = 'split', compression = 'infer')
@@ -16,7 +16,6 @@ def checkBeam(mqLumis, filename):
     return mqLumis['beam'].loc[(mqLumis['run'] == run) & (mqLumis['file'] == file)].values[0]
 
 #create root TChain of files for a given run
-
 run = 1580
 dataDir = '/store/user/milliqan/trees/v34/1500/'
 
@@ -36,8 +35,6 @@ entries = mychain.GetEntries()
 print("There are {} total entries in the chain".format(entries))
 
 #select only the events with hits in front and back slab with area > 100k
-
-
 mychain.Draw(">>eList", "MaxIf$(area, chan==74) > 100000 && MaxIf$(area, chan==75) > 100000", "entryList")
 eList = r.gDirectory.Get("eList")
 mychain.SetEntryList(eList)
@@ -48,7 +45,6 @@ mychain.Draw("MaxIf$(timeFit_module_calibrated, chan==75&&area==MaxIf$(area,chan
 c1.Draw()
 
 #save the output in a root file
-
 #get all files from the gDirectory
 h_timeDiff = r.gDirectory.Get('h_timeDiff')
 

@@ -17,7 +17,7 @@ def checkBeam(mqLumis, filename):
 
 #create root TChain of files for a given run
 run = 1580
-dataDir = '/home/bpeng/muonAnalysis/1300/'
+dataDir = '/store/user/milliqan/trees/v34/1500/'
 
 #create tchain that will read in tree with name t
 mychain = r.TChain('t') 

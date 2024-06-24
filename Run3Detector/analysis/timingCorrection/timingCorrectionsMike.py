@@ -16,8 +16,8 @@ def checkBeam(mqLumis, filename):
     return mqLumis['beam'].loc[(mqLumis['run'] == run) & (mqLumis['file'] == file)].values[0]
 
 #create root TChain of files for a given run
-run = 1580
-dataDir = '/store/user/milliqan/trees/v34/1500/'
+run = 1000######################################################################################################################################
+dataDir = '/store/user/milliqan/trees/v34/1000/'###################################################################################################
 
 #create tchain that will read in tree with name t
 mychain = r.TChain('t') 
@@ -49,7 +49,7 @@ c1.Draw()
 h_timeDiff = r.gDirectory.Get('h_timeDiff')
 
 #create the output root file
-fout = r.TFile("timingCorrectionsOutput.root", 'RECREATE')
+fout = r.TFile("timingCorrection1000.root", 'RECREATE')##########################################################################################
 
 #switch to our root file for writing
 fout.cd()

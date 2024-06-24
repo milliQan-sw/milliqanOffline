@@ -49,7 +49,7 @@ c1.Draw()
 h_timeDiff = r.gDirectory.Get('h_timeDiff')
 
 #create the output root file
-fout = r.TFile("timingCorrection1000.root", 'RECREATE')##########################################################################################
+fout = r.TFile("Run1000timingCorrection.root", 'RECREATE')##########################################################################################
 
 #switch to our root file for writing
 fout.cd()

@@ -19,14 +19,11 @@ def getTimeDiff(self):
 
     time_diffsL30 = []
 
-    # central time mask
-    centralTimeMask = (self.events['timeFit_module_calibrated'] > 1100) & (self.events['timeFit_module_calibrated'] < 1400)
-
     # height and area mask
-    heightAreaMask = (self.events['height'] > 1000) & (self.events['area'] > 500000)
+    areaMask = self.events['area'] > 100000
 
     # require ipulse == 0
-    finalPulseMask = centralTimeMask & heightAreaMask & (self.events['ipulse'] == 0)
+    finalPulseMask = areaMask & (self.events['ipulse'] == 0)
 
     # apply the finalPulseMask
     masked_time = self.events['timeFit_module_calibrated'][finalPulseMask]

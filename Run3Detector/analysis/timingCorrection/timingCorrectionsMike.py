@@ -63,10 +63,18 @@ if entries > 0:
         if eList.GetN() > 0:
             # Create a canvas and draw the time difference 
             c1 = r.TCanvas("c1", "c1", 600, 600)
-            mychain.Draw("MaxIf$(timeFit_module_calibrated, chan==75&&area==MaxIf$(area,chan==75)) - MaxIf$(timeFit_module_calibrated, chan==74&&area==MaxIf$(area,chan==74)) >> h_timeDiff")
-            c1.Draw()
+            draw_command = "MaxIf$(timeFit_module_calibrated, chan==75&&area==MaxIf$(area,chan==75)) - MaxIf$(timeFit_module_calibrated, chan==74&&area==MaxIf$(area,chan==74)) >> h_timeDiff"
+            mychain.Draw(draw_command)
+            h_timeDiff = r.gDirectory.Get('h_timeDiff')
 
-            print(f"Number of entries in histogram: {h_timeDiff.GetEntries()}")  # Debug print to check histogram entries
+            if h_timeDiff and isinstance(h_timeDiff, r.TH1):
+                print(f"Number of entries in histogram: {h_timeDiff.GetEntries()}")  # Debug print to check histogram entries
+                if h_timeDiff.GetEntries() > 0:
+                    c1.Draw()
+                else:
+                    print("The histogram has no entries.")
+            else:
+                print("The histogram 'h_timeDiff' was not created or is not a TH1 object.")
         else:
             print("No entries matched the selection criteria.")
     else:

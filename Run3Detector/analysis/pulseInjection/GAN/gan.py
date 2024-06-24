@@ -15,8 +15,6 @@ def build_generator(latent_dim, output_shape, embed_dim, num_classes):
     x = Concatenate()([x, l])
     x = Dense(256, name="gen_dense1")(x)
     x = LeakyReLU(0.2, name="gen_relu1")(x)
-    # x = dense(output_shape)(x)
-    # x = leakyrelu(0.2)(x)
 
     output = Activation("tanh")(x)
     output = Dense(output_shape, name="gen_dense2")(x)
@@ -75,3 +73,8 @@ def train_step (real_waveforms, real_labels, latent_dim, generator, discriminato
     g_opt.apply_gradients(zip(g_grad, generator.trainable_variables))
 
     return d_loss, g_loss
+
+def generate_waveforms(generator, labels, latent_dim=500):
+    noise = tf.random.normal([len(labels), latent_dim])
+    labels = tf.convert_to_tensor(labels, dtype='int64')
+    return generator([noise, labels], training=False)

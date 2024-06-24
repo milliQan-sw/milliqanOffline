@@ -20,9 +20,9 @@ def checkBeam(mqLumis, filename):
         return False
 
 # Define the range of runs
-start_run = 1190
-end_run = 1199
-dataDir = '/store/user/milliqan/trees/v34/1100/'  # Base directory for data
+start_run = 1200
+end_run = 1209
+dataDir = '/store/user/milliqan/trees/v34/1200/'  # Base directory for data
 
 # Create TChain that will read in tree with name t
 mychain = r.TChain('t')

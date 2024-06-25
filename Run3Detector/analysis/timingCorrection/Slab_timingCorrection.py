@@ -64,7 +64,7 @@ if entries > 0:
         if eList.GetN() > 0:
             # Create a canvas and draw the time difference 
             c1 = r.TCanvas("c1", "c1", 600, 600)
-            draw_command = "MaxIf$(timeFit_module_calibrated, chan==75&&area==MaxIf$(area,chan==75)) - MaxIf$(timeFit_module_calibrated, chan==74&&area==MaxIf$(area,chan==74)) >> h_timeDiff"
+            draw_command = "MaxIf$(timeFit_module_calibrated, chan==75 && area==MaxIf$(area,chan==75)) - MaxIf$(timeFit_module_calibrated, chan==74 && area==MaxIf$(area,chan==74)) >> h_timeDiff"
             mychain.Draw(draw_command)
             h_timeDiff = r.gDirectory.Get('h_timeDiff')
 

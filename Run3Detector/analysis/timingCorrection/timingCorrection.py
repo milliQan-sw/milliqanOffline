@@ -48,7 +48,7 @@ fout = r.TFile(f"Run{start_run}to{end_run}timingCorrection.root", 'RECREATE')
 fout.cd()
 
 # Create an empty histogram
-h_timeDiff = r.TH1F("h_timeDiff", "Time Difference", 100, -50, 50)  # Adjust bins and range as needed
+h_timeDiff = r.TH1F("h_timeDiff", f"Run{start_run}to{end_run}time difference", 100, -50, 50)
 
 # Ensure there are entries before proceeding
 if entries > 0:
@@ -114,7 +114,7 @@ def fit_histogram(hist, root_file):
     # Get the mean and stddev of the right peak (gaus2)
     mean_right_peak = gaus2.GetParameter(1)
     stddev_right_peak = gaus2.GetParameter(2)
-    
+
     # Draw the histogram and individual fits
     c = r.TCanvas()
     hist.Draw()

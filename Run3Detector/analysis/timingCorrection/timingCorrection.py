@@ -90,6 +90,10 @@ fout.Close()
 
 # fit the histogram with a combined model of two Gaussian functions and save the canvas to the ROOT file
 def fit_histogram(hist, root_file):
+    if not isinstance(hist, r.TH1):
+        print("Error: The provided object is not a histogram.")
+        return None, None
+
     # define the combined Gaussian model
     combined_gaus = r.TF1("combined_gaus", "gaus(0) + gaus(3)", -50, 50)
     
@@ -130,19 +134,3 @@ def fit_histogram(hist, root_file):
     c.Write("TimeDiffs_Fit_Canvas")
 
     return mean_right_peak, stddev_right_peak
-
-# create a new TFile for the fitted histogram and canvas
-f_fit = r.TFile(f"FitRun{start_run}to{end_run}timingCorrection.root", "recreate") ######################################################################################################
-
-# open the original ROOT file and retrieve the histogram
-f_orig = r.TFile(f"Run{start_run}to{end_run}timingCorrection.root") ######################################################################################################
-h_1d = f_orig.Get("h_1d")
-
-# fit the histogram and get the mean of the right peak
-mean_right_peak, stddev_right_peak = fit_histogram(h_1d, f_fit)
-print("Mean of the right peak:", mean_right_peak)
-print("Stddev of the right peak:", stddev_right_peak)
-
-# close the files
-f_fit.Close()
-f_orig.Close()

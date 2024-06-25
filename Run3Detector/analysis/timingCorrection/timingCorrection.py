@@ -19,7 +19,7 @@ def checkBeam(mqLumis, filename):
         print(f"Error in checkBeam for file {filename}: {e}")
         return False
 
-# Define the range of runs (from run1000-1009 -> 1620-1629 62 histograms) 
+# Define the range of runs (from Run1000-1009 to Run1620-1629: 62 histograms) 
 start_run = 1620
 end_run = 1629
 dataDir = '/store/user/milliqan/trees/v34/1600/'  # Base directory for data

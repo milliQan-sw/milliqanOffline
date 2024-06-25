@@ -20,9 +20,9 @@ def checkBeam(mqLumis, filename):
         return False
 
 # Define the range of runs (from Run1000-1009 to Run1620-1629: 62 histograms) 
-start_run = 1620
-end_run = 1629
-dataDir = '/store/user/milliqan/trees/v34/1600/'  # Base directory for data
+start_run = 1110 #################################################################################################################################
+end_run = 1119 ##################################################################################################################################
+dataDir = '/store/user/milliqan/trees/v34/1100/' #################################################################################################
 
 # Create TChain that will read in tree with name t
 mychain = r.TChain('t')
@@ -87,3 +87,62 @@ h_timeDiff.Write()
 
 # Close the file
 fout.Close()
+
+# fit the histogram with a combined model of two Gaussian functions and save the canvas to the ROOT file
+def fit_histogram(hist, root_file):
+    # define the combined Gaussian model
+    combined_gaus = r.TF1("combined_gaus", "gaus(0) + gaus(3)", -50, 50)
+    
+    # initial parameter estimates for the two Gaussian functions
+    combined_gaus.SetParameters(4, -17, 3, 26, 0, 4)  # peak mean stddev ######################################################################################################
+
+    # fit the histogram with the combined model
+    hist.Fit(combined_gaus, "R")
+
+    # extract the individual Gaussian functions from the combined model
+    gaus1 = r.TF1("gaus1", "gaus", -24, -10)  # range ######################################################################################################
+    gaus2 = r.TF1("gaus2", "gaus", -8, 9)  # range ######################################################################################################
+    for i in range(3):
+        gaus1.SetParameter(i, combined_gaus.GetParameter(i))
+        gaus2.SetParameter(i, combined_gaus.GetParameter(i + 3))
+
+    # get the mean and stddev of the right peak (gaus2)
+    mean_right_peak = gaus2.GetParameter(1) ######################################################################################################
+    stddev_right_peak = gaus2.GetParameter(2) ######################################################################################################
+
+    # draw the histogram and individual fits
+    c = r.TCanvas()
+    hist.Draw()
+    gaus1.SetLineColor(r.kRed)
+    gaus1.Draw("same")
+    gaus2.SetLineColor(r.kBlue)
+    gaus2.Draw("same")
+
+    # add the mean value as text on the plot
+    text = r.TText()
+    text.SetNDC()
+    text.SetTextSize(0.03)
+    text.DrawText(0.15, 0.85, f"Mean of the right peak: {mean_right_peak:.2f}")
+    text.DrawText(0.15, 0.80, f"Stddev of the right peak: {stddev_right_peak:.2f}")
+
+    # save the canvas to the ROOT file
+    root_file.cd()
+    c.Write("TimeDiffs_Fit_Canvas")
+
+    return mean_right_peak, stddev_right_peak
+
+# create a new TFile for the fitted histogram and canvas
+f_fit = r.TFile(f"FitRun{start_run}to{end_run}timingCorrection.root", "recreate") ######################################################################################################
+
+# open the original ROOT file and retrieve the histogram
+f_orig = r.TFile(f"Run{start_run}to{end_run}timingCorrection.root") ######################################################################################################
+h_1d = f_orig.Get("h_1d")
+
+# fit the histogram and get the mean of the right peak
+mean_right_peak, stddev_right_peak = fit_histogram(h_1d, f_fit)
+print("Mean of the right peak:", mean_right_peak)
+print("Stddev of the right peak:", stddev_right_peak)
+
+# close the files
+f_fit.Close()
+f_orig.Close()

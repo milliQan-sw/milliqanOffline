@@ -112,8 +112,8 @@ def fit_histogram(hist, root_file):
         gaus2.SetParameter(i, combined_gaus.GetParameter(i + 3))
 
     # get the mean and stddev of the right peak (gaus2)
-    mean_right_peak = gaus2.GetParameter(1) ######################################################################################################
-    stddev_right_peak = gaus2.GetParameter(2) ######################################################################################################
+    mean_right_peak = gaus2.GetParameter(1)
+    stddev_right_peak = gaus2.GetParameter(2)
 
     # draw the histogram and individual fits
     c = r.TCanvas()
@@ -137,11 +137,10 @@ def fit_histogram(hist, root_file):
     return mean_right_peak, stddev_right_peak
 
 # create a new TFile for the fitted histogram and canvas
-f_fit = r.TFile(f"FitRun{start_run}to{end_run}timingCorrection.root", "recreate") ######################################################################################################
+f_fit = r.TFile(f"FitRun{start_run}to{end_run}timingCorrection.root", "recreate")
 
 # open the original ROOT file and retrieve the histogram
-f_orig = r.TFile(f"Run{start_run}to{end_run}timingCorrection.root") ######################################################################################################
-h_1d = f_orig.Get("h_1d")
+f_orig = r.TFile(f"Run{start_run}to{end_run}timingCorrection.root")
 
 # fit the histogram and get the mean of the right peak
 mean_right_peak, stddev_right_peak = fit_histogram(h_1d, f_fit)

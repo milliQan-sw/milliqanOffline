@@ -72,6 +72,9 @@ if entries > 0:
                 print(f"Number of entries in histogram: {h_timeDiff.GetEntries()}")  # Debug print to check histogram entries
                 if h_timeDiff.GetEntries() > 0:
                     c1.Draw()
+                    # Write the histogram to the file
+                    fout.cd()
+                    h_timeDiff.Write()
                 else:
                     print("The histogram has no entries.")
             else:
@@ -82,9 +85,6 @@ if entries > 0:
         print("Failed to create entry list or eList is not a TEntryList object.")
 else:
     print("No entries in the TChain.")
-
-# Write the plot to the file
-h_timeDiff.Write()
 
 # Close the file
 fout.Close()
@@ -141,6 +141,7 @@ f_fit = r.TFile(f"FitRun{start_run}to{end_run}timingCorrection.root", "recreate"
 
 # Open the original ROOT file and retrieve the histogram
 f_orig = r.TFile(f"Run{start_run}to{end_run}timingCorrection.root")
+h_timeDiff = f_orig.Get("h_timeDiff")
 
 # Fit the histogram and get the mean of the right peak
 mean_right_peak, stddev_right_peak = fit_histogram(h_timeDiff, f_fit)

@@ -6,6 +6,7 @@ import pandas as pd
 import json
 import shutil
 
+# Copy and load the JSON configuration file
 shutil.copy('/eos/experiment/milliqan/Configs/mqLumis.json', os.getcwd())
 mqLumis = pd.read_json('mqLumis.json', orient='split', compression='infer')
 
@@ -20,9 +21,9 @@ def checkBeam(mqLumis, filename):
         return False
 
 # Define the range of runs (from Run1000-1009 to Run1620-1629: 62 histograms) 
-start_run = 1110 #################################################################################################################################
-end_run = 1119 ##################################################################################################################################
-dataDir = '/store/user/milliqan/trees/v34/1100/' #################################################################################################
+start_run = 1110 ######################################################################################################
+end_run = 1119 ######################################################################################################
+dataDir = '/store/user/milliqan/trees/v34/1100/' ######################################################################################################
 
 # Create TChain that will read in tree with name t
 mychain = r.TChain('t')
@@ -134,3 +135,19 @@ def fit_histogram(hist, root_file):
     c.Write("TimeDiffs_Fit_Canvas")
 
     return mean_right_peak, stddev_right_peak
+
+# create a new TFile for the fitted histogram and canvas
+f_fit = r.TFile(f"FitRun{start_run}to{end_run}timingCorrection.root", "recreate") ######################################################################################################
+
+# open the original ROOT file and retrieve the histogram
+f_orig = r.TFile(f"Run{start_run}to{end_run}timingCorrection.root") ######################################################################################################
+h_1d = f_orig.Get("h_1d")
+
+# fit the histogram and get the mean of the right peak
+mean_right_peak, stddev_right_peak = fit_histogram(h_1d, f_fit)
+print("Mean of the right peak:", mean_right_peak)
+print("Stddev of the right peak:", stddev_right_peak)
+
+# close the files
+f_fit.Close()
+f_orig.Close()

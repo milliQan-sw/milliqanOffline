@@ -112,9 +112,9 @@ def fit_histogram(hist, root_file):
         gaus2.SetParameter(i, combined_gaus.GetParameter(i + 3))
 
     # Get the mean and stddev of the right peak (gaus2)
-    mean_right_peak = gaus2.GetParameter(1) ###########################################################################################################################################
-    stddev_right_peak = gaus2.GetParameter(2) #########################################################################################################################################
-
+    mean_right_peak = gaus2.GetParameter(1)
+    stddev_right_peak = gaus2.GetParameter(2)
+    
     # Draw the histogram and individual fits
     c = r.TCanvas()
     hist.Draw()

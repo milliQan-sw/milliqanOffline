@@ -48,7 +48,7 @@ fout = r.TFile(f"Run{start_run}to{end_run}timingCorrection.root", 'RECREATE')
 fout.cd()
 
 # Create an empty histogram
-h_timeDiff = r.TH1F("h_timeDiff", f"Run{start_run}to{end_run}time difference", 100, -50, 50)
+h_timeDiff = r.TH1F("h_timeDiff", f"Run {start_run} to {end_run} time difference", 100, -50, 50)
 
 # Ensure there are entries before proceeding
 if entries > 0:

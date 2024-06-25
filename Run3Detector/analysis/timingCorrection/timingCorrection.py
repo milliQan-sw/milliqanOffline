@@ -143,7 +143,7 @@ f_fit = r.TFile(f"FitRun{start_run}to{end_run}timingCorrection.root", "recreate"
 f_orig = r.TFile(f"Run{start_run}to{end_run}timingCorrection.root")
 
 # fit the histogram and get the mean of the right peak
-mean_right_peak, stddev_right_peak = fit_histogram(h_1d, f_fit)
+mean_right_peak, stddev_right_peak = fit_histogram(h_timeDiff, f_fit)
 print("Mean of the right peak:", mean_right_peak)
 print("Stddev of the right peak:", stddev_right_peak)
 

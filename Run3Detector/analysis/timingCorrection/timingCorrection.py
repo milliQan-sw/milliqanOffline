@@ -94,14 +94,14 @@ def fit_histogram(hist, root_file):
     combined_gaus = r.TF1("combined_gaus", "gaus(0) + gaus(3)", -50, 50)
     
     # initial parameter estimates for the two Gaussian functions
-    combined_gaus.SetParameters(4, -17, 3, 26, 0, 4)  # peak mean stddev ######################################################################################################
+    combined_gaus.SetParameters(25, -21.5, 4.655, 375, 4, 4.9)  # peak mean stddev ######################################################################################################
 
     # fit the histogram with the combined model
     hist.Fit(combined_gaus, "R")
 
     # extract the individual Gaussian functions from the combined model
-    gaus1 = r.TF1("gaus1", "gaus", -24, -10)  # range ######################################################################################################
-    gaus2 = r.TF1("gaus2", "gaus", -8, 9)  # range ######################################################################################################
+    gaus1 = r.TF1("gaus1", "gaus", -29, -12)  # range ######################################################################################################
+    gaus2 = r.TF1("gaus2", "gaus", -6, 14)  # range ######################################################################################################
     for i in range(3):
         gaus1.SetParameter(i, combined_gaus.GetParameter(i))
         gaus2.SetParameter(i, combined_gaus.GetParameter(i + 3))

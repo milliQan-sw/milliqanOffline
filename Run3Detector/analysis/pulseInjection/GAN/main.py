@@ -3,15 +3,17 @@ import datetime
 import sys
 import os
 import cProfile
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
-
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2' 
 import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
 
+tf.debugging.set_log_device_placement(True)
+print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
 from preprocessing import WaveformProcessor
 import gan 
 
+tf.config.list_physical_devices('GPU')
 # Data Preprocessing Constants
 WAVEFORM_BOUNDS = (1200, 1600)
 SPE_AREA = 500
@@ -21,7 +23,7 @@ NS_PER_MEASUREMENT = 2.5
 LATENT_DIM = 500
 BATCH_SIZE = 128
 EPOCHS = 100
-EVAL_EPOCH = 2000  # How often you should get output during training
+EVAL_EPOCH = 10  # How often you should get output during training
 
 PLOT = False
 
@@ -92,8 +94,16 @@ train_summary_writer = tf.summary.create_file_writer(train_log_dir)
 
 start = time.time()
 for epoch in range(EPOCHS):
+    # Monitoring of training
     if (epoch % 100) == 0:
         print(f"On epoch {epoch}")
+
+    # Evaluation of model during training
+    if (epoch % EVAL_EPOCH) == 0:
+        waveform = gan.generate_waveforms(generator, [1])
+        with train_summary_writer.as_default():
+            tf.summary.histogram(f"output/{epoch}", waveform[0], step=epoch)
+
     d_loss = 0.0
     g_loss = 0.0
 
@@ -116,7 +126,6 @@ for epoch in range(EPOCHS):
     with train_summary_writer.as_default():
         tf.summary.scalar('d_loss', d_loss, step=epoch)
         tf.summary.scalar('g_loss', g_loss, step=epoch)
-
             
 end = time.time()
 

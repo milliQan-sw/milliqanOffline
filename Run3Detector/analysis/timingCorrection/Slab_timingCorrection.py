@@ -1,3 +1,5 @@
+# Run this scirpt on T3
+# The ###### comments are only for easier locating parameters as I need to change them frequently
 import sys
 sys.path.append('/root/lib/')
 import os

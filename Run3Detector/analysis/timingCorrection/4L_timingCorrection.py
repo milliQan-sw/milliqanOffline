@@ -68,8 +68,8 @@ def getTimeDiff(self):
 setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)
 
 # Define the range of runs (from Run1000-1009 to Run1620-1629: 63 histograms) 
-start_run_number = 1570 ######################################################################################################################################################
-end_run_number = 1579 ########################################################################################################################################################
+start_run_number = 1580 ######################################################################################################################################################
+end_run_number = 1589 ########################################################################################################################################################
 
 # Define a file list to run over
 filelist = []
@@ -184,14 +184,14 @@ def fit_histogram(hist, root_file):
     return mean_right_peak, stddev_right_peak
 
 # Create a new TFile for the fitted histogram and canvas
-f_fit = r.TFile(f"FitRun{start_run}to{end_run}timingCorrection.root", "recreate")
+f_fit = r.TFile(f"FitRun{start_run_number}to{end_run_number}timingCorrection.root", "recreate")
 
 # Open the original ROOT file and retrieve the histogram
-f_orig = r.TFile(f"Run{start_run}to{end_run}timingCorrection.root")
-h_timeDiff = f_orig.Get("h_timeDiff")
+f_orig = r.TFile(f"Run{start_run_number}to{end_run_number}timingCorrection.root")
+h_1d = f_orig.Get("h_1d")
 
 # Fit the histogram and get the mean of the right peak
-mean_right_peak, stddev_right_peak = fit_histogram(h_timeDiff, f_fit)
+mean_right_peak, stddev_right_peak = fit_histogram(h_1d, f_fit)
 print("Mean of the right peak:", mean_right_peak)
 print("Stddev of the right peak:", stddev_right_peak)
 

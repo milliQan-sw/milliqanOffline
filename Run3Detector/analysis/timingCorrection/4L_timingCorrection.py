@@ -68,8 +68,8 @@ def getTimeDiff(self):
 setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)
 
 # Define the range of runs (from Run1000-1009 to Run1620-1629: 62 histograms) 
-start_run_number = 1390 ######################################################################################################################################################
-end_run_number = 1399 ########################################################################################################################################################
+start_run_number = 1400 ######################################################################################################################################################
+end_run_number = 1409 ########################################################################################################################################################
 
 # Define a file list to run over
 filelist = []
@@ -77,7 +77,7 @@ for run_number in range(start_run_number, end_run_number + 1):
     file_number = 0
     consecutive_missing_files = 0
     while True:
-        file_path = f"/home/bpeng/muonAnalysis/1300/MilliQan_Run{run_number}.{file_number}_v34.root" #########################################################################
+        file_path = f"/home/bpeng/muonAnalysis/1400/MilliQan_Run{run_number}.{file_number}_v34.root" #########################################################################
         if os.path.exists(file_path):
             filelist.append(file_path)
             file_number += 1

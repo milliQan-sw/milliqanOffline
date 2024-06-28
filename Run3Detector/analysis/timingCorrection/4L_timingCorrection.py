@@ -68,8 +68,8 @@ def getTimeDiff(self):
 setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)
 
 # Define the range of runs (from Run1000-1009 to Run1620-1629: 63 histograms) 
-start_run_number = 1580 ######################################################################################################################################################
-end_run_number = 1589 ########################################################################################################################################################
+start_run_number = 1590 ######################################################################################################################################################
+end_run_number = 1599 ########################################################################################################################################################
 
 # Define a file list to run over
 filelist = []
@@ -146,14 +146,14 @@ def fit_histogram(hist, root_file):
     combined_gaus = r.TF1("combined_gaus", "gaus(0) + gaus(3)", -50, 50)
     
     # Initial parameter estimates for the two Gaussian functions
-    combined_gaus.SetParameters(37, -14.5, 5.162, 22, 0.5, 8.575)  # Max Mean Stddev ##################################################################################################
+    combined_gaus.SetParameters(45, -14.5, 5.162, 80, 0.5, 13.475)  # Max Mean Stddev ##################################################################################################
 
     # Fit the histogram with the combined model
     hist.Fit(combined_gaus, "R")
 
     # Extract the individual Gaussian functions from the combined model
     gaus1 = r.TF1("gaus1", "gaus", -36, 7)  # Range ##################################################################################################################################
-    gaus2 = r.TF1("gaus2", "gaus", -17, 18)  # Range ####################################################################################################################################
+    gaus2 = r.TF1("gaus2", "gaus", -27, 28)  # Range ####################################################################################################################################
     for i in range(3):
         gaus1.SetParameter(i, combined_gaus.GetParameter(i))
         gaus2.SetParameter(i, combined_gaus.GetParameter(i + 3))

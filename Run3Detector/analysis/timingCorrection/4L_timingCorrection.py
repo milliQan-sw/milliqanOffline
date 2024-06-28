@@ -135,7 +135,7 @@ h_1d.Write()
 
 # Close the file
 f.Close()
-'''
+
 # Fit the histogram with a combined model of two Gaussian functions and save the canvas to the ROOT file
 def fit_histogram(hist, root_file):
     if not isinstance(hist, r.TH1):
@@ -198,4 +198,3 @@ print("Stddev of the right peak:", stddev_right_peak)
 # Close the files
 f_fit.Close()
 f_orig.Close()
-'''

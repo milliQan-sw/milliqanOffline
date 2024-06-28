@@ -22,7 +22,7 @@ def getTimeDiff(self):
     time_diffsL30 = []
 
     # Height and area mask
-    areaMask = self.events['area'] > 100000
+    areaMask = self.events['area'] > 500000
 
     # Pick the first pulse
     finalPulseMask = areaMask & (self.events['ipulse'] == 0)
@@ -36,6 +36,7 @@ def getTimeDiff(self):
     timeL1 = masked_time[masked_layer == 1]
     timeL2 = masked_time[masked_layer == 2]
     timeL3 = masked_time[masked_layer == 3]
+    timeL3 = masked_time[masked_layer == 4]
 
     # Function to get minimum time per event handling None values
     def minTime(pulse_times):
@@ -47,10 +48,11 @@ def getTimeDiff(self):
     timeL1_min = [minTime(event) for event in ak.to_list(timeL1)]
     timeL2_min = [minTime(event) for event in ak.to_list(timeL2)]
     timeL3_min = [minTime(event) for event in ak.to_list(timeL3)]
+    timeL4_min = [minTime(event) for event in ak.to_list(timeL3)]
 
     for i in range(len(timeL0_min)):
-        # Require pulses in all 4 layers for one event
-        if timeL0_min[i] is not None and timeL1_min[i] is not None and timeL2_min[i] is not None and timeL3_min[i] is not None:
+        # Require pulses in all 4 layers and the back panel for one event
+        if timeL0_min[i] is not None and timeL1_min[i] is not None and timeL2_min[i] is not None and timeL3_min[i] is not None and timeL4_min[i] is not None:
             # Calculate time differences only for events with valid times in all layers
             time_diffsL30.append(timeL3_min[i] - timeL0_min[i])
     

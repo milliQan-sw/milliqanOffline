@@ -146,7 +146,7 @@ def fit_histogram(hist, root_file):
     combined_gaus = r.TF1("combined_gaus", "gaus(0) + gaus(3)", -50, 50)
     
     # Initial parameter estimates for the two Gaussian functions
-    combined_gaus.SetParameters(10, -13.5, 2.281 12, 2.5, 5.635)  # Max Mean Stddev ##################################################################################################
+    combined_gaus.SetParameters(10, -13.5, 2.281, 12, 2.5, 5.635)  # Max Mean Stddev ##################################################################################################
 
     # Fit the histogram with the combined model
     hist.Fit(combined_gaus, "R")

@@ -68,8 +68,8 @@ def getTimeDiff(self):
 setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)
 
 # Define the range of runs (from Run1000-1009 to Run1620-1629: 63 histograms) 
-start_run_number = 1110 ######################################################################################################################################################
-end_run_number = 1119 ########################################################################################################################################################
+start_run_number = 1540 ######################################################################################################################################################
+end_run_number = 1549 ########################################################################################################################################################
 
 # Define a file list to run over
 filelist = []
@@ -77,7 +77,7 @@ for run_number in range(start_run_number, end_run_number + 1):
     file_number = 0
     consecutive_missing_files = 0
     while True:
-        file_path = f"/home/bpeng/muonAnalysis/1100/MilliQan_Run{run_number}.{file_number}_v34.root" #########################################################################
+        file_path = f"/home/bpeng/muonAnalysis/1500/MilliQan_Run{run_number}.{file_number}_v34.root" #########################################################################
         if os.path.exists(file_path):
             filelist.append(file_path)
             file_number += 1
@@ -146,14 +146,14 @@ def fit_histogram(hist, root_file):
     combined_gaus = r.TF1("combined_gaus", "gaus(0) + gaus(3)", -50, 50)
     
     # Initial parameter estimates for the two Gaussian functions
-    combined_gaus.SetParameters(100, -13.5, 8.085, 135, 0, 6.86)  # Max Mean Stddev ##################################################################################################
+    combined_gaus.SetParameters(55, -12.5, 6.123, 46, 1.5, 9.555)  # Max Mean Stddev ##################################################################################################
 
     # Fit the histogram with the combined model
     hist.Fit(combined_gaus, "R")
 
     # Extract the individual Gaussian functions from the combined model
-    gaus1 = r.TF1("gaus1", "gaus", -30, 3)  # Range ##################################################################################################################################
-    gaus2 = r.TF1("gaus2", "gaus", -14, 14)  # Range ####################################################################################################################################
+    gaus1 = r.TF1("gaus1", "gaus", -38, 13)  # Range ##################################################################################################################################
+    gaus2 = r.TF1("gaus2", "gaus", -18, 21)  # Range ####################################################################################################################################
     for i in range(3):
         gaus1.SetParameter(i, combined_gaus.GetParameter(i))
         gaus2.SetParameter(i, combined_gaus.GetParameter(i + 3))

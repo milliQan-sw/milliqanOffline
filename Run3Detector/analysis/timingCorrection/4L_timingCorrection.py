@@ -36,7 +36,7 @@ def getTimeDiff(self):
     timeL1 = masked_time[masked_layer == 1]
     timeL2 = masked_time[masked_layer == 2]
     timeL3 = masked_time[masked_layer == 3]
-    timeL3 = masked_time[masked_layer == 4]
+    timeL4 = masked_time[masked_layer == 4]
 
     # Function to get minimum time per event handling None values
     def minTime(pulse_times):
@@ -48,7 +48,7 @@ def getTimeDiff(self):
     timeL1_min = [minTime(event) for event in ak.to_list(timeL1)]
     timeL2_min = [minTime(event) for event in ak.to_list(timeL2)]
     timeL3_min = [minTime(event) for event in ak.to_list(timeL3)]
-    timeL4_min = [minTime(event) for event in ak.to_list(timeL3)]
+    timeL4_min = [minTime(event) for event in ak.to_list(timeL4)]
 
     for i in range(len(timeL0_min)):
         # Require pulses in all 4 layers and the back panel for one event
@@ -75,6 +75,9 @@ end_run_number = 1629 ##########################################################
 
 # Define a file list to run over
 filelist = []
+beamOn_true_count = 0
+total_files_count = 0
+
 for run_number in range(start_run_number, end_run_number + 1):
     file_number = 0
     consecutive_missing_files = 0
@@ -82,6 +85,11 @@ for run_number in range(start_run_number, end_run_number + 1):
         file_path = f"/home/bpeng/muonAnalysis/1600/MilliQan_Run{run_number}.{file_number}_v34.root" #########################################################################
         if os.path.exists(file_path):
             filelist.append(file_path)
+            with uproot.open(file_path) as file:
+                beamOn = file['beamOn'].array(library="np")[0]
+                if beamOn:
+                    beamOn_true_count += 1
+                total_files_count += 1
             file_number += 1
             consecutive_missing_files = 0
         else:
@@ -129,6 +137,10 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts, myplotter
 # Run the milliqan processor
 myiterator.run()
 
+# Calculate the percentage of beamOn == True files
+beamOn_true_percentage = (beamOn_true_count / total_files_count) * 100
+print(f"Percentage of beamOn == True files: {beamOn_true_percentage:.2f}%")
+
 # Create a new TFile
 f = r.TFile(f"Run{start_run_number}to{end_run_number}timingCorrection.root", "recreate")
 
@@ -137,7 +149,7 @@ h_1d.Write()
 
 # Close the file
 f.Close()
-
+'''
 # Fit the histogram with a combined model of two Gaussian functions and save the canvas to the ROOT file
 def fit_histogram(hist, root_file):
     if not isinstance(hist, r.TH1):
@@ -200,3 +212,4 @@ print("Stddev of the right peak:", stddev_right_peak)
 # Close the files
 f_fit.Close()
 f_orig.Close()
+'''

@@ -139,7 +139,7 @@ myiterator.run()
 
 # Calculate the percentage of beamOn == True files
 beamOn_true_percentage = (beamOn_true_count / total_files_count) * 100
-print(f"Percentage of beamOn == True files: {beamOn_true_percentage:.2f}%")
+print(f"Percentage of beam on files: {beamOn_true_percentage:.2f}%")
 
 # Create a new TFile
 f = r.TFile(f"Run{start_run_number}to{end_run_number}timingCorrection.root", "recreate")

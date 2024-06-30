@@ -75,8 +75,6 @@ end_run_number = 1009 ##########################################################
 
 # Define a file list to run over
 filelist = []
-beamOn_true_count = 0
-total_files_count = 0
 
 for run_number in range(start_run_number, end_run_number + 1):
     file_number = 0
@@ -85,11 +83,6 @@ for run_number in range(start_run_number, end_run_number + 1):
         file_path = f"/home/bpeng/muonAnalysis/1000/MilliQan_Run{run_number}.{file_number}_v34.root" #########################################################################
         if os.path.exists(file_path):
             filelist.append(file_path)
-            with uproot.open(file_path) as file:
-                beamOn = file['beamOn'].array(library="np")[0]
-                if beamOn:
-                    beamOn_true_count += 1
-                total_files_count += 1
             file_number += 1
             consecutive_missing_files = 0
         else:
@@ -131,15 +124,27 @@ myschedule = milliQanScheduler(cutflow, mycuts, myplotter)
 # Print out the schedule
 myschedule.printSchedule()
 
-# Create the milliqan processor object
-myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts, myplotter)
+class CustomMilliqanProcessor(milliqanProcessor):
+    def __init__(self, filelist, branches, schedule, cuts, plotter):
+        super().__init__(filelist, branches, schedule, cuts, plotter)
+        self.beamOn_true_count = 0
+        self.total_files_count = 0
+
+    def process_file(self, filename):
+        self.load_file(filename)
+        self.total_files_count += 1
+        if self.events['beamOn'][0]:
+            self.beamOn_true_count += 1
+
+# Create the custom milliqan processor object
+myiterator = CustomMilliqanProcessor(filelist, branches, myschedule, mycuts, myplotter)
 
 # Run the milliqan processor
 myiterator.run()
 
 # Calculate the percentage of beamOn == True files
-beamOn_true_percentage = (beamOn_true_count / total_files_count) * 100
-print(f"Percentage of beam on files: {beamOn_true_percentage:.2f}%")
+beamOn_true_percentage = (myiterator.beamOn_true_count / myiterator.total_files_count) * 100
+print(f"Percentage of beamOn == True files: {beamOn_true_percentage:.2f}%")
 
 # Create a new TFile
 f = r.TFile(f"Run{start_run_number}to{end_run_number}timingCorrection.root", "recreate")

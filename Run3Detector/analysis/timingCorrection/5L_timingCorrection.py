@@ -86,7 +86,7 @@ for run_number in range(start_run_number, end_run_number + 1):
         if os.path.exists(file_path):
             filelist.append(file_path)
             with uproot.open(file_path) as file:
-                beamOn = file['beamOn'].array(library="np")[0]
+                beamOn = file.events['beamOn']
                 if beamOn:
                     beamOn_true_count += 1
                 total_files_count += 1

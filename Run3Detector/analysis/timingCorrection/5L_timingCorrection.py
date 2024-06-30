@@ -88,7 +88,7 @@ for run_number in range(start_run_number, end_run_number + 1):
             with uproot.open(file_path) as file:
                 tree = file["t"]
                 beamOn = tree["beamOn"].array()
-                if beamOn.any():
+                if np.any(beamOn):
                     beamOn_true_count += 1
                 total_files_count += 1
             file_number += 1

@@ -79,23 +79,29 @@ beamOn_true_count = 0
 total_files_count = 0
 
 for run_number in range(start_run_number, end_run_number + 1):
+    print(f"Processing run number: {run_number}")
     file_number = 0
     consecutive_missing_files = 0
     while True:
-        file_path = f"/home/bpeng/muonAnalysis/1000/MilliQan_Run{run_number}.{file_number}_v34.root" #########################################################################
+        file_path = f"/home/bpeng/muonAnalysis/1000/MilliQan_Run{run_number}.{file_number}_v34.root"
         if os.path.exists(file_path):
             filelist.append(file_path)
-            with uproot.open(file_path) as file:
-                tree = file["t"]
-                beamOn = tree["beamOn"].array(library="np")
-                if beamOn[0]:
-                    beamOn_true_count += 1
-                total_files_count += 1
+            try:
+                with uproot.open(file_path) as file:
+                    tree = file["t"]
+                    beamOn = tree["beamOn"].array(library="np")
+                    if np.any(beamOn):
+                        beamOn_true_count += 1
+                    total_files_count += 1
+                print(f"Processed file: {file_path}")
+            except Exception as e:
+                print(f"Error processing file {file_path}: {e}")
             file_number += 1
             consecutive_missing_files = 0
         else:
             consecutive_missing_files += 1
             if consecutive_missing_files >= 10:
+                print(f"No more files found after {file_number} for run {run_number}")
                 break
             file_number += 1
 

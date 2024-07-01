@@ -19,7 +19,7 @@ from milliqanPlotter import *
 def getTimeDiff(self):
     time_diffsL30 = []
 
-    # Height and area mask
+    # Area mask
     areaMask = self.events['area'] > 500000
 
     # Pick the first pulse

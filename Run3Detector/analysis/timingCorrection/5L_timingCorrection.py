@@ -17,7 +17,6 @@ from milliqanPlotter import *
 
 # Define the function to get the time differences
 def getTimeDiff(self):
-    
     time_diffsL30 = []
 
     # Height and area mask

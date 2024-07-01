@@ -74,23 +74,38 @@ end_run_number = 1009 ##########################################################
 
 # Define a file list to run over
 filelist = []
+beamOn_true_count = 0
+total_files_count = 0
+
 for run_number in range(start_run_number, end_run_number + 1):
+    print(f"Processing run number: {run_number}")
     file_number = 0
     consecutive_missing_files = 0
     while True:
-        file_path = f"/home/bpeng/muonAnalysis/1000/MilliQan_Run{run_number}.{file_number}_v34.root" #########################################################################
+        file_path = f"/home/bpeng/muonAnalysis/1000/MilliQan_Run{run_number}.{file_number}_v34.root"
         if os.path.exists(file_path):
             filelist.append(file_path)
+            try:
+                with uproot.open(file_path) as file:
+                    tree = file["t"]
+                    beamOn = tree["beamOn"].array(library="np")
+                    if np.any(beamOn):
+                        beamOn_true_count += 1
+                    total_files_count += 1
+                print(f"Processed file: {file_path}")
+            except Exception as e:
+                print(f"Error processing file {file_path}: {e}")
             file_number += 1
             consecutive_missing_files = 0
         else:
             consecutive_missing_files += 1
             if consecutive_missing_files >= 10:
+                print(f"No more files found after {file_number} for run {run_number}")
                 break
             file_number += 1
 
 # Define the necessary branches to run over
-branches = ['timeFit_module_calibrated', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type']
+branches = ['timeFit_module_calibrated', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type', 'beamOn']
 
 # Define the milliqan cuts object
 mycuts = milliqanCuts()
@@ -119,6 +134,10 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts, myplotter
 # Run the milliqan processor
 myiterator.run()
 
+# Calculate the percentage of beamOn == True files
+beamOn_true_percentage = (beamOn_true_count / total_files_count) * 100
+print(f"Percentage of beam on files: {beamOn_true_percentage:.2f}%")
+
 # Create a new TFile
 f = r.TFile(f"Run{start_run_number}to{end_run_number}timingCorrection.root", "recreate")
 
@@ -127,3 +146,67 @@ h_1d.Write()
 
 # Close the file
 f.Close()
+
+# Fit the histogram with a combined model of two Gaussian functions and save the canvas to the ROOT file
+def fit_histogram(hist, root_file):
+    if not isinstance(hist, r.TH1):
+        print("Error: The provided object is not a histogram.")
+        return None, None
+
+    # Define the combined Gaussian model
+    combined_gaus = r.TF1("combined_gaus", "gaus(0) + gaus(3)", -50, 50)
+    
+    # Initial parameter estimates for the two Gaussian functions
+    combined_gaus.SetParameters(27, -16.5, 3.48, 18, -1.5, 8.575)  # Max Mean Stddev ##################################################################################################
+
+    # Fit the histogram with the combined model
+    hist.Fit(combined_gaus, "R")
+
+    # Extract the individual Gaussian functions from the combined model
+    gaus1 = r.TF1("gaus1", "gaus", -31, -2)  # Range ##################################################################################################################################
+    gaus2 = r.TF1("gaus2", "gaus", -19, 16)  # Range ####################################################################################################################################
+    for i in range(3):
+        gaus1.SetParameter(i, combined_gaus.GetParameter(i))
+        gaus2.SetParameter(i, combined_gaus.GetParameter(i + 3))
+
+    # Get the mean and stddev of the right peak (gaus2)
+    mean_right_peak = gaus2.GetParameter(1)
+    stddev_right_peak = abs(gaus2.GetParameter(2))
+
+    # Draw the histogram and individual fits
+    c = r.TCanvas()
+    hist.Draw()
+    gaus1.SetLineColor(r.kRed)
+    gaus1.Draw("same")
+    gaus2.SetLineColor(r.kBlue)
+    gaus2.Draw("same")
+
+    # Add the mean value as text on the plot
+    text = r.TText()
+    text.SetNDC()
+    text.SetTextSize(0.03)
+    text.DrawText(0.15, 0.85, f"Mean of the right peak: {mean_right_peak:.2f}")
+    text.DrawText(0.15, 0.80, f"Stddev of the right peak: {stddev_right_peak:.2f}")
+    text.DrawText(0.15, 0.75, f"Beam On: {beamOn_true_percentage:.2f}%")
+
+    # Save the canvas to the ROOT file
+    root_file.cd()
+    c.Write("TimeDiffs_Fit_Canvas")
+
+    return mean_right_peak, stddev_right_peak
+
+# Create a new TFile for the fitted histogram and canvas
+f_fit = r.TFile(f"FitRun{start_run_number}to{end_run_number}timingCorrection.root", "recreate")
+
+# Open the original ROOT file and retrieve the histogram
+f_orig = r.TFile(f"Run{start_run_number}to{end_run_number}timingCorrection.root")
+h_1d = f_orig.Get("h_1d")
+
+# Fit the histogram and get the mean of the right peak
+mean_right_peak, stddev_right_peak = fit_histogram(h_1d, f_fit)
+print("Mean of the right peak:", mean_right_peak)
+print("Stddev of the right peak:", stddev_right_peak)
+
+# Close the files
+f_fit.Close()
+f_orig.Close()

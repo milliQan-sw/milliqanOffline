@@ -68,7 +68,7 @@ def getTimeDiff(self):
 # Add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)
 
-# Define the range of runs (from Run1000-1009 to Run1620-1629: 63 histograms) 
+# Define the range of runs (from Run1000-1009 to Run1620-1629: 63 histograms)
 start_run_number = 1000 ######################################################################################################################################################
 end_run_number = 1009 ########################################################################################################################################################
 

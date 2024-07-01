@@ -187,7 +187,7 @@ def fit_histogram(hist, root_file):
     text.SetTextSize(0.03)
     text.DrawText(0.15, 0.85, f"Mean of the right peak: {mean_right_peak:.2f}")
     text.DrawText(0.15, 0.80, f"Stddev of the right peak: {stddev_right_peak:.2f}")
-    text.DrawText(0.15, 0.75, f"Beam On: {beamOn_true_percentage:.2f}%")
+    text.DrawText(0.15, 0.75, f"Beam on files percentage: {beamOn_true_percentage:.2f}%")
 
     # Save the canvas to the ROOT file
     root_file.cd()

@@ -145,6 +145,11 @@ f = r.TFile(f"Run{start_run_number}to{end_run_number}timingCorrection.root", "re
 # Write the histograms to the file
 h_1d.Write()
 
+# Add a legend with the beamOn_true_percentage
+legend = r.TLegend(0.7, 0.7, 0.9, 0.9)
+legend.AddEntry(h_1d, f"Beam On: {beamOn_true_percentage:.2f}%")
+legend.Draw()
+
 # Close the file
 f.Close()
 '''

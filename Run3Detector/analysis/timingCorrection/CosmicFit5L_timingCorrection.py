@@ -137,69 +137,52 @@ myiterator.run()
 beamOn_true_percentage = (beamOn_true_count / total_files_count) * 100
 print(f"Percentage of beam on files: {beamOn_true_percentage:.2f}%")
 
-# Fit the histogram with a combined model of two Gaussian functions and save the canvas to the ROOT file
+# Fit the histogram with a single Gaussian function for the left peak and save the canvas to the ROOT file
 def fit_histogram(hist, beamOn_true_percentage, root_file):
     if not isinstance(hist, r.TH1):
         print("Error: The provided object is not a histogram.")
         return None, None
 
-    # Define the combined Gaussian model
-    combined_gaus = r.TF1("combined_gaus", "gaus(0) + gaus(3)", -50, 50)
-    
-    # Initial parameter estimates for the two Gaussian functions
-    combined_gaus.SetParameters(27, -16.5, 3.48, 18, -1.5, 8.575)  # Max Mean Stddev ######################################################################################################################
-
-    # Fit the histogram with the combined model
-    hist.Fit(combined_gaus, "R")
-
-    # Extract the individual Gaussian functions from the combined model
+    # Define the Gaussian model for the left peak
     gaus1 = r.TF1("gaus1", "gaus", -31, -2)  # Range ######################################################################################################################################################
-    gaus2 = r.TF1("gaus2", "gaus", -19, 16)  # Range ######################################################################################################################################################
-    for i in range(3):
-        gaus1.SetParameter(i, combined_gaus.GetParameter(i))
-        gaus2.SetParameter(i, combined_gaus.GetParameter(i + 3))
+
+    # Initial parameter estimates for the Gaussian function
+    gaus1.SetParameters(27, -16.5, 3.48)  # Max Mean Stddev ######################################################################################################################
+
+    # Fit the histogram with the Gaussian model
+    hist.Fit(gaus1, "R")
 
     # Get the mean and stddev of the left peak (gaus1)
     mean_left_peak = gaus1.GetParameter(1)
     stddev_left_peak = abs(gaus1.GetParameter(2))
 
-    # Get the mean and stddev of the right peak (gaus2)
-    mean_right_peak = gaus2.GetParameter(1)
-    stddev_right_peak = abs(gaus2.GetParameter(2))
-
-    # Draw the histogram and individual fits
+    # Draw the histogram and individual fit
     c = r.TCanvas()
     hist.Draw()
     gaus1.SetLineColor(r.kRed)
     gaus1.Draw("same")
-    gaus2.SetLineColor(r.kBlue)
-    gaus2.Draw("same")
 
     # Add the mean and stddev values as text on the plot
     text = r.TText()
     text.SetNDC()
     text.SetTextSize(0.03)
-    text.DrawText(0.15, 0.90, f"Mean of the cosmic peak: {mean_left_peak:.2f}")
-    text.DrawText(0.15, 0.85, f"Stddev of the cosmic peak: {stddev_left_peak:.2f}")
-    text.DrawText(0.15, 0.80, f"Mean of the beam peak: {mean_right_peak:.2f}")
-    text.DrawText(0.15, 0.75, f"Stddev of the beam peak: {stddev_right_peak:.2f}")
-    text.DrawText(0.15, 0.70, f"Beam on files percentage: {beamOn_true_percentage:.2f}%")
+    text.DrawText(0.15, 0.85, f"Mean of the cosmic peak: {mean_left_peak:.2f}")
+    text.DrawText(0.15, 0.80, f"Stddev of the cosmic peak: {stddev_left_peak:.2f}")
+    text.DrawText(0.15, 0.75, f"Beam on files percentage: {beamOn_true_percentage:.2f}%")
 
     # Save the canvas to the ROOT file
     root_file.cd()
     c.Write("TimeDiffs_Fit_Canvas")
 
-    return mean_left_peak, stddev_left_peak, mean_right_peak, stddev_right_peak
+    return mean_left_peak, stddev_left_peak
 
 # Create a new TFile for the fitted histogram and canvas
 f_fit = r.TFile(f"FitRun{start_run_number}to{end_run_number}timingCorrection.root", "recreate")
 
-# Fit the histogram and get the mean of the left and right peaks
-mean_left_peak, stddev_left_peak, mean_right_peak, stddev_right_peak = fit_histogram(h_1d, beamOn_true_percentage, f_fit)
-print("Mean of the left peak:", mean_left_peak)
-print("Stddev of the left peak:", stddev_left_peak)
-print("Mean of the right peak:", mean_right_peak)
-print("Stddev of the right peak:", stddev_right_peak)
+# Fit the histogram and get the mean and stddev of the left peak
+mean_left_peak, stddev_left_peak = fit_histogram(h_1d, beamOn_true_percentage, f_fit)
+print("Mean of the cosmic peak:", mean_left_peak)
+print("Stddev of the cosmic peak:", stddev_left_peak)
 
 # Close the fit file
 f_fit.Close()

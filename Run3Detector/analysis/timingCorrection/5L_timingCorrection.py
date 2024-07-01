@@ -71,7 +71,7 @@ setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)
 
 # Define the range of runs (from Run1000-1009 to Run1620-1629: 63 histograms) 
 start_run_number = 1000 ######################################################################################################################################################
-end_run_number = 1009 ########################################################################################################################################################
+end_run_number = 1002 ########################################################################################################################################################
 
 # Define a file list to run over
 filelist = []
@@ -106,19 +106,10 @@ for run_number in range(start_run_number, end_run_number + 1):
             file_number += 1
 
 # Define the necessary branches to run over
-branches = ['pickupFlag', 'boardsMatched', 'timeFit_module_calibrated', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type', 'beamOn']
+branches = ['timeFit_module_calibrated', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type', 'beamOn']
 
 # Define the milliqan cuts object
 mycuts = milliqanCuts()
-
-# Require pulses are not pickup
-pickupCut = mycuts.getCut(mycuts.pickupCut, 'pickupCut', cut=True, branches=branches)
-
-# Require that all digitizer boards are matched
-boardMatchCut = mycuts.getCut(mycuts.boardsMatched, 'boardMatchCut', cut=True, branches=branches)
-
-# Add four layer cut
-fourLayerCut = mycuts.getCut(mycuts.fourLayerCut, 'fourLayerCut', cut=False)
 
 # Define milliqan plotter
 myplotter = milliqanPlotter()
@@ -130,7 +121,7 @@ h_1d = r.TH1F("h_1d", f"Run {start_run_number} to {end_run_number} time differen
 myplotter.addHistograms(h_1d, 'timeDiff')
 
 # Defining the cutflow
-cutflow = [boardMatchCut, pickupCut, mycuts.layerCut, mycuts.getTimeDiff, myplotter.dict['h_1d']]
+cutflow = [mycuts.getTimeDiff, myplotter.dict['h_1d']]
 
 # Create a schedule of the cuts
 myschedule = milliQanScheduler(cutflow, mycuts, myplotter)

@@ -141,8 +141,10 @@ canvas = r.TCanvas("canvas", "canvas", 800, 600)
 h_1d.Draw()
 
 # Add text to the histogram
-text = r.TPaveText(0.15, 0.75, 0.4, 0.85, "NDC")
-text.AddText(f"Beam on files percentage: {beamOn_true_percentage:.2f}%")
+text = r.TText()
+text.SetNDC()
+text.SetTextSize(0.03)
+text.DrawText(0.15, 0.65, f"Beam on files percentage: {beamOn_true_percentage:.2f}%")
 text.Draw()
 
 # Create a new TFile

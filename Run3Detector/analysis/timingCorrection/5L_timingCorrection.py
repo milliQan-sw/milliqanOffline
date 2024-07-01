@@ -144,7 +144,7 @@ h_1d.Draw()
 text = r.TText()
 text.SetNDC()
 text.SetTextSize(0.03)
-text.DrawText(0.15, 0.65, f"Beam on files percentage: {beamOn_true_percentage:.2f}%")
+text.DrawText(0.15, 0.75, f"Beam on files percentage: {beamOn_true_percentage:.2f}%")
 text.Draw()
 
 # Create a new TFile

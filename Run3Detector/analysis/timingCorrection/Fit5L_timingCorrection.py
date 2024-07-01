@@ -69,7 +69,7 @@ setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)
 
 # Define the range of runs (from Run1000-1009 to Run1620-1629: 63 histograms)
 start_run_number = 1000 ######################################################################################################################################################
-end_run_number = 1009 ########################################################################################################################################################
+end_run_number = 1002 ########################################################################################################################################################
 
 # Define a file list to run over
 filelist = []
@@ -179,11 +179,11 @@ def fit_histogram(hist, beamOn_true_percentage, root_file):
     text = r.TText()
     text.SetNDC()
     text.SetTextSize(0.03)
-    text.DrawText(0.15, 0.90, f"Mean of the cosmic peak: {mean_left_peak:.2f}")
-    text.DrawText(0.15, 0.85, f"Stddev of the cosmic peak: {stddev_left_peak:.2f}")
-    text.DrawText(0.15, 0.80, f"Mean of the beam peak: {mean_right_peak:.2f}")
-    text.DrawText(0.15, 0.75, f"Stddev of the beam peak: {stddev_right_peak:.2f}")
-    text.DrawText(0.15, 0.70, f"Beam on files percentage: {beamOn_true_percentage:.2f}%")
+    text.DrawText(0.15, 0.85, f"Mean of the cosmic peak: {mean_left_peak:.2f}")
+    text.DrawText(0.15, 0.80, f"Stddev of the cosmic peak: {stddev_left_peak:.2f}")
+    text.DrawText(0.15, 0.75, f"Mean of the beam peak: {mean_right_peak:.2f}")
+    text.DrawText(0.15, 0.70, f"Stddev of the beam peak: {stddev_right_peak:.2f}")
+    text.DrawText(0.15, 0.65, f"Beam on files percentage: {beamOn_true_percentage:.2f}%")
 
     # Save the canvas to the ROOT file
     root_file.cd()

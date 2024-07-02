@@ -42,11 +42,8 @@ mycuts = milliqanCuts()
 # define milliqan plotter
 myplotter = milliqanPlotter()
 
-# add root histogram to plotter
-myplotter.addHistograms(h_1d, 'countMuon')
-
 # defining the cutflow
-cutflow = [mycuts.getMuonNum, myplotter.dict['h_1d']]
+cutflow = [mycuts.getMuonNum]
 
 # create a schedule of the cuts
 myschedule = milliQanScheduler(cutflow, mycuts, myplotter)

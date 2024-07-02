@@ -50,7 +50,7 @@ def getTimeDiff(self):
 
     for i in range(len(timeL0_min)):
         # Require pulses in all 4 layers and the back panel for one event
-        if timeL0_min[i] is not None and timeL1_min[i] is not None and timeL2_min[i] is not None and timeL3_min[i] is not None and timeL4_min[i] is not None:
+        if timeL0_min[i] is not None and timeL1_min[i] is not None and timeL2_min[i] is not None and timeL3_min[i] is not None:
             # Calculate time differences only for events with valid times in all layers
             time_diffsL30.append(timeL3_min[i] - timeL0_min[i])
     
@@ -68,8 +68,8 @@ def getTimeDiff(self):
 setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)
 
 # Define the range of runs (from Run1000-1009 to Run1620-1629: 63 histograms)
-start_run_number = 1580 ######################################################################################################################################################
-end_run_number = 1589 ########################################################################################################################################################
+start_run_number = 1000 ######################################################################################################################################################
+end_run_number = 1009 ########################################################################################################################################################
 
 # Define a file list to run over
 filelist = []
@@ -81,7 +81,7 @@ for run_number in range(start_run_number, end_run_number + 1):
     file_number = 0
     consecutive_missing_files = 0
     while True:
-        file_path = f"/home/bpeng/muonAnalysis/1500/MilliQan_Run{run_number}.{file_number}_v34.root" #########################################################################
+        file_path = f"/home/bpeng/muonAnalysis/1000/MilliQan_Run{run_number}.{file_number}_v34.root" #########################################################################
         if os.path.exists(file_path):
             filelist.append(file_path)
             try:

@@ -53,7 +53,7 @@ def get3LNum(self):
            (timeL0_min[i] is not None and timeL1_min[i] is not None and timeL3_min[i] is not None) or \
            (timeL0_min[i] is not None and timeL2_min[i] is not None and timeL3_min[i] is not None) or \
            (timeL1_min[i] is not None and timeL2_min[i] is not None and timeL3_min[i] is not None):
-            # calculate time differences only for events with valid times in 3 layers
+            # count events with valid times in 3 layers
             threeLcount.append(0)
     
     print(threeLcount)

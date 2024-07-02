@@ -22,7 +22,7 @@ def getTimeDiff(self):
     # nPE mask to replace height and area mask
     nPEMask = self.events['nPE'] > 10000
 
-    # require hits to be muons
+    # require events to have muons
     muonMask = ak.any(abs(self.events['hit_particleName']) == 13, axis = 1)
 
     # make final mask

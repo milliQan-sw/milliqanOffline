@@ -23,7 +23,7 @@ def getTimeDiff(self):
     nPEMask = self.events['nPE'] > 10000
 
     # require hits to be muons
-    muonMask = ak.any(self.events['hit_particleName'] ==13, axis = 1)
+    muonMask = ak.any(abs(self.events['hit_particleName']) == 13, axis = 1)
 
     # make final mask
     finalPulseMask = nPEMask & muonMask

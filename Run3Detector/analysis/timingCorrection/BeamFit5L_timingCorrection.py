@@ -20,21 +20,27 @@ def getTimeDiff(self):
     time_diffsL30 = []
 
     # Area mask
-    areaMask = self.events['area'] > 500000
+    barAreaMask = self.events['area'] > 500000
+    slabAreaMask = self.events['area'] > 500000 / 12
 
     # Pick the first pulse
-    finalPulseMask = areaMask & (self.events['ipulse'] == 0)
+    barFinalPulseMask = barAreaMask & (self.events['ipulse'] == 0)
+    slabFinalPulseMask = slabAreaMask & (self.events['ipulse'] == 0)
 
     # Apply the finalPulseMask
-    masked_time = self.events['timeFit_module_calibrated'][finalPulseMask]
-    masked_layer = self.events['layer'][finalPulseMask]
+    masked_time1 = self.events['timeFit_module_calibrated'][barFinalPulseMask]
+    masked_layer1 = self.events['layer'][barFinalPulseMask]
+
+    masked_time2 = self.events['timeFit_module_calibrated'][slabFinalPulseMask]
+    masked_layer2 = self.events['layer'][slabFinalPulseMask]
 
     # Masked times per layer
-    timeL0 = masked_time[masked_layer == 0]
-    timeL1 = masked_time[masked_layer == 1]
-    timeL2 = masked_time[masked_layer == 2]
-    timeL3 = masked_time[masked_layer == 3]
-    timeL4 = masked_time[masked_layer == 4]
+    timeL0 = masked_time1[masked_layer1 == 0]
+    timeL1 = masked_time1[masked_layer1 == 1]
+    timeL2 = masked_time1[masked_layer1 == 2]
+    timeL3 = masked_time1[masked_layer1 == 3]
+
+    timeL4 = masked_time2[masked_layer2 == 4]
 
     # Function to get minimum time per event handling None values
     def minTime(pulse_times):

@@ -17,14 +17,13 @@ from milliqanPlotter import *
 
 # define the function to get the time differences
 def getTimeDiff(self):
-    
     time_diffsL30 = []
 
     # nPE mask to replace height and area mask
     nPEMask = self.events['nPE'] > 10000
 
     # require hits to be muons
-    muonMask = abs(self.events['hit_particleName']) == 13
+    muonMask = ak.any(self.events['hit_particleName'] ==13, axis = 1)
 
     # make final mask
     finalPulseMask = nPEMask & muonMask

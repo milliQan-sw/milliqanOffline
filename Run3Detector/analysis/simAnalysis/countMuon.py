@@ -20,16 +20,13 @@ def getMuonNum(self):
 
     countMuon = []
 
-    print(len(self.events['hit_particleName']))
-    print(len(ak.any(abs(self.events['hit_particleName']) == 13, axis = 1)))
-
     hit_muons = self.events['hit_particleName'][ak.any(abs(self.events['hit_particleName']) == 13, axis = 1)]
 
     for i in range(len(hit_muons)):
         if hit_muons[i] is not None:
             countMuon.append(hit_muons[i])
 
-    self.events['countMuon'] = countMuon
+    print(len(countMuon))
 
 # add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getMuonNum', getMuonNum)
@@ -44,10 +41,6 @@ mycuts = milliqanCuts()
 
 # define milliqan plotter
 myplotter = milliqanPlotter()
-
-# create a 1D root histogram
-h_1d = r.TH1F("h_1d", "Number of Muons", 20, 0, 20)
-h_1d.GetXaxis().SetTitle("hit_particleName")
 
 # add root histogram to plotter
 myplotter.addHistograms(h_1d, 'countMuon')
@@ -66,12 +59,3 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts, myplotter
 
 # run the milliqan processor
 myiterator.run()
-
-# create a new TFile
-f = r.TFile("COUNT_MUON.root", "recreate")
-
-# write the histograms to the file
-h_1d.Write()
-
-# close the file
-f.Close()

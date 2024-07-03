@@ -21,6 +21,8 @@ def getMuonNum(self):
 
     hit_muons = self.events['hit_particleName'][ak.any(abs(self.events['hit_particleName']) == 13, axis = 1)]
     
+    print(len(self.events['hit_particleName']))
+    print(len(ak.any(abs(self.events['hit_particleName']) == 13, axis = 1)))
     print(len(self.events['hit_layer'] == 0))
     print(len(hit_muons))
 

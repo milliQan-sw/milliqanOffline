@@ -15,7 +15,7 @@ from milliqanScheduler import *
 from milliqanCuts import *
 from milliqanPlotter import *
 
-# define the function to get the number of muons
+# define the function to get the number of events with muons in all 4 layers
 def getMuonNum(self):
 
     countMuon = []

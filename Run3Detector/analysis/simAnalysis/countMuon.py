@@ -17,10 +17,6 @@ from milliqanPlotter import *
 
 # define the function to get the number of events with muons in all 4 layers
 def getMuonNum(self):
-
-    print(len(self.events['hit_particleName']))
-    print(len(self.events['hit_layer']))
-
     countMuon = []
 
     hit_muons = self.events['hit_particleName'][ak.any(abs(self.events['hit_particleName']) == 13, axis = 1)]
@@ -29,6 +25,9 @@ def getMuonNum(self):
     hit_muons_L1 = hit_muons[self.events['hit_layer'] == 1]
     hit_muons_L2 = hit_muons[self.events['hit_layer'] == 2]
     hit_muons_L3 = hit_muons[self.events['hit_layer'] == 3]
+
+    print(len(hit_muons))
+    print(len(hit_muons_L0))
 
     for i in range(len(hit_muons_L0)):
         if ak.any(hit_muons_L0[i]) is not None and ak.any(hit_muons_L1[i]) is not None and ak.any(hit_muons_L2[i]) is not None and ak.any(hit_muons_L3[i]) is not None:

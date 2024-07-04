@@ -32,7 +32,7 @@ def get3LNum(self):
     muonMask = ak.any(abs(self.events['hit_particleName']) == 13, axis = 1) #muonL0Mask & muonL1Mask & muonL2Mask & muonL3Mask
 
     # make final mask
-    finalPulseMask = nPEMask & muonMask
+    finalPulseMask = nPEMask & ~muonMask
 
     # apply the finalPulseMask
     masked_time = self.events['time'][finalPulseMask]

@@ -26,6 +26,9 @@ def getMuonNum(self):
     muons_L2 = self.events['hit_particleName'][(abs(self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 2)]
     muons_L3 = self.events['hit_particleName'][(abs(self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 3)]
     
+    print(ak.num(muons_L0))
+    print(ak.num(self.events['hit_particleName']))
+    
     # check each event
     for i in range(len(self.events)):
         if (ak.any(muons_L0[i]) and ak.any(muons_L1[i]) and ak.any(muons_L2[i]) and ak.any(muons_L3[i])):

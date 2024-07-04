@@ -20,6 +20,7 @@ def getMuonNum(self):
 
     countMuon = []
 
+    print(len(ak.any(abs((self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 0), axis = 1)))
     hit_muons_L0 = self.events['hit_particleName'][ak.any(abs((self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 0), axis = 1)]
     hit_muons_L1 = self.events['hit_particleName'][ak.any(abs((self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 1), axis = 1)]
     hit_muons_L2 = self.events['hit_particleName'][ak.any(abs((self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 2), axis = 1)]

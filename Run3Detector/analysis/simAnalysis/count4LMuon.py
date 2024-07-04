@@ -20,10 +20,10 @@ def getMuonNum(self):
 
     countMuon = []
 
-    hit_muons_L0 = self.events['hit_particleName'][ak.any(abs((self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 0), axis = 1)]
-    hit_muons_L1 = self.events['hit_particleName'][ak.any(abs((self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 1), axis = 1)]
-    hit_muons_L2 = self.events['hit_particleName'][ak.any(abs((self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 2), axis = 1)]
-    hit_muons_L3 = self.events['hit_particleName'][ak.any(abs((self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 3), axis = 1)]
+    hit_muons_L0 = self.events['hit_particleName'][abs((self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 0)]
+    hit_muons_L1 = self.events['hit_particleName'][abs((self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 1)]
+    hit_muons_L2 = self.events['hit_particleName'][abs((self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 2)]
+    hit_muons_L3 = self.events['hit_particleName'][abs((self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 3)]
 
     for i in range(len(hit_muons_L0)):
         if ak.any(hit_muons_L0[i]) is not None and ak.any(hit_muons_L1[i]) is not None and ak.any(hit_muons_L2[i]) is not None and ak.any(hit_muons_L3[i]) is not None:

@@ -19,17 +19,10 @@ from milliqanPlotter import *
 def getMuonNum(self):
     countMuon = []
 
-    hit_muons = self.events['hit_particleName'][ak.any(abs(self.events['hit_particleName']) == 13, axis = 1)]
-    
-    print(len(self.events['hit_particleName']))
-    print(len(ak.any(abs(self.events['hit_particleName']) == 13, axis = 1)))
-    print(len(self.events['hit_layer'] == 0))
-    print(len(hit_muons))
-
-    hit_muons_L0 = hit_muons[self.events['hit_layer'] == 0]
-    hit_muons_L1 = hit_muons[self.events['hit_layer'] == 1]
-    hit_muons_L2 = hit_muons[self.events['hit_layer'] == 2]
-    hit_muons_L3 = hit_muons[self.events['hit_layer'] == 3]
+    hit_muons_L0 = self.events['hit_particleName'][(self.events['hit_layer'] == 0) & (ak.any(abs(self.events['hit_particleName']) == 13, axis = 1))]
+    hit_muons_L1 = self.events['hit_particleName'][(self.events['hit_layer'] == 1) & (ak.any(abs(self.events['hit_particleName']) == 13, axis = 1))]
+    hit_muons_L2 = self.events['hit_particleName'][(self.events['hit_layer'] == 2) & (ak.any(abs(self.events['hit_particleName']) == 13, axis = 1))]
+    hit_muons_L3 = self.events['hit_particleName'][(self.events['hit_layer'] == 3) & (ak.any(abs(self.events['hit_particleName']) == 13, axis = 1))]
 
     for i in range(len(hit_muons_L0)):
         if ak.any(hit_muons_L0[i]) is not None and ak.any(hit_muons_L1[i]) is not None and ak.any(hit_muons_L2[i]) is not None and ak.any(hit_muons_L3[i]) is not None:

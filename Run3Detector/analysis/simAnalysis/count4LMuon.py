@@ -26,7 +26,7 @@ def getMuonNum(self):
     hit_muons_L3 = ak.any(abs((self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 3), axis = 1)
 
     for i in range(len(hit_muons_L0)):
-        if ak.any(hit_muons_L0[i]) is not None and ak.any(hit_muons_L1[i]) is not None and ak.any(hit_muons_L2[i]) is not None and ak.any(hit_muons_L3[i]) is not None:
+        if hit_muons_L0[i] is not None and hit_muons_L1[i] is not None and hit_muons_L2[i] is not None and hit_muons_L3[i] is not None:
             countMuon.append(0)
 
     print(len(countMuon))

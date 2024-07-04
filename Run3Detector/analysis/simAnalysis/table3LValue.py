@@ -111,7 +111,7 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts, myplotter
 myiterator.run()
 
 # create a new TFile
-f = r.TFile("COUNT_3L.root", "recreate")
+f = r.TFile("TP_DtL30_3L.root", "recreate")
 
 # write the histograms to the file
 h_1d.Write()

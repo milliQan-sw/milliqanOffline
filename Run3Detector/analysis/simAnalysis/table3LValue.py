@@ -22,7 +22,7 @@ def get3LNum(self):
 
     # nPE mask to replace height and area mask
     nPEMask = self.events['nPE'] > 10000
-    
+
     # require events to have muons in all four layers
     muonL0Mask = ak.any((abs(self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 0), axis = 1)
     muonL1Mask = ak.any((abs(self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 1), axis = 1)
@@ -32,7 +32,7 @@ def get3LNum(self):
     muonMask = muonL0Mask & muonL1Mask & muonL2Mask & muonL3Mask #ak.any(abs(self.events['hit_particleName']) == 13, axis = 1)
 
     # make final mask
-    finalPulseMask = nPEMask & muonMask
+    finalPulseMask = nPEMask & ~muonMask
 
     # apply the finalPulseMask
     masked_time = self.events['time'][finalPulseMask]

@@ -66,14 +66,6 @@ def get3LNum(self):
     
     print(len(threeLcount))
 
-    # extend the final list to match the size of the current file
-    num_events = len(self.events)
-    num_nones = num_events - len(threeLcount)
-    threeLcount.extend([None] * num_nones)
-
-    # define custom branch
-    self.events['threeLcount'] = threeLcount
-
 # add our custom function to milliqanCuts
 setattr(milliqanCuts, 'get3LNum', get3LNum)
 
@@ -109,12 +101,3 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts, myplotter
 
 # run the milliqan processor
 myiterator.run()
-
-# create a new TFile
-f = r.TFile("TP_DtL30_3L.root", "recreate")
-
-# write the histograms to the file
-h_1d.Write()
-
-# close the file
-f.Close()

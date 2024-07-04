@@ -64,7 +64,7 @@ def get3LNum(self):
             # count events with valid times in 3 layers
             threeLcount.append(0)
     
-    print(threeLcount)
+    print(len(threeLcount))
 
     # extend the final list to match the size of the current file
     num_events = len(self.events)

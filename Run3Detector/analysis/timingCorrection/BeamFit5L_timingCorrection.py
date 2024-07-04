@@ -155,12 +155,14 @@ def fit_histogram(hist, beamOn_true_percentage, root_file):
     # Initial parameter estimates for the two Gaussian functions
     combined_gaus.SetParameters(27, -16.5, 3.48, 18, -1.5, 8.575)  # Max Mean Stddev ######################################################################################################################
 
-    # Fit the histogram with the combined model
-    hist.Fit(combined_gaus, "R")
+    # Fit the histogram with the combined model within the specified range
+    fit_range_min = -31  # Adjust this as necessary ######################################################################################################################
+    fit_range_max = 16   # Adjust this as necessary ######################################################################################################################
+    hist.Fit(combined_gaus, "R", "", fit_range_min, fit_range_max)
 
     # Extract the individual Gaussian functions from the combined model
-    gaus1 = r.TF1("gaus1", "gaus", -31, -2)  # Range ######################################################################################################################################################
-    gaus2 = r.TF1("gaus2", "gaus", -19, 16)  # Range ######################################################################################################################################################
+    gaus1 = r.TF1("gaus1", "gaus", fit_range_min, fit_range_max)  # Range ######################################################################################################################
+    gaus2 = r.TF1("gaus2", "gaus", fit_range_min, fit_range_max)  # Range ######################################################################################################################
     for i in range(3):
         gaus1.SetParameter(i, combined_gaus.GetParameter(i))
         gaus2.SetParameter(i, combined_gaus.GetParameter(i + 3))

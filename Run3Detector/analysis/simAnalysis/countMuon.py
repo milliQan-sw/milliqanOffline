@@ -19,10 +19,15 @@ from milliqanPlotter import *
 def getMuonNum(self):
     countMuon = []
 
-    hit_muons_L0 = self.events['hit_particleName'][(self.events['hit_layer'] == 0) & (ak.any(abs(self.events['hit_particleName']) == 13, axis = 1))]
-    hit_muons_L1 = self.events['hit_particleName'][(self.events['hit_layer'] == 1) & (ak.any(abs(self.events['hit_particleName']) == 13, axis = 1))]
-    hit_muons_L2 = self.events['hit_particleName'][(self.events['hit_layer'] == 2) & (ak.any(abs(self.events['hit_particleName']) == 13, axis = 1))]
-    hit_muons_L3 = self.events['hit_particleName'][(self.events['hit_layer'] == 3) & (ak.any(abs(self.events['hit_particleName']) == 13, axis = 1))]
+    muon_cut = ak.any(abs(self.events['hit_particleName']) == 13, axis = 1)
+
+    hit_muons = self.events['hit_particleName'][muon_cut]
+    layer = self.events['hit_layer'][muon_cut]
+
+    hit_muons_L0 = hit_muons[layer == 0]
+    hit_muons_L1 = hit_muons[layer == 1]
+    hit_muons_L2 = hit_muons[layer == 2]
+    hit_muons_L3 = hit_muons[layer == 3]
 
     for i in range(len(hit_muons_L0)):
         if ak.any(hit_muons_L0[i]) is not None and ak.any(hit_muons_L1[i]) is not None and ak.any(hit_muons_L2[i]) is not None and ak.any(hit_muons_L3[i]) is not None:

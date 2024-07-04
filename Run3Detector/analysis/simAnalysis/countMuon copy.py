@@ -15,16 +15,23 @@ from milliqanScheduler import *
 from milliqanCuts import *
 from milliqanPlotter import *
 
-# define the function to get the number of muons
+# define the function to get the number of events with muons in all 4 layers
 def getMuonNum(self):
-
     countMuon = []
 
-    hit_muons = self.events['hit_particleName'][ak.any(abs(self.events['hit_particleName']) == 13, axis = 1)]
+    muon_cut = ak.any(abs(self.events['hit_particleName']) == 13, axis = 1)
 
-    for i in range(len(hit_muons)):
-        if hit_muons[i] is not None:
-            countMuon.append(hit_muons[i])
+    hit_muons = self.events['hit_particleName'][muon_cut]
+    layer = self.events['hit_layer'][muon_cut]
+
+    hit_muons_L0 = hit_muons[layer == 0]
+    hit_muons_L1 = hit_muons[layer == 1]
+    hit_muons_L2 = hit_muons[layer == 2]
+    hit_muons_L3 = hit_muons[layer == 3]
+
+    for i in range(len(hit_muons_L0)):
+        if ak.any(hit_muons_L0[i]) is not None and ak.any(hit_muons_L1[i]) is not None and ak.any(hit_muons_L2[i]) is not None and ak.any(hit_muons_L3[i]) is not None:
+            countMuon.append(0)
 
     print(len(countMuon))
 

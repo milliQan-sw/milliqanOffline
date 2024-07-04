@@ -1,4 +1,4 @@
-# Run this scirpt on milliqan-pc
+# the ##### comment is for easier locating parameters due to the need to adjust them frequently
 import os
 import ROOT as r
 import uproot

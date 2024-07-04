@@ -32,7 +32,7 @@ def getTimeDiff(self):
     muonMask = muonL0Mask & muonL1Mask & muonL2Mask & muonL3Mask #ak.any(abs(self.events['hit_particleName']) == 13, axis = 1)
 
     # make final mask
-    finalPulseMask = nPEMask & ~muonMask
+    finalPulseMask = nPEMask & muonMask
 
     # apply the finalPulseMask
     masked_time = self.events['time'][finalPulseMask]
@@ -109,7 +109,7 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts, myplotter
 myiterator.run()
 
 # create a new TFile
-f = r.TFile("FP_DtL30_4L.root", "recreate")
+f = r.TFile("TP_DtL30_4L.root", "recreate")
 
 # write the histograms to the file
 h_1d.Write()

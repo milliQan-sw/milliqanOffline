@@ -150,17 +150,17 @@ def fit_histogram(hist, beamOn_true_percentage, root_file):
         return None, None
 
     # Define the combined Gaussian model
-    combined_gaus = r.TF1("combined_gaus", "gaus(0) + gaus(3)", -50, 50)
+    combined_gaus = r.TF1("combined_gaus", "gaus(0) + gaus(3)", -27, 9) # Fit range ##############################################################################################################################
     
     # Initial parameter estimates for the two Gaussian functions
-    combined_gaus.SetParameters(27, -16.5, 3.48, 18, -1.5, 8.575)  # Max Mean Stddev ######################################################################################################################
+    combined_gaus.SetParameters(9, -15.5, 2.76, 55, 0.5, 4.165)  # Max Mean Stddev (left/right) ##################################################################################################################
 
     # Fit the histogram with the combined model
     hist.Fit(combined_gaus, "R")
 
     # Extract the individual Gaussian functions from the combined model
-    gaus1 = r.TF1("gaus1", "gaus", -31, -2)  # Range ######################################################################################################################################################
-    gaus2 = r.TF1("gaus2", "gaus", -19, 16)  # Range ######################################################################################################################################################
+    gaus1 = r.TF1("gaus1", "gaus", -27, -4)  # Left Range ########################################################################################################################################################
+    gaus2 = r.TF1("gaus2", "gaus", -8, 9)  # Right Range #########################################################################################################################################################
     for i in range(3):
         gaus1.SetParameter(i, combined_gaus.GetParameter(i))
         gaus2.SetParameter(i, combined_gaus.GetParameter(i + 3))

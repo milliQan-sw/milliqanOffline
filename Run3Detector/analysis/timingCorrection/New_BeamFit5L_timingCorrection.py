@@ -87,7 +87,7 @@ for run_number in range(start_run_number, end_run_number + 1):
     file_number = 0
     consecutive_missing_files = 0
     while True:
-        file_path = f"/home/bpeng/muonAnalysis/1000/MilliQan_Run{run_number}.{file_number}_v34.root" ##########################################################################
+        file_path = f"/home/bpeng/muonAnalysis/1000/MilliQan_Run{run_number}.{file_number}_v34.root" #########################################################################
         if os.path.exists(file_path):
             filelist.append(file_path)
             try:
@@ -153,16 +153,16 @@ def fit_histogram(hist, beamOn_true_percentage, root_file):
     combined_gaus = r.TF1("combined_gaus", "gaus(0) + gaus(3)", -50, 50)
     
     # Initial parameter estimates for the two Gaussian functions
-    combined_gaus.SetParameters(9, -15.5, 2.76, 55, 0.5, 4.165)  # Max Mean Stddev ######################################################################################################################
+    combined_gaus.SetParameters(9, -15.5, 2.76, 55, 0.5, 4.165)  # Max Mean Stddev ########################################################################################
 
     # Fit the histogram with the combined model within the specified range
-    fit_range_min = -27  # Range ######################################################################################################################
-    fit_range_max = 9   # Range ######################################################################################################################
+    fit_range_min = -27  # 2 Peak Range ###################################################################################################################################
+    fit_range_max = 9   # 2 Peak Range ####################################################################################################################################
     hist.Fit(combined_gaus, "R", "", fit_range_min, fit_range_max)
 
     # Extract the individual Gaussian functions from the combined model
-    gaus1 = r.TF1("gaus1", "gaus", fit_range_min, fit_range_max)
-    gaus2 = r.TF1("gaus2", "gaus", fit_range_min, fit_range_max)
+    gaus1 = r.TF1("gaus1", "gaus", -27, -4) # left Peak Range #############################################################################################################
+    gaus2 = r.TF1("gaus2", "gaus", -8, 9) # right Peak Range ##############################################################################################################
     for i in range(3):
         gaus1.SetParameter(i, combined_gaus.GetParameter(i))
         gaus2.SetParameter(i, combined_gaus.GetParameter(i + 3))

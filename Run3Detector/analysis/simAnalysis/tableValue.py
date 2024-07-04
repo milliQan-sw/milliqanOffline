@@ -15,8 +15,34 @@ from milliqanScheduler import *
 from milliqanCuts import *
 from milliqanPlotter import *
 
+# define the function to get the cut to select events with muons in all 4 layers
+def createMuonMask(self):
+        # Create masks for muons in each layer
+        mask_L0 = (abs(self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 0)
+        mask_L1 = (abs(self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 1)
+        mask_L2 = (abs(self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 2)
+        mask_L3 = (abs(self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 3)
+        
+        # Apply masks to get muons in each layer
+        muons_L0 = self.events[mask_L0]
+        muons_L1 = self.events[mask_L1]
+        muons_L2 = self.events[mask_L2]
+        muons_L3 = self.events[mask_L3]
+        
+        # Count the number of muons in each layer per event
+        num_muons_L0 = ak.num(muons_L0['hit_particleName'], axis=1)
+        num_muons_L1 = ak.num(muons_L1['hit_particleName'], axis=1)
+        num_muons_L2 = ak.num(muons_L2['hit_particleName'], axis=1)
+        num_muons_L3 = ak.num(muons_L3['hit_particleName'], axis=1)
+        
+        # Create muon mask: events with muons in all 4 layers
+        muonMask = (num_muons_L0 > 0) & (num_muons_L1 > 0) & (num_muons_L2 > 0) & (num_muons_L3 > 0)
+        
+        return muonMask
+
 # define the function to get the time differences
 def getTimeDiff(self):
+
     time_diffsL30 = []
 
     # nPE mask to replace height and area mask

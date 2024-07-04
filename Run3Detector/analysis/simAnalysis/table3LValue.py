@@ -80,15 +80,8 @@ mycuts = milliqanCuts()
 # define milliqan plotter
 myplotter = milliqanPlotter()
 
-# create a 1D root histogram
-h_1d = r.TH1F("h_1d", "Number of events that have hits in any 3 layers", 10, -5, 5)
-h_1d.GetXaxis().SetTitle("number")
-
-# add root histogram to plotter
-myplotter.addHistograms(h_1d, 'threeLcount')
-
 # defining the cutflow
-cutflow = [mycuts.get3LNum, myplotter.dict['h_1d']]
+cutflow = [mycuts.get3LNum]
 
 # create a schedule of the cuts
 myschedule = milliQanScheduler(cutflow, mycuts, myplotter)

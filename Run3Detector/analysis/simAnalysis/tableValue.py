@@ -15,6 +15,30 @@ from milliqanScheduler import *
 from milliqanCuts import *
 from milliqanPlotter import *
 
+def createMuonMask(self):
+    # Create masks for muons in each layer
+    mask_L0 = (abs(self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 0)
+    mask_L1 = (abs(self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 1)
+    mask_L2 = (abs(self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 2)
+    mask_L3 = (abs(self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 3)
+    
+    # Apply masks to get muons in each layer
+    muons_L0 = self.events[mask_L0]
+    muons_L1 = self.events[mask_L1]
+    muons_L2 = self.events[mask_L2]
+    muons_L3 = self.events[mask_L3]
+    
+    # Count the number of muons in each layer per event
+    num_muons_L0 = ak.num(muons_L0['hit_particleName'], axis=1)
+    num_muons_L1 = ak.num(muons_L1['hit_particleName'], axis=1)
+    num_muons_L2 = ak.num(muons_L2['hit_particleName'], axis=1)
+    num_muons_L3 = ak.num(muons_L3['hit_particleName'], axis=1)
+    
+    # Create muon mask: events with muons in all 4 layers
+    muonMask = (num_muons_L0 > 0) & (num_muons_L1 > 0) & (num_muons_L2 > 0) & (num_muons_L3 > 0)
+    
+    return muonMask
+
 # define the function to get the time differences
 def getTimeDiff(self):
     time_diffsL30 = []
@@ -23,10 +47,10 @@ def getTimeDiff(self):
     nPEMask = self.events['nPE'] > 10000
 
     # require events to have muons
-    muonMask = ak.any(abs(self.events['hit_particleName']) == 13, axis = 1)
+    muonMask = self.createMuonMask()
 
     # make final mask
-    finalPulseMask = nPEMask & ~muonMask
+    finalPulseMask = nPEMask & muonMask
 
     # apply the finalPulseMask
     masked_time = self.events['time'][finalPulseMask]
@@ -102,7 +126,7 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts, myplotter
 myiterator.run()
 
 # create a new TFile
-f = r.TFile("FP_DtL30_4L.root", "recreate")
+f = r.TFile("TP_DtL30_4L.root", "recreate")
 
 # write the histograms to the file
 h_1d.Write()

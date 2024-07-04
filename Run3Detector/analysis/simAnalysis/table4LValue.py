@@ -29,7 +29,7 @@ def getTimeDiff(self):
     muonL2Mask = ak.any((abs(self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 2), axis = 1)
     muonL3Mask = ak.any((abs(self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 3), axis = 1)
 
-    muonMask = muonL0Mask & muonL1Mask & muonL2Mask & muonL3Mask
+    muonMask = muonL0Mask & muonL1Mask & muonL2Mask & muonL3Mask #ak.any(abs(self.events['hit_particleName']) == 13, axis = 1)
 
     # make final mask
     finalPulseMask = nPEMask & ~muonMask

@@ -24,7 +24,7 @@ def getMuonNum(self):
 
     for i in range(len(hit_muons)):
         if hit_muons[i] is not None:
-            countMuon.append(hit_muons[i])
+            countMuon.append(0)
 
     print(len(countMuon))
 

@@ -9,43 +9,45 @@ def filling(typeArr,layerArr,rowArr,columnArr,npeArr,NpeT):
         if type == 0:
 
             if layer == 0:
-                fillingColumn_offset = 2
+                fillingColumn_offset = 2 + column
                 rowoffset = 4-row
             elif layer == 1:
-                fillingColumn_offset = 7
+                fillingColumn_offset = 7 + column
                 rowoffset = 4-row
             
             elif layer == 2:
-                fillingColumn_offset = 11
+                fillingColumn_offset = 11 + column
                 rowoffset = 4-row
             
             elif layer == 3:
-                fillingColumn_offset = 16
+                fillingColumn_offset = 16 + column
                 rowoffset = 4-row
 
         #slab (beam)
         elif type == 1:
             if layer == -1:
-                fillingColumn_offset = 0
+                fillingColumn_offset = 0 
                 rowoffset = 4
 
             if layer  == 4:
-                fillingColumn_offset = 0
+                fillingColumn_offset = 0 
                 rowoffset = 21
         #panel (cosmic)
 
         
 
         if npe > NpeT:
-            block[rowoffset][fillingColumn_offset] += 1
-
+            block[rowoffset][fillingColumn_offset] += 1  
+    print(block)
     return block
 
 def findTrack(arr):
+    print(arr)
+    print(arr.shape)
     
     #straightLineArr = np.array([])
-    ROWarrST = np.array([])
-    ColumnarrST = np.array([])
+    ROWarrST = list()
+    ColumnarrST = list()
 
     
     for column in range(4):
@@ -55,43 +57,43 @@ def findTrack(arr):
         straightLineArrL3 = 0
 
 
-        rowTempL0 = np.array([])
-        columnTempL0 = np.array([])
+        rowTempL0 = list()
+        columnTempL0 = list()
 
-        rowTempL1 = np.array([])
-        columnTempL1 = np.array([])
-
-
-        rowTempL2 = np.array([])
-        columnTempL2 = np.array([])
+        rowTempL1 = list()
+        columnTempL1 = list()
 
 
-        rowTempL3 = np.array([])
-        columnTempL3 = np.array([])
+        rowTempL2 = list()
+        columnTempL2 = list()
+
+
+        rowTempL3 = list()
+        columnTempL3 = list()
         for row in range(4):
             #layer zero
-            if arr[column+2][row+1] >= 1:
+            if arr[row+1][column+2]>= 1:
                 #STDPath.append(arr[column+2][row+1])
                 rowTempL0.append(row)
                 columnTempL0.append(column)
                 straightLineArrL0 += 1
 
             #layer one
-            if arr[column+7][row+1] >= 1:
+            if arr[row+1][column+7] >= 1:
                 #STDPath.append(arr[column+2][row+1])
                 rowTempL1.append(row)
                 columnTempL1.append(column)
                 straightLineArrL1 += 1
             
             #layer two
-            if arr[column+12][row+1] >= 1:
+            if arr[row+1][column+12] >= 1:
                 #STDPath.append(arr[column+2][row+1])
                 rowTempL2.append(row)
                 columnTempL2.append(column)
                 straightLineArrL2 += 1
             
             #layer three
-            if arr[column+17][row+1] >= 1:
+            if arr[row+1][column+17] >= 1:
                 #STDPath.append(arr[column+2][row+1])
                 rowTempL3.append(row)
                 columnTempL3.append(column)
@@ -130,12 +132,12 @@ def findTrack(arr):
     #DGpath2Row = np.array([])
 
     for column in [2,7,12,17]:
-        if (arr[column][1] >= 1) and (arr[column+1][2] >= 1) and (arr[column+2][3] >= 1) and (arr[column+3][4] >= 1):
+        if (arr[1][column] >= 1) and (arr[2][column+1] >= 1) and (arr[3][column+2] >= 1) and (arr[4][column+3] >= 1):
             ColumnarrST.append[[column,column+1,column+2,column+3]]
             ROWarrST.append([1,2,3,4])
     
     for column in [2,7,12,17]:
-        if (arr[column][4] >= 1) and (arr[column+1][3] >= 1) and (arr[column+2][2] >= 1) and (arr[column+3][1] >= 1):
+        if (arr[4][column] >= 1) and (arr[3][column+1] >= 1) and (arr[2][column+2] >= 1) and (arr[1][column+3] >= 1):
             ColumnarrST.append[[column+2,column+3,column+4,column+5]]
             ROWarrST.append([4,3,2,1])
 
@@ -143,49 +145,73 @@ def findTrack(arr):
     shift1Column = np.array([])
     shift1Row = np.array([])
     for column in [2,3,4,7,8,9,12,13,14,17,18,19]:
-        if (arr[column][1] >= 1) and (arr[column][2] >= 1) and (arr[column][3] >= 1) and (arr[column+1][4] >= 1):
+        if (arr[1][column] >= 1) and (arr[2][column] >= 1) and (arr[3][column] >= 1) and (arr[4][column+1] >= 1):
             ColumnarrST.append([column,column,column,column+1])
             ROWarrST.append([1,2,3,4])
 
-        if (arr[column][1] >= 1) and (arr[column][2] >= 1) and (arr[column+1][3] >= 1) and (arr[column+1][4] >= 1):
+        if (arr[1][column] >= 1) and (arr[2][column] >= 1) and (arr[3][column+1] >= 1) and (arr[4][column+1] >= 1):
             ColumnarrST.append([column,column,column+1,column+1])
             ROWarrST.append([1,2,3,4])
 
-        if (arr[column][1] >= 1) and (arr[column+1][2] >= 1) and (arr[column+1][3] >= 1) and (arr[column+1][4] >= 1):
+        if (arr[1][column] >= 1) and (arr[2][column+1] >= 1) and (arr[3][column+1] >= 1) and (arr[4][column+1] >= 1):
             ColumnarrST.append([column,column+1,column+1,column+1])
             ROWarrST.append([1,2,3,4])
 
     for column in [2,3,7,8,12,13,17,18]:  
-        if (arr[column][1] >= 1) and (arr[column][2] >= 1) and (arr[column+1][3] >= 1) and (arr[column+2][4] >= 1):
+        if (arr[1][column] >= 1) and (arr[2][column] >= 1) and (arr[3][column+1] >= 1) and (arr[4][column+2] >= 1):
             ColumnarrST.append([column,column,column+1,column+2])
             ROWarrST.append([1,2,3,4])
 
-        if (arr[column][1] >= 1) and (arr[column+1][2] >= 1) and (arr[column+2][3] >= 1) and (arr[column+2][4] >= 1):
+        if (arr[1][column] >= 1) and (arr[2][column+1] >= 1) and (arr[3][column+2] >= 1) and (arr[4][column+2] >= 1):
             ColumnarrST.append([column,column+1,column+2,column+2])
             ROWarrST.append([1,2,3,4])
 
     #shifting to the left
     for column in [3,4,5,8,9,10,13,14,15,18,19,20]:
-        if (arr[column][1] >= 1) and (arr[column][2] >= 1) and (arr[column][3] >= 1) and (arr[column-1][4] >= 1):
+        if (arr[1][column] >= 1) and (arr[2][column] >= 1) and (arr[3][column] >= 1) and (arr[4][column-1] >= 1):
             ColumnarrST.append([column,column,column,column-1])
             ROWarrST.append([1,2,3,4])
 
-        if (arr[column][1] >= 1) and (arr[column][2] >= 1) and (arr[column-1][3] >= 1) and (arr[column-1][4] >= 1):
+        if (arr[1][column] >= 1) and (arr[2][column] >= 1) and (arr[3][column-1] >= 1) and (arr[4][column-1] >= 1):
             ColumnarrST.append([column,column,column-1,column-1])
             ROWarrST.append([1,2,3,4])
 
-        if (arr[column][1] >= 1) and (arr[column-1][2] >= 1) and (arr[column-1][3] >= 1) and (arr[column-1][4] >= 1):
+        if (arr[1][column] >= 1) and (arr[2][column-1] >= 1) and (arr[3][column-1] >= 1) and (arr[4][column-1] >= 1):
             ColumnarrST.append([column,column-1,column-1,column-1])
             ROWarrST.append([1,2,3,4])
         
     for column in [4,5,9,10,14,15,19,20]: 
-        if (arr[column][1] >= 1) and (arr[column][2] >= 1) and (arr[column-1][3] >= 1) and (arr[column-2][4] >= 1):
+        if (arr[1][column] >= 1) and (arr[2][column] >= 1) and (arr[3][column-1] >= 1) and (arr[4][column-2] >= 1):
             ColumnarrST.append([column,column,column-1,column-2])
             ROWarrST.append([1,2,3,4])
 
-        if (arr[column][1] >= 1) and (arr[column-1][2] >= 1) and (arr[column-2][3] >= 1) and (arr[column-2][4] >= 1):
+        if (arr[1][column] >= 1) and (arr[2][column-1] >= 1) and (arr[3][column-2] >= 1) and (arr[4][column-2] >= 1):
             ColumnarrST.append([column,column-1,column-2,column-2])
             ROWarrST.append([1,2,3,4])
 
     return ColumnarrST,ROWarrST
 
+
+if __name__ == "__main__":
+    import uproot
+    uptree = uproot.open("/Users/haoliangzheng/CERN_ana/MilliQan_Run1500.11_v35.root:t")
+    branches = uptree.arrays(["type","layer","row","column","nPE","event"], entry_stop=100000)
+    typeArr= branches["type"][branches["event"]==0]
+    layerArr = branches["layer"][branches["event"]==0]
+    rowArr = branches["row"][branches["event"]==0]
+    columnArr = branches["column"][branches["event"]==0]
+    npeArr = branches["nPE"][branches["event"]==0]
+    print(len(npeArr))
+
+    print(typeArr)
+    print(layerArr)
+    NpeT = 20
+    arr=filling(typeArr[0],layerArr[0],rowArr[0],columnArr[0],npeArr[0],NpeT)
+    ColumnarrST,ROWarrST=findTrack(arr)
+    print(ColumnarrST) 
+    print(ROWarrST) 
+
+    plt.imshow(arr, cmap='viridis', origin='upper', extent=[0, 22, 0, 5]) 
+    plt.colorbar(label='Height')
+    plt.grid(True)
+    plt.show()

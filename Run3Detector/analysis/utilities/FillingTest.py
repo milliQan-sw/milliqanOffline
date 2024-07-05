@@ -1,3 +1,16 @@
+"""
+select sim and offline when doing the demonstration
+
+with cosmic muon events
+
+Follow david's suggestion find the sample muon event
+
+
+Todo
+When making the straight track, it should add an extra offset factor -0.5
+"""
+
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -16,11 +29,11 @@ def filling(typeArr,layerArr,rowArr,columnArr,npeArr,NpeT):
                 rowoffset = 4-row
             
             elif layer == 2:
-                fillingColumn_offset = 11 + column
+                fillingColumn_offset = 12 + column
                 rowoffset = 4-row
             
             elif layer == 3:
-                fillingColumn_offset = 16 + column
+                fillingColumn_offset = 17 + column
                 rowoffset = 4-row
 
         #slab (beam)
@@ -38,7 +51,7 @@ def filling(typeArr,layerArr,rowArr,columnArr,npeArr,NpeT):
 
         if npe > NpeT:
             block[rowoffset][fillingColumn_offset] += 1  
-    print(block)
+    #print(block)
     return block
 
 def findTrack(arr):
@@ -74,29 +87,29 @@ def findTrack(arr):
             #layer zero
             if arr[row+1][column+2]>= 1:
                 #STDPath.append(arr[column+2][row+1])
-                rowTempL0.append(row)
-                columnTempL0.append(column)
+                rowTempL0.append(row+1)
+                columnTempL0.append(column+2)
                 straightLineArrL0 += 1
 
             #layer one
             if arr[row+1][column+7] >= 1:
                 #STDPath.append(arr[column+2][row+1])
-                rowTempL1.append(row)
-                columnTempL1.append(column)
+                rowTempL1.append(row+1)
+                columnTempL1.append(column+7)
                 straightLineArrL1 += 1
             
             #layer two
             if arr[row+1][column+12] >= 1:
                 #STDPath.append(arr[column+2][row+1])
-                rowTempL2.append(row)
-                columnTempL2.append(column)
+                rowTempL2.append(row+1)
+                columnTempL2.append(column+12)
                 straightLineArrL2 += 1
             
             #layer three
             if arr[row+1][column+17] >= 1:
                 #STDPath.append(arr[column+2][row+1])
-                rowTempL3.append(row)
-                columnTempL3.append(column)
+                rowTempL3.append(row+1)
+                columnTempL3.append(column+17)
                 straightLineArrL3 += 1
 
 
@@ -133,17 +146,17 @@ def findTrack(arr):
 
     for column in [2,7,12,17]:
         if (arr[1][column] >= 1) and (arr[2][column+1] >= 1) and (arr[3][column+2] >= 1) and (arr[4][column+3] >= 1):
-            ColumnarrST.append[[column,column+1,column+2,column+3]]
+            ColumnarrST.append([column,column+1,column+2,column+3])
             ROWarrST.append([1,2,3,4])
     
-    for column in [2,7,12,17]:
-        if (arr[4][column] >= 1) and (arr[3][column+1] >= 1) and (arr[2][column+2] >= 1) and (arr[1][column+3] >= 1):
-            ColumnarrST.append[[column+2,column+3,column+4,column+5]]
-            ROWarrST.append([4,3,2,1])
+    for column in [5,10,15,20]:
+        if (arr[1][column] >= 1) and (arr[2][column-1] >= 1) and (arr[3][column-2] >= 1) and (arr[4][column-3] >= 1):
+            ColumnarrST.append([column,column-1,column-2,column-3])
+            ROWarrST.append([1,2,3,4])
 
     #shifting to the right
-    shift1Column = np.array([])
-    shift1Row = np.array([])
+    #shift1Column = np.array([])
+    #shift1Row = np.array([])
     for column in [2,3,4,7,8,9,12,13,14,17,18,19]:
         if (arr[1][column] >= 1) and (arr[2][column] >= 1) and (arr[3][column] >= 1) and (arr[4][column+1] >= 1):
             ColumnarrST.append([column,column,column,column+1])
@@ -194,13 +207,14 @@ def findTrack(arr):
 
 if __name__ == "__main__":
     import uproot
-    uptree = uproot.open("/Users/haoliangzheng/CERN_ana/MilliQan_Run1500.11_v35.root:t")
+    #uptree = uproot.open("/Users/haoliangzheng/CERN_ana/MilliQan_Run1500.11_v35.root:t")
+    uptree = uproot.open("/Users/haoliangzheng/CERN_ana/EventDisplay/MilliQan_Run1190.1_v34.root:t")
     branches = uptree.arrays(["type","layer","row","column","nPE","event"], entry_stop=100000)
-    typeArr= branches["type"][branches["event"]==0]
-    layerArr = branches["layer"][branches["event"]==0]
-    rowArr = branches["row"][branches["event"]==0]
-    columnArr = branches["column"][branches["event"]==0]
-    npeArr = branches["nPE"][branches["event"]==0]
+    typeArr= branches["type"][branches["event"]==472]
+    layerArr = branches["layer"][branches["event"]==472]
+    rowArr = branches["row"][branches["event"]==472]
+    columnArr = branches["column"][branches["event"]==472]
+    npeArr = branches["nPE"][branches["event"]==472]
     print(len(npeArr))
 
     print(typeArr)
@@ -208,8 +222,13 @@ if __name__ == "__main__":
     NpeT = 20
     arr=filling(typeArr[0],layerArr[0],rowArr[0],columnArr[0],npeArr[0],NpeT)
     ColumnarrST,ROWarrST=findTrack(arr)
-    print(ColumnarrST) 
-    print(ROWarrST) 
+    print(f"ColumnarrST {ColumnarrST}") 
+    print(f"ROWarrST {ROWarrST}") 
+
+    for column,row in zip(ColumnarrST,ROWarrST):
+        plt.plot(column, row, color='red')
+
+
 
     plt.imshow(arr, cmap='viridis', origin='upper', extent=[0, 22, 0, 5]) 
     plt.colorbar(label='Height')

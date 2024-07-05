@@ -224,9 +224,20 @@ if __name__ == "__main__":
     ColumnarrST,ROWarrST=findTrack(arr)
     print(f"ColumnarrST {ColumnarrST}") 
     print(f"ROWarrST {ROWarrST}") 
-
+    """
     for column,row in zip(ColumnarrST,ROWarrST):
+        #column = [x + 0.5 for x in column]
+        #row = [x - 1 for x in row]
+        print(f"track ColumnarrST {column}") 
+        print(f"track ROWarrST {row}") 
+        
         plt.plot(column, row, color='red')
+    """
+    column = [15, 14, 13, 12]
+    row = [4, 3, 2, 1]
+
+    plt.plot(column, row, color='red') #it seems the filling order is the not the same as plotting order(cordinate), row flip again
+    
 
 
 

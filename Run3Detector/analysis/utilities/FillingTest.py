@@ -13,6 +13,7 @@ When making the straight track, it should add an extra offset factor -0.5
 
 import numpy as np
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 
 def filling(typeArr,layerArr,rowArr,columnArr,npeArr,NpeT):
@@ -43,9 +44,32 @@ def filling(typeArr,layerArr,rowArr,columnArr,npeArr,NpeT):
                 rowoffset = 4
 
             if layer  == 4:
-                fillingColumn_offset = 0 
-                rowoffset = 21
+                fillingColumn_offset = 21
+                rowoffset = 4
         #panel (cosmic)
+        elif type == 2:
+            if layer == 0:
+                if column == -1:
+                    fillingColumn_offset = 1
+                    rowoffset = 4
+                elif column == 0:
+                    fillingColumn_offset = 2
+                    rowoffset = 0
+                elif column == 4:
+                    fillingColumn_offset = 6
+                    rowoffset = 4
+
+            if layer  == 2:
+                if column == -1:
+                    fillingColumn_offset = 11
+                    rowoffset = 4
+                elif column == 0:
+                    print("find it")
+                    fillingColumn_offset = 12
+                    rowoffset = 0
+                elif column == 4:
+                    fillingColumn_offset = 16
+                    rowoffset = 4
 
         
 
@@ -204,6 +228,18 @@ def findTrack(arr):
 
     return ColumnarrST,ROWarrST
 
+"""
+def MakeLego(arr):
+    row,column = arr.shape
+    fig = plt.figure()
+    for r in range(row):
+        for c in range(column):
+            NumHits = arr[r][c]
+            fig.bar3d(c, r, 0, 1, 1, NumHits, color='green')
+"""
+
+
+
 
 if __name__ == "__main__":
     import uproot
@@ -228,16 +264,32 @@ if __name__ == "__main__":
     for column,row in zip(ColumnarrST,ROWarrST):
         column = [x + 0.5 for x in column]
         row = [x + 0.5 for x in row]
-        print(f"track ColumnarrST {column}") 
-        print(f"track ROWarrST {row}") 
+        #print(f"track ColumnarrST {column}") 
+        #print(f"track ROWarrST {row}") 
         
         plt.plot(column, row, color='red')
     
     
 
 
-
     plt.imshow(arr, cmap='viridis', origin='upper', extent=[0, 22, 0, 5]) 
     plt.colorbar(label='Height')
     plt.grid(True)
+    #plt.show()
+
+
+    fig = plt.figure(figsize=(8, 3))
+    ax1 = fig.add_subplot(121, projection='3d')
+    row,column = arr.shape
+    for r in range(row):
+        for c in range(column):
+            NumHits = arr[r][c]
+            if NumHits > 0:
+                if (c <= 1) or (r==0) or (c == 6) or (c == 11) or (c == 16) or (c==21):
+                    ax1.bar3d(c, 4-r, 0, 1, 1, NumHits, color='red') #panel
+                
+
+                else:
+                    ax1.bar3d(c, 4-r, 0, 1, 1, NumHits, color='green') #bar
+
     plt.show()

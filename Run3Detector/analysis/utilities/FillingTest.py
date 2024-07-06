@@ -87,28 +87,28 @@ def findTrack(arr):
             #layer zero
             if arr[row+1][column+2]>= 1:
                 #STDPath.append(arr[column+2][row+1])
-                rowTempL0.append(row+1)
+                rowTempL0.append(row)
                 columnTempL0.append(column+2)
                 straightLineArrL0 += 1
 
             #layer one
             if arr[row+1][column+7] >= 1:
                 #STDPath.append(arr[column+2][row+1])
-                rowTempL1.append(row+1)
+                rowTempL1.append(row)
                 columnTempL1.append(column+7)
                 straightLineArrL1 += 1
             
             #layer two
             if arr[row+1][column+12] >= 1:
                 #STDPath.append(arr[column+2][row+1])
-                rowTempL2.append(row+1)
+                rowTempL2.append(row)
                 columnTempL2.append(column+12)
                 straightLineArrL2 += 1
             
             #layer three
             if arr[row+1][column+17] >= 1:
                 #STDPath.append(arr[column+2][row+1])
-                rowTempL3.append(row+1)
+                rowTempL3.append(row)
                 columnTempL3.append(column+17)
                 straightLineArrL3 += 1
 
@@ -147,12 +147,12 @@ def findTrack(arr):
     for column in [2,7,12,17]:
         if (arr[1][column] >= 1) and (arr[2][column+1] >= 1) and (arr[3][column+2] >= 1) and (arr[4][column+3] >= 1):
             ColumnarrST.append([column,column+1,column+2,column+3])
-            ROWarrST.append([1,2,3,4])
+            ROWarrST.append([3,2,1,0])
     
     for column in [5,10,15,20]:
         if (arr[1][column] >= 1) and (arr[2][column-1] >= 1) and (arr[3][column-2] >= 1) and (arr[4][column-3] >= 1):
             ColumnarrST.append([column,column-1,column-2,column-3])
-            ROWarrST.append([1,2,3,4])
+            ROWarrST.append([3,2,1,0])
 
     #shifting to the right
     #shift1Column = np.array([])
@@ -160,47 +160,47 @@ def findTrack(arr):
     for column in [2,3,4,7,8,9,12,13,14,17,18,19]:
         if (arr[1][column] >= 1) and (arr[2][column] >= 1) and (arr[3][column] >= 1) and (arr[4][column+1] >= 1):
             ColumnarrST.append([column,column,column,column+1])
-            ROWarrST.append([1,2,3,4])
+            ROWarrST.append([3,2,1,0])
 
         if (arr[1][column] >= 1) and (arr[2][column] >= 1) and (arr[3][column+1] >= 1) and (arr[4][column+1] >= 1):
             ColumnarrST.append([column,column,column+1,column+1])
-            ROWarrST.append([1,2,3,4])
+            ROWarrST.append([3,2,1,0])
 
         if (arr[1][column] >= 1) and (arr[2][column+1] >= 1) and (arr[3][column+1] >= 1) and (arr[4][column+1] >= 1):
             ColumnarrST.append([column,column+1,column+1,column+1])
-            ROWarrST.append([1,2,3,4])
+            ROWarrST.append([3,2,1,0])
 
     for column in [2,3,7,8,12,13,17,18]:  
         if (arr[1][column] >= 1) and (arr[2][column] >= 1) and (arr[3][column+1] >= 1) and (arr[4][column+2] >= 1):
             ColumnarrST.append([column,column,column+1,column+2])
-            ROWarrST.append([1,2,3,4])
+            ROWarrST.append([3,2,1,0])
 
         if (arr[1][column] >= 1) and (arr[2][column+1] >= 1) and (arr[3][column+2] >= 1) and (arr[4][column+2] >= 1):
             ColumnarrST.append([column,column+1,column+2,column+2])
-            ROWarrST.append([1,2,3,4])
+            ROWarrST.append([3,2,1,0])
 
     #shifting to the left
     for column in [3,4,5,8,9,10,13,14,15,18,19,20]:
         if (arr[1][column] >= 1) and (arr[2][column] >= 1) and (arr[3][column] >= 1) and (arr[4][column-1] >= 1):
             ColumnarrST.append([column,column,column,column-1])
-            ROWarrST.append([1,2,3,4])
+            ROWarrST.append([3,2,1,0])
 
         if (arr[1][column] >= 1) and (arr[2][column] >= 1) and (arr[3][column-1] >= 1) and (arr[4][column-1] >= 1):
             ColumnarrST.append([column,column,column-1,column-1])
-            ROWarrST.append([1,2,3,4])
+            ROWarrST.append([3,2,1,0])
 
         if (arr[1][column] >= 1) and (arr[2][column-1] >= 1) and (arr[3][column-1] >= 1) and (arr[4][column-1] >= 1):
             ColumnarrST.append([column,column-1,column-1,column-1])
-            ROWarrST.append([1,2,3,4])
+            ROWarrST.append([3,2,1,0])
         
     for column in [4,5,9,10,14,15,19,20]: 
         if (arr[1][column] >= 1) and (arr[2][column] >= 1) and (arr[3][column-1] >= 1) and (arr[4][column-2] >= 1):
             ColumnarrST.append([column,column,column-1,column-2])
-            ROWarrST.append([1,2,3,4])
+            ROWarrST.append([3,2,1,0])
 
         if (arr[1][column] >= 1) and (arr[2][column-1] >= 1) and (arr[3][column-2] >= 1) and (arr[4][column-2] >= 1):
             ColumnarrST.append([column,column-1,column-2,column-2])
-            ROWarrST.append([1,2,3,4])
+            ROWarrST.append([3,2,1,0])
 
     return ColumnarrST,ROWarrST
 
@@ -224,19 +224,15 @@ if __name__ == "__main__":
     ColumnarrST,ROWarrST=findTrack(arr)
     print(f"ColumnarrST {ColumnarrST}") 
     print(f"ROWarrST {ROWarrST}") 
-    """
+    
     for column,row in zip(ColumnarrST,ROWarrST):
-        #column = [x + 0.5 for x in column]
-        #row = [x - 1 for x in row]
+        column = [x + 0.5 for x in column]
+        row = [x + 0.5 for x in row]
         print(f"track ColumnarrST {column}") 
         print(f"track ROWarrST {row}") 
         
         plt.plot(column, row, color='red')
-    """
-    column = [15, 14, 13, 12]
-    row = [4, 3, 2, 1]
-
-    plt.plot(column, row, color='red') #it seems the filling order is the not the same as plotting order(cordinate), row flip again
+    
     
 
 

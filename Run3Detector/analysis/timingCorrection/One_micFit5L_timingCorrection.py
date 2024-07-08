@@ -150,10 +150,10 @@ def fit_histogram(hist, beamOn_true_percentage, root_file):
         return None, None
 
     # Define the Gaussian model for the left peak
-    gaus1 = r.TF1("gaus1", "gaus", -20, -10)  # Range ###########################################################################################################################
+    gaus1 = r.TF1("gaus1", "gaus", -9, 9)  # Range ###########################################################################################################################
 
     # Initial parameter estimates for the Gaussian function
-    gaus1.SetParameters(4, -16.5, 2.45)  # Max Mean Stddev ######################################################################################################################
+    gaus1.SetParameters(14, 0.5, 4.05)  # Max Mean Stddev ######################################################################################################################
 
     # Fit the histogram with the Gaussian model
     hist.Fit(gaus1, "R")

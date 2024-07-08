@@ -150,17 +150,17 @@ def fit_histogram(hist, beamOn_true_percentage, root_file):
         return None, None
 
     # Define the combined Gaussian model
-    combined_gaus = r.TF1("combined_gaus", "gaus(0) + gaus(3)", -20, 10) # Fit range ##############################################################################################################################
+    combined_gaus = r.TF1("combined_gaus", "gaus(0) + gaus(3)", -25, 10) # Fit range ##############################################################################################################################
     
     # Initial parameter estimates for the two Gaussian functions
-    combined_gaus.SetParameters(4, -16.5, 2.45, 14, 0.5, 4.05)  # Max Mean Stddev (left/right) ##################################################################################################################
+    combined_gaus.SetParameters(19, -17, 3.92, 50, 1.5, 4.165)  # Max Mean Stddev (left/right) ##################################################################################################################
 
     # Fit the histogram with the combined model
     hist.Fit(combined_gaus, "R")
 
     # Extract the individual Gaussian functions from the combined model
-    gaus1 = r.TF1("gaus1", "gaus", -20, -10)  # Left Range ########################################################################################################################################################
-    gaus2 = r.TF1("gaus2", "gaus", -9, 9)  # Right Range #########################################################################################################################################################
+    gaus1 = r.TF1("gaus1", "gaus", -25, -9)  # Left Range ########################################################################################################################################################
+    gaus2 = r.TF1("gaus2", "gaus", -7, 10)  # Right Range #########################################################################################################################################################
     for i in range(3):
         gaus1.SetParameter(i, combined_gaus.GetParameter(i))
         gaus2.SetParameter(i, combined_gaus.GetParameter(i + 3))

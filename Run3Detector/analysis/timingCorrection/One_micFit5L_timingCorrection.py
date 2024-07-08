@@ -74,8 +74,8 @@ def getTimeDiff(self):
 setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)
 
 # Define the range of runs (from Run1000-1009 to Run1620-1629: 63 histograms)
-start_run_number = 1020 ######################################################################################################################################################
-end_run_number = 1029 ########################################################################################################################################################
+start_run_number = 1120 ######################################################################################################################################################
+end_run_number = 1129 ########################################################################################################################################################
 
 # Define a file list to run over
 filelist = []
@@ -87,7 +87,7 @@ for run_number in range(start_run_number, end_run_number + 1):
     file_number = 0
     consecutive_missing_files = 0
     while True:
-        file_path = f"/home/bpeng/muonAnalysis/1000/MilliQan_Run{run_number}.{file_number}_v34.root" ##########################################################################
+        file_path = f"/home/bpeng/muonAnalysis/1100/MilliQan_Run{run_number}.{file_number}_v34.root" ##########################################################################
         if os.path.exists(file_path):
             filelist.append(file_path)
             try:
@@ -150,10 +150,10 @@ def fit_histogram(hist, beamOn_true_percentage, root_file):
         return None, None
 
     # Define the Gaussian model for the left peak
-    gaus1 = r.TF1("gaus1", "gaus", -9, 9)  # Range ###########################################################################################################################
+    gaus1 = r.TF1("gaus1", "gaus", -25, 0)  # Range ###########################################################################################################################
 
     # Initial parameter estimates for the Gaussian function
-    gaus1.SetParameters(14, 0.5, 4.05)  # Max Mean Stddev ######################################################################################################################
+    gaus1.SetParameters(14, -16.5, 4.165)  # Max Mean Stddev ######################################################################################################################
 
     # Fit the histogram with the Gaussian model
     hist.Fit(gaus1, "R")
@@ -172,8 +172,8 @@ def fit_histogram(hist, beamOn_true_percentage, root_file):
     text = r.TText()
     text.SetNDC()
     text.SetTextSize(0.03)
-    text.DrawText(0.15, 0.80, f"Mean of the beam peak: {mean_left_peak:.2f}") #################################################################################################
-    text.DrawText(0.15, 0.75, f"Stddev of the beam peak: {stddev_left_peak:.2f}") #############################################################################################
+    text.DrawText(0.15, 0.80, f"Mean of the cosmic peak: {mean_left_peak:.2f}") #################################################################################################
+    text.DrawText(0.15, 0.75, f"Stddev of the cosmic peak: {stddev_left_peak:.2f}") #############################################################################################
     text.DrawText(0.15, 0.70, f"Beam on files percentage: {beamOn_true_percentage:.2f}%")
 
     # Save the canvas to the ROOT file

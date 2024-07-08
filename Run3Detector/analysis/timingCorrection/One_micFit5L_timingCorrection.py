@@ -74,8 +74,8 @@ def getTimeDiff(self):
 setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)
 
 # Define the range of runs (from Run1000-1009 to Run1620-1629: 63 histograms)
-start_run_number = 1050 ######################################################################################################################################################
-end_run_number = 1059 ########################################################################################################################################################
+start_run_number = 1020 ######################################################################################################################################################
+end_run_number = 1029 ########################################################################################################################################################
 
 # Define a file list to run over
 filelist = []
@@ -150,10 +150,10 @@ def fit_histogram(hist, beamOn_true_percentage, root_file):
         return None, None
 
     # Define the Gaussian model for the left peak
-    gaus1 = r.TF1("gaus1", "gaus", -25, -5)  # Range ###########################################################################################################################
+    gaus1 = r.TF1("gaus1", "gaus", -9, 9)  # Range ###########################################################################################################################
 
     # Initial parameter estimates for the Gaussian function
-    gaus1.SetParameters(11, -11.5, 3.185)  # Max Mean Stddev ######################################################################################################################
+    gaus1.SetParameters(14, 0.5, 4.05)  # Max Mean Stddev ######################################################################################################################
 
     # Fit the histogram with the Gaussian model
     hist.Fit(gaus1, "R")
@@ -172,8 +172,8 @@ def fit_histogram(hist, beamOn_true_percentage, root_file):
     text = r.TText()
     text.SetNDC()
     text.SetTextSize(0.03)
-    text.DrawText(0.15, 0.80, f"Mean of the cosmic peak: {mean_left_peak:.2f}") #################################################################################################
-    text.DrawText(0.15, 0.75, f"Stddev of the cosmic peak: {stddev_left_peak:.2f}") #############################################################################################
+    text.DrawText(0.15, 0.80, f"Mean of the beam peak: {mean_left_peak:.2f}") #################################################################################################
+    text.DrawText(0.15, 0.75, f"Stddev of the beam peak: {stddev_left_peak:.2f}") #############################################################################################
     text.DrawText(0.15, 0.70, f"Beam on files percentage: {beamOn_true_percentage:.2f}%")
 
     # Save the canvas to the ROOT file
@@ -187,8 +187,8 @@ f_fit = r.TFile(f"FitRun{start_run_number}to{end_run_number}timingCorrection.roo
 
 # Fit the histogram and get the mean and stddev of the left peak
 mean_left_peak, stddev_left_peak = fit_histogram(h_1d, beamOn_true_percentage, f_fit)
-print("Mean of the cosmic peak:", mean_left_peak) ##############################################################################################################################
-print("Stddev of the cosmic peak:", stddev_left_peak) ##########################################################################################################################
+print("Mean of the peak:", mean_left_peak)
+print("Stddev of the peak:", stddev_left_peak)
 
 # Close the fit file
 f_fit.Close()

@@ -74,8 +74,8 @@ def getTimeDiff(self):
 setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)
 
 # Define the range of runs (from Run1000-1009 to Run1620-1629: 63 histograms)
-start_run_number = 1210 ######################################################################################################################################################
-end_run_number = 1219 ########################################################################################################################################################
+start_run_number = 1360 ######################################################################################################################################################
+end_run_number = 1369 ########################################################################################################################################################
 
 # Define a file list to run over
 filelist = []
@@ -87,7 +87,7 @@ for run_number in range(start_run_number, end_run_number + 1):
     file_number = 0
     consecutive_missing_files = 0
     while True:
-        file_path = f"/home/bpeng/muonAnalysis/1200/MilliQan_Run{run_number}.{file_number}_v34.root" ##########################################################################
+        file_path = f"/home/bpeng/muonAnalysis/1300/MilliQan_Run{run_number}.{file_number}_v34.root" ##########################################################################
         if os.path.exists(file_path):
             filelist.append(file_path)
             try:
@@ -150,10 +150,10 @@ def fit_histogram(hist, beamOn_true_percentage, root_file):
         return None, None
 
     # Define the Gaussian model for the left peak
-    gaus1 = r.TF1("gaus1", "gaus", -24, -12)  # Range ###########################################################################################################################
+    gaus1 = r.TF1("gaus1", "gaus", -28, 6)  # Range ###########################################################################################################################
 
     # Initial parameter estimates for the Gaussian function
-    gaus1.SetParameters(29, -17.5, 3.185)  # Max Mean Stddev ######################################################################################################################
+    gaus1.SetParameters(10, -17.5, 5.145)  # Max Mean Stddev ######################################################################################################################
 
     # Fit the histogram with the Gaussian model
     hist.Fit(gaus1, "R")

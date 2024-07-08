@@ -150,7 +150,7 @@ def fit_histogram(hist, beamOn_true_percentage, root_file):
         return None, None
 
     # Define the Gaussian model for the left peak
-    gaus1 = r.TF1("gaus1", "gaus", -20, -10)  # Range #############################################################################################################################
+    gaus1 = r.TF1("gaus1", "gaus", -20, -10)  # Range ###########################################################################################################################
 
     # Initial parameter estimates for the Gaussian function
     gaus1.SetParameters(4, -16.5, 2.45)  # Max Mean Stddev ######################################################################################################################
@@ -172,8 +172,8 @@ def fit_histogram(hist, beamOn_true_percentage, root_file):
     text = r.TText()
     text.SetNDC()
     text.SetTextSize(0.03)
-    text.DrawText(0.15, 0.80, f"Mean of the cosmic peak: {mean_left_peak:.2f}")
-    text.DrawText(0.15, 0.75, f"Stddev of the cosmic peak: {stddev_left_peak:.2f}")
+    text.DrawText(0.15, 0.80, f"Mean of the cosmic peak: {mean_left_peak:.2f}") #################################################################################################
+    text.DrawText(0.15, 0.75, f"Stddev of the cosmic peak: {stddev_left_peak:.2f}") #############################################################################################
     text.DrawText(0.15, 0.70, f"Beam on files percentage: {beamOn_true_percentage:.2f}%")
 
     # Save the canvas to the ROOT file
@@ -187,8 +187,8 @@ f_fit = r.TFile(f"FitRun{start_run_number}to{end_run_number}timingCorrection.roo
 
 # Fit the histogram and get the mean and stddev of the left peak
 mean_left_peak, stddev_left_peak = fit_histogram(h_1d, beamOn_true_percentage, f_fit)
-print("Mean of the cosmic peak:", mean_left_peak)
-print("Stddev of the cosmic peak:", stddev_left_peak)
+print("Mean of the cosmic peak:", mean_left_peak) ##############################################################################################################################
+print("Stddev of the cosmic peak:", stddev_left_peak) ##########################################################################################################################
 
 # Close the fit file
 f_fit.Close()

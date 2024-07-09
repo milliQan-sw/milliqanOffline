@@ -3,15 +3,15 @@ import datetime
 import sys
 import os
 import cProfile
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2' 
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
 
 tf.debugging.set_log_device_placement(True)
 print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
-from preprocessing import WaveformProcessor
-import gan 
+from Lib.preprocessing import WaveformProcessor
+import Lib.gan 
 
 tf.config.list_physical_devices('GPU')
 # Data Preprocessing Constants

@@ -3,7 +3,7 @@ import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
 import ROOT as r 
-from preprocessing import WaveformProcessor
+from Lib.preprocessing import WaveformProcessor
 
 LATENT_DIM = 500
 WAVEFORM_BOUNDS = (1200, 1600)

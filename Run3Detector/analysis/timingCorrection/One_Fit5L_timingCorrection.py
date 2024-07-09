@@ -150,10 +150,10 @@ def fit_histogram(hist, beamOn_true_percentage, root_file):
         return None, None
 
     # Define the Gaussian model for the left peak
-    gaus1 = r.TF1("gaus1", "gaus", -26, -5)  # Range ###########################################################################################################################
+    gaus1 = r.TF1("gaus1", "gaus", -13, 14)  # Range ###########################################################################################################################
 
     # Initial parameter estimates for the Gaussian function
-    gaus1.SetParameters(13, -15.5, 5.145)  # Max Mean Stddev ######################################################################################################################
+    gaus1.SetParameters(66, 0.5, 6.615)  # Max Mean Stddev ######################################################################################################################
 
     # Fit the histogram with the Gaussian model
     hist.Fit(gaus1, "R")
@@ -172,8 +172,8 @@ def fit_histogram(hist, beamOn_true_percentage, root_file):
     text = r.TText()
     text.SetNDC()
     text.SetTextSize(0.03)
-    text.DrawText(0.15, 0.80, f"Mean of the cosmic peak: {mean_left_peak:.2f}") #################################################################################################
-    text.DrawText(0.15, 0.75, f"Stddev of the cosmic peak: {stddev_left_peak:.2f}") #############################################################################################
+    text.DrawText(0.15, 0.80, f"Mean of the beam peak: {mean_left_peak:.2f}") #################################################################################################
+    text.DrawText(0.15, 0.75, f"Stddev of the beam peak: {stddev_left_peak:.2f}") #############################################################################################
     text.DrawText(0.15, 0.70, f"Beam on files percentage: {beamOn_true_percentage:.2f}%")
 
     # Save the canvas to the ROOT file

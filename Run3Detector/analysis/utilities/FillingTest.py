@@ -14,7 +14,10 @@ When making the straight track, it should add an extra offset factor -0.5
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-
+import sys
+import hist
+import awkward as ak
+import ROOT as r
 
 def filling(typeArr,layerArr,rowArr,columnArr,npeArr,NpeT):
     block = np.zeros((5, 22))
@@ -244,13 +247,79 @@ def MakeLego(arr):
 if __name__ == "__main__":
     import uproot
     #uptree = uproot.open("/Users/haoliangzheng/CERN_ana/MilliQan_Run1500.11_v35.root:t")
-    uptree = uproot.open("/Users/haoliangzheng/CERN_ana/EventDisplay/MilliQan_Run1190.1_v34.root:t")
-    branches = uptree.arrays(["type","layer","row","column","nPE","event"], entry_stop=100000)
-    typeArr= branches["type"][branches["event"]==472]
-    layerArr = branches["layer"][branches["event"]==472]
-    rowArr = branches["row"][branches["event"]==472]
-    columnArr = branches["column"][branches["event"]==472]
-    npeArr = branches["nPE"][branches["event"]==472]
+    #uptree = uproot.open("/Users/haoliangzheng/CERN_ana/EventDisplay/MilliQan_Run1190.1_v34.root:t") event 472 is a sample event
+    uptree = uproot.open("/Users/haoliangzheng/CERN_ana/EventDisplay/MilliQan_Run1500.1_v35.root:t")
+    branches = uptree.arrays(["type","layer","row","column","nPE","event","area"], entry_stop=100000)
+
+    EventNum = int(sys.argv[1])
+    typeArr= branches["type"][branches["event"]==EventNum]
+    layerArr = branches["layer"][branches["event"]==EventNum]
+    rowArr = branches["row"][branches["event"]==EventNum]
+    columnArr = branches["column"][branches["event"]==EventNum]
+    npeArr = branches["nPE"][branches["event"]==EventNum]
+
+    
+    EventArr = branches[branches["event"]==EventNum]
+    Lar0barNpe=EventArr["area"][(EventArr["type"] == 0) &  (EventArr["layer"] == 0)]
+    Lar1barNpe=EventArr["area"][(EventArr["type"] == 0) &  (EventArr["layer"] == 1)]
+    Lar2barNpe=EventArr["area"][(EventArr["type"] == 0) &  (EventArr["layer"] == 2)]
+    Lar3barNpe=EventArr["area"][(EventArr["type"] == 0) &  (EventArr["layer"] == 3)]
+    FrBeamPanNpe=EventArr["area"][(EventArr["type"] == 2) &  (EventArr["layer"] == -1)]
+    BkBeamPanNpe=EventArr["area"][(EventArr["type"] == 2) &  (EventArr["layer"] == 4)]
+    TpFrontCosp=EventArr["area"][(EventArr["row"] == 4)]
+    TpBackCosp=EventArr["area"][(EventArr["row"] == 4)]
+    print(f"TpBackCosp:{TpBackCosp}")
+    print(f"TpBackCosp area :{EventArr['area'][(EventArr['row'] == 4)]}")
+    c1 = r.TCanvas("c1","c1",800,1000)
+    c1.Divide(2,4)
+
+    l0BarNpeHist = r.TH1F("l0BarNpe","layer 0 bar npe",100,0,1000000)
+    l1BarNpeHist = r.TH1F("l1BarNpe","layer 1 bar npe",100,0,1000000)
+    l2BarNpeHist = r.TH1F("l2BarNpe","layer 2 bar npe",100,0,1000000)
+    l3BarNpeHist = r.TH1F("l3BarNpe","layer 3 bar npe",100,0,1000000)
+    FrBeampanelNpeHist = r.TH1F("FbeamPanel","Front beam panel npe",100,0,1000000)
+    BkBeampanelNpeHist = r.TH1F("BkeamPanel","Back beam panel npe",100,0,1000000)
+    TpFrontPanelNpeHist = r.TH1F("TpFrontCosPanel","top front cos panel npe",100,0,1000000)
+    TpBackPanelNpeHist = r.TH1F("BkFrontCosPanel","Back front cos panel npe",100,0,1000000)
+
+
+    print(Lar0barNpe[0])
+
+    def HistFilling(data, hist):
+        for subdata in data:
+            hist.Fill(subdata)
+
+    HistFilling(Lar0barNpe[0],l0BarNpeHist)
+    HistFilling(Lar1barNpe[0],l1BarNpeHist)
+    HistFilling(Lar2barNpe[0],l2BarNpeHist)
+    HistFilling(Lar3barNpe[0],l3BarNpeHist)
+    HistFilling(BkBeamPanNpe[0],BkBeampanelNpeHist)
+    HistFilling(FrBeamPanNpe[0],FrBeampanelNpeHist)
+    HistFilling(TpFrontCosp[0],TpFrontPanelNpeHist)
+    HistFilling(TpBackCosp[0],TpBackPanelNpeHist)
+
+    c1.cd(1)
+    l0BarNpeHist.Draw()
+    c1.cd(2)
+    #draw with differe colors and draw beam panel NPE disgtribution
+    l1BarNpeHist.Draw()
+    c1.cd(3)
+    l2BarNpeHist.Draw()
+    c1.cd(4)
+    l3BarNpeHist.Draw()
+    c1.cd(5)
+    BkBeampanelNpeHist.Draw()
+    c1.cd(6)
+    FrBeampanelNpeHist.Draw()
+    c1.cd(7)
+    TpFrontPanelNpeHist.Draw()
+    c1.cd(8)
+    TpBackPanelNpeHist.Draw()
+
+
+    c1.SaveAs("Histtest.png")
+    
+    
     print(len(npeArr))
 
     print(typeArr)

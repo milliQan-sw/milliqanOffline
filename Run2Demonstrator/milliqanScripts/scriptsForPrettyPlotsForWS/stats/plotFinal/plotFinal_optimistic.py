@@ -38,7 +38,7 @@ fig = plt.figure()
 iFile = "./limitsMQMC_V5.root"
 datasets = {}
 # for datasetName in ["directDetection","ArgoNeut","SK","MilliQ","milliQanRun3Both","milliQan","CMS","Collider","SUBMET"][:-1]:
-for datasetName in ["directDetection","ArgoNeut","SK","MilliQ","milliQanRun3Both","milliQan","FORMOSA_nominal","FORMOSA_dem","CMS","Collider","SUBMET","luminiQ"][1:]:
+for datasetName in ["directDetection","ArgoNeut","SK","MilliQ","milliQanRun3Both","milliQan","FORMOSA_nominal","FORMOSA_dem","CMS","Collider","luminiQ"][1:]:
     if  datasetName == "FORMOSA_crystal100_test":
         dataset = np.loadtxt("external/FORMOSA_nominal.csv",delimiter=",")
         dataset = extrapolate(dataset,4)

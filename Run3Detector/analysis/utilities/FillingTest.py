@@ -266,8 +266,8 @@ if __name__ == "__main__":
     Lar3barNpe=EventArr["area"][(EventArr["type"] == 0) &  (EventArr["layer"] == 3)]
     FrBeamPanNpe=EventArr["area"][(EventArr["type"] == 2) &  (EventArr["layer"] == -1)]
     BkBeamPanNpe=EventArr["area"][(EventArr["type"] == 2) &  (EventArr["layer"] == 4)]
-    TpFrontCosp=EventArr["area"][(EventArr["row"] == 4)]
-    TpBackCosp=EventArr["area"][(EventArr["row"] == 4)]
+    TpFrontCosp=EventArr["area"][(EventArr["layer"] == 0) & (EventArr["row"] == 4)]
+    TpBackCosp=EventArr["area"][(EventArr["row"] == 4) & (EventArr["layer"] == 2)]
     print(f"TpBackCosp:{TpBackCosp}")
     print(f"TpBackCosp area :{EventArr['area'][(EventArr['row'] == 4)]}")
     c1 = r.TCanvas("c1","c1",800,1000)
@@ -280,7 +280,7 @@ if __name__ == "__main__":
     FrBeampanelNpeHist = r.TH1F("FbeamPanel","Front beam panel npe",100,0,1000000)
     BkBeampanelNpeHist = r.TH1F("BkeamPanel","Back beam panel npe",100,0,1000000)
     TpFrontPanelNpeHist = r.TH1F("TpFrontCosPanel","top front cos panel npe",100,0,1000000)
-    TpBackPanelNpeHist = r.TH1F("BkFrontCosPanel","Back front cos panel npe",100,0,1000000)
+    TpBackPanelNpeHist = r.TH1F("TpBackCosPanel","top back cos panel npe",100,0,1000000)
 
 
     print(Lar0barNpe[0])
@@ -342,7 +342,7 @@ if __name__ == "__main__":
 
 
     plt.imshow(arr, cmap='viridis', origin='upper', extent=[0, 22, 0, 5]) 
-    plt.colorbar(label='Height')
+    plt.colorbar(label='number of hits')
     plt.grid(True)
     #plt.show()
 

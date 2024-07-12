@@ -260,61 +260,61 @@ if __name__ == "__main__":
 
     
     EventArr = branches[branches["event"]==EventNum]
-    Lar0barNpe=EventArr["area"][(EventArr["type"] == 0) &  (EventArr["layer"] == 0)]
-    Lar1barNpe=EventArr["area"][(EventArr["type"] == 0) &  (EventArr["layer"] == 1)]
-    Lar2barNpe=EventArr["area"][(EventArr["type"] == 0) &  (EventArr["layer"] == 2)]
-    Lar3barNpe=EventArr["area"][(EventArr["type"] == 0) &  (EventArr["layer"] == 3)]
-    FrBeamPanNpe=EventArr["area"][(EventArr["type"] == 2) &  (EventArr["layer"] == -1)]
-    BkBeamPanNpe=EventArr["area"][(EventArr["type"] == 2) &  (EventArr["layer"] == 4)]
-    TpFrontCosp=EventArr["area"][(EventArr["layer"] == 0) & (EventArr["row"] == 4)]
-    TpBackCosp=EventArr["area"][(EventArr["row"] == 4) & (EventArr["layer"] == 2)]
-    print(f"TpBackCosp:{TpBackCosp}")
+    Lar0barArea=EventArr["area"][(EventArr["type"] == 0) &  (EventArr["layer"] == 0)]
+    Lar1barArea=EventArr["area"][(EventArr["type"] == 0) &  (EventArr["layer"] == 1)]
+    Lar2barArea=EventArr["area"][(EventArr["type"] == 0) &  (EventArr["layer"] == 2)]
+    
+    Lar3barArea=EventArr["area"][(EventArr["type"] == 0) &  (EventArr["layer"] == 3)]
+    FrBeamPanArea=EventArr["area"][(EventArr["type"] == 2) &  (EventArr["layer"] == -1)]
+    BkBeamPanArea=EventArr["area"][(EventArr["type"] == 2) &  (EventArr["layer"] == 4)]
+    TpFrontCospArea=EventArr["area"][(EventArr["layer"] == 0) & (EventArr["row"] == 4)]
+    TpBackCospArea=EventArr["area"][(EventArr["row"] == 4) & (EventArr["layer"] == 2)]
+    print(f"TpBackCosp:{TpBackCospArea}")
     print(f"TpBackCosp area :{EventArr['area'][(EventArr['row'] == 4)]}")
     c1 = r.TCanvas("c1","c1",800,1000)
     c1.Divide(2,4)
 
-    l0BarNpeHist = r.TH1F("l0BarNpe","layer 0 bar npe",100,0,1000000)
-    l1BarNpeHist = r.TH1F("l1BarNpe","layer 1 bar npe",100,0,1000000)
-    l2BarNpeHist = r.TH1F("l2BarNpe","layer 2 bar npe",100,0,1000000)
-    l3BarNpeHist = r.TH1F("l3BarNpe","layer 3 bar npe",100,0,1000000)
-    FrBeampanelNpeHist = r.TH1F("FbeamPanel","Front beam panel npe",100,0,1000000)
-    BkBeampanelNpeHist = r.TH1F("BkeamPanel","Back beam panel npe",100,0,1000000)
-    TpFrontPanelNpeHist = r.TH1F("TpFrontCosPanel","top front cos panel npe",100,0,1000000)
-    TpBackPanelNpeHist = r.TH1F("TpBackCosPanel","top back cos panel npe",100,0,1000000)
+    l0BarAreaHist = r.TH1F("l0BarArea","layer 0 bar Area",100,0,1000000)
+    l1BarAreaHist = r.TH1F("l1BarArea","layer 1 bar Area",100,0,1000000)
+    l2BarAreaHist = r.TH1F("l2BarArea","layer 2 bar Area",100,0,1000000)
+    l3BarAreaHist = r.TH1F("l3BarArea","layer 3 bar Area",100,0,1000000)
+    FrBeampanelAreaHist = r.TH1F("FbeamPanel","Front beam panel Area",100,0,1000000)
+    BkBeampanelAreaHist = r.TH1F("BkeamPanel","Back beam panel Area",100,0,1000000)
+    TpFrontPanelAreaHist = r.TH1F("TpFrontCosPanel","top front cos panel Area",100,0,1000000)
+    TpBackPanelAreaHist = r.TH1F("TpBackCosPanel","top back cos panel Area",100,0,1000000)
 
 
-    print(Lar0barNpe[0])
 
     def HistFilling(data, hist):
         for subdata in data:
             hist.Fill(subdata)
 
-    HistFilling(Lar0barNpe[0],l0BarNpeHist)
-    HistFilling(Lar1barNpe[0],l1BarNpeHist)
-    HistFilling(Lar2barNpe[0],l2BarNpeHist)
-    HistFilling(Lar3barNpe[0],l3BarNpeHist)
-    HistFilling(BkBeamPanNpe[0],BkBeampanelNpeHist)
-    HistFilling(FrBeamPanNpe[0],FrBeampanelNpeHist)
-    HistFilling(TpFrontCosp[0],TpFrontPanelNpeHist)
-    HistFilling(TpBackCosp[0],TpBackPanelNpeHist)
+    HistFilling(Lar0barArea[0],l0BarAreaHist)
+    HistFilling(Lar1barArea[0],l1BarAreaHist)
+    HistFilling(Lar2barArea[0],l2BarAreaHist)
+    HistFilling(Lar3barArea[0],l3BarAreaHist)
+    HistFilling(BkBeamPanArea[0],BkBeampanelAreaHist)
+    HistFilling(FrBeamPanArea[0],FrBeampanelAreaHist)
+    HistFilling(TpFrontCospArea[0],TpFrontPanelAreaHist)
+    HistFilling(TpBackCospArea[0],TpBackPanelAreaHist)
 
     c1.cd(1)
-    l0BarNpeHist.Draw()
+    l0BarAreaHist.Draw()
     c1.cd(2)
     #draw with differe colors and draw beam panel NPE disgtribution
-    l1BarNpeHist.Draw()
+    l1BarAreaHist.Draw()
     c1.cd(3)
-    l2BarNpeHist.Draw()
+    l2BarAreaHist.Draw()
     c1.cd(4)
-    l3BarNpeHist.Draw()
+    l3BarAreaHist.Draw()
     c1.cd(5)
-    BkBeampanelNpeHist.Draw()
+    BkBeampanelAreaHist.Draw()
     c1.cd(6)
-    FrBeampanelNpeHist.Draw()
+    FrBeampanelAreaHist.Draw()
     c1.cd(7)
-    TpFrontPanelNpeHist.Draw()
+    TpFrontPanelAreaHist.Draw()
     c1.cd(8)
-    TpBackPanelNpeHist.Draw()
+    TpBackPanelAreaHist.Draw()
 
 
     c1.SaveAs("Histtest.png")

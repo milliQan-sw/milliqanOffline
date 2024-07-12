@@ -1,19 +1,21 @@
 import time
 import datetime
-import sys
 import os
-import cProfile
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
+import logging 
 
-tf.debugging.set_log_device_placement(True)
-print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
-from Lib.preprocessing import WaveformProcessor
-import Lib.gan 
-
+logging.basicConfig(level=logging.INFO)
+# Tensorflow setup
+tf.debugging.set_log_device_placement(False)
+logging.info("Num GPUs Available: {}".format(len(tf.config.experimental.list_physical_devices('GPU'))))
 tf.config.list_physical_devices('GPU')
+
+from preprocessing import WaveformProcessor
+import gan as gan
+
 # Data Preprocessing Constants
 WAVEFORM_BOUNDS = (1200, 1600)
 SPE_AREA = 500
@@ -23,6 +25,7 @@ NS_PER_MEASUREMENT = 2.5
 LATENT_DIM = 500
 BATCH_SIZE = 128
 EPOCHS = 100
+NUM_CLASSES = 3
 EVAL_EPOCH = 10  # How often you should get output during training
 
 PLOT = False
@@ -46,12 +49,7 @@ peak_heights = np.max(isolated_peaks, axis=1)
 #                         file_path="height.root")
 
 # Create Height Classification
-
-
 npe = np.round(np.divide(np.trapz(isolated_peaks), SPE_AREA))
-
-NUM_CLASSES = 3
-# num_classes = len(tf.unique(npe)[0])
 
 dataset = tf.data.Dataset.from_tensor_slices((isolated_peaks,
                                               npe))
@@ -64,7 +62,7 @@ dataset = dataset.batch(BATCH_SIZE).prefetch(buffer_size=tf.data.experimental.
 
 if PLOT:
     for i, value in enumerate(isolated_peaks):
-        print(f"Index: {value}")
+        logging.debug(f"Index: {value}")
         plt.clf()
         plt.plot(value)
         plt.text(3, 6, f"NPE: {npe[i]}", fontsize=12, color='red')
@@ -78,7 +76,7 @@ discriminator = gan.build_discriminator(embed_dim=128, input_shape=500,
 generator = gan.build_generator(LATENT_DIM, output_shape=500, embed_dim=16,
                                   num_classes=NUM_CLASSES+1)
 
-print(generator.summary())
+logging.info(generator.summary())
 # Train Models
 generator_opt = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
 disc_opt = tf.keras.optimizers.Adam(2e-4, beta_1=0.5)
@@ -96,7 +94,7 @@ start = time.time()
 for epoch in range(EPOCHS):
     # Monitoring of training
     if (epoch % 100) == 0:
-        print(f"On epoch {epoch}")
+        logging.info(f"On epoch {epoch}")
 
     # Evaluation of model during training
     if (epoch % EVAL_EPOCH) == 0:
@@ -128,6 +126,5 @@ for epoch in range(EPOCHS):
         tf.summary.scalar('g_loss', g_loss, step=epoch)
             
 end = time.time()
-
-print(f"Training took {end - start} seconds to complete.")
+logging.info(f"Training took {end - start} seconds to complete.")
 

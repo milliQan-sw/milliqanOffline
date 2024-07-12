@@ -490,7 +490,7 @@ class milliqanCuts():
         """
         self.events['None_empty_event'] = ak.num(self.events['layer']) > 0
 
-    def MuonEvent(self, cutName = None, CutonBars = True, branches = None):
+    def MuonEvent(self, cutName = None, CutonBars = True, branches = None, FurtherCheck = False):
         """
         This method is only useful for simulation data.
         self.events.muonHit == 1 return a tag that indicates which channel got hit by muon.
@@ -506,6 +506,16 @@ class milliqanCuts():
         else:
             self.events["muonEvent"] = ak.any(self.events.muonHit == 1, axis = 1) 
 
+        #the further check is used for muon geometric cut validation.
+        if FurtherCheck:
+            Row0Muon=(self.events.muonHit == 1) & (self.events["row"] == 0) 
+            Row3Muon=(self.events.muonHit == 1) & (self.events["row"] == 3) 
+            self.events["DetectableMuon"] = ak.any(Row3Muon & Row0Muon, axis = 1) #muon event that might be able to pass my muon tag
+            
+
+
+
+
     def countEvent(self, cutName = None, Countobject='None_empty_event', debug = False):
         """
         this function is to count the the amount of non-empty events or events with specific tag.
@@ -514,7 +524,7 @@ class milliqanCuts():
         if debug: 
             print(ak.to_pandas(self.events))
         if cutName:
-            print(f"{Countobject} event: {len(self.events[self.events[Countobject]])}")
+            print(f"{Countobject} event : {len(self.events[self.events[Countobject]])}")
         else:
             print(f"current available events : {ak.count_nonzero(self.events['None_empty_event'])}")
 

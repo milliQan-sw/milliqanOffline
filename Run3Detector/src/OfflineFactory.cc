@@ -69,6 +69,7 @@ void OfflineFactory::addFriendTree(){
         trigMetaData = (TTree*) matchedFile->Get("MetaData");
         trigMetaDataCopy = trigMetaData->CloneTree();
         trigMetaDataCopy->SetDirectory(0);
+        writeTriggerMetaData=true;
     }
     matchedFile->Close();
 
@@ -1645,14 +1646,14 @@ void OfflineFactory::readWaveData(){
 
     setTotalLumi();
 
-    std::cout << std::endl;
+    //std::cout << std::endl;
     
 }
 
 void OfflineFactory::writeOutputTree(){
     outFile->cd();
     outTree->Write();
-    if (friendFileName != "") trigMetaDataCopy->Write();
+    if (writeTriggerMetaData) trigMetaDataCopy->Write();
     writeVersion();
     outFile->Close();
     if (inFile) inFile->Close();

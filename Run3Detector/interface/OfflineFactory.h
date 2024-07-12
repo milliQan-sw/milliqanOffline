@@ -290,6 +290,8 @@ private:
     TTree * outTree;
     TTree * trigMetaData;
     TTree * trigMetaDataCopy;
+
+    bool writeTriggerMetaData=false;
     offline_tree_ outputTreeContents;
     bool triggerFileMatched;
     vector<TColor *> palette;

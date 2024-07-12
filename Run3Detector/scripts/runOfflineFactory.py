@@ -203,12 +203,13 @@ def getConfigs(runNum, offlineDir):
     runs = json.load(fin)
     fin.close()
     for key, value in runs.items():
+        print(key, value)
         if len(value) > 1:
-            if runNum in range(value[0], value[1]): return key
+            if value[0] <= runNum <= value[1]: return key
         else:
             print(runNum)
             if runNum >= value[0]: return key
-    print("Did not find the correct channel map")
+    print("Did not find the correct channel map for run {}".format(runNum))
     sys.exit(1)
 
 def copyFromEOS(slab=False):

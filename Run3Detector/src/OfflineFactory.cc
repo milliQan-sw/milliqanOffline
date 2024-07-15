@@ -189,6 +189,7 @@ std::vector<std::string> OfflineFactory::splitLumiContents(std::string input){
 
 //Function to load good runs list and check if this file is "good"
 void OfflineFactory::checkGoodRunList(std::string goodRunList){
+    if (isSlab) return; //temporary while no good runs
     std::string json;
     if (goodRunList.find("{") != std::string::npos){
         json = goodRunList;
@@ -220,12 +221,14 @@ void OfflineFactory::checkGoodRunList(std::string goodRunList){
         }
     }
     else{
+        std::cout << "Error: OfflineFactory::checkGoodRunList" << std::endl;
         throw invalid_argument(goodRunList);
     }
 }
 
 //Function to load lumis json file
 void OfflineFactory::getLumis(std::string lumiFile){
+    if(isSlab) return; //temporary while there are no lumis
     std::string json;
     if (lumiFile.find("{") != std::string::npos){
         json = lumiFile;
@@ -290,6 +293,7 @@ void OfflineFactory::getLumis(std::string lumiFile){
         }
     }
     else{
+        std::cout << "Error: OfflineFactory::getLumis" << std::endl;
         throw invalid_argument(lumiFile);
     }
 }
@@ -497,12 +501,16 @@ void OfflineFactory::processDisplays( vector<int> & eventsToDisplay,TString disp
 void OfflineFactory::process(){
 
     // Testing json stuff
-
+    cout << "in process" << endl;
     makeOutputTree();
+    cout << "made output tree" <<endl;
     inFile = TFile::Open(inFileName, "READ");
     readMetaData();
+    cout << "read meta data" << endl;
     readWaveData();
+    cout << "read wave data" << endl;
     writeOutputTree();
+    cout << "wrote output tree" << endl;
 }
 void OfflineFactory::process(TString inFileName,TString outFileName)
 {
@@ -1619,9 +1627,10 @@ void OfflineFactory::readWaveData(){
 
         findExtrema();
 
-        getEventLumis();
-
-        setGoodRuns();
+        if (!isSlab){ //temporary while slab has no lumi/good runs
+            getEventLumis();
+            setGoodRuns();
+        } 
 
         if (outputTreeContents.event_time_fromTDC < firstTDC_time) firstTDC_time = outputTreeContents.event_time_fromTDC; 
         if (outputTreeContents.event_time_fromTDC > lastTDC_time) lastTDC_time = outputTreeContents.event_time_fromTDC;
@@ -1932,6 +1941,7 @@ void OfflineFactory::loadWavesMilliDAQ(){
         board = boardArray->GetAt(ic);
         chan = chanArray->GetAt(ic);
         waves[ic] = (TH1D*)evt->GetWaveform(board, chan, Form("digitizers[%i].waveform[%i]",board,ic));  
+        if (isSlab) waves[ic]->Scale(-1);
     }
 
 }    

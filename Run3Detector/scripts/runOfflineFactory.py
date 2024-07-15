@@ -93,11 +93,11 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
         if slab:
             chanConfig = offlineDir + "/configuration/slabConfigs/" + getConfigs(runNumber, offlineDir+'/configuration/slabConfigs') + '.json'
             print("Using the chan config", chanConfig)
-            configurations = [chanConfig, offlineDir+"/configuration/pulseFinding/pulseFindingTest.json"]
+            configurations = [chanConfig, offlineDir+"/configuration/pulseFinding/pulseFindingSlab.json"]
         else:
             chanConfig = offlineDir + "/configuration/barConfigs/" + getConfigs(runNumber, offlineDir+'/configuration/barConfigs') + '.json'
             print("Using the chan config", chanConfig)
-            configurations = [chanConfig,offlineDir+"/configuration/pulseFinding/pulseFindingTest.json"]
+            configurations = [chanConfig,offlineDir+"/configuration/pulseFinding/pulseFindingBar.json"]
 
     if "{" in configurations and "}" in configurations:
         configurationsJSONString = configurations

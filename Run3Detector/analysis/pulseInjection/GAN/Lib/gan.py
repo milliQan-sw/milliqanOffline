@@ -8,55 +8,29 @@ from tensorflow.keras.models import Model
 
 
 def build_generator(latent_dim, output_shape, embed_dim, num_classes):
-    noise = Input((latent_dim), name="noise_input")
+    noise = Input((latent_dim,), name="noise_input")
     x = Dense(256, name="gen_dense0")(noise)
     x = LeakyReLU(0.2, name="gen_relu0")(x)
 
-    label = Input((1), name="label")
+    label = Input((1,), name="label")
     l = Embedding(num_classes, embed_dim, input_length=1)(label)
     l = Flatten()(l)
 
     x = Concatenate()([x, l])
     x = Dense(256, name="gen_dense1")(x)
     x = LeakyReLU(0.2, name="gen_relu1")(x)
-    x = Dense(128)(x)
-    x = LeakyReLU(0.2)(x)
-    x = Dense(64)(x)
-    x = LeakyReLU(0.2)(x)
-    output = Dense(output_shape, activation='tanh')(x)
 
     return Model([noise, label], output, name="generator")
 
-
-def build_discriminator(embed_dim, input_shape, num_classes, extra_info_shape):
-    data_input = Input(input_shape, name="data_input")
-    
-    x = Flatten()(data_input)
-
-    # Label input
-    label_input = Input((1,), name="label")
-    label_embedding = Embedding(num_classes, embed_dim)(label_input)
-    label_embedding = Flatten()(label_embedding)
-
-    # Extra info input
-    extra_info_input = Input((extra_info_shape), name="extra_info_input")
-    extra_info_flat = Flatten()(extra_info_input)
-
-    # Concatenate all inputs
-    concatenated_inputs = Concatenate(name='disc_concat')(
-        [x, label_embedding, extra_info_flat])
-
-    # Discriminator layers
-    x = Dense(256, name="disc_dense0")(concatenated_inputs)
-    x = LeakyReLU(0.2, name="disc_relu0")(x)
-    x = Dense(64)(x)
+def build_discriminator(embed_dim, input_shape, num_classes):
+    waveform = Input((input_shape,), name="discriminator_input")
+    x = Dense(64)(waveform)
     x = LeakyReLU(0.2)(x)
     output = Dense(1, name="disc_dense1")(x)
 
-    # Create and compile the discriminator model
-    discriminator = Model(
-        [data_input, label_input, extra_info_input], output, name="discriminator")
-    return discriminator
+    label = Input((1,), name="class_label")
+    l = Embedding(num_classes, embed_dim)(label)
+    l = Flatten()(l)
 
 
 def calculate_extra_metrics(waveform):
@@ -69,7 +43,10 @@ def calculate_extra_metrics(waveform):
 # discriminate against real and fake data. The generator loss measures
 # how often the generated data is caught by the discriminator. Even ideally,
 # the loss should not go to 0, it will meet in the middle somewhere
-def train_step(real_waveforms, real_labels, latent_dim, num_classes, generator, discriminator, g_opt, d_opt, batch_size):
+@tf.function
+def train_step (real_waveforms, real_labels, latent_dim, generator, discriminator, g_opt, d_opt):
+    d_loss = 0
+    g_loss = 0
     batch_size = tf.shape(real_waveforms)[0]
     cross_entropy = tf.keras.losses.BinaryCrossentropy(from_logits=True)
 
@@ -83,7 +60,10 @@ def train_step(real_waveforms, real_labels, latent_dim, num_classes, generator, 
 
         gen_extra_info = calculate_extra_metrics(generated_waveforms)
 
-        real_extra_info = calculate_extra_metrics(real_waveforms)
+            # The loss of the GAN is the cumulative loss on the real and fake data
+            d_real_loss = bce_loss(tf.ones_like(real_output), real_output)
+            d_fake_loss = bce_loss(tf.zeros_like(fake_output), fake_output)
+            d_loss = d_real_loss + d_fake_loss
 
         # Train the discriminator over real data and generated data
         real_output = discriminator(
@@ -109,4 +89,9 @@ def train_step(real_waveforms, real_labels, latent_dim, num_classes, generator, 
     g_grad = gtape.gradient(g_loss, generator.trainable_variables)
     g_opt.apply_gradients(zip(g_grad, generator.trainable_variables))
 
-    return d_loss, g_loss, g_opt, d_opt
+    return d_loss, g_loss
+
+def generate_waveforms(generator, labels, latent_dim=500):
+    noise = tf.random.normal([len(labels), latent_dim])
+    labels = tf.convert_to_tensor(labels, dtype='int64')
+    return generator([noise, labels], training=False)

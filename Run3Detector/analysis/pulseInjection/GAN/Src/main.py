@@ -5,6 +5,9 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
+
+is_eager = tf.executing_eagerly()
+print("Is eager", is_eager)
 import logging 
 
 logging.basicConfig(level=logging.INFO)
@@ -110,6 +113,8 @@ for epoch in range(EPOCHS):
     assert dataset is not None, "Error in setting up dataset"
     for waveform_batch, label_batch in dataset:
         i+=1
+        print(tf.shape(waveform_batch))
+        print(tf.shape(label_batch))
         d_batch_loss, g_batch_loss = gan.train_step(waveform_batch, label_batch,
                                                     LATENT_DIM,
                                                     generator, discriminator,

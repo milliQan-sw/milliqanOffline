@@ -20,7 +20,7 @@ def build_generator(latent_dim, output_shape, embed_dim, num_classes):
     x = Dense(256, name="gen_dense1")(x)
     x = LeakyReLU(0.2, name="gen_relu1")(x)
 
-    return Model([noise, label], output, name="generator")
+    return Model([noise, label], x, name="generator")
 
 def build_discriminator(embed_dim, input_shape, num_classes):
     waveform = Input((input_shape,), name="discriminator_input")
@@ -31,12 +31,21 @@ def build_discriminator(embed_dim, input_shape, num_classes):
     label = Input((1,), name="class_label")
     l = Embedding(num_classes, embed_dim)(label)
     l = Flatten()(l)
+    return Model([waveform, label], output, name="discriminator")
 
+@tf.function
+def calculate_area(dx, y_values):
+    area = tf.reduce_sum((y_values[1:] + y_values[:1]) * dx / 2.0, axis=0)
+    return area
+
+@tf.function
+def get_max_height(waveform):
+    return tf.reduce_max(waveform, axis=0)
 
 def calculate_extra_metrics(waveform):
-    area = np.trapz(waveform, axis=1)
-    height = np.max(waveform, axis=1)
-    return np.column_stack((area, height))
+    height = get_max_height(waveform)
+    area = calculate_area(2.5, waveform)
+    return tf.stack([height, area])
 
 
 # The discriminator loss is defined as the combination of how well it is able
@@ -48,44 +57,34 @@ def train_step (real_waveforms, real_labels, latent_dim, generator, discriminato
     d_loss = 0
     g_loss = 0
     batch_size = tf.shape(real_waveforms)[0]
-    cross_entropy = tf.keras.losses.BinaryCrossentropy(from_logits=True)
+    bce_loss = tf.keras.losses.BinaryCrossentropy(from_logits=True, label_smoothing=0.1)
 
     noise = tf.random.normal([batch_size, latent_dim])
 
-    # Gradient tape keeps track of the forward pass so that you can back-propagate the errors
-    with tf.GradientTape() as dtape, tf.GradientTape() as gtape:
-        # Generate waveforms
-        generated_waveforms = generator(
-            [noise, real_labels], training=True)
+    for _ in range(3):
+        # Gradient tape keeps track of the forward pass so that you can back-propagate the errors
+        with tf.GradientTape() as dtape:
+            # Generate waveforms
+            generated_waveforms = generator([noise, real_labels], training=True)
 
-        gen_extra_info = calculate_extra_metrics(generated_waveforms)
+            # Train the discriminator over real data and generated data
+            print(real_waveforms)
+            print(real_labels)
+            real_output = discriminator([real_waveforms, real_labels], training=True)
+            fake_output = discriminator([generated_waveforms, real_labels], training=True)
 
             # The loss of the GAN is the cumulative loss on the real and fake data
             d_real_loss = bce_loss(tf.ones_like(real_output), real_output)
             d_fake_loss = bce_loss(tf.zeros_like(fake_output), fake_output)
             d_loss = d_real_loss + d_fake_loss
 
-        # Train the discriminator over real data and generated data
-        real_output = discriminator(
-            [real_waveforms, real_labels, real_extra_info], training=True)
-        fake_output = discriminator(
-            [generated_waveforms, real_labels, gen_extra_info], training=True)
+        d_grad = dtape.gradient(d_loss, discriminator.trainable_variables)
+        d_opt.apply_gradients(zip(d_grad, discriminator.trainable_variables))
 
-        # The loss of the GAN is the cumulative loss on the real and fake data
-        d_real_loss = cross_entropy(tf.ones_like(real_output), real_output)
-        d_fake_loss = cross_entropy(tf.zeros_like(fake_output), fake_output)
-        d_loss = d_real_loss + d_fake_loss
-
-        # Train generator
+    with tf.GradientTape() as gtape:
         generated_waveforms = generator([noise, real_labels], training=True)
-        gen_extra_info = calculate_extra_metrics(generated_waveforms)
-        fake_output = discriminator(
-            [generated_waveforms, real_labels, gen_extra_info], training=True)
-        g_loss = cross_entropy(tf.ones_like(fake_output), fake_output)
-
-    d_grad = dtape.gradient(d_loss, discriminator.trainable_variables)
-    d_opt.apply_gradients(zip(d_grad, discriminator.trainable_variables))
-
+        fake_output = discriminator([generated_waveforms, real_labels], training=True)
+        g_loss = bce_loss(tf.ones_like(fake_output), fake_output)
     g_grad = gtape.gradient(g_loss, generator.trainable_variables)
     g_opt.apply_gradients(zip(g_grad, generator.trainable_variables))
 

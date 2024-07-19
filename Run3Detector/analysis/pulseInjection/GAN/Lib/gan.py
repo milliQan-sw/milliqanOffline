@@ -2,9 +2,10 @@ from typing import Tuple
 
 import numpy as np
 import tensorflow as tf
-from tensorflow.keras.layers import (Input, Dense, LeakyReLU, Embedding, Flatten,
+from tensorflow.keras.layers import (Input, Dense, LeakyReLU, Embedding, Flatten, Softmax,
                                      Concatenate, Reshape, Activation, Normalization)
 from tensorflow.keras.models import Model
+import tensorflow_probability as tfp
 
 
 def build_generator(latent_dim, output_shape, embed_dim, num_classes):
@@ -17,7 +18,7 @@ def build_generator(latent_dim, output_shape, embed_dim, num_classes):
     l = Flatten()(l)
 
     x = Concatenate()([x, l])
-    x = Dense(256, name="gen_dense1")(x)
+    x = Dense(output_shape, name="gen_dense1")(x)
     x = LeakyReLU(0.2, name="gen_relu1")(x)
 
     return Model([noise, label], x, name="generator")
@@ -26,21 +27,25 @@ def build_discriminator(embed_dim, input_shape, num_classes):
     waveform = Input((input_shape,), name="discriminator_input")
     x = Dense(64)(waveform)
     x = LeakyReLU(0.2)(x)
-    output = Dense(1, name="disc_dense1")(x)
 
     label = Input((1,), name="class_label")
     l = Embedding(num_classes, embed_dim)(label)
     l = Flatten()(l)
-    return Model([waveform, label], output, name="discriminator")
+
+    x = Concatenate()([x,l])
+    x = Dense(256, name="disc_dense2")(x)
+    x = Dense(64)(x)
+    x = Softmax()(x)
+    return Model([waveform, label], x, name="discriminator")
 
 @tf.function
 def calculate_area(dx, y_values):
-    area = tf.reduce_sum((y_values[1:] + y_values[:1]) * dx / 2.0, axis=0)
+    area = tfp.math.trapz(y_values, dx=dx)
     return area
 
 @tf.function
 def get_max_height(waveform):
-    return tf.reduce_max(waveform, axis=0)
+    return tf.reduce_max(waveform, axis=1)
 
 def calculate_extra_metrics(waveform):
     height = get_max_height(waveform)
@@ -57,9 +62,10 @@ def train_step (real_waveforms, real_labels, latent_dim, generator, discriminato
     d_loss = 0
     g_loss = 0
     batch_size = tf.shape(real_waveforms)[0]
-    bce_loss = tf.keras.losses.BinaryCrossentropy(from_logits=True, label_smoothing=0.1)
+    bce_loss = tf.keras.losses.BinaryCrossentropy(from_logits=False, label_smoothing=0.1)
 
     noise = tf.random.normal([batch_size, latent_dim])
+    
 
     for _ in range(3):
         # Gradient tape keeps track of the forward pass so that you can back-propagate the errors
@@ -68,8 +74,6 @@ def train_step (real_waveforms, real_labels, latent_dim, generator, discriminato
             generated_waveforms = generator([noise, real_labels], training=True)
 
             # Train the discriminator over real data and generated data
-            print(real_waveforms)
-            print(real_labels)
             real_output = discriminator([real_waveforms, real_labels], training=True)
             fake_output = discriminator([generated_waveforms, real_labels], training=True)
 

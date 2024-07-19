@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 
 is_eager = tf.executing_eagerly()
-print("Is eager", is_eager)
 import logging 
 
 logging.basicConfig(level=logging.INFO)
@@ -27,15 +26,14 @@ NS_PER_MEASUREMENT = 2.5
 # Model Constants
 LATENT_DIM = 500
 BATCH_SIZE = 128
-EPOCHS = 100
+EPOCHS = 1000
 NUM_CLASSES = 3
 EVAL_EPOCH = 10  # How often you should get output during training
 
 PLOT = False
 
 # Preprocess Waveform Data
-INPUT_FILE = ("/home/ryan/Documents/Data/MilliQan/"
-              "outputWaveforms_812_2p5V.root")
+INPUT_FILE = ("/home/ryan/Documents/Research/Data/MilliQanWaveforms/outputWaveforms_812_2p5V.root")
 processor = WaveformProcessor(INPUT_FILE)
 
 
@@ -113,8 +111,6 @@ for epoch in range(EPOCHS):
     assert dataset is not None, "Error in setting up dataset"
     for waveform_batch, label_batch in dataset:
         i+=1
-        print(tf.shape(waveform_batch))
-        print(tf.shape(label_batch))
         d_batch_loss, g_batch_loss = gan.train_step(waveform_batch, label_batch,
                                                     LATENT_DIM,
                                                     generator, discriminator,
@@ -124,8 +120,8 @@ for epoch in range(EPOCHS):
 
     d_loss /= i
     g_loss /= i
-    d_loss_values.append(d_loss)
-    g_loss_values.append(g_loss)
+    d_loss_values[i] = d_loss
+    g_loss_values[i] = g_loss
 
     with train_summary_writer.as_default():
         tf.summary.scalar('d_loss', d_loss, step=epoch)

@@ -20,8 +20,8 @@ def getTimeDiff(self):
     time_diffsL30 = []
 
     # Area mask
-    barAreaMask = self.events['area'] > 500000
-    slabAreaMask = self.events['area'] > 500000 / 12
+    barAreaMask = self.events['area'] > 100000
+    slabAreaMask = self.events['area'] > 100000 / 12
 
     # Pick the first pulse
     barFinalPulseMask = barAreaMask & (self.events['ipulse'] == 0)

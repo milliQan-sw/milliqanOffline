@@ -20,8 +20,8 @@ def getTimeDiff(self):
     time_diffsL30 = []
 
     # Area mask
-    barAreaMask = self.events['area'] > 100000
-    slabAreaMask = self.events['area'] > 100000 / 12
+    barAreaMask = self.events['area'] > 500000
+    slabAreaMask = self.events['area'] > 500000 / 12
 
     # Pick the first pulse
     barFinalPulseMask = barAreaMask & (self.events['ipulse'] == 0)
@@ -56,7 +56,7 @@ def getTimeDiff(self):
 
     for i in range(len(timeL0_min)):
         # Require pulses in all 4 layers and the back panel for one event
-        if timeL0_min[i] is not None and timeL1_min[i] is not None and timeL2_min[i] is not None and timeL3_min[i] is not None:
+        if timeL0_min[i] is not None and timeL1_min[i] is not None and timeL2_min[i] is not None and timeL3_min[i] is not None and timeL4_min[i] is not None:
             # Calculate time differences only for events with valid times in all layers
             time_diffsL30.append(timeL3_min[i] - timeL0_min[i])
     

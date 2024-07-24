@@ -32,7 +32,7 @@ def getTimeDiff(self):
     # nPE mask to replace height and area mask (this is the actual nPE cut being tested) 
     nPEMask = self.events['nPE'] > 10000
 
-    finalPulseMask = nPEMask & simCheck
+    finalPulseMask = nPEMask #& simCheck
 
     # apply the finalPulseMask
     masked_time = self.events['time'][finalPulseMask]

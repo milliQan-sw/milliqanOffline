@@ -419,6 +419,8 @@ class milliqanCuts():
         else:
             uniqueBarArr = ak.Array([np.unique(x) for x in bararr["chan"]])
             self.events[cutName] = ak.count(uniqueBarArr, axis = 1)
+        print(f"four bars events {self.events['event'][self.events[cutName]==4]}")
+
 
     def BarNPERatioCalculate(self,cutName = "BarNPERatio",cut = None):
         """
@@ -518,7 +520,7 @@ class milliqanCuts():
         else:
             print(f"current available events : {ak.count_nonzero(self.events['None_empty_event'])}")
 
-    def sudo_straight(self, cutName = "StraghtCosmic",NPEcut = 20,time = "time", offlineData = True):
+    def sudo_straight(self, cutName = "StraghtCosmic",NPEcut = 10,time = "time", offlineData = True):
         """
         This function creates 3 event-based tags for cosmic muon events. When doing analysis with offline data offlinePreProcess is required before creating this tag.
         The first two tags only check the first bit hit from bars but the last one also check the big hit on top cosmic panels.
@@ -740,7 +742,14 @@ class milliqanCuts():
         self.events["downwardPath"] = SpassArr #straight downward path. Hits 
         #check the number of events that can pass the cosmic straight cut
         print(f"cosmic straight : {len(self.events['event'][self.events['StraghtCosmic']])}")
-
+        
+        #extra script for cosmic muon tag validation by using event number
+        ENum_ST = self.events["event"][self.events["StraghtCosmic"]]
+        ENum_DW = self.events["event"][self.events["downwardPath"]]
+        ENum_CL = self.events["event"][self.events["Clean_MuonEvent"]]
+        print(f"ENum_ST {ENum_ST}")
+        print(f"ENum_DW {ENum_DW}")
+        print(f"ENum_CL {ENum_CL}")
 
     def offlinePreProcess(self,cutName = None, cut = None, startTime = 1250, endTime = 1350):
         """

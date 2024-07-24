@@ -69,13 +69,13 @@ def getTimeDiff(self):
     #print(time_diffsL30)
     #print(len(time_diffsL30))
 
-    cut = ak.any(muonL4Mask & nPEMask, axis = 1)
+    cut = muonL4Mask
     count = 0
     for i in range(len(cut)):
         if cut[i] is True:
             count += 1
     print(count)
-    
+
     # extend the final list to match the size of the current file
     num_events = len(self.events)
     num_nones = num_events - len(time_diffsL30)

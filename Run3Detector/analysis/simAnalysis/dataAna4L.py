@@ -44,9 +44,11 @@ def getTimeDiff(self):
     timeL2 = masked_time[masked_layer == 2]
     timeL3 = masked_time[masked_layer == 3]
 
+    '''
     timeL4 = masked_time[masked_layer == 4]
     boolTimeL4 = ak.any(timeL4, axis = 1)
-
+    '''
+    
     # function to get minimum time per event handling None values
     def minTime(pulse_times):
         filtered_times = [time for time in pulse_times if time is not None]
@@ -60,13 +62,14 @@ def getTimeDiff(self):
 
     for i in range(len(timeL0_min)):
         # require an event to have pulses in all 5 layers (this is the actual 5-layer cut being tested) 
-        if timeL0_min[i] is not None and timeL1_min[i] is not None and timeL2_min[i] is not None and timeL3_min[i] is not None and boolTimeL4[i] is True:
+        if timeL0_min[i] is not None and timeL1_min[i] is not None and timeL2_min[i] is not None and timeL3_min[i] is not None:
             # calculate time differences only for events with valid times in all layers
             time_diffsL30.append(timeL3_min[i] - timeL0_min[i])
     
-    #print(time_diffsL30)
-    #print(len(time_diffsL30))
+    print(time_diffsL30)
+    print(len(time_diffsL30))
 
+    '''
     cut1 = ak.any(self.events['hit_nPE'] > 10000, axis = 1)
     cut2 = ak.any(self.events['nPE'] > 10000, axis = 1)
 
@@ -82,8 +85,7 @@ def getTimeDiff(self):
             count2 += 1
 
     print(count1, count2)
-    
-    '''
+
     off = ak.any((self.events['layer'] == 4) & (self.events['nPE'] > 10000), axis = 1)
     sim = ak.any((abs(self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 4) & (self.events['hit_nPE'] > 10000), axis = 1)
 

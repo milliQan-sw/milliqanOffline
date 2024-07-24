@@ -32,7 +32,15 @@ def getMuonNum(self):
         if muonL0Mask[i] and muonL1Mask[i] and muonL2Mask[i] and muonL3Mask[i] and muonL4Mask[i]:
             countMuon += 1
     
-    print(countMuon)
+    #print(countMuon)
+    
+    count = 0
+    cut = ak.any(muonL4Mask & (self.events['nPE'] > 10000), axis = 1)
+    for i in range(len(self.events)):
+        if cut[i] == True:
+            count += 1
+
+    print(count)
 
 # add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getMuonNum', getMuonNum)

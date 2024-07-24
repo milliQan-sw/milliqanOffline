@@ -67,9 +67,9 @@ def getTimeDiff(self):
     
     #print(time_diffsL30)
     #print(len(time_diffsL30))
-    print(len(timeL4))
-    print(ak.num(timeL4))
-    print(boolTimeL4)
+    for i in range(len(ak.num(timeL4))):
+        if ak.num(timeL4)[i] != 0:
+            print(ak.num(timeL4)[i])
 
     # extend the final list to match the size of the current file
     num_events = len(self.events)

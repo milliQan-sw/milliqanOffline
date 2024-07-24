@@ -119,9 +119,9 @@ ST_TN_count = mycuts.getCut(mycuts.countEvent,'ST_TN')
 DW_TN_count = mycuts.getCut(mycuts.countEvent,'DW_TN')
 CL_TN_count = mycuts.getCut(mycuts.countEvent,'CL_TN')
 
-ST_TN_count = mycuts.getCut(mycuts.countEvent,'ST_TN')
-DW_TN_count = mycuts.getCut(mycuts.countEvent,'DW_TN')
-CL_TN_count = mycuts.getCut(mycuts.countEvent,'CL_TN')
+ST_FN_count = mycuts.getCut(mycuts.countEvent,'ST_FN')
+DW_FN_count = mycuts.getCut(mycuts.countEvent,'DW_FN')
+CL_FN_count = mycuts.getCut(mycuts.countEvent,'CL_FN')
 
 MuonEventCount = mycuts.getCut(mycuts.countEvent,'muonEvent')
 
@@ -135,7 +135,7 @@ cleanMuon_count = mycuts.getCut(mycuts.countEvent,'placeholder', Countobject= 'C
 SIM_sudo_straight = mycuts.getCut(mycuts.sudo_straight,'StraghtCosmic', NPEcut = BigHitThreashold,time = "time", offlineData = False)
 
 
-cutflow8 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.NbarsHitsCount,SIM_sudo_straight,DW_Muon_count,cleanMuon_count, SIM_sudo_straight,ST_TP_count,DW_TP_count,CL_TP_count,ST_FP_count,DW_FP_count,CL_FP_count,ST_TN_count,DW_TN_count,CL_TN_count,ST_TN_count,DW_TN_count,CL_TN_count]
+cutflow8 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.NbarsHitsCount,MuonEventCount,SIM_sudo_straight,MuonGeoValidation,DW_Muon_count,cleanMuon_count,ST_TP_count,DW_TP_count,CL_TP_count,ST_FP_count,DW_FP_count,CL_FP_count,ST_TN_count,DW_TN_count,CL_TN_count,ST_FN_count,DW_FN_count,CL_FN_count]
 
 cutflow = cutflow8
 myschedule = milliQanScheduler(cutflow, mycuts)

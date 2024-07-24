@@ -60,7 +60,7 @@ def getTimeDiff(self):
 
     for i in range(len(timeL0_min)):
         # require an event to have pulses in all 5 layers (this is the actual 5-layer cut being tested) 
-        if timeL0_min[i] is not None and timeL1_min[i] is not None and timeL2_min[i] is not None and timeL3_min[i] is not None and boolTimeL4 is not None:
+        if timeL0_min[i] is not None and timeL1_min[i] is not None and timeL2_min[i] is not None and timeL3_min[i] is not None and boolTimeL4[i] is not None:
             # calculate time differences only for events with valid times in all layers
             time_diffsL30.append(timeL3_min[i] - timeL0_min[i])
     

@@ -135,21 +135,7 @@ cleanMuon_count = mycuts.getCut(mycuts.countEvent,'placeholder', Countobject= 'C
 SIM_sudo_straight = mycuts.getCut(mycuts.sudo_straight,'StraghtCosmic', NPEcut = BigHitThreashold,time = "time", offlineData = False)
 
 
-
-#-----------------plots for NPE and NPE ratio with layer constaints and time difference----------------
-Dt = mycuts.getCut(mycuts.findCorrectTime, 'placeholder',cut = None,timeData = "time",offlineMode = False)
-
-
-NpeRatio_adj_tag= mycuts.getCut(mycuts.BarNPERatioCalculateV2, "NpeRatio_adj_tag",cut = "MuonADJLayers") #The tag "NpeRatio_adj_tag" can be used to extract the NPE ratio for ST and CL event.
-NpeRatio_adj_DW_tag= mycuts.getCut(mycuts.BarNPERatioCalculateV2, "NpeRatio_adj_DW_tag",cut = "MuonADJLayers_DW")
-NPERatio_CL = r.TH1F("NPERatio_CL","NPE ratio CL adj;max NPE/min NPE;Events",5000,0,5000)
-NPERatio_DW = r.TH1F("NPERatio_DW","NPE ratio DW adj;max NPE/min NPE;Events",5000,0,5000)
-NPERatio_ST = r.TH1F("NPERatio_ST","NPE ratio ST adj;max NPE/min NPE;Events",5000,0,5000)
-myplotter.addHistograms(NPERatio_CL, 'NpeRatio_adj_tag', 'Clean_MuonEvent')
-myplotter.addHistograms(NPERatio_ST, 'NpeRatio_adj_tag', 'StraghtCosmic')
-myplotter.addHistograms(NPERatio_DW, 'NpeRatio_adj_DW_tag', 'downwardPath')
-
-cutflow8 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.NbarsHitsCount,SIM_sudo_straight,dw_bar_cf8,dw_panel_cf8,St_bar_cf8,St_panel_cf8,CL_bar_cf8,CL_panel_cf8,DW_Muon_count,cleanMuon_count,myplotter.dict['NuniqueBar_DW'],myplotter.dict['NuniqueBar_ST'],myplotter.dict['NuniqueBar_CL'],myplotter.dict['Bar_NPE_DW'],myplotter.dict['Bar_NPE_St'],myplotter.dict['Bar_NPE_CL'], Dt, myplotter.dict['Dt_ST'], myplotter.dict['Dt_DW'],myplotter.dict['Dt_CL'],Muon_adj_layer_CL,Muon_adj_layer_ST,Muon_adj_layer_DW , myplotter.dict['adj_NPE_CL'], myplotter.dict['adj_NPE_DW'],myplotter.dict['adj_NPE_ST'],NpeRatio_adj_tag,NpeRatio_adj_DW_tag,myplotter.dict['NPERatio_CL'],myplotter.dict['NPERatio_DW'],myplotter.dict['NPERatio_ST'] ]
+cutflow8 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.NbarsHitsCount,SIM_sudo_straight,DW_Muon_count,cleanMuon_count, SIM_sudo_straight,ST_TP_count,DW_TP_count,CL_TP_count,ST_FP_count,DW_FP_count,CL_FP_count,ST_TN_count,DW_TN_count,CL_TN_count,ST_TN_count,DW_TN_count,CL_TN_count]
 
 cutflow = cutflow8
 myschedule = milliQanScheduler(cutflow, mycuts)

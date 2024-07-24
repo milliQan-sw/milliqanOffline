@@ -20,16 +20,18 @@ def get3LNum(self):
     
     threeLcount = []
 
-    # nPE mask to replace height and area mask
-    nPEMask = self.events['nPE'] > 10000
-
-    # develop simulation check: events actually have muons in all 4 layers 
+    # develop simulation check: events actually have muons in all 4 layers (simulation check)
     muonL0Mask = ak.any((abs(self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 0), axis = 1)
     muonL1Mask = ak.any((abs(self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 1), axis = 1)
     muonL2Mask = ak.any((abs(self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 2), axis = 1)
     muonL3Mask = ak.any((abs(self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 3), axis = 1)
-    muonMask = muonL0Mask & muonL1Mask & muonL2Mask & muonL3Mask
-    finalPulseMask = nPEMask & muonMask
+
+    simCheck = muonL0Mask & muonL1Mask & muonL2Mask & muonL3Mask
+
+    # nPE mask to replace height and area mask (this is the actual nPE cut being tested) 
+    nPEMask = self.events['nPE'] > 10000
+
+    finalPulseMask = nPEMask & simCheck
 
     # apply the finalPulseMask
     masked_time = self.events['time'][finalPulseMask]
@@ -53,7 +55,7 @@ def get3LNum(self):
     timeL3_min = [minTime(event) for event in ak.to_list(timeL3)]
 
     for i in range(len(timeL0_min)):
-        # require pulses in all 4 layers for one event
+        # require an event to have pulses in at least 3 layers (this is the actual 3-layer cut being tested)
         if (timeL0_min[i] is not None and timeL1_min[i] is not None and timeL2_min[i] is not None) or \
            (timeL0_min[i] is not None and timeL1_min[i] is not None and timeL3_min[i] is not None) or \
            (timeL0_min[i] is not None and timeL2_min[i] is not None and timeL3_min[i] is not None) or \

@@ -32,7 +32,7 @@ def getTimeDiff(self):
     # nPE mask to replace height and area mask (this is the actual nPE cut being tested) 
     nPEMask = self.events['nPE'] > 10000
 
-    finalPulseMask = nPEMask #& simCheck
+    finalPulseMask = nPEMask & simCheck
 
     # apply the finalPulseMask
     masked_time = self.events['time'][finalPulseMask]
@@ -43,11 +43,6 @@ def getTimeDiff(self):
     timeL1 = masked_time[masked_layer == 1]
     timeL2 = masked_time[masked_layer == 2]
     timeL3 = masked_time[masked_layer == 3]
-
-    '''
-    timeL4 = masked_time[masked_layer == 4]
-    boolTimeL4 = ak.any(timeL4, axis = 1)
-    '''
 
     # function to get minimum time per event handling None values
     def minTime(pulse_times):
@@ -66,14 +61,8 @@ def getTimeDiff(self):
             # calculate time differences only for events with valid times in all layers
             time_diffsL30.append(timeL3_min[i] - timeL0_min[i])
     
-    #print(time_diffsL30)
-    #print(len(time_diffsL30))
-
-    count = 0
-    for i in range(len(muonL4Mask)):
-        if muonL4Mask[i] is True:
-            count += 1
-    print(count)
+    print(time_diffsL30)
+    print(len(time_diffsL30))
 
     # extend the final list to match the size of the current file
     num_events = len(self.events)

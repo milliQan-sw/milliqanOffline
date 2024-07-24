@@ -107,21 +107,21 @@ setattr(mycuts, 'MuonGeoValidation', MuonGeoValidation)
 branches = ["column","time","chan","runNumber","event","layer","nPE","type","row","muonHit"]
 
 
-ST_TP_count = mycuts.getCut(mycuts.countEvent,'ST_TP')
-DW_TP_count = mycuts.getCut(mycuts.countEvent,'DW_TP')
-CL_TP_count = mycuts.getCut(mycuts.countEvent,'CL_TP')
+ST_TP_count = mycuts.getCut(mycuts.countEvent,cutName = True,Countobject= 'ST_TP')
+DW_TP_count = mycuts.getCut(mycuts.countEvent,cutName = True,Countobject= 'DW_TP')
+CL_TP_count = mycuts.getCut(mycuts.countEvent,cutName = True,Countobject= 'CL_TP')
 
-ST_FP_count = mycuts.getCut(mycuts.countEvent,'ST_FP')
-DW_FP_count = mycuts.getCut(mycuts.countEvent,'DW_FP')
-CL_FP_count = mycuts.getCut(mycuts.countEvent,'CL_FP')
+ST_FP_count = mycuts.getCut(mycuts.countEvent,cutName = True,Countobject= 'ST_FP')
+DW_FP_count = mycuts.getCut(mycuts.countEvent,cutName = True,Countobject= 'DW_FP')
+CL_FP_count = mycuts.getCut(mycuts.countEvent,cutName = True,Countobject= 'CL_FP')
 
-ST_TN_count = mycuts.getCut(mycuts.countEvent,'ST_TN')
-DW_TN_count = mycuts.getCut(mycuts.countEvent,'DW_TN')
-CL_TN_count = mycuts.getCut(mycuts.countEvent,'CL_TN')
+ST_TN_count = mycuts.getCut(mycuts.countEvent,cutName = True,Countobject= 'ST_TN')
+DW_TN_count = mycuts.getCut(mycuts.countEvent,cutName = True,Countobject= 'DW_TN')
+CL_TN_count = mycuts.getCut(mycuts.countEvent,cutName = True,Countobject= 'CL_TN')
 
-ST_FN_count = mycuts.getCut(mycuts.countEvent,'ST_FN')
-DW_FN_count = mycuts.getCut(mycuts.countEvent,'DW_FN')
-CL_FN_count = mycuts.getCut(mycuts.countEvent,'CL_FN')
+ST_FN_count = mycuts.getCut(mycuts.countEvent,cutName = True,Countobject= 'ST_FN')
+DW_FN_count = mycuts.getCut(mycuts.countEvent,cutName = True,Countobject= 'DW_FN')
+CL_FN_count = mycuts.getCut(mycuts.countEvent,cutName = True,Countobject= 'CL_FN')
 
 MuonEventCount = mycuts.getCut(mycuts.countEvent,'muonEvent')
 

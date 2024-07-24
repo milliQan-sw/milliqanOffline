@@ -25,8 +25,9 @@ def getTimeDiff(self):
     muonL1Mask = ak.any((abs(self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 1), axis = 1)
     muonL2Mask = ak.any((abs(self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 2), axis = 1)
     muonL3Mask = ak.any((abs(self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 3), axis = 1)
+    muonL4Mask = ak.any((abs(self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 4), axis = 1)
 
-    simCheck = muonL0Mask & muonL1Mask & muonL2Mask & muonL3Mask
+    simCheck = muonL0Mask & muonL1Mask & muonL2Mask & muonL3Mask & muonL4Mask
 
     # nPE mask to replace height and area mask (this is the actual nPE cut being tested) 
     nPEMask = self.events['nPE'] > 10000

@@ -33,9 +33,9 @@ def getMuonNum(self):
             countMuon += 1
     
     #print(countMuon)
-    
+
     count = 0
-    cut = ak.any(muonL4Mask & (self.events['nPE'] > 10000), axis = 1)
+    cut = ak.any((self.events['layer'] == 4) & (self.events['nPE'] > 10000), axis = 1) #(muonL4Mask & (self.events['nPE'] > 10000), axis = 1)
     for i in range(len(self.events)):
         if cut[i] == True:
             count += 1

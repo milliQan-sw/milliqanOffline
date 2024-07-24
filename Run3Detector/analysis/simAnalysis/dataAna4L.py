@@ -69,10 +69,9 @@ def getTimeDiff(self):
     #print(time_diffsL30)
     #print(len(time_diffsL30))
 
-    cut = muonL4Mask
     count = 0
-    for i in range(len(cut)):
-        if cut[i] is True:
+    for i in range(len(muonL4Mask)):
+        if muonL4Mask[i] is True:
             count += 1
     print(count)
 

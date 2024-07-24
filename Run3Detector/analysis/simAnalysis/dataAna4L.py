@@ -72,7 +72,9 @@ def getTimeDiff(self):
     for i in range(len(cut)):
         if cut[i] == True:
             count += 1
-
+    
+    print(count)
+    
     # extend the final list to match the size of the current file
     num_events = len(self.events)
     num_nones = num_events - len(time_diffsL30)

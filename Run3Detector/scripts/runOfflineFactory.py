@@ -214,7 +214,7 @@ def getConfigs(runNum, offlineDir):
 
 def copyFromEOS(slab=False):
 
-    if not os.path.exists('goodRunsList.json'): 
+    if not os.path.exists('configuration/goodRunsList.json'): 
         print("Warning (runOfflineFactory.py): goodRunsList.json is not available locally, trying to access from eos")
         try:
             if not slab:
@@ -222,7 +222,7 @@ def copyFromEOS(slab=False):
         except:
             print("Error (runOfflineFactory.py): could not access the goodRunList.json on eos or locally")
     
-    if not os.path.exists('mqLumis.json'):
+    if not os.path.exists('configuration/mqLumis.json'):
         print("Warning (runOfflineFactory.py): mqLumis.json is not available locally, trying to access from eos")
         try:
             if not slab:

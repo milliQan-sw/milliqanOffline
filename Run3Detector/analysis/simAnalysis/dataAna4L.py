@@ -64,9 +64,25 @@ def getTimeDiff(self):
             # calculate time differences only for events with valid times in all layers
             time_diffsL30.append(timeL3_min[i] - timeL0_min[i])
     
-    print(time_diffsL30)
-    print(len(time_diffsL30))
+    #print(time_diffsL30)
+    #print(len(time_diffsL30))
 
+    cut1 = ak.any(self.events['hit_nPE'] > 10000, axis = 1)
+    cut2 = ak.any(self.events['nPE'] > 10000, axis = 1)
+
+    count1 = 0
+    count2 = 0
+
+    for i in range(len(cut1)):
+        if cut1[i] == True:
+            count1 += 1
+
+    for i in range(len(cut2)):
+        if cut2[i] == True:
+            count2 += 1
+
+    print(count1, count2)
+    
     '''
     off = ak.any((self.events['layer'] == 4) & (self.events['nPE'] > 10000), axis = 1)
     sim = ak.any((abs(self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 4) & (self.events['hit_nPE'] > 10000), axis = 1)
@@ -84,7 +100,7 @@ def getTimeDiff(self):
 
     print(countoff, countsim)
     '''
-    
+
     # extend the final list to match the size of the current file
     num_events = len(self.events)
     num_nones = num_events - len(time_diffsL30)

@@ -15,21 +15,21 @@ from milliqanScheduler import *
 from milliqanCuts import *
 from milliqanPlotter import *
 
-# define the function to get the number of events with muons in all 4 layers
+# define the function to get the number of events with muons in layers
 def getMuonNum(self):
 
     countMuon = 0
     
     # extract muons for each layer
-    muons_L0 = self.events['hit_particleName'][(abs(self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 0)]
-    muons_L1 = self.events['hit_particleName'][(abs(self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 1)]
-    muons_L2 = self.events['hit_particleName'][(abs(self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 2)]
-    muons_L3 = self.events['hit_particleName'][(abs(self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 3)]
-    muons_L4 = self.events['hit_particleName'][(abs(self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 4)]
+    muonL0Mask = ak.any((abs(self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 0), axis = 1)
+    muonL1Mask = ak.any((abs(self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 1), axis = 1)
+    muonL2Mask = ak.any((abs(self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 2), axis = 1)
+    muonL3Mask = ak.any((abs(self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 3), axis = 1)
+    muonL4Mask = ak.any((abs(self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 4), axis = 1)
 
     # check each event
     for i in range(len(self.events)):
-        if (ak.any(muons_L0[i]) and ak.any(muons_L1[i]) and ak.any(muons_L2[i]) and ak.any(muons_L3[i]) and ak.any(muons_L4[i])):
+        if muonL0Mask[i] and muonL1Mask[i] and muonL2Mask[i] and muonL3Mask[i] and muonL4Mask[i]:
             countMuon += 1
     
     print(countMuon)

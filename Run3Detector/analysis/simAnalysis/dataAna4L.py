@@ -67,14 +67,22 @@ def getTimeDiff(self):
     #print(time_diffsL30)
     #print(len(time_diffsL30))
     
-    count = 0
-    cut = ak.any(nPEMask & muonL4Mask, axis = 1)
-    for i in range(len(cut)):
-        if cut[i] == True:
-            count += 1
-    
-    print(count)
-    
+    off = ak.any((self.events['layer'] == 4) & (self.events['nPE'] > 10000), axis = 1)
+    sim = ak.any((abs(self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 4) & (self.events['hit_nPE'] > 10000), axis = 1)
+
+    countoff = 0
+    countsim = 0
+
+    for i in range(len(off)):
+        if off[i] == True:
+            countoff += 1
+
+    for i in range(len(sim)):
+        if sim[i] == True:
+            countsim += 1
+
+    print(countoff, countsim)
+
     # extend the final list to match the size of the current file
     num_events = len(self.events)
     num_nones = num_events - len(time_diffsL30)

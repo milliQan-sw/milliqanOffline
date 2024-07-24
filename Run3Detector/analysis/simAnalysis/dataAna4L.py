@@ -67,7 +67,7 @@ def getTimeDiff(self):
     #print(time_diffsL30)
     #print(len(time_diffsL30))
 
-    cut = ak.any(self.events['layer'] == 4 & self.events['nPE'] > 10000, axis = 1)
+    cut = ak.any((self.events['layer'] == 4) & (self.events['nPE'] > 10000), axis = 1)
 
     for i in range(len(cut)):
         if cut[i] == True:

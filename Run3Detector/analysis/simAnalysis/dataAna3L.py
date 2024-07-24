@@ -20,7 +20,7 @@ def get3LNum(self):
     
     threeLcount = []
 
-    # develop simulation check: events actually have muons in all 4 layers (simulation check)
+    # develop simulation check: events actually have muons in 5 layers (simulation check)
     muonL0Mask = ak.any((abs(self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 0), axis = 1)
     muonL1Mask = ak.any((abs(self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 1), axis = 1)
     muonL2Mask = ak.any((abs(self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 2), axis = 1)

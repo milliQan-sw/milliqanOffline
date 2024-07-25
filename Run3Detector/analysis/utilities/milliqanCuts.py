@@ -492,13 +492,14 @@ class milliqanCuts():
         """
         self.events['None_empty_event'] = ak.num(self.events['layer']) > 0
 
-    def MuonEvent(self, cutName = None, CutonBars = True, branches = None, FurtherCheck = False):
+    def MuonEvent(self, cutName = None, CutonBars = False, branches = None, FurtherCheck = False):
         """
         This method is only useful for simulation data.
         self.events.muonHit == 1 return a tag that indicates which channel got hit by muon.
         set CutonBars = True if you want to do the analysis on the data from channels that hit by muon. Otherwise it creates a event based tag that tells you which event contains muon hit.
         
         """
+        #FIXME: the CutonBars seems has bug
         if CutonBars:
             for branch in branches:
                 if branch == 'boardsMatched' or branch == "runNumber" or branch == "fileNumber" or branch == "event": continue
@@ -761,6 +762,40 @@ class milliqanCuts():
         print(f"ENum_DW {ENum_DW}")
         print(f"ENum_CL {ENum_CL}")
 
+
+        #count how many events can have big hits on both top and bottom row. (Validation only)
+        self.events["BHR0"] = ak.any( ( (self.events["nPE"] >= NPEcut) & (self.events["row"] == 0) & (self.events["type"] == 0) ),axis=1)
+        self.events["BHR3"] = ak.any( ( (self.events["nPE"] >= NPEcut) & (self.events["row"] == 3) & (self.events["type"] == 0) ),axis=1)
+        self.events["BigHit_TB_row"] = self.events["BHR3"] & self.events["BHR0"]
+        print(f"BigHit at Top & Bottom row : {ak.count_nonzero(self.events['BigHit_TB_row'])}")
+
+        #count how many events can have MUON hits on both top and bottom row. (Validation only)
+        self.events["MUONR0"] = ak.any( (  (self.events["row"] == 0) & (self.events["type"] == 0) & (self.events["muonHit"] == 1) ),axis=1)
+        self.events["MUONR3"] = ak.any( (  (self.events["row"] == 3) & (self.events["type"] == 0) & (self.events["muonHit"] == 1) ),axis=1)
+        self.events["MuonHit_TB_row"] = self.events["MUONR0"] & self.events["MUONR3"]
+        print(f"Muon Hit at Top & Bottom row : {ak.count_nonzero(self.events['MuonHit_TB_row'])}")
+
+
+        self.events["MUONR0L0"] = ak.any( ( (self.events["nPE"] >= NPEcut) & (self.events["row"] == 0) & (self.events["type"] == 0) & (self.events["muonHit"] == 1) &  (self.events["layer"] == 0)),axis=1)
+        self.events["MUONR3L0"] = ak.any( ( (self.events["nPE"] >= NPEcut) & (self.events["row"] == 3) & (self.events["type"] == 0) & (self.events["muonHit"] == 1) & (self.events["layer"] == 0)),axis=1)
+
+        self.events["MUONR0L1"] = ak.any( ( (self.events["nPE"] >= NPEcut) & (self.events["row"] == 0) & (self.events["type"] == 0) & (self.events["muonHit"] == 1) &  (self.events["layer"] == 1)),axis=1)
+        self.events["MUONR3L1"] = ak.any( ( (self.events["nPE"] >= NPEcut) & (self.events["row"] == 3) & (self.events["type"] == 0) & (self.events["muonHit"] == 1) & (self.events["layer"] == 1)),axis=1)
+
+        self.events["MUONR0L2"] = ak.any( ( (self.events["nPE"] >= NPEcut) & (self.events["row"] == 0) & (self.events["type"] == 0) & (self.events["muonHit"] == 1) &  (self.events["layer"] == 2)),axis=1)
+        self.events["MUONR3L2"] = ak.any( ( (self.events["nPE"] >= NPEcut) & (self.events["row"] == 3) & (self.events["type"] == 0) & (self.events["muonHit"] == 1) & (self.events["layer"] == 2)),axis=1)
+
+        self.events["MUONR0L3"] = ak.any( ( (self.events["nPE"] >= NPEcut) & (self.events["row"] == 0) & (self.events["type"] == 0) & (self.events["muonHit"] == 1) &  (self.events["layer"] == 3)),axis=1)
+        self.events["MUONR3L3"] = ak.any( ( (self.events["nPE"] >= NPEcut) & (self.events["row"] == 3) & (self.events["type"] == 0) & (self.events["muonHit"] == 1) & (self.events["layer"] == 3)),axis=1)
+
+        print(f"L0 Muon Hit at Top & Bottom row : {ak.count_nonzero( (self.events['MUONR0L0']) & (self.events['MUONR3L0']) )}")
+        print(f"L1 Muon Hit at Top & Bottom row : {ak.count_nonzero( (self.events['MUONR0L1']) & (self.events['MUONR3L1']) )}")
+        print(f"L2 Muon Hit at Top & Bottom row : {ak.count_nonzero( (self.events['MUONR0L2']) & (self.events['MUONR3L2']) )}")
+        print(f"L3 Muon Hit at Top & Bottom row : {ak.count_nonzero( (self.events['MUONR0L3']) & (self.events['MUONR3L3']) )}")
+
+
+        
+
     def offlinePreProcess(self,cutName = None, cut = None, startTime = 1250, endTime = 1350):
         """
         This function is to remove pulse outside specific window when doing comsic muon event offline analysis.
@@ -794,6 +829,35 @@ class milliqanCuts():
                     self.events[f"MAXNPE_l{layer}_r{row}_c{column}"] = ak.fill_none(self.events[f"MAXNPE_l{layer}_r{row}_c{column}"], -100)
                     self.events[f"MAXNPE_l{layer}_r{row}_c{column}"] = ak.max(self.events[f"MAXNPE_l{layer}_r{row}_c{column}"], axis = 1)
                     
+
+
+    def MuonGeoValidation(self):
+        #for CHeckMuonTagSelectionRate.py only not for anlaysis
+        print("running MuonGeoValidation")
+        #when checking the tag with sim data, I only have interest in non-empty even. THe empty event will definitely fail the tag, but it will contaminate the counting for TN
+        self.events["ST_TP"] = self.events["StraghtCosmic"] & self.events["muonEvent"] & self.events['None_empty_event']
+        self.events["DW_TP"] = self.events["downwardPath"] & self.events["muonEvent"] & self.events['None_empty_event']
+        self.events["CL_TP"] = self.events["Clean_MuonEvent"] & self.events["muonEvent"] & self.events['None_empty_event']
+
+        self.events["ST_FP"] = self.events["StraghtCosmic"] & ~self.events["muonEvent"] & self.events['None_empty_event']
+        self.events["DW_FP"] = self.events["downwardPath"] & ~self.events["muonEvent"] & self.events['None_empty_event']
+        self.events["CL_FP"] = self.events["Clean_MuonEvent"] & ~self.events["muonEvent"] & self.events['None_empty_event']
+
+        self.events["ST_TN"] = ~self.events["StraghtCosmic"] & ~self.events["muonEvent"] & self.events['None_empty_event']
+        self.events["DW_TN"] = ~self.events["downwardPath"] & ~self.events["muonEvent"] & self.events['None_empty_event']
+        self.events["CL_TN"] = ~self.events["Clean_MuonEvent"] & ~self.events["muonEvent"] & self.events['None_empty_event']
+
+        self.events["ST_FN"] = ~self.events["StraghtCosmic"] & self.events["muonEvent"] & self.events['None_empty_event']
+        self.events["DW_FN"] = ~self.events["downwardPath"] & self.events["muonEvent"] & self.events['None_empty_event']
+        self.events["CL_FN"] = ~self.events["Clean_MuonEvent"] & self.events["muonEvent"] & self.events['None_empty_event']
+        
+
+        
+
+        #count the number of event that pass the muonEvent but fail the DetectableMuon
+        #there is a need to do the check like above. 
+        #self.events["IncompleteMuonE"] = self.events["muonEvent"] & ~self.events["DetectableMuon"]
+
 
 
     def getCut(self, func, name, *args, **kwargs):

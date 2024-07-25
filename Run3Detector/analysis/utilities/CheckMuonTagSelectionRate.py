@@ -56,7 +56,9 @@ filelist =[f'{filename}:t']
 
 #"""
 numRun = str(sys.argv[1])
-filelist =[f'/home/czheng/SimCosmicFlatTree/withPhotonMuontag/output_{numRun}.root:t']
+#filelist =[f'/home/czheng/SimCosmicFlatTree/withPhotonMuontag/output_{numRun}.root:t']
+filelist =[f'/Users/haoliangzheng/CERN_ana/output_{numRun}.root:t']
+
 print(filelist)
 
 
@@ -74,7 +76,9 @@ print(outputPath)
 #FP: False positive: (pass the muon geometric cut but it is not the muon event)
 #TN: fail the gemoectric cut abd fail the muon event
 #FN: fail the geometric cut and pass the muon event
+"""
 def MuonGeoValidation(self):
+    print("running MuonGeoValidation")
     self.event["ST_TP"] = self.events["StraghtCosmic"] & self.events["muonEvent"]
     self.event["DW_TP"] = self.events["downwardPath"] & self.events["muonEvent"]
     self.event["CL_TP"] = self.events["Clean_MuonEvent"] & self.events["muonEvent"]
@@ -97,6 +101,7 @@ def MuonGeoValidation(self):
 
 
 setattr(mycuts, 'MuonGeoValidation', MuonGeoValidation)
+"""
 
 
 
@@ -123,7 +128,7 @@ ST_FN_count = mycuts.getCut(mycuts.countEvent,'placeholder',Countobject= 'ST_FN'
 DW_FN_count = mycuts.getCut(mycuts.countEvent,'placeholder',Countobject= 'DW_FN')
 CL_FN_count = mycuts.getCut(mycuts.countEvent,'placeholder',Countobject= 'CL_FN')
 
-MuonEventCount = mycuts.getCut(mycuts.countEvent,'muonEvent')
+MuonEventCount = mycuts.getCut(mycuts.countEvent,'placeholder',Countobject= 'muonEvent')
 
 inCompleteMuonEventCount = mycuts.getCut(mycuts.countEvent,'IncompleteMuonE')
 
@@ -134,8 +139,11 @@ DW_Muon_count = mycuts.getCut(mycuts.countEvent,'placeholder', Countobject= 'dow
 cleanMuon_count = mycuts.getCut(mycuts.countEvent,'placeholder', Countobject= 'Clean_MuonEvent')
 SIM_sudo_straight = mycuts.getCut(mycuts.sudo_straight,'StraghtCosmic', NPEcut = BigHitThreashold,time = "time", offlineData = False)
 
-
-cutflow8 = [mycuts.EmptyListFilter,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.NbarsHitsCount,MuonEventCount,SIM_sudo_straight,MuonGeoValidation,DW_Muon_count,cleanMuon_count,ST_TP_count,DW_TP_count,CL_TP_count,ST_FP_count,DW_FP_count,CL_FP_count,ST_TN_count,DW_TN_count,CL_TN_count,ST_FN_count,DW_FN_count,CL_FN_count]
+#NbarsHitsCount is used to study the four bar events
+#FIXME: MuonEventCount print "None_empty_event event". -> the count function has issue? - > yes, in fact the the count muonEvent is not in the field.
+#FIXME: mycuts.MuonGeoValidation doesn't work
+#after I move the MuonGeoValidation back to milliqanCut.py it comeplains the muonEvent is not in the field.???
+cutflow8 = [mycuts.EmptyListFilter,mycuts.MuonEvent,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.NbarsHitsCount,MuonEventCount,SIM_sudo_straight,mycuts.MuonGeoValidation,DW_Muon_count,cleanMuon_count,ST_TP_count,DW_TP_count,CL_TP_count,ST_FP_count,DW_FP_count,CL_FP_count,ST_TN_count,DW_TN_count,CL_TN_count,ST_FN_count,DW_FN_count,CL_FN_count]
 
 cutflow = cutflow8
 myschedule = milliQanScheduler(cutflow, mycuts)

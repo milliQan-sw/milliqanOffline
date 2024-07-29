@@ -247,8 +247,8 @@ def MakeLego(arr):
 if __name__ == "__main__":
     import uproot
     #uptree = uproot.open("/Users/haoliangzheng/CERN_ana/MilliQan_Run1500.11_v35.root:t")
-    #uptree = uproot.open("/Users/haoliangzheng/CERN_ana/EventDisplay/MilliQan_Run1190.1_v34.root:t") event 472 is a sample event
-    uptree = uproot.open("/Users/haoliangzheng/CERN_ana/EventDisplay/MilliQan_Run1500.1_v35.root:t")
+    uptree = uproot.open("/Users/haoliangzheng/CERN_ana/EventDisplay/MilliQan_Run1190.1_v34.root:t") #event 472 is a sample event
+    #uptree = uproot.open("/Users/haoliangzheng/CERN_ana/EventDisplay/MilliQan_Run1500.1_v35.root:t")
     branches = uptree.arrays(["type","layer","row","column","nPE","event","area"], entry_stop=100000)
 
     EventNum = int(sys.argv[1])
@@ -342,8 +342,8 @@ if __name__ == "__main__":
 
 
     plt.imshow(arr, cmap='viridis', origin='upper', extent=[0, 22, 0, 5]) 
-    plt.colorbar(label='number of hits')
-    plt.grid(True)
+    plt.colorbar(label= f'number of hits above {NpeT} pulse NPE')
+    #plt.grid(True) #if possible can I create the grid manually to outline the position of panel?
     #plt.show()
 
 

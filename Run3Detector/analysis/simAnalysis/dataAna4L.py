@@ -69,7 +69,7 @@ def getTimeDiff(self):
 
     for i in range(len(timeL0_min)):
         # this is the actual cut being tested
-        if timeL0_min[i] is not None and timeL1_min[i] is not None and timeL2_min[i] is not None and timeL3_min[i] is not None and backPanelBool[i] == False:
+        if timeL0_min[i] is not None and timeL1_min[i] is not None and timeL2_min[i] is not None and timeL3_min[i] is not None:
             # calculate time differences only for events with valid times in all layers
             #time_diffsL30.append(timeL3_min[i] - timeL0_min[i])
             missed_chan.append(chan_L0[i])
@@ -97,7 +97,7 @@ mycuts = milliqanCuts()
 myplotter = milliqanPlotter()
 
 # create a 1D root histogram
-h_1d = r.TH1F("h_1d", "Chan in Layer 0 of 4 Layer Hit Events Missing Back Slab", 75, 0, 75)
+h_1d = r.TH1F("h_1d", "Chan in Layer 0 of 4 Layer Hit Events", 75, 0, 75)
 h_1d.GetXaxis().SetTitle("chan")
 
 # add root histogram to plotter

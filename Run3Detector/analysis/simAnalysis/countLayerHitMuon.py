@@ -42,7 +42,7 @@ def getMuonNum(self):
         if timeL4[i] == True:
             countMuon2 += 1
 
-    print(countMuon2)
+    print(countMuon1, countMuon2)
 
 # add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getMuonNum', getMuonNum)

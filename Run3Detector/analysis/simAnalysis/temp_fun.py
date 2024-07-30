@@ -19,11 +19,7 @@ def getTimeDiff(self):
     
     channel = []
 
-    muonL0Mask = ak.any((abs(self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 0), axis = 1)
-    muonL1Mask = ak.any((abs(self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 1), axis = 1)
-    muonL2Mask = ak.any((abs(self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 2), axis = 1)
-    muonL3Mask = ak.any((abs(self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 3), axis = 1)
-    muonL4Mask = ak.any((abs(self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 4), axis = 1)
+    
 
     self.events['timeDiff'] = channel
 

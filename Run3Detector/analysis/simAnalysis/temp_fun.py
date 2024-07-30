@@ -17,33 +17,15 @@ from milliqanPlotter import *
 
 def getTimeDiff(self):
     
-    nPE_backSlab = []
+    channel = []
 
-    nPEL0 = self.events['nPE'][self.events['layer'] == 0]
-    nPEL1 = self.events['nPE'][self.events['layer'] == 1]
-    nPEL2 = self.events['nPE'][self.events['layer'] == 2]
-    nPEL3 = self.events['nPE'][self.events['layer'] == 3]
+    muonL0Mask = ak.any((abs(self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 0), axis = 1)
+    muonL1Mask = ak.any((abs(self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 1), axis = 1)
+    muonL2Mask = ak.any((abs(self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 2), axis = 1)
+    muonL3Mask = ak.any((abs(self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 3), axis = 1)
+    muonL4Mask = ak.any((abs(self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 4), axis = 1)
 
-    nPEL4 = self.events['nPE'][self.events['layer'] == 4]
-
-    def minTime(pulse_times):
-        filtered_times = [time for time in pulse_times if time is not None]
-        return min(filtered_times) if filtered_times else None
-
-    nPEL0_min = [minTime(event) for event in ak.to_list(nPEL0)]
-    nPEL1_min = [minTime(event) for event in ak.to_list(nPEL1)]
-    nPEL2_min = [minTime(event) for event in ak.to_list(nPEL2)]
-    nPEL3_min = [minTime(event) for event in ak.to_list(nPEL3)]
-
-    for i in range(len(self.events)):
-        if nPEL0_min[i] is not None and nPEL1_min[i] is not None and nPEL2_min[i] is not None and nPEL3_min[i] is not None:
-            nPE_backSlab.append(nPEL4[i])
-
-    num_events = len(self.events)
-    num_nones = num_events - len(nPE_backSlab)
-    nPE_backSlab.extend([None] * num_nones)
-
-    self.events['timeDiff'] = nPE_backSlab
+    self.events['timeDiff'] = channel
 
 # add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)

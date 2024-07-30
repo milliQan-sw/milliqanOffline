@@ -1,0 +1,11 @@
+setup.cfg
+setup.py
+src/evaluate_gan.py
+src/generate.py
+src/load_model.py
+src/main.py
+src/processData.py
+src/local_gan.egg-info/PKG-INFO
+src/local_gan.egg-info/SOURCES.txt
+src/local_gan.egg-info/dependency_links.txt
+src/local_gan.egg-info/top_level.txt

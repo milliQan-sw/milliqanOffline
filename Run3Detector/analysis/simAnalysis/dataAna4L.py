@@ -34,8 +34,8 @@ def getTimeDiff(self):
     bar_nPEMask = self.events['nPE'] > 10000
     backPanel_nPEMask = self.events['nPE'] > 10000 / 12
 
-    bar_finalMask = bar_nPEMask & simCheck
-    backPanel_finalMask = backPanel_nPEMask & simCheck
+    bar_finalMask = bar_nPEMask #& simCheck
+    backPanel_finalMask = backPanel_nPEMask #& simCheck
 
     # apply the finalPulseMask
     bar_masked_time = self.events['time'][bar_finalMask]

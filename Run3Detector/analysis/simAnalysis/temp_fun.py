@@ -35,7 +35,7 @@ def getTimeDiff(self):
     nPEL2_min = [minTime(event) for event in ak.to_list(nPEL2)]
     nPEL3_min = [minTime(event) for event in ak.to_list(nPEL3)]
 
-    for i in range(len(timeL0_min)):
+    for i in range(len(self.events)):
         if nPEL0_min[i] is not None and nPEL1_min[i] is not None and nPEL2_min[i] is not None and nPEL3_min[i] is not None:
             nPE_backSlab.append(nPEL4[i])
 

@@ -15,10 +15,9 @@ from milliqanScheduler import *
 from milliqanCuts import *
 from milliqanPlotter import *
 
-# define the function to get the time differences
 def getTimeDiff(self):
     
-    time_diffsL30 = []
+    nPE_backSlab = []
 
     nPEL0 = self.events['nPE'][self.events['layer'] == 0]
     nPEL1 = self.events['nPE'][self.events['layer'] == 1]
@@ -38,9 +37,9 @@ def getTimeDiff(self):
 
     for i in range(len(timeL0_min)):
         if nPEL0_min[i] is not None and nPEL1_min[i] is not None and nPEL2_min[i] is not None and nPEL3_min[i] is not None:
-            time_diffsL30.append(nPEL4[i])
+            nPE_backSlab.append(nPEL4[i])
 
-    self.events['timeDiff'] = time_diffsL30
+    self.events['timeDiff'] = nPE_backSlab
 
 # add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)
@@ -57,8 +56,8 @@ mycuts = milliqanCuts()
 myplotter = milliqanPlotter()
 
 # create a 1D root histogram
-h_1d = r.TH1F("h_1d", "Time Differences between Layer 3 and 0", 100, -50, 50)
-h_1d.GetXaxis().SetTitle("Time Differences")
+h_1d = r.TH1F("h_1d", "nPE in back slab", 5000, 0, 5000)
+h_1d.GetXaxis().SetTitle("nPE")
 
 # add root histogram to plotter
 myplotter.addHistograms(h_1d, 'timeDiff')
@@ -79,7 +78,7 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts, myplotter
 myiterator.run()
 
 # create a new TFile
-f = r.TFile("DtL30_4L.root", "recreate")
+f = r.TFile("nPE_backSlab.root", "recreate")
 
 # write the histograms to the file
 h_1d.Write()

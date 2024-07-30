@@ -19,6 +19,8 @@ from milliqanPlotter import *
 def getTimeDiff(self):
     
     time_diffsL30 = []
+    missed_col = []
+    missed_row = []
 
     # develop simulation check: events actually have muons in 5 layers (simulation check)
     muonL0Mask = ak.any((abs(self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 0), axis = 1)
@@ -41,8 +43,8 @@ def getTimeDiff(self):
     bar_masked_time = self.events['time'][bar_finalMask]
     bar_masked_layer = self.events['layer'][bar_finalMask]
 
-    backPanel_masked_time = self.events['time'][backPanel_finalMask]
-    backPanel_masked_layer = self.events['layer'][backPanel_finalMask]
+    backPanel_masked_time = self.events['time']
+    backPanel_masked_layer = self.events['layer']
 
     # masked times per layer
     timeL0 = bar_masked_time[bar_masked_layer == 0]
@@ -64,14 +66,22 @@ def getTimeDiff(self):
     timeL2_min = [minTime(event) for event in ak.to_list(timeL2)]
     timeL3_min = [minTime(event) for event in ak.to_list(timeL3)]
 
+    col_L0 = self.events['column'][self.events['layer'] == 0]
+    row_L0 = self.events['row'][self.events['layer'] == 0]
+
     for i in range(len(timeL0_min)):
-        # require an event to have pulses in all 5 layers (this is the actual 5-layer cut being tested) 
-        if timeL0_min[i] is not None and timeL1_min[i] is not None and timeL2_min[i] is not None and timeL3_min[i] is not None and backPanelBool[i] is True:
+        # this is the actual cut being tested
+        if timeL0_min[i] is not None and timeL1_min[i] is not None and timeL2_min[i] is not None and timeL3_min[i] is not None and backPanelBool[i] == False:
             # calculate time differences only for events with valid times in all layers
-            time_diffsL30.append(timeL3_min[i] - timeL0_min[i])
+            #time_diffsL30.append(timeL3_min[i] - timeL0_min[i])
+            missed_col.append(col_L0[i])
+            missed_row.append(row_L0[i])
     
-    print(time_diffsL30)
-    print(len(time_diffsL30))
+    flattened_col = [item for sublist in missed_col for item in sublist]
+    flattened_row = [item for sublist in missed_row for item in sublist]
+
+    for i in range(len(flattened_col)):
+        print(flattened_col[i], flattened_row[i])
 
     # extend the final list to match the size of the current file
     num_events = len(self.events)

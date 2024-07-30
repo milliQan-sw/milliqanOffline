@@ -18,7 +18,8 @@ from milliqanPlotter import *
 # define the function to get the number of events with muons in layers
 def getMuonNum(self):
 
-    countMuon = 0
+    countMuon1 = 0
+    countMuon2 = 0
     
     # extract muons for each layer
     muonL0Mask = ak.any((abs(self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 0), axis = 1)
@@ -30,9 +31,18 @@ def getMuonNum(self):
     # check each event
     for i in range(len(self.events)):
         if muonL0Mask[i] and muonL1Mask[i] and muonL2Mask[i] and muonL3Mask[i] and muonL4Mask[i]:
-            countMuon += 1
+            countMuon1 += 1
     
-    print(countMuon)
+    backPanel_nPEMask = self.events['nPE'] > 10000 / 12
+    backPanel_masked_time = self.events['time'][backPanel_nPEMask]
+    backPanel_masked_layer = self.events['layer'][backPanel_nPEMask]
+    timeL4 = ak.any(backPanel_masked_time[backPanel_masked_layer == 4], axis = 1)
+
+    for i in range(len(self.events)):
+        if timeL4[i] == True:
+            countMuon2 += 1
+
+    print(countMuon2)
 
 # add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getMuonNum', getMuonNum)

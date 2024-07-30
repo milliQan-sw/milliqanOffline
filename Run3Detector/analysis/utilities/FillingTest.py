@@ -15,9 +15,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import sys
-import hist
 import awkward as ak
 import ROOT as r
+import matplotlib.patches as patches
 
 def filling(typeArr,layerArr,rowArr,columnArr,npeArr,NpeT):
     block = np.zeros((5, 22))
@@ -352,7 +352,40 @@ if __name__ == "__main__":
                 MaxNPEText = plt.text(column,4-row,f"{MAXNPEarr[row,column]:.0e}", color="w",fontsize=8)
     
     
-    
+    #outline the panel
+
+    # Get the current axes
+    ax = plt.gca()
+
+    #beam panels have the red outline
+    beamF = patches.Rectangle((0, 0), 1, 1, linewidth=2, edgecolor='red', facecolor='none')
+    beamB = patches.Rectangle((21, 0), 1, 1, linewidth=2, edgecolor='red', facecolor='none')
+    ax.add_patch(beamF)
+    ax.add_patch(beamB)
+    #cosmic panel have the white outline
+    COS70 = patches.Rectangle((1, 0), 1, 1, linewidth=2, edgecolor='white', facecolor='none')
+    COS72 = patches.Rectangle((6, 0), 1, 1, linewidth=2, edgecolor='white', facecolor='none')
+    COS71 = patches.Rectangle((11, 0), 1, 1, linewidth=2, edgecolor='white', facecolor='none')
+    COS73 = patches.Rectangle((16, 0), 1, 1, linewidth=2, edgecolor='white', facecolor='none')
+    Cos68 = patches.Rectangle((2, 4), 1, 1, linewidth=2, edgecolor='white', facecolor='none')
+    Cos69 = patches.Rectangle((12, 4), 1, 1, linewidth=2, edgecolor='white', facecolor='none')
+    ax.add_patch(COS70)
+    ax.add_patch(COS72)
+    ax.add_patch(COS73)
+    ax.add_patch(COS71)
+    ax.add_patch(Cos68)
+    ax.add_patch(Cos69)
+    #bar channel with 
+    L0b= patches.Rectangle((2, 0), 4, 4, linewidth=2, edgecolor='orange', facecolor='none')
+    L1b= patches.Rectangle((7, 0), 4, 4, linewidth=2, edgecolor='orange', facecolor='none')
+    L2b= patches.Rectangle((12, 0), 4, 4, linewidth=2, edgecolor='orange', facecolor='none')
+    L3b= patches.Rectangle((17, 0), 4, 4, linewidth=2, edgecolor='orange', facecolor='none')
+    ax.add_patch(L0b)
+    ax.add_patch(L1b)
+    ax.add_patch(L2b)
+    ax.add_patch(L3b)
+
+
     
 
 

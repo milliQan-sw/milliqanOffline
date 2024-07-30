@@ -27,22 +27,31 @@ def getTimeDiff(self):
     muonL3Mask = ak.any((abs(self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 3), axis = 1)
     muonL4Mask = ak.any((abs(self.events['hit_particleName']) == 13) & (self.events['hit_layer'] == 4), axis = 1)
 
-    simCheck = muonL0Mask & muonL1Mask & muonL2Mask & muonL3Mask & muonL4Mask
+    simCheck = ak.any(abs(self.events['hit_particleName']) == 13, axis = 1)
+    #simCheck = muonL0Mask & muonL1Mask & muonL2Mask & muonL3Mask & muonL4Mask
 
     # nPE mask to replace height and area mask (this is the actual nPE cut being tested) 
-    nPEMask = self.events['nPE'] > 10000
+    bar_nPEMask = self.events['nPE'] > 10000
+    backPanel_nPEMask = self.events['nPE'] > 10000 / 12
 
-    finalPulseMask = nPEMask & simCheck
+    bar_finalMask = bar_nPEMask & simCheck
+    backPanel_finalMask = backPanel_nPEMask & simCheck
 
     # apply the finalPulseMask
-    masked_time = self.events['time'][finalPulseMask]
-    masked_layer = self.events['layer'][finalPulseMask]
+    bar_masked_time = self.events['time'][bar_finalMask]
+    bar_masked_layer = self.events['layer'][bar_finalMask]
+
+    backPanel_masked_time = self.events['time'][backPanel_finalMask]
+    backPanel_masked_layer = self.events['layer'][backPanel_finalMask]
 
     # masked times per layer
-    timeL0 = masked_time[masked_layer == 0]
-    timeL1 = masked_time[masked_layer == 1]
-    timeL2 = masked_time[masked_layer == 2]
-    timeL3 = masked_time[masked_layer == 3]
+    timeL0 = bar_masked_time[bar_masked_layer == 0]
+    timeL1 = bar_masked_time[bar_masked_layer == 1]
+    timeL2 = bar_masked_time[bar_masked_layer == 2]
+    timeL3 = bar_masked_time[bar_masked_layer == 3]
+
+    timeL4 = backPanel_masked_time[backPanel_masked_layer == 4]
+    backPanelBool = ak.any(timeL4, axis = 1)
 
     # function to get minimum time per event handling None values
     def minTime(pulse_times):
@@ -57,7 +66,7 @@ def getTimeDiff(self):
 
     for i in range(len(timeL0_min)):
         # require an event to have pulses in all 5 layers (this is the actual 5-layer cut being tested) 
-        if timeL0_min[i] is not None and timeL1_min[i] is not None and timeL2_min[i] is not None and timeL3_min[i] is not None:
+        if timeL0_min[i] is not None and timeL1_min[i] is not None and timeL2_min[i] is not None and timeL3_min[i] is not None and backPanelBool[i] is True:
             # calculate time differences only for events with valid times in all layers
             time_diffsL30.append(timeL3_min[i] - timeL0_min[i])
     

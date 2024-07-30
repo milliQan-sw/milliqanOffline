@@ -97,7 +97,7 @@ mycuts = milliqanCuts()
 myplotter = milliqanPlotter()
 
 # create a 1D root histogram
-h_1d = r.TH1F("h_1d", "Chan in Layer 0 of 4 Layer Hit Events Missing Back Slab", 15, 0, 15)
+h_1d = r.TH1F("h_1d", "Chan in Layer 0 of 4 Layer Hit Events Missing Back Slab", 75, 0, 75)
 h_1d.GetXaxis().SetTitle("chan")
 
 # add root histogram to plotter

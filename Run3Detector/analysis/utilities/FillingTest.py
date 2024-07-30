@@ -21,6 +21,7 @@ import ROOT as r
 
 def filling(typeArr,layerArr,rowArr,columnArr,npeArr,NpeT):
     block = np.zeros((5, 22))
+    MaxNPEArr = np.zeros((5, 22))
     for type,layer,row,column,npe in zip (typeArr,layerArr,rowArr,columnArr,npeArr):
         #bar channel data filling
         if type == 0:
@@ -78,8 +79,11 @@ def filling(typeArr,layerArr,rowArr,columnArr,npeArr,NpeT):
 
         if npe > NpeT:
             block[rowoffset][fillingColumn_offset] += 1  
+
+        if npe > MaxNPEArr[rowoffset][fillingColumn_offset]:
+            MaxNPEArr[rowoffset][fillingColumn_offset] = npe
     #print(block)
-    return block
+    return MaxNPEArr,block
 
 def findTrack(arr):
     print(arr)
@@ -247,8 +251,8 @@ def MakeLego(arr):
 if __name__ == "__main__":
     import uproot
     #uptree = uproot.open("/Users/haoliangzheng/CERN_ana/MilliQan_Run1500.11_v35.root:t")
-    uptree = uproot.open("/Users/haoliangzheng/CERN_ana/EventDisplay/MilliQan_Run1190.1_v34.root:t") #event 472 is a sample event
-    #uptree = uproot.open("/Users/haoliangzheng/CERN_ana/EventDisplay/MilliQan_Run1500.1_v35.root:t")
+    #uptree = uproot.open("/Users/haoliangzheng/CERN_ana/EventDisplay/MilliQan_Run1190.1_v34.root:t") #event 472 is a sample event
+    uptree = uproot.open("/Users/haoliangzheng/CERN_ana/EventDisplay/MilliQan_Run1500.1_v35.root:t")
     branches = uptree.arrays(["type","layer","row","column","nPE","event","area"], entry_stop=100000)
 
     EventNum = int(sys.argv[1])
@@ -325,11 +329,13 @@ if __name__ == "__main__":
     print(typeArr)
     print(layerArr)
     NpeT = 20
-    arr=filling(typeArr[0],layerArr[0],rowArr[0],columnArr[0],npeArr[0],NpeT)
+    MAXNPEarr,arr=filling(typeArr[0],layerArr[0],rowArr[0],columnArr[0],npeArr[0],NpeT)
     ColumnarrST,ROWarrST=findTrack(arr)
     print(f"ColumnarrST {ColumnarrST}") 
     print(f"ROWarrST {ROWarrST}") 
     
+
+    #plot the muon track
     for column,row in zip(ColumnarrST,ROWarrST):
         column = [x + 0.5 for x in column]
         row = [x + 0.5 for x in row]
@@ -337,6 +343,15 @@ if __name__ == "__main__":
         #print(f"track ROWarrST {row}") 
         
         plt.plot(column, row, color='red')
+    
+    #display the the max NPE for each channel
+    
+    for row in range(5):
+        for column in range(22):
+            if MAXNPEarr[row,column] > NpeT:
+                MaxNPEText = plt.text(column,4-row,f"{MAXNPEarr[row,column]:.0e}", color="w",fontsize=8)
+    
+    
     
     
 
@@ -347,6 +362,7 @@ if __name__ == "__main__":
     #plt.show()
 
 
+    #plot the 3d lego plot with number pulse above NPE 
     fig = plt.figure(figsize=(8, 3))
     ax1 = fig.add_subplot(121, projection='3d')
     row,column = arr.shape

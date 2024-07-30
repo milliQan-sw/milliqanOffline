@@ -39,6 +39,10 @@ def getTimeDiff(self):
         if nPEL0_min[i] is not None and nPEL1_min[i] is not None and nPEL2_min[i] is not None and nPEL3_min[i] is not None:
             nPE_backSlab.append(nPEL4[i])
 
+    num_events = len(self.events)
+    num_nones = num_events - len(nPE_backSlab)
+    nPE_backSlab.extend([None] * num_nones)
+
     self.events['timeDiff'] = nPE_backSlab
 
 # add our custom function to milliqanCuts

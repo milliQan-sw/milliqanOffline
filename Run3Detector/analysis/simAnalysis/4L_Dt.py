@@ -20,31 +20,26 @@ def getTimeDiff(self):
     
     time_diffsL30 = []
 
-    # masked times per layer
     nPEL0 = self.events['nPE'][self.events['layer'] == 0]
     nPEL1 = self.events['nPE'][self.events['layer'] == 1]
     nPEL2 = self.events['nPE'][self.events['layer'] == 2]
     nPEL3 = self.events['nPE'][self.events['layer'] == 3]
+
     nPEL4 = self.events['nPE'][self.events['layer'] == 4]
 
-    # function to get minimum time per event handling None values
     def minTime(pulse_times):
         filtered_times = [time for time in pulse_times if time is not None]
         return min(filtered_times) if filtered_times else None
 
-    # extract minimum times for each layer
     nPEL0_min = [minTime(event) for event in ak.to_list(nPEL0)]
     nPEL1_min = [minTime(event) for event in ak.to_list(nPEL1)]
     nPEL2_min = [minTime(event) for event in ak.to_list(nPEL2)]
     nPEL3_min = [minTime(event) for event in ak.to_list(nPEL3)]
 
     for i in range(len(timeL0_min)):
-        # require pulses in all 4 layers for one event
         if nPEL0_min[i] is not None and nPEL1_min[i] is not None and nPEL2_min[i] is not None and nPEL3_min[i] is not None:
-            # calculate time differences only for events with valid times in all layers
             time_diffsL30.append(nPEL4[i])
 
-    # define custom branch
     self.events['timeDiff'] = time_diffsL30
 
 # add our custom function to milliqanCuts

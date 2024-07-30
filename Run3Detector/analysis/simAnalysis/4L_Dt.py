@@ -20,21 +20,12 @@ def getTimeDiff(self):
     
     time_diffsL30 = []
 
-    # nPE mask to replace height and area mask
-    nPEMask = self.events['nPE'] > 10000
-
-    # make final mask
-    finalPulseMask = nPEMask
-
-    # apply the finalPulseMask
-    masked_time = self.events['time'][finalPulseMask]
-    masked_layer = self.events['layer'][finalPulseMask]
-
     # masked times per layer
-    timeL0 = masked_time[masked_layer == 0]
-    timeL1 = masked_time[masked_layer == 1]
-    timeL2 = masked_time[masked_layer == 2]
-    timeL3 = masked_time[masked_layer == 3]
+    nPEL0 = self.events['nPE'][self.events['layer'] == 0]
+    nPEL1 = self.events['nPE'][self.events['layer'] == 1]
+    nPEL2 = self.events['nPE'][self.events['layer'] == 2]
+    nPEL3 = self.events['nPE'][self.events['layer'] == 3]
+    nPEL4 = self.events['nPE'][self.events['layer'] == 4]
 
     # function to get minimum time per event handling None values
     def minTime(pulse_times):
@@ -42,23 +33,16 @@ def getTimeDiff(self):
         return min(filtered_times) if filtered_times else None
 
     # extract minimum times for each layer
-    timeL0_min = [minTime(event) for event in ak.to_list(timeL0)]
-    timeL1_min = [minTime(event) for event in ak.to_list(timeL1)]
-    timeL2_min = [minTime(event) for event in ak.to_list(timeL2)]
-    timeL3_min = [minTime(event) for event in ak.to_list(timeL3)]
+    nPEL0_min = [minTime(event) for event in ak.to_list(nPEL0)]
+    nPEL1_min = [minTime(event) for event in ak.to_list(nPEL1)]
+    nPEL2_min = [minTime(event) for event in ak.to_list(nPEL2)]
+    nPEL3_min = [minTime(event) for event in ak.to_list(nPEL3)]
 
     for i in range(len(timeL0_min)):
         # require pulses in all 4 layers for one event
-        if timeL0_min[i] is not None and timeL1_min[i] is not None and timeL2_min[i] is not None and timeL3_min[i] is not None:
+        if nPEL0_min[i] is not None and nPEL1_min[i] is not None and nPEL2_min[i] is not None and nPEL3_min[i] is not None:
             # calculate time differences only for events with valid times in all layers
-            time_diffsL30.append(timeL3_min[i] - timeL0_min[i])
-    
-    print(time_diffsL30)
-
-    # extend the final list to match the size of the current file
-    num_events = len(self.events)
-    num_nones = num_events - len(time_diffsL30)
-    time_diffsL30.extend([None] * num_nones)
+            time_diffsL30.append(nPEL4[i])
 
     # define custom branch
     self.events['timeDiff'] = time_diffsL30

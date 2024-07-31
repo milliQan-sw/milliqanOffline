@@ -92,8 +92,8 @@ int main(int argc, char **argv){
         goodRunList = TString(offlineDir) + "/configuration/slabConfigs/goodRunsListSlab.json";
     }
     else {
-        lumiFile = TString(offlineDir) + "/mqLumis.json";
-        goodRunList = TString(offlineDir) + "/goodRunsList.json";
+        lumiFile = TString(offlineDir) + "/configuration/barConfigs/mqLumis.json";
+        goodRunList = TString(offlineDir) + "/configuration/barConfigs/goodRunsList.json";
     }
     offlineFactory.getLumis(lumiFile);
     offlineFactory.checkGoodRunList(goodRunList);

@@ -253,9 +253,19 @@ if __name__ == "__main__":
     #uptree = uproot.open("/Users/haoliangzheng/CERN_ana/MilliQan_Run1500.11_v35.root:t")
     #uptree = uproot.open("/Users/haoliangzheng/CERN_ana/EventDisplay/MilliQan_Run1190.1_v34.root:t") #event 472/   are a sample event
     uptree = uproot.open("/Users/haoliangzheng/CERN_ana/EventDisplay/MilliQan_Run1500.1_v35.root:t") # event 527 for this file
-    branches = uptree.arrays(["type","layer","row","column","nPE","event","area"], entry_stop=100000)
+    branches = uptree.arrays(["type","layer","row","column","nPE","event","area","timeFit_module_calibrated"], entry_stop=100000)
 
     EventNum = int(sys.argv[1])
+    #remove pulses outside the trigger window 1250-1350ns
+    
+  
+    removePulse_T = (branches["timeFit_module_calibrated"] >= 1250) & (branches["timeFit_module_calibrated"] <= 1350 )
+    
+    for branch in ["type","layer","row","column","nPE","area","timeFit_module_calibrated"]:
+        branches[branch] = branches[branch][removePulse_T]
+
+    
+
     typeArr= branches["type"][branches["event"]==EventNum]
     layerArr = branches["layer"][branches["event"]==EventNum]
     rowArr = branches["row"][branches["event"]==EventNum]
@@ -349,7 +359,7 @@ if __name__ == "__main__":
     for row in range(5):
         for column in range(22):
             if MAXNPEarr[row,column] > NpeT:
-                MaxNPEText = plt.text(column,4-row,f"{MAXNPEarr[row,column]:.0e}", color="w",fontsize=8)
+                MaxNPEText = plt.text(column,4-row,f"{MAXNPEarr[row,column]:.0e}", color="red",fontsize=8)
     
     
     #outline the panel

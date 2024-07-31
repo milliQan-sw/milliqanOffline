@@ -79,6 +79,17 @@ def filling(typeArr,layerArr,rowArr,columnArr,npeArr,NpeT):
 
         if npe > NpeT:
             block[rowoffset][fillingColumn_offset] += 1  
+            if (type == 2):
+                if (column == 0): #top cosmic panel
+                    block[rowoffset][fillingColumn_offset+1] += 1
+                    block[rowoffset][fillingColumn_offset+2] += 1  
+                    block[rowoffset][fillingColumn_offset+3] += 1  
+                else: #side cosmic panels
+                    block[rowoffset-1][fillingColumn_offset] += 1  
+                    block[rowoffset-2][fillingColumn_offset] += 1  
+                    block[rowoffset-3][fillingColumn_offset] += 1  
+
+
 
         if npe > MaxNPEArr[rowoffset][fillingColumn_offset]:
             MaxNPEArr[rowoffset][fillingColumn_offset] = npe
@@ -373,12 +384,12 @@ if __name__ == "__main__":
     ax.add_patch(beamF)
     ax.add_patch(beamB)
     #cosmic panel have the white outline
-    COS70 = patches.Rectangle((1, 0), 1, 1, linewidth=2, edgecolor='white', facecolor='none')
-    COS72 = patches.Rectangle((6, 0), 1, 1, linewidth=2, edgecolor='white', facecolor='none')
-    COS71 = patches.Rectangle((11, 0), 1, 1, linewidth=2, edgecolor='white', facecolor='none')
-    COS73 = patches.Rectangle((16, 0), 1, 1, linewidth=2, edgecolor='white', facecolor='none')
-    Cos68 = patches.Rectangle((2, 4), 1, 1, linewidth=2, edgecolor='white', facecolor='none')
-    Cos69 = patches.Rectangle((12, 4), 1, 1, linewidth=2, edgecolor='white', facecolor='none')
+    COS70 = patches.Rectangle((1, 0), 1, 4, linewidth=2, edgecolor='white', facecolor='none')
+    COS72 = patches.Rectangle((6, 0), 1, 4, linewidth=2, edgecolor='white', facecolor='none')
+    COS71 = patches.Rectangle((11, 0), 1, 4, linewidth=2, edgecolor='white', facecolor='none')
+    COS73 = patches.Rectangle((16, 0), 1, 4, linewidth=2, edgecolor='white', facecolor='none')
+    Cos68 = patches.Rectangle((2, 4), 4, 1, linewidth=2, edgecolor='white', facecolor='none')
+    Cos69 = patches.Rectangle((12, 4), 4, 1, linewidth=2, edgecolor='white', facecolor='none')
     ax.add_patch(COS70)
     ax.add_patch(COS72)
     ax.add_patch(COS73)

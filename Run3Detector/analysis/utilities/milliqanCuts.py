@@ -788,6 +788,9 @@ class milliqanCuts():
         self.events["MUONR0L3"] = ak.any( ( (self.events["nPE"] >= NPEcut) & (self.events["row"] == 0) & (self.events["type"] == 0) & (self.events["muonHit"] == 1) &  (self.events["layer"] == 3)),axis=1)
         self.events["MUONR3L3"] = ak.any( ( (self.events["nPE"] >= NPEcut) & (self.events["row"] == 3) & (self.events["type"] == 0) & (self.events["muonHit"] == 1) & (self.events["layer"] == 3)),axis=1)
 
+	#events that contains muon hitting the top and the bottom layers and those muon hit are at same layer 
+        self.events["MuonR31L"] = (self.events['MUONR0L0'] & self.events['MUONR3L0']) | (self.events['MUONR0L1'] & self.events['MUONR3L1']) | (self.events['MUONR0L2'] & self.events['MUONR3L2']) | (self.events['MUONR0L3'] & self.events['MUONR3L3'])
+
         print(f"L0 Muon Hit at Top & Bottom row : {ak.count_nonzero( (self.events['MUONR0L0']) & (self.events['MUONR3L0']) )}")
         print(f"L1 Muon Hit at Top & Bottom row : {ak.count_nonzero( (self.events['MUONR0L1']) & (self.events['MUONR3L1']) )}")
         print(f"L2 Muon Hit at Top & Bottom row : {ak.count_nonzero( (self.events['MUONR0L2']) & (self.events['MUONR3L2']) )}")
@@ -852,7 +855,23 @@ class milliqanCuts():
         self.events["CL_FN"] = ~self.events["Clean_MuonEvent"] & self.events["muonEvent"] & self.events['None_empty_event']
         
 
+        #extra counting for self.events["MuonHit_TB_row"] tag. The goal is to check how likely the geometric tag can find the MuonHit_TB_row event.
+        self.events["ST_TP_EX"] = self.events["StraghtCosmic"] & self.events["MuonHit_TB_row"] & self.events['None_empty_event']
+        self.events["DW_TP_EX"] = self.events["downwardPath"] & self.events["MuonHit_TB_row"] & self.events['None_empty_event']
+        self.events["CL_TP_EX"] = self.events["Clean_MuonEvent"] & self.events["MuonHit_TB_row"] & self.events['None_empty_event']
         
+        self.events["ST_FP_EX"] = self.events["StraghtCosmic"] & ~self.events["MuonHit_TB_row"] & self.events['None_empty_event']
+        self.events["DW_FP_EX"] = self.events["downwardPath"] & ~self.events["MuonHit_TB_row"] & self.events['None_empty_event']
+        self.events["CL_FP_EX"] = self.events["Clean_MuonEvent"] & ~self.events["MuonHit_TB_row"] & self.events['None_empty_event']
+
+        #extra counting for MuonHit_TB_row same layer event
+        self.events["ST_TP_EX2"] = self.events["StraghtCosmic"] & self.events["MuonR31L"]  & self.events['None_empty_event']
+        self.events["DW_TP_EX2"] = self.events["downwardPath"] & self.events["MuonR31L"]  & self.events['None_empty_event']
+        self.events["CL_TP_EX2"] = self.events["Clean_MuonEvent"] & self.events["MuonR31L"]  & self.events['None_empty_event']
+        
+        self.events["ST_FP_EX2"] = self.events["StraghtCosmic"] & ~self.events["MuonR31L"]  & self.events['None_empty_event'] 
+        self.events["DW_FP_EX2"] = self.events["downwardPath"] & ~self.events["MuonR31L"]  & self.events['None_empty_event']
+        self.events["CL_FP_EX2"] = self.events["Clean_MuonEvent"] & ~self.events["MuonR31L"]  & self.events['None_empty_event']        
 
         #count the number of event that pass the muonEvent but fail the DetectableMuon
         #there is a need to do the check like above. 

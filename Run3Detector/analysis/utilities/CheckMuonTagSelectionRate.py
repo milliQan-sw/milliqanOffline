@@ -57,7 +57,11 @@ filelist =[f'{filename}:t']
 #"""
 numRun = str(sys.argv[1])
 #filelist =[f'/home/czheng/SimCosmicFlatTree/withPhotonMuontag/output_{numRun}.root:t']
-filelist =[f'/Users/haoliangzheng/CERN_ana/output_{numRun}.root:t']
+filelist =[f'/home/czheng/SimCosmicFlatTree/withPhotonMuontag/output_1kFiles_photon.root:t']
+
+#filelist =[f'/Users/haoliangzheng/CERN_ana/output_{numRun}.root:t']
+
+
 
 print(filelist)
 
@@ -128,6 +132,24 @@ ST_FN_count = mycuts.getCut(mycuts.countEvent,'placeholder',Countobject= 'ST_FN'
 DW_FN_count = mycuts.getCut(mycuts.countEvent,'placeholder',Countobject= 'DW_FN')
 CL_FN_count = mycuts.getCut(mycuts.countEvent,'placeholder',Countobject= 'CL_FN')
 
+ST_TP_EX_count = mycuts.getCut(mycuts.countEvent,'placeholder',Countobject= 'ST_TP_EX')
+DW_TP_EX_count = mycuts.getCut(mycuts.countEvent,'placeholder',Countobject= 'DW_TP_EX')
+CL_TP_EX_count = mycuts.getCut(mycuts.countEvent,'placeholder',Countobject= 'CL_TP_EX')
+
+ST_FP_EX_count = mycuts.getCut(mycuts.countEvent,'placeholder',Countobject= 'ST_FP_EX')
+DW_FP_EX_count = mycuts.getCut(mycuts.countEvent,'placeholder',Countobject= 'DW_FP_EX')
+CL_FP_EX_count = mycuts.getCut(mycuts.countEvent,'placeholder',Countobject= 'CL_FP_EX')
+
+
+ST_TP_EX2_count = mycuts.getCut(mycuts.countEvent,'placeholder',Countobject= 'ST_TP_EX2')
+DW_TP_EX2_count = mycuts.getCut(mycuts.countEvent,'placeholder',Countobject= 'DW_TP_EX2')
+CL_TP_EX2_count = mycuts.getCut(mycuts.countEvent,'placeholder',Countobject= 'CL_TP_EX2')
+
+ST_FP_EX2_count = mycuts.getCut(mycuts.countEvent,'placeholder',Countobject= 'ST_FP_EX2')
+DW_FP_EX2_count = mycuts.getCut(mycuts.countEvent,'placeholder',Countobject= 'DW_FP_EX2')
+CL_FP_EX2_count = mycuts.getCut(mycuts.countEvent,'placeholder',Countobject= 'CL_FP_EX2')
+
+
 MuonEventCount = mycuts.getCut(mycuts.countEvent,'placeholder',Countobject= 'muonEvent')
 
 inCompleteMuonEventCount = mycuts.getCut(mycuts.countEvent,'IncompleteMuonE')
@@ -143,7 +165,7 @@ SIM_sudo_straight = mycuts.getCut(mycuts.sudo_straight,'StraghtCosmic', NPEcut =
 #FIXME: MuonEventCount print "None_empty_event event". -> the count function has issue? - > yes, in fact the the count muonEvent is not in the field.
 #FIXME: mycuts.MuonGeoValidation doesn't work
 #after I move the MuonGeoValidation back to milliqanCut.py it comeplains the muonEvent is not in the field.???
-cutflow8 = [mycuts.EmptyListFilter,mycuts.MuonEvent,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.NbarsHitsCount,MuonEventCount,SIM_sudo_straight,mycuts.MuonGeoValidation,DW_Muon_count,cleanMuon_count,ST_TP_count,DW_TP_count,CL_TP_count,ST_FP_count,DW_FP_count,CL_FP_count,ST_TN_count,DW_TN_count,CL_TN_count,ST_FN_count,DW_FN_count,CL_FN_count]
+cutflow8 = [mycuts.EmptyListFilter,mycuts.MuonEvent,mycuts.countEvent,mycuts.barCut,mycuts.panelCut,mycuts.NbarsHitsCount,MuonEventCount,SIM_sudo_straight,mycuts.MuonGeoValidation,DW_Muon_count,cleanMuon_count,ST_TP_count,DW_TP_count,CL_TP_count,ST_FP_count,DW_FP_count,CL_FP_count,ST_TN_count,DW_TN_count,CL_TN_count,ST_FN_count,DW_FN_count,CL_FN_count,ST_TP_EX_count,DW_TP_EX_count,CL_TP_EX_count,ST_FP_EX_count,DW_FP_EX_count,CL_FP_EX_count,ST_TP_EX2_count,DW_TP_EX2_count,CL_TP_EX2_count,ST_FP_EX2_count,DW_FP_EX2_count,CL_FP_EX2_count]
 
 cutflow = cutflow8
 myschedule = milliQanScheduler(cutflow, mycuts)

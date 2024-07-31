@@ -214,29 +214,29 @@ def getConfigs(runNum, offlineDir):
 
 def copyFromEOS(slab=False):
 
-    if not os.path.exists('goodRunsList.json'): 
+    if not slab and not os.path.exists('configuration/barConfigs/goodRunsList.json'): 
         print("Warning (runOfflineFactory.py): goodRunsList.json is not available locally, trying to access from eos")
         try:
-            if not slab:
-                os.system('cp /eos/experiment/milliqan/Configs/goodRunsList.json .')
+            os.system('cp /eos/experiment/milliqan/Configs/goodRunsList.json configuration/slabConfigs/')
         except:
             print("Error (runOfflineFactory.py): could not access the goodRunList.json on eos or locally")
     
-    if not os.path.exists('mqLumis.json'):
-        print("Warning (runOfflineFactory.py): mqLumis.json is not available locally, trying to access from eos")
-        try:
-            if not slab:
-                os.system('cp /eos/experiment/milliqan/Configs/mqLumis.json .')
-            
-            #make datetimes into uint64 to be read by c++
-            lumis = pd.read_json('mqLumis.json', orient = 'split', compression = 'infer')
-            convert_cols = ['start', 'stop', 'fillStart', 'fillEnd', 'startStableBeam', 'endStableBeam']
+    if not slab:
+        if not os.path.exists('configuration/barConfigs/mqLumis.json'):
+            print("Warning (runOfflineFactory.py): mqLumis.json is not available locally, trying to access from eos")
+            try:
+                os.system('cp /eos/experiment/milliqan/Configs/mqLumis.json configuration/barConfigs/')
+            except:
+                print("Error (runOfflineFactory.py): unable to access the mqLumis file on eos or locally")
+        
+        #make datetimes into uint64 to be read by c++
+        lumis = pd.read_json('configuration/barConfigs/mqLumis.json', orient = 'split', compression = 'infer')
+        convert_cols = ['start', 'stop', 'fillStart', 'fillEnd', 'startStableBeam', 'endStableBeam']
 
-            for col in convert_cols:
-                lumis[col] = convertTimes(lumis[col])
-            lumis.to_json('mqLumis.json', orient = 'split', compression = 'infer', index = 'true')
-        except:
-            print("Error (runOfflineFactory.py): unable to access the mqLumis file on eos or locally")
+        for col in convert_cols:
+            lumis[col] = convertTimes(lumis[col])
+        lumis.to_json('configuration/barConfigs/mqLumis.json', orient = 'split', compression = 'infer', index = 'true')
+
 
 def convertTimes(input):
     input = input.apply(datetime_to_uint64)

@@ -18,6 +18,7 @@ import sys
 import awkward as ak
 import ROOT as r
 import matplotlib.patches as patches
+import math
 
 def filling(typeArr,layerArr,rowArr,columnArr,npeArr,NpeT):
     block = np.zeros((5, 22))
@@ -102,6 +103,119 @@ def filling(typeArr,layerArr,rowArr,columnArr,npeArr,NpeT):
             MaxNPEArr[rowoffset][fillingColumn_offset] = npe
     #print(block)
     return MaxNPEArr,block
+
+def findTackWeight(MaxNPEArr):
+    #find the possible muon with the weight of max pulse npe
+    # arr stores the number pulse above specific threashold for each channel
+    # MaxNPEArr stores the max pulse npe for each channel
+
+    rowTempL0 = list()
+    columnTempL0 = list()
+
+    rowTempL1 = list()
+    columnTempL1 = list()
+
+    rowTempL2 = list()
+    columnTempL2 = list()
+
+    rowTempL3 = list()
+    columnTempL3 = list()
+
+    ROWarrST = list()
+    ColumnarrST = list()
+
+
+    #find the weight postion with the pulse npe at layer 0 row 4
+    for row in range(4):
+        
+        L0sumWeight = 0
+        L0sumTerm = 0
+
+        L1sumWeight = 0
+        L1sumTerm = 0
+
+        L2sumWeight = 0
+        L2sumTerm = 0
+
+        L3sumWeight = 0
+        L3sumTerm = 0
+
+        #layer 0 row 3 in the bar corresponds to (row = 1) in MaxNPEArr
+        for column in [2,3,4,5]:
+
+            L0sumWeight += (MaxNPEArr[row+1][column])*(column)
+            L0sumTerm += MaxNPEArr[row+1][column]
+        
+        for column in [7,8,9,10]:
+
+            L1sumWeight += (MaxNPEArr[row+1][column])*(column)
+            L1sumTerm += MaxNPEArr[row+1][column]
+
+        
+        for column in [12,13,14,15]:
+
+            L2sumWeight += (MaxNPEArr[row+1][column])*(column)
+            L2sumTerm += MaxNPEArr[row+1][column]
+
+        for column in [17,18,19,20]:
+
+            L3sumWeight += (MaxNPEArr[row+1][column])*(column)
+            L3sumTerm += MaxNPEArr[row+1][column]
+
+        L0 = 0
+        L1 = 0
+        L2 = 0
+        L3 = 0
+        
+        
+        if L0sumTerm >= 1:
+            L0 = L0sumWeight/L0sumTerm
+
+        if L1sumTerm >= 1:
+            L1 = L1sumWeight/L1sumTerm
+        
+        if L2sumTerm >= 1:
+            L2 = L2sumWeight/L2sumTerm
+
+        if L3sumTerm >= 1:
+            L3 = L3sumWeight/L3sumTerm
+
+
+            
+
+        columnTempL0.append(L0)
+        rowTempL0.append(3-row)
+        columnTempL1.append(L1)
+        rowTempL1.append(3-row)
+        columnTempL2.append(L2)
+        rowTempL2.append(3-row)
+        columnTempL3.append(L3)
+        rowTempL3.append(3-row)
+
+    #record the track only if there is at least one hit in each row in a give layer 
+
+    if all(x > 0 for x in columnTempL0):
+        ROWarrST.append(rowTempL0)
+        ColumnarrST.append(columnTempL0)
+
+    
+    if all(x > 0 for x in columnTempL1):
+        ROWarrST.append(rowTempL1)
+        ColumnarrST.append(columnTempL1)
+
+    if all(x > 0 for x in columnTempL2):
+        ROWarrST.append(rowTempL2)
+        ColumnarrST.append(columnTempL2)
+
+    if all(x > 0 for x in columnTempL3):
+        ROWarrST.append(rowTempL3)
+        ColumnarrST.append(columnTempL3)
+    
+
+    return ColumnarrST,ROWarrST
+
+
+
 
 def findTrack(arr):
     print(arr)
@@ -361,14 +475,15 @@ if __name__ == "__main__":
     print(layerArr)
     NpeT = 20
     MAXNPEarr,arr=filling(typeArr[0],layerArr[0],rowArr[0],columnArr[0],npeArr[0],NpeT)
-    ColumnarrST,ROWarrST=findTrack(arr)
+    #ColumnarrST,ROWarrST=findTrack(arr)
+    ColumnarrST,ROWarrST=findTackWeight(MAXNPEarr)
     print(f"ColumnarrST {ColumnarrST}") 
     print(f"ROWarrST {ROWarrST}") 
     
 
-    #plot the muon track
+    #plot the muon track (hard code version)
 
-    """
+    #"""
     for column,row in zip(ColumnarrST,ROWarrST):
         column = [x + 0.5 for x in column]
         row = [x + 0.5 for x in row]
@@ -376,7 +491,7 @@ if __name__ == "__main__":
         #print(f"track ROWarrST {row}") 
         
         plt.plot(column, row, color='red')
-    """
+    #"""
     
     
     #display the the max NPE for each channel

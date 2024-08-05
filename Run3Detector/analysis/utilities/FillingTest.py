@@ -81,9 +81,16 @@ def filling(typeArr,layerArr,rowArr,columnArr,npeArr,NpeT):
             block[rowoffset][fillingColumn_offset] += 1  
             if (type == 2):
                 if (column == 0): #top cosmic panel
+
                     block[rowoffset][fillingColumn_offset+1] += 1
                     block[rowoffset][fillingColumn_offset+2] += 1  
                     block[rowoffset][fillingColumn_offset+3] += 1  
+                    block[rowoffset][fillingColumn_offset+4] += 1 
+                    block[rowoffset][fillingColumn_offset+5] += 1
+                    block[rowoffset][fillingColumn_offset+6] += 1
+                    block[rowoffset][fillingColumn_offset+7] += 1
+                    block[rowoffset][fillingColumn_offset+8] += 1
+         
                 else: #side cosmic panels
                     block[rowoffset-1][fillingColumn_offset] += 1  
                     block[rowoffset-2][fillingColumn_offset] += 1  
@@ -395,8 +402,8 @@ if __name__ == "__main__":
     COS72 = patches.Rectangle((6, 0), 1, 4, linewidth=2, edgecolor='white', facecolor='none')
     COS71 = patches.Rectangle((11, 0), 1, 4, linewidth=2, edgecolor='white', facecolor='none')
     COS73 = patches.Rectangle((16, 0), 1, 4, linewidth=2, edgecolor='white', facecolor='none')
-    Cos68 = patches.Rectangle((2, 4), 4, 1, linewidth=2, edgecolor='white', facecolor='none')
-    Cos69 = patches.Rectangle((12, 4), 4, 1, linewidth=2, edgecolor='white', facecolor='none')
+    Cos68 = patches.Rectangle((2, 4), 9, 1, linewidth=2, edgecolor='white', facecolor='none')
+    Cos69 = patches.Rectangle((12, 4), 9, 1, linewidth=2, edgecolor='white', facecolor='none')
     ax.add_patch(COS70)
     ax.add_patch(COS72)
     ax.add_patch(COS73)

@@ -264,24 +264,27 @@ if __name__ == "__main__":
     #uptree = uproot.open("/Users/haoliangzheng/CERN_ana/MilliQan_Run1500.11_v35.root:t")
     #uptree = uproot.open("/Users/haoliangzheng/CERN_ana/EventDisplay/MilliQan_Run1190.1_v34.root:t") #event 472/   are a sample event
     uptree = uproot.open("/Users/haoliangzheng/CERN_ana/EventDisplay/MilliQan_Run1500.1_v35.root:t") # event 527 for this file
-    branches = uptree.arrays(["type","layer","row","column","nPE","event","area","timeFit_module_calibrated"], entry_stop=100000)
+    branches = uptree.arrays(["type","layer","row","column","nPE","event","area","timeFit_module_calibrated","chan"], entry_stop=100000)
 
     EventNum = int(sys.argv[1])
-    #remove pulses outside the trigger window 1250-1350ns
-    
-  
-    removePulse_T = (branches["timeFit_module_calibrated"] >= 1250) & (branches["timeFit_module_calibrated"] <= 1350 )
-    
+    #remove pulses outside the trigger window 1200-1500ns
+
+
+    removePulse_T = (branches["timeFit_module_calibrated"] >= 1200) & (branches["timeFit_module_calibrated"] <= 1350 )
+    """
     for branch in ["type","layer","row","column","nPE","area","timeFit_module_calibrated"]:
         branches[branch] = branches[branch][removePulse_T]
+    """
 
-    
 
     typeArr= branches["type"][branches["event"]==EventNum]
     layerArr = branches["layer"][branches["event"]==EventNum]
     rowArr = branches["row"][branches["event"]==EventNum]
     columnArr = branches["column"][branches["event"]==EventNum]
     npeArr = branches["nPE"][branches["event"]==EventNum]
+
+
+    
 
     
     EventArr = branches[branches["event"]==EventNum]
@@ -357,6 +360,8 @@ if __name__ == "__main__":
     
 
     #plot the muon track
+
+    """
     for column,row in zip(ColumnarrST,ROWarrST):
         column = [x + 0.5 for x in column]
         row = [x + 0.5 for x in row]
@@ -364,6 +369,8 @@ if __name__ == "__main__":
         #print(f"track ROWarrST {row}") 
         
         plt.plot(column, row, color='red')
+    """
+    
     
     #display the the max NPE for each channel
     

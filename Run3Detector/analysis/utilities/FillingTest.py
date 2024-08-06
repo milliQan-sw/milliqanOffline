@@ -8,6 +8,17 @@ Follow david's suggestion find the sample muon event
 
 Todo
 When making the straight track, it should add an extra offset factor -0.5
+
+
+usage:
+
+currently the big hit threashold and the file number are hard code in the script
+
+python3 FillingTest.py 378(event number)
+
+
+
+
 """
 
 
@@ -20,10 +31,11 @@ import ROOT as r
 import matplotlib.patches as patches
 import math
 
-def filling(typeArr,layerArr,rowArr,columnArr,npeArr,NpeT):
+def filling(typeArr,layerArr,rowArr,columnArr,npeArr,timeArr,NpeT):
     block = np.zeros((5, 22))
     MaxNPEArr = np.zeros((5, 22))
-    for type,layer,row,column,npe in zip (typeArr,layerArr,rowArr,columnArr,npeArr):
+    MaxPTimeArr = np.zeros((5, 22)) #pulse time for each channels that corresponding to the max pulse in the event
+    for type,layer,row,column,npe,time in zip (typeArr,layerArr,rowArr,columnArr,npeArr,timeArr):
         #bar channel data filling
         if type == 0:
 
@@ -101,8 +113,9 @@ def filling(typeArr,layerArr,rowArr,columnArr,npeArr,NpeT):
 
         if npe > MaxNPEArr[rowoffset][fillingColumn_offset]:
             MaxNPEArr[rowoffset][fillingColumn_offset] = npe
-    #print(block)
-    return MaxNPEArr,block
+            MaxPTimeArr[rowoffset][fillingColumn_offset] = time
+    #print(block) 
+    return MaxPTimeArr,MaxNPEArr,block
 
 def findTackWeight(MaxNPEArr):
     #find the possible muon with the weight of max pulse npe
@@ -403,6 +416,7 @@ if __name__ == "__main__":
     rowArr = branches["row"][branches["event"]==EventNum]
     columnArr = branches["column"][branches["event"]==EventNum]
     npeArr = branches["nPE"][branches["event"]==EventNum]
+    timeArr = branches["timeFit_module_calibrated"][branches["event"]==EventNum]
 
 
     
@@ -474,7 +488,7 @@ if __name__ == "__main__":
     print(typeArr)
     print(layerArr)
     NpeT = 20
-    MAXNPEarr,arr=filling(typeArr[0],layerArr[0],rowArr[0],columnArr[0],npeArr[0],NpeT)
+    MaxPTimeArr,MAXNPEarr,arr=filling(typeArr[0],layerArr[0],rowArr[0],columnArr[0],npeArr[0],timeArr[0],NpeT)
     #ColumnarrST,ROWarrST=findTrack(arr)
     ColumnarrST,ROWarrST=findTackWeight(MAXNPEarr)
     print(f"ColumnarrST {ColumnarrST}") 
@@ -500,7 +514,7 @@ if __name__ == "__main__":
         for column in range(22):
             if MAXNPEarr[row,column] > NpeT:
                 MaxNPEText = plt.text(column,4-row,f"{MAXNPEarr[row,column]:.0e}", color="red",fontsize=8)
-    
+                PulseTimeMText = plt.text(column,4-row + 0.5,f"{MaxPTimeArr[row,column]:.3e}ns", color="red",fontsize=8)
     
     #outline the panel
 

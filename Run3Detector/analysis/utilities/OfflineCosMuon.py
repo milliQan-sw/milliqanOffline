@@ -64,7 +64,7 @@ filelist =[f'{filename}:t']
 #--------------------------------Non condor job sec 1--------------------------------
 numRun = str(sys.argv[1])
 fileNum = str(sys.argv[2])
-filelist =[f'/home/czheng/SimCosmicFlatTree/offlinefile/MilliQan_Run{numRun}.{fileNum}_v34.root:t']
+filelist =[f'/home/czheng/SimCosmicFlatTree/offlinefile/MilliQan_Run{numRun}.{fileNum}_v35.root:t']
 print(filelist)
 
 outputPath = str(sys.argv[3]) # the path is used at the very end for the output txt file

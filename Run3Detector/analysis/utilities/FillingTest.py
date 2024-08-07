@@ -30,6 +30,7 @@ import awkward as ak
 import ROOT as r
 import matplotlib.patches as patches
 import math
+from sklearn.linear_model import LinearRegression
 
 def filling(typeArr,layerArr,rowArr,columnArr,npeArr,timeArr,NpeT):
     block = np.zeros((5, 22))
@@ -116,6 +117,72 @@ def filling(typeArr,layerArr,rowArr,columnArr,npeArr,timeArr,NpeT):
             MaxPTimeArr[rowoffset][fillingColumn_offset] = time
     #print(block) 
     return MaxPTimeArr,MaxNPEArr,block
+
+#
+def findTrackSKWeight(MaxNPEArr):
+
+    regr = LinearRegression()
+    rowTempL0 = []
+    columnTempL0 = []
+    L0NPEArr = []
+    FCheckL0R3 = False #tag for layer 0 have at least one hit per row
+    FCheckL0R2 = False 
+    FCheckL0R1 = False
+    FCheckL0R0 = False
+
+
+    rowTempL1 = []
+    columnTempL1 = []
+    L1NPEArr = []
+    FCheckL1R3 = False #tag for layer 0 have at least one hit per row
+    FCheckL1R2 = False 
+    FCheckL1R1 = False
+    FCheckL1R0 = False
+
+
+    for row in range(4):
+        for column in [2,3,4,5]:
+            if MaxNPEArr[row+1][column] >= 20:
+                
+                #L0NPEArr.append(MaxNPEArr[row+1][column])
+                #L0NPEArr = np.append(L0NPEArr, MaxNPEArr[row+1][column])
+                rowTempL0.append([3-row]) #change the corrdinate 
+                #rowTempL0 = np.append(rowTempL0, [3-row])
+                columnTempL0.append([column])
+                #columnTempL0 = np.append(columnTempL0, [column])
+
+                if (3-row) == 3: FCheckL0R3 = True
+                elif (3-row) == 2: FCheckL0R2 = True
+                elif (3-row) == 1: FCheckL0R1 = True
+                elif (3-row) == 0: FCheckL0R0 = True
+        
+        for column in [7,8,9,10]:
+            if MaxNPEArr[row+1][column] >= 20:
+                L1NPEArr.append(MaxNPEArr[row+1][column])
+                rowTempL1.append([3-row]) #change the corrdinate 
+                columnTempL1.append([column])
+                #L1NPEArr = np.append(L1NPEArr, MaxNPEArr[row+1][column])
+                #rowTempL1 = np.append(rowTempL1, [3-row])
+                #columnTempL1 = np.append(columnTempL1, [column])
+
+                if (3-row) == 3: FCheckL1R3 = True
+                elif (3-row) == 2: FCheckL1R2 = True
+                elif (3-row) == 1: FCheckL1R1 = True
+                elif (3-row) == 0: FCheckL1R0 = True
+        
+
+    
+    if (FCheckL0R3 & FCheckL0R2 & FCheckL0R1 & FCheckL0R0):
+        regr.fit(columnTempL0, rowTempL0,L0NPEArr)
+        plt.plot(columnTempL0, regr.predict(columnTempL0), color='blue', linewidth=3, label='Weighted model')
+
+    if (FCheckL1R3 & FCheckL1R2 & FCheckL1R1 & FCheckL1R0):
+        #columnTempL1 = columnTempL1.reshape((len(columnTempL1),1))
+        #rowTempL1 = rowTempL1.reshape((len(rowTempL1),1))
+        regr.fit(columnTempL1, rowTempL1,L1NPEArr)
+        plt.plot(columnTempL1, regr.predict(columnTempL1), color='blue', linewidth=3, label='Weighted model')
+
+
 
 def findTackWeight(MaxNPEArr):
     #find the possible muon with the weight of max pulse npe
@@ -491,6 +558,7 @@ if __name__ == "__main__":
     MaxPTimeArr,MAXNPEarr,arr=filling(typeArr[0],layerArr[0],rowArr[0],columnArr[0],npeArr[0],timeArr[0],NpeT)
     #ColumnarrST,ROWarrST=findTrack(arr)
     ColumnarrST,ROWarrST=findTackWeight(MAXNPEarr)
+    findTrackSKWeight(MAXNPEarr)
     print(f"ColumnarrST {ColumnarrST}") 
     print(f"ROWarrST {ROWarrST}") 
     

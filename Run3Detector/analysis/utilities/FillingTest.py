@@ -118,7 +118,8 @@ def filling(typeArr,layerArr,rowArr,columnArr,npeArr,timeArr,NpeT):
     #print(block) 
     return MaxPTimeArr,MaxNPEArr,block
 
-#
+#this function is not finished yet(fitting function for layer2 and layer3 are not finishsed). 
+# The result looks weird by using 1500.1 378
 def findTrackSKWeight(MaxNPEArr):
 
     regr = LinearRegression()
@@ -558,7 +559,7 @@ if __name__ == "__main__":
     MaxPTimeArr,MAXNPEarr,arr=filling(typeArr[0],layerArr[0],rowArr[0],columnArr[0],npeArr[0],timeArr[0],NpeT)
     #ColumnarrST,ROWarrST=findTrack(arr)
     ColumnarrST,ROWarrST=findTackWeight(MAXNPEarr)
-    findTrackSKWeight(MAXNPEarr)
+    #findTrackSKWeight(MAXNPEarr)
     print(f"ColumnarrST {ColumnarrST}") 
     print(f"ROWarrST {ROWarrST}") 
     

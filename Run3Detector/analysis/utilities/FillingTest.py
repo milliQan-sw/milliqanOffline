@@ -465,14 +465,16 @@ if __name__ == "__main__":
     import uproot
     #uptree = uproot.open("/Users/haoliangzheng/CERN_ana/MilliQan_Run1500.11_v35.root:t")
     #uptree = uproot.open("/Users/haoliangzheng/CERN_ana/EventDisplay/MilliQan_Run1190.1_v34.root:t") #event 472/   are a sample event
-    uptree = uproot.open("/Users/haoliangzheng/CERN_ana/EventDisplay/MilliQan_Run1500.1_v35.root:t") # event 527 for this file
-    branches = uptree.arrays(["type","layer","row","column","nPE","event","area","timeFit_module_calibrated","chan"], entry_stop=100000)
+    #uptree = uproot.open("/Users/haoliangzheng/CERN_ana/EventDisplay/MilliQan_Run1500.1_v35.root:t") # event 527 for this file
+    uptree = uproot.open("/Users/haoliangzheng/CERN_ana/EventDisplay/output_1047.root:t")
+    #branches = uptree.arrays(["type","layer","row","column","nPE","event","area","timeFit_module_calibrated","chan"], entry_stop=100000) #for offline file only
+    branches = uptree.arrays(["type","layer","row","column","nPE","event","time","chan"])#for sim file only
 
     EventNum = int(sys.argv[1])
     #remove pulses outside the trigger window 1200-1500ns
 
 
-    removePulse_T = (branches["timeFit_module_calibrated"] >= 1200) & (branches["timeFit_module_calibrated"] <= 1350 )
+    #removePulse_T = (branches["timeFit_module_calibrated"] >= 1200) & (branches["timeFit_module_calibrated"] <= 1350 )
     """
     for branch in ["type","layer","row","column","nPE","area","timeFit_module_calibrated"]:
         branches[branch] = branches[branch][removePulse_T]
@@ -484,11 +486,14 @@ if __name__ == "__main__":
     rowArr = branches["row"][branches["event"]==EventNum]
     columnArr = branches["column"][branches["event"]==EventNum]
     npeArr = branches["nPE"][branches["event"]==EventNum]
-    timeArr = branches["timeFit_module_calibrated"][branches["event"]==EventNum]
+    #timeArr = branches["timeFit_module_calibrated"][branches["event"]==EventNum]#for offline file only
+    timeArr = branches["time"][branches["event"]==EventNum]#for sim file only
 
 
     
-
+    """
+    #section for making pulse area distribution layer by layer for bar channel. 
+    #I comment this out during the sim analysis
     
     EventArr = branches[branches["event"]==EventNum]
     Lar0barArea=EventArr["area"][(EventArr["type"] == 0) &  (EventArr["layer"] == 0)]
@@ -504,6 +509,8 @@ if __name__ == "__main__":
     print(f"TpBackCosp area :{EventArr['area'][(EventArr['row'] == 4)]}")
     c1 = r.TCanvas("c1","c1",800,1000)
     c1.Divide(2,4)
+
+    
 
     l0BarAreaHist = r.TH1F("l0BarArea","layer 0 bar Area",100,0,1000000)
     l1BarAreaHist = r.TH1F("l1BarArea","layer 1 bar Area",100,0,1000000)
@@ -549,6 +556,7 @@ if __name__ == "__main__":
 
 
     c1.SaveAs("Histtest.png")
+    """
     
     
     print(len(npeArr))

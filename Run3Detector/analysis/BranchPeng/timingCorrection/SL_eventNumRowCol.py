@@ -21,7 +21,7 @@ def getEventNum(self):
     for row in range(4):
         for column in range(4):
             event_count = 0
-
+    
             # straight line path location mask
             pulse_maskL0 = (self.events['row'] == row) & (self.events['column'] == column) & (self.events['layer'] == 0)
             pulse_maskL1 = (self.events['row'] == row) & (self.events['column'] == column) & (self.events['layer'] == 1)

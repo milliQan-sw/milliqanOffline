@@ -29,7 +29,6 @@ from milliqanPlotter import *
 
 # Define the function to count events for each channel
 def countEventsPerChannel(self):
-    
     # Define the cut to keep only events with straight line paths
     straight_line_events = []
     for event in self.events:
@@ -53,7 +52,6 @@ def countEventsPerChannel(self):
             straight_line_events.append(event)
         else:
             straight_line_events.append(None)  # Replace events without straight line paths with None
-
 
     # Initialize a dictionary to store the count of events for each (row, column, layer) combination
     channel_counts = {(row, column, layer): 0 for row in range(4) for column in range(4) for layer in range(4)}

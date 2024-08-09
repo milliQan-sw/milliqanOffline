@@ -29,10 +29,11 @@ from milliqanPlotter import *
 
 # Define the function to count events for each channel
 def countEventsPerChannel(self):
+    print("Starting countEventsPerChannel function...")
     # Define the cut to keep only events with straight line paths
     straight_line_events = []
-    for event in self.events:
-        event_kept = False # A boolean variable used for checking pass or not
+    for event_index, event in enumerate(self.events):
+        event_kept = False  # A boolean variable used for checking pass or not
         for row in range(4):
             for column in range(4):
                 # Create boolean masks for each layer at the specific row and column
@@ -53,10 +54,16 @@ def countEventsPerChannel(self):
         else:
             straight_line_events.append(None)  # Replace events without straight line paths with None
 
+        # Debug output
+        if event_index % 100 == 0:
+            print(f"Processed {event_index + 1}/{len(self.events)} events")
+
+    print("Finished filtering events. Starting to count events per channel...")
+
     # Initialize a dictionary to store the count of events for each (row, column, layer) combination
     channel_counts = {(row, column, layer): 0 for row in range(4) for column in range(4) for layer in range(4)}
 
-    for event in straight_line_events:
+    for event_index, event in enumerate(straight_line_events):
         if event is None:
             continue  # Skip events that were cut out
         for row in range(4):
@@ -69,6 +76,11 @@ def countEventsPerChannel(self):
                         channel_counts[(row, column, layer)] += 1
                         break  # Count the event only once per channel
 
+        # Debug output
+        if event_index % 100 == 0:
+            print(f"Counted {event_index + 1}/{len(straight_line_events)} events")
+
+    print("Finished counting events per channel.")
     return channel_counts
 
 # Add our custom functions to milliqanCuts

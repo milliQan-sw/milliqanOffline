@@ -28,10 +28,23 @@ from milliqanScheduler import *
 from milliqanCuts import *
 from milliqanPlotter import *
 
+def process_file(file_path):
+    print(f"Processing file: {file_path}")
+    try:
+        # Open the ROOT file and retrieve the events
+        with uproot.open(file_path) as file:
+            events = file["t"].arrays(branches, library="ak")  # Use the correct tree name
+            print(f"Successfully retrieved events from: {file_path}")
+            return countEventsPerChannel(events)
+    except Exception as e:
+        print(f"Error processing file {file_path}: {e}")
+        return None
+
 def countEventsPerChannel(events):
+    print("Starting countEventsPerChannel function...")
     # Define the cut to keep only events with straight line paths
     straight_line_events = []
-    for event in events:
+    for event_index, event in enumerate(events):
         event_kept = False
         for row in range(4):
             for column in range(4):
@@ -49,9 +62,14 @@ def countEventsPerChannel(events):
         if event_kept:
             straight_line_events.append(event)
 
+        if event_index % 100 == 0:
+            print(f"Processed {event_index + 1}/{len(events)} events")
+
+    print("Finished filtering events. Starting to count events per channel...")
+
     channel_counts = {(row, column, layer): 0 for row in range(4) for column in range(4) for layer in range(4)}
 
-    for event in straight_line_events:
+    for event_index, event in enumerate(straight_line_events):
         for row in range(4):
             for column in range(4):
                 for layer in range(4):
@@ -60,20 +78,19 @@ def countEventsPerChannel(events):
                         channel_counts[(row, column, layer)] += 1
                         break
 
+        if event_index % 100 == 0:
+            print(f"Counted {event_index + 1}/{len(straight_line_events)} events")
+
+    print("Finished counting events per channel.")
     return channel_counts
 
-def process_file(file_path):
-    # Open the ROOT file and retrieve the events
-    with uproot.open(file_path) as file:
-        events = file["t"].arrays(branches, library="ak")  # Replace "your_tree_name" with your actual tree name
-        return countEventsPerChannel(events)
-
-# Parallel processing setup
 def process_files_in_parallel(filelist):
     total_channel_counts = {(row, column, layer): 0 for row in range(4) for column in range(4) for layer in range(4)}
 
     with concurrent.futures.ProcessPoolExecutor() as executor:
         for event_counts in executor.map(process_file, filelist):
+            if event_counts is None:
+                continue
             for channel, count in event_counts.items():
                 total_channel_counts[channel] += count
 

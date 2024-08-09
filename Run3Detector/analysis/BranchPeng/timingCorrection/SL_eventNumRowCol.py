@@ -65,7 +65,7 @@ def countEventsPerChannel(events):
 def process_file(file_path):
     # Open the ROOT file and retrieve the events
     with uproot.open(file_path) as file:
-        events = file["your_tree_name"].arrays(branches, library="ak")  # Replace "your_tree_name" with your actual tree name
+        events = file["t"].arrays(branches, library="ak")  # Replace "your_tree_name" with your actual tree name
         return countEventsPerChannel(events)
 
 # Parallel processing setup

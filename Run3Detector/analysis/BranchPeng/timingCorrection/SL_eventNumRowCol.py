@@ -44,7 +44,7 @@ def getEventNum(self):
             straightLineMask = ak.any(pulse_maskL0, axis = 1) & ak.any(pulse_maskL1, axis = 1) & ak.any(pulse_maskL2, axis = 1) & ak.any(pulse_maskL3, axis = 1)
 
             # this is a boolean mask to indicate whether each event at current location has SLPs or not
-            events_at_current_loc = ak.any(self.events['timeFit_module_calibrated'][straightLineMask], axis = 1)
+            events_at_current_loc = ak.any(straightLineMask, axis = 1)
 
             # Check if events_at_current_loc is empty
             if len(events_at_current_loc) == 0:

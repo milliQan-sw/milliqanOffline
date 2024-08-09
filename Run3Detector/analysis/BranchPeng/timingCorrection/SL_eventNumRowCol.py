@@ -1,4 +1,4 @@
-# Run this scirpt on milliqan-pc
+# importing packages
 import os
 import ROOT as r
 import uproot
@@ -9,7 +9,12 @@ import numpy as np
 import pandas as pd
 import array as arr
 import sys
-sys.path.append('../utilities')
+
+# add the utilities directory to the Python path
+script_dir = os.path.dirname(os.path.abspath(__file__))
+utilities_dir = os.path.join(script_dir, '..', '..', 'utilities')
+sys.path.append(utilities_dir)
+
 from milliqanProcessor import *
 from milliqanScheduler import *
 from milliqanCuts import *

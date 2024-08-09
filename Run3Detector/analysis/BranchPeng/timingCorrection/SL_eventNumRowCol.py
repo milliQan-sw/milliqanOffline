@@ -43,15 +43,12 @@ def getEventNum(self):
             # straight line boolean mask (this is also an event-wise cut to keep only events that have SLPs of 4 layers at current location)
             straightLineMask = ak.any(pulse_maskL0, axis = 1) & ak.any(pulse_maskL1, axis = 1) & ak.any(pulse_maskL2, axis = 1) & ak.any(pulse_maskL3, axis = 1)
 
-            # this is a boolean mask to indicate whether each event at current location has SLPs or not
-            events_at_current_loc = ak.any(straightLineMask, axis = 1)
-
             # Check if events_at_current_loc is empty
-            if len(events_at_current_loc) == 0:
+            if len(straightLineMask) == 0:
                 continue  # Skip to the next iteration if there are no events
             
-            for i in range(len(events_at_current_loc)):
-                if events_at_current_loc[i] is True:
+            for i in range(len(straightLineMask)):
+                if straightLineMask[i] is True:
                     event_count += 1
 
             print(f"Event number at column {column} row {row} is: {event_count}")

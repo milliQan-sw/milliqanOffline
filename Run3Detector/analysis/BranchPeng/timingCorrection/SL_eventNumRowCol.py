@@ -17,7 +17,6 @@ from milliqanPlotter import *
 
 # Define the function to get the number of events for each straight line path after straight line cut
 def getEventNum(self):
-    # develop a cut to keep only events that have straight line paths in them (event-wise cut, does not cut out any pulse)
     # iterate over row and column combinations
     for row in range(4):
         for column in range(4):

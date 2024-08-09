@@ -48,7 +48,6 @@ def getEventNum(self):
 
             # Check if events_at_current_loc is empty
             if len(events_at_current_loc) == 0:
-                print(f"No events at column {column} row {row}")
                 continue  # Skip to the next iteration if there are no events
             
             for i in range(len(events_at_current_loc)):

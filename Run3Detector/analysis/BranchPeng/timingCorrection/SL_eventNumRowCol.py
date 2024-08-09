@@ -51,7 +51,7 @@ def getEventNum(self):
                 print(f"No events at column {column} row {row}")
                 continue  # Skip to the next iteration if there are no events
             
-            for i in range(len(self.events)):
+            for i in range(len(events_at_current_loc)):
                 if events_at_current_loc[i] is True:
                     event_count += 1
 

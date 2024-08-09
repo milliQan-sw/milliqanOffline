@@ -40,25 +40,29 @@ def getEventNum(self):
             pulse_maskL2 = (self.events['row'] == row) & (self.events['column'] == column) & (self.events['layer'] == 2)
             pulse_maskL3 = (self.events['row'] == row) & (self.events['column'] == column) & (self.events['layer'] == 3)
 
-            # straight line boolean mask (this is also a event-wise cut to keep only events that have SLPs of 4 layers at current location)
+            # straight line boolean mask (this is also an event-wise cut to keep only events that have SLPs of 4 layers at current location)
             straightLineMask = ak.any(pulse_maskL0, axis = 1) & ak.any(pulse_maskL1, axis = 1) & ak.any(pulse_maskL2, axis = 1) & ak.any(pulse_maskL3, axis = 1)
 
             # this is a boolean mask to indicate whether each event at current location has SLPs or not
             events_at_current_loc = ak.any(self.events['timeFit_module_calibrated'][straightLineMask], axis = 1)
 
+            # Check if events_at_current_loc is empty
+            if len(events_at_current_loc) == 0:
+                print(f"No events at column {column} row {row}")
+                continue  # Skip to the next iteration if there are no events
+            
             for i in range(len(self.events)):
                 if events_at_current_loc[i] is True:
                     event_count += 1
 
-            print(f"Event number at column {column} row {row} is: {event_count}")        
-
+            print(f"Event number at column {column} row {row} is: {event_count}")
 
 # Add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getEventNum', getEventNum)
 
 # Define the range of runs (from Run1000-1009 to Run1620-1629: 63 histograms)
-start_run_number = 1000 ######################################################################################################################################################
-end_run_number = 1009 ########################################################################################################################################################
+start_run_number = 1000  # ######################################################################################################################################################
+end_run_number = 1009    # ########################################################################################################################################################
 
 # Define a file list to run over
 filelist = []
@@ -68,7 +72,7 @@ for run_number in range(start_run_number, end_run_number + 1):
     file_number = 0
     consecutive_missing_files = 0
     while True:
-        file_path = f"/home/bpeng/muonAnalysis/1000/MilliQan_Run{run_number}.{file_number}_v34.root" #########################################################################
+        file_path = f"/home/bpeng/muonAnalysis/1000/MilliQan_Run{run_number}.{file_number}_v34.root"  # #########################################################################
         if os.path.exists(file_path):
             filelist.append(file_path)
             file_number += 1

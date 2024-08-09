@@ -27,8 +27,10 @@ from milliqanScheduler import *
 from milliqanCuts import *
 from milliqanPlotter import *
 
-# Define the cut function to keep only events with straight line paths
-def applyStraightLineCut(self):
+# Define the function to count events for each channel
+def countEventsPerChannel(self):
+    
+    # Define the cut to keep only events with straight line paths
     straight_line_events = []
     for event in self.events:
         event_kept = False # A boolean variable used for checking pass or not
@@ -52,14 +54,11 @@ def applyStraightLineCut(self):
         else:
             straight_line_events.append(None)  # Replace events without straight line paths with None
 
-    self.events = straight_line_events
 
-# Define the function to count events for each channel
-def countEventsPerChannel(self):
     # Initialize a dictionary to store the count of events for each (row, column, layer) combination
     channel_counts = {(row, column, layer): 0 for row in range(4) for column in range(4) for layer in range(4)}
 
-    for event in self.events:
+    for event in straight_line_events:
         if event is None:
             continue  # Skip events that were cut out
         for row in range(4):

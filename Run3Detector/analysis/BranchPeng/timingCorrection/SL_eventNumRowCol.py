@@ -22,16 +22,17 @@ def getEventNum(self):
         for column in range(4):
             event_count = 0
     
-            # straight line path location mask
+            # straight line path location boolean mask
             pulse_maskL0 = (self.events['row'] == row) & (self.events['column'] == column) & (self.events['layer'] == 0)
             pulse_maskL1 = (self.events['row'] == row) & (self.events['column'] == column) & (self.events['layer'] == 1)
             pulse_maskL2 = (self.events['row'] == row) & (self.events['column'] == column) & (self.events['layer'] == 2)
             pulse_maskL3 = (self.events['row'] == row) & (self.events['column'] == column) & (self.events['layer'] == 3)
 
-            # straight line mask (this is also a event-wise cut to keep only events that have SLPs in current location)
+            # straight line mask (this is also a event-wise cut to keep only events that have SLPs of 4 layers at current location)
             straightLineMask = ak.any(pulse_maskL0, axis = 1) & ak.any(pulse_maskL1, axis = 1) & ak.any(pulse_maskL2, axis = 1) & ak.any(pulse_maskL3, axis = 1)
 
-            events_at_current_loc = ak.any(self.events['chan'][straightLineMask], axis = 1)
+            # this is a list to indicate whether each event at current location has SLPs or not
+            events_at_current_loc = ak.any(self.events['timeFit_module_calibrated'][straightLineMask], axis = 1)
 
             for i in range(len(self.events)):
                 if events_at_current_loc[i] is True:

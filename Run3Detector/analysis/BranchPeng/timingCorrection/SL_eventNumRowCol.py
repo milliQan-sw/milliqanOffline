@@ -15,7 +15,6 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 
 # Try to find the utilities directory in the current directory or one level up
 utilities_dir = os.path.join(script_dir, '..', 'utilities')
-
 if not os.path.exists(utilities_dir):
     # If not found, adjust the path to look one level higher
     utilities_dir = os.path.join(script_dir, '..', '..', 'utilities')

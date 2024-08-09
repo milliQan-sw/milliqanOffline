@@ -109,7 +109,7 @@ branches = ['timeFit_module_calibrated', 'height', 'area', 'column', 'row', 'lay
 mycuts = milliqanCuts()
 
 # Defining the cutflow
-cutflow = [mycuts.applyStraightLineCut]
+cutflow = [mycuts.applyStraightLineCut, mycuts.applyStraightLineCut]
 
 # Create a schedule of the cuts
 myschedule = milliQanScheduler(cutflow, mycuts)

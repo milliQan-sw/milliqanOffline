@@ -87,7 +87,7 @@ def countEventsPerChannel(events):
 def process_files_in_parallel(filelist):
     total_channel_counts = {(row, column, layer): 0 for row in range(4) for column in range(4) for layer in range(4)}
 
-    with concurrent.futures.ProcessPoolExecutor() as executor:
+    with concurrent.futures.ProcessPoolExecutor(max_workers=8) as executor:  # Set to 8 workers
         for event_counts in executor.map(process_file, filelist):
             if event_counts is None:
                 continue

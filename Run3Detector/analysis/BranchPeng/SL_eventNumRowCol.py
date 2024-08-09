@@ -9,6 +9,11 @@ import numpy as np
 import pandas as pd
 import array as arr
 import sys
+
+script_dir = os.path.dirname(os.path.abspath(__file__))
+utilities_dir = os.path.join(script_dir, '..', 'utilities')
+sys.path.append(utilities_dir)
+
 from milliqanProcessor import *
 from milliqanScheduler import *
 from milliqanCuts import *

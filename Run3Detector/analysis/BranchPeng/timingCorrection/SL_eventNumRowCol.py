@@ -72,7 +72,6 @@ def countEventsPerChannel(self):
     return channel_counts
 
 # Add our custom functions to milliqanCuts
-setattr(milliqanCuts, 'applyStraightLineCut', applyStraightLineCut)
 setattr(milliqanCuts, 'countEventsPerChannel', countEventsPerChannel)
 
 # Define the range of runs (from Run1000-1009 to Run1620-1629: 63 histograms)
@@ -106,7 +105,7 @@ branches = ['timeFit_module_calibrated', 'height', 'area', 'column', 'row', 'lay
 mycuts = milliqanCuts()
 
 # Defining the cutflow
-cutflow = [mycuts.applyStraightLineCut, mycuts.applyStraightLineCut]
+cutflow = [mycuts.countEventsPerChannel]
 
 # Create a schedule of the cuts
 myschedule = milliQanScheduler(cutflow, mycuts)

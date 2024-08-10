@@ -28,89 +28,43 @@ from milliqanScheduler import *
 from milliqanCuts import *
 from milliqanPlotter import *
 
-def process_file(file_path):
-    print(f"Processing file: {file_path}")
-    try:
-        # Open the ROOT file and retrieve the events
-        with uproot.open(file_path) as file:
-            events = file["t"].arrays(branches, library="ak")  # Use the correct tree name
-            print(f"Successfully retrieved events from: {file_path}")
-            return countEventsPerChannel(events)
-    except Exception as e:
-        print(f"Error processing file {file_path}: {e}")
-        return None
+# Define the function to get the time differences
+def getTimeDiff(self):
+    
+    
 
-def countEventsPerChannel(events):
-    print("Starting countEventsPerChannel function...")
-    # Define the cut to keep only events with straight line paths
-    straight_line_events = []
-    for event_index, event in enumerate(events):
-        event_kept = False
-        for row in range(4):
-            for column in range(4):
-                pulse_maskL0 = (event['row'] == row) & (event['column'] == column) & (event['layer'] == 0)
-                pulse_maskL1 = (event['row'] == row) & (event['column'] == column) & (event['layer'] == 1)
-                pulse_maskL2 = (event['row'] == row) & (event['column'] == column) & (event['layer'] == 2)
-                pulse_maskL3 = (event['row'] == row) & (event['column'] == column) & (event['layer'] == 3)
 
-                if ak.any(pulse_maskL0) and ak.any(pulse_maskL1) and ak.any(pulse_maskL2) and ak.any(pulse_maskL3):
-                    event_kept = True
-                    break
-            if event_kept:
-                break
 
-        if event_kept:
-            straight_line_events.append(event)
+# Add our custom function to milliqanCuts
+setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)
 
-        if event_index % 100 == 0:
-            print(f"Processed {event_index + 1}/{len(events)} events")
-
-    print("Finished filtering events. Starting to count events per channel...")
-
-    channel_counts = {(row, column, layer): 0 for row in range(4) for column in range(4) for layer in range(4)}
-
-    for event_index, event in enumerate(straight_line_events):
-        for row in range(4):
-            for column in range(4):
-                for layer in range(4):
-                    channel_mask = (event['row'] == row) & (event['column'] == column) & (event['layer'] == layer)
-                    if ak.any(channel_mask):
-                        channel_counts[(row, column, layer)] += 1
-                        break
-
-        if event_index % 100 == 0:
-            print(f"Counted {event_index + 1}/{len(straight_line_events)} events")
-
-    print("Finished counting events per channel.")
-    return channel_counts
-
-def process_files_in_parallel(filelist):
-    total_channel_counts = {(row, column, layer): 0 for row in range(4) for column in range(4) for layer in range(4)}
-
-    with concurrent.futures.ProcessPoolExecutor(max_workers=8) as executor:  # Set to 8 workers
-        for event_counts in executor.map(process_file, filelist):
-            if event_counts is None:
-                continue
-            for channel, count in event_counts.items():
-                total_channel_counts[channel] += count
-
-    return total_channel_counts
-
-# Define the range of runs
-start_run_number = 1000
-end_run_number = 1000
+# Define the range of runs (from Run1000-1009 to Run1620-1629: 63 histograms)
+start_run_number = 1000 ######################################################################################################################################################
+end_run_number = 1009 ########################################################################################################################################################
 
 # Define a file list to run over
 filelist = []
+beamOn_true_count = 0
+total_files_count = 0
 
 for run_number in range(start_run_number, end_run_number + 1):
     print(f"Processing run number: {run_number}")
     file_number = 0
     consecutive_missing_files = 0
     while True:
-        file_path = f"/home/bpeng/muonAnalysis/1000/MilliQan_Run{run_number}.{file_number}_v34.root"
+        file_path = f"/home/bpeng/muonAnalysis/1000/MilliQan_Run{run_number}.{file_number}_v34.root" #########################################################################
         if os.path.exists(file_path):
             filelist.append(file_path)
+            try:
+                with uproot.open(file_path) as file:
+                    tree = file["t"]
+                    beamOn = tree["beamOn"].array(library="np")
+                    if np.any(beamOn):
+                        beamOn_true_count += 1
+                    total_files_count += 1
+                print(f"Processed file: {file_path}")
+            except Exception as e:
+                print(f"Error processing file {file_path}: {e}")
             file_number += 1
             consecutive_missing_files = 0
         else:
@@ -120,13 +74,55 @@ for run_number in range(start_run_number, end_run_number + 1):
                 break
             file_number += 1
 
+# Calculate the beamOn percentage
+beamOn_true_percentage = (beamOn_true_count / total_files_count) * 100 if total_files_count > 0 else 0
+
 # Define the necessary branches to run over
 branches = ['timeFit_module_calibrated', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type', 'beamOn']
 
-# Process files in parallel and accumulate results
-total_channel_counts = process_files_in_parallel(filelist)
+# Define the milliqan cuts object
+mycuts = milliqanCuts()
 
-# Print out the final event counts for each channel
-print("Final event counts for each channel (row, column, layer):")
-for (row, column, layer), count in total_channel_counts.items():
-    print(f"Row {row}, Column {column}, Layer {layer}: {count} events")
+# Define milliqan plotter
+myplotter = milliqanPlotter()
+
+# Create a 1D root histogram
+h_1d = r.TH1F("h_1d", f"Run {start_run_number} to {end_run_number} time difference", 100, -50, 50)
+
+# Add root histogram to plotter
+myplotter.addHistograms(h_1d, 'timeDiff')
+
+# Defining the cutflow
+cutflow = [mycuts.getTimeDiff, myplotter.dict['h_1d']]
+
+# Create a schedule of the cuts
+myschedule = milliQanScheduler(cutflow, mycuts, myplotter)
+
+# Print out the schedule
+myschedule.printSchedule()
+
+# Create the milliqan processor object
+myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts, myplotter)
+
+# Run the milliqan processor
+myiterator.run()
+
+# Draw the histogram
+canvas = r.TCanvas("canvas", "canvas", 800, 600)
+h_1d.Draw()
+
+# Add text to the histogram
+text = r.TText()
+text.SetNDC()
+text.SetTextSize(0.03)
+text.DrawText(0.15, 0.75, f"Beam on files percentage: {beamOn_true_percentage:.2f}%")
+text.Draw()
+
+# Create a new TFile
+f = r.TFile(f"Run{start_run_number}to{end_run_number}timingCorrection.root", "recreate")
+
+# Write the canvas (including histogram and text) to the file
+canvas.Write()
+
+# Close the file
+f.Close()

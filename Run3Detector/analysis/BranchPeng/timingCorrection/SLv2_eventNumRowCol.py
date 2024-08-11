@@ -30,7 +30,6 @@ from milliqanPlotter import *
 
 # Define the function to get the number of events 
 def getEventNum(self):
-    
     eventCount = 0
 
     col = 0

@@ -98,7 +98,7 @@ def process_files_in_parallel(filelist):
 
 # Define the range of runs
 start_run_number = 1000
-end_run_number = 1000
+end_run_number = 1099
 
 # Define a file list to run over
 filelist = []

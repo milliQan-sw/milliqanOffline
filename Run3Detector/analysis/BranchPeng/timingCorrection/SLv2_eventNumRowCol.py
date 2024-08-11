@@ -28,10 +28,11 @@ from milliqanScheduler import *
 from milliqanCuts import *
 from milliqanPlotter import *
 
-# Define the function to get the time differences
-def getTimeDiff(self):
+# Define the function to get the number of events 
+def getEventNum(self):
     
-    
+    eventsFiltered = self.events['chan']['straightLineCut']
+
 
 
 
@@ -55,16 +56,6 @@ for run_number in range(start_run_number, end_run_number + 1):
         file_path = f"/home/bpeng/muonAnalysis/1000/MilliQan_Run{run_number}.{file_number}_v34.root" #########################################################################
         if os.path.exists(file_path):
             filelist.append(file_path)
-            try:
-                with uproot.open(file_path) as file:
-                    tree = file["t"]
-                    beamOn = tree["beamOn"].array(library="np")
-                    if np.any(beamOn):
-                        beamOn_true_count += 1
-                    total_files_count += 1
-                print(f"Processed file: {file_path}")
-            except Exception as e:
-                print(f"Error processing file {file_path}: {e}")
             file_number += 1
             consecutive_missing_files = 0
         else:

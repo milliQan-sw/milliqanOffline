@@ -76,9 +76,6 @@ for run_number in range(start_run_number, end_run_number + 1):
                 break
             file_number += 1
 
-# Calculate the beamOn percentage
-beamOn_true_percentage = (beamOn_true_count / total_files_count) * 100 if total_files_count > 0 else 0
-
 # Define the necessary branches to run over
 branches = ['timeFit_module_calibrated', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type', 'beamOn']
 
@@ -88,14 +85,8 @@ mycuts = milliqanCuts()
 # Define milliqan plotter
 myplotter = milliqanPlotter()
 
-# Create a 1D root histogram
-h_1d = r.TH1F("h_1d", f"Run {start_run_number} to {end_run_number} time difference", 100, -50, 50)
-
-# Add root histogram to plotter
-myplotter.addHistograms(h_1d, 'timeDiff')
-
 # Defining the cutflow
-cutflow = [mycuts.getTimeDiff, myplotter.dict['h_1d']]
+cutflow = [mycuts.getEventNum]
 
 # Create a schedule of the cuts
 myschedule = milliQanScheduler(cutflow, mycuts, myplotter)
@@ -108,23 +99,3 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts, myplotter
 
 # Run the milliqan processor
 myiterator.run()
-
-# Draw the histogram
-canvas = r.TCanvas("canvas", "canvas", 800, 600)
-h_1d.Draw()
-
-# Add text to the histogram
-text = r.TText()
-text.SetNDC()
-text.SetTextSize(0.03)
-text.DrawText(0.15, 0.75, f"Beam on files percentage: {beamOn_true_percentage:.2f}%")
-text.Draw()
-
-# Create a new TFile
-f = r.TFile(f"Run{start_run_number}to{end_run_number}timingCorrection.root", "recreate")
-
-# Write the canvas (including histogram and text) to the file
-canvas.Write()
-
-# Close the file
-f.Close()

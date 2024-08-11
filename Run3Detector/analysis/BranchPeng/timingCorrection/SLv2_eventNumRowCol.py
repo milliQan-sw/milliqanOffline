@@ -45,8 +45,6 @@ end_run_number = 1009 ##########################################################
 
 # Define a file list to run over
 filelist = []
-beamOn_true_count = 0
-total_files_count = 0
 
 for run_number in range(start_run_number, end_run_number + 1):
     print(f"Processing run number: {run_number}")

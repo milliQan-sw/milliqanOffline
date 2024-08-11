@@ -39,7 +39,7 @@ def getEventNum(self):
 
     locationMask = (self.events['column'] == col) & (self.events['row'] == row) & (self.events['layer'] == lay)
 
-    eventsSL = self.events['chan']['straightLineCut']
+    eventsSL = self.events['straightLineCut']
 
     eventsFiltered = ak.any(eventsSL[locationMask], axis = 1)
 

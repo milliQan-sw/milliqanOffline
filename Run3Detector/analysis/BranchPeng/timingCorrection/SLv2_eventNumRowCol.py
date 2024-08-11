@@ -50,7 +50,7 @@ def getEventNum(self):
     print(eventCount)
 
 # Add our custom function to milliqanCuts
-setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)
+setattr(milliqanCuts, 'getEventNum', getEventNum)
 
 # Define the range of runs (from Run1000-1009 to Run1620-1629: 63 histograms)
 start_run_number = 1000 ######################################################################################################################################################

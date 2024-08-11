@@ -31,10 +31,23 @@ from milliqanPlotter import *
 # Define the function to get the number of events 
 def getEventNum(self):
     
-    eventsFiltered = self.events['chan']['straightLineCut']
+    eventCount = 0
 
+    col = 0
+    row = 0
+    lay = 0
 
+    locationMask = (self.events['column'] == col) & (self.events['row'] == row) & (self.events['layer'] == lay)
 
+    eventsSL = self.events['chan']['straightLineCut']
+
+    eventsFiltered = ak.any(eventsSL[locationMask], axis = 1)
+
+    for i in range(len(eventsFiltered)):
+        if eventsFiltered[i] is True:
+            eventCount += 1
+
+    print(eventCount)
 
 # Add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)

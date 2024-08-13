@@ -27,6 +27,8 @@ from milliqanPlotter import *
 
 # Define the function to get the time differences
 def getTimeDiff(self):
+    time_diffsL30 = []
+
     # Area mask
     barAreaMask = self.events['area'] > 500000
     slabAreaMask = self.events['area'] > 500000 / 12
@@ -50,42 +52,30 @@ def getTimeDiff(self):
 
     timeL4 = masked_time2[masked_layer2 == 4]
 
-    # Using Awkward Array's `min` function to find the minimum time per event
-    timeL0_min = ak.min(timeL0, axis=1, mask_identity=True)
-    timeL1_min = ak.min(timeL1, axis=1, mask_identity=True)
-    timeL2_min = ak.min(timeL2, axis=1, mask_identity=True)
-    timeL3_min = ak.min(timeL3, axis=1, mask_identity=True)
-    timeL4_min = ak.min(timeL4, axis=1, mask_identity=True)
+    # Function to get minimum time per event handling None values
+    def minTime(pulse_times):
+        filtered_times = [time for time in pulse_times if time is not None]
+        return min(filtered_times) if filtered_times else None
 
-    # Stack the times to easily apply the condition for all layers
-    stacked_times = ak.zip({
-        'L0': timeL0_min,
-        'L1': timeL1_min,
-        'L2': timeL2_min,
-        'L3': timeL3_min,
-        'L4': timeL4_min
-    })
+    # Extract minimum times for each layer
+    timeL0_min = [minTime(event) for event in ak.to_list(timeL0)]
+    timeL1_min = [minTime(event) for event in ak.to_list(timeL1)]
+    timeL2_min = [minTime(event) for event in ak.to_list(timeL2)]
+    timeL3_min = [minTime(event) for event in ak.to_list(timeL3)]
+    timeL4_min = [minTime(event) for event in ak.to_list(timeL4)]
 
-    # Replace None values with a large negative number (or any placeholder)
-    stacked_times_filled = ak.zip({
-        'L0': ak.fill_none(stacked_times['L0'], -999999),
-        'L1': ak.fill_none(stacked_times['L1'], -999999),
-        'L2': ak.fill_none(stacked_times['L2'], -999999),
-        'L3': ak.fill_none(stacked_times['L3'], -999999),
-        'L4': ak.fill_none(stacked_times['L4'], -999999)
-    })
+    for i in range(len(timeL0_min)):
+        # Require pulses in all 4 layers and the back panel for one event
+        if timeL0_min[i] is not None and timeL1_min[i] is not None and timeL2_min[i] is not None and timeL3_min[i] is not None and timeL4_min[i] is not None:
+            # Calculate time differences only for events with valid times in all layers
+            time_diffsL30.append(timeL3_min[i] - timeL0_min[i])
+    
+    print(time_diffsL30)
 
-    # Create a mask for events with valid times in all layers
-    valid_mask = (
-        (stacked_times_filled['L0'] != -999999) &
-        (stacked_times_filled['L1'] != -999999) &
-        (stacked_times_filled['L2'] != -999999) &
-        (stacked_times_filled['L3'] != -999999) &
-        (stacked_times_filled['L4'] != -999999)
-    )
-
-    # Calculate time differences for valid events
-    time_diffsL30 = ak.where(valid_mask, stacked_times_filled['L3'] - stacked_times_filled['L0'], None)
+    # Extend the final list to match the size of the current file
+    num_events = len(self.events)
+    num_nones = num_events - len(time_diffsL30)
+    time_diffsL30.extend([None] * num_nones)
 
     # Define custom branch
     self.events['timeDiff'] = time_diffsL30

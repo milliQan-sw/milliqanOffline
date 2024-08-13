@@ -1,4 +1,4 @@
-# Run this scirpt on milliqan-pc
+# importing packages
 import os
 import ROOT as r
 import uproot
@@ -9,11 +9,21 @@ import numpy as np
 import pandas as pd
 import array as arr
 import sys
-sys.path.append('../utilities')
+import concurrent.futures
+# Get the current script directory
+script_dir = os.path.dirname(os.path.abspath(__file__))
+# Try to find the utilities directory in the current directory
+utilities_dir = os.path.join(script_dir, '..', 'utilities')
+if not os.path.exists(utilities_dir):
+    # If not found, adjust the path to look one level higher
+    utilities_dir = os.path.join(script_dir, '..', '..', 'utilities')
+# Add the utilities directory to the Python path
+sys.path.append(utilities_dir)
 from milliqanProcessor import *
 from milliqanScheduler import *
 from milliqanCuts import *
 from milliqanPlotter import *
+
 
 # Define the function to get the time differences
 def getTimeDiff(self):
@@ -69,6 +79,7 @@ def getTimeDiff(self):
 
     # Define custom branch
     self.events['timeDiff'] = time_diffsL30
+
 
 # Add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)

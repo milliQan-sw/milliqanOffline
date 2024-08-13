@@ -1,4 +1,4 @@
-# the ##### comment is for easier locating parameters due to the need to adjust them frequently
+# importing packages
 import os
 import ROOT as r
 import uproot
@@ -9,11 +9,21 @@ import numpy as np
 import pandas as pd
 import array as arr
 import sys
-sys.path.append('../utilities')
+import concurrent.futures
+# Get the current script directory
+script_dir = os.path.dirname(os.path.abspath(__file__))
+# Try to find the utilities directory in the current directory
+utilities_dir = os.path.join(script_dir, '..', 'utilities')
+if not os.path.exists(utilities_dir):
+    # If not found, adjust the path to look one level higher
+    utilities_dir = os.path.join(script_dir, '..', '..', 'utilities')
+# Add the utilities directory to the Python path
+sys.path.append(utilities_dir)
 from milliqanProcessor import *
 from milliqanScheduler import *
 from milliqanCuts import *
 from milliqanPlotter import *
+
 
 # Define the function to get the time differences
 def getTimeDiff(self):
@@ -69,6 +79,7 @@ def getTimeDiff(self):
 
     # Define custom branch
     self.events['timeDiff'] = time_diffsL30
+
 
 # Add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)
@@ -133,6 +144,7 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts, myplotter
 # Run the milliqan processor
 myiterator.run()
 
+
 # Fit the histogram with a single Gaussian function for the peak and save the canvas to the ROOT file
 def fit_histogram(hist, root_file):
     # Define the Gaussian model for the peak
@@ -166,6 +178,7 @@ def fit_histogram(hist, root_file):
     c.Write("TimeDiffs_Fit_Canvas")
 
     return mean_peak, stddev_peak
+
 
 # Create a new TFile for the fitted histogram and canvas
 f_fit = r.TFile(f"FitRun{start_run_number}to{end_run_number}TC.root", "recreate")

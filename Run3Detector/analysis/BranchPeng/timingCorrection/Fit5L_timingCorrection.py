@@ -27,6 +27,8 @@ from milliqanPlotter import *
 
 # Define the function to get the time differences
 def getTimeDiff(self):
+    time_diffsL30 = []
+    
     # Area mask
     barAreaMask = self.events['area'] > 500000
     slabAreaMask = self.events['area'] > 500000 / 12

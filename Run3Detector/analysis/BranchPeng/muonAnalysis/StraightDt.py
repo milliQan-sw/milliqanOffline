@@ -176,7 +176,7 @@ filelist = [
     if os.path.exists(f"/home/bpeng/muonAnalysis/MilliQan_Run1541.{i}_v34.root")
 ]
 '''
-filelist = ['/home/bpeng/muonAnalysis/MilliQan_Run1000_v34_skim_correction.root']
+filelist = ['/home/bpeng/muonAnalysis/MilliQan_Run1000_v34.root']
 
 # define the necessary branches to run over
 branches = ['pickupFlag', 'boardsMatched', 'timeFit_module_calibrated_corrected', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type']

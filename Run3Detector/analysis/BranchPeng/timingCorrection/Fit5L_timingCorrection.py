@@ -79,27 +79,15 @@ end_run_number = 1009 ##########################################################
 
 # Define a file list to run over
 filelist = []
-beamOn_true_count = 0
-total_files_count = 0
 
 for run_number in range(start_run_number, end_run_number + 1):
     print(f"Processing run number: {run_number}")
     file_number = 0
     consecutive_missing_files = 0
     while True:
-        file_path = f"/home/bpeng/muonAnalysis/1000/MilliQan_Run{run_number}.{file_number}_v34.root" ##########################################################################
+        file_path = f"/home/bpeng/muonAnalysis/1000/MilliQan_Run{run_number}.{file_number}_v34.root" #########################################################################
         if os.path.exists(file_path):
             filelist.append(file_path)
-            try:
-                with uproot.open(file_path) as file:
-                    tree = file["t"]
-                    beamOn = tree["beamOn"].array(library="np")
-                    if np.any(beamOn):
-                        beamOn_true_count += 1
-                    total_files_count += 1
-                print(f"Processed file: {file_path}")
-            except Exception as e:
-                print(f"Error processing file {file_path}: {e}")
             file_number += 1
             consecutive_missing_files = 0
         else:
@@ -145,56 +133,47 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts, myplotter
 # Run the milliqan processor
 myiterator.run()
 
-# Calculate the percentage of beamOn == True files
-beamOn_true_percentage = (beamOn_true_count / total_files_count) * 100
-print(f"Percentage of beam on files: {beamOn_true_percentage:.2f}%")
-
-# Fit the histogram with a single Gaussian function for the left peak and save the canvas to the ROOT file
-def fit_histogram(hist, beamOn_true_percentage, root_file):
-    if not isinstance(hist, r.TH1):
-        print("Error: The provided object is not a histogram.")
-        return None, None
-
-    # Define the Gaussian model for the left peak
-    gaus1 = r.TF1("gaus1", "gaus", -11, 15)  # Range ###########################################################################################################################
+# Fit the histogram with a single Gaussian function for the peak and save the canvas to the ROOT file
+def fit_histogram(hist, root_file):
+    # Define the Gaussian model for the peak
+    gaus1 = r.TF1("gaus1", "gaus", -11, 15)  # Range #####################################################################################################################
 
     # Initial parameter estimates for the Gaussian function
-    gaus1.SetParameters(14, -0.5, 5.145)  # Max Mean Stddev ######################################################################################################################
+    gaus1.SetParameters(14, -0.5, 5.145)  # Max Mean Stddev ##############################################################################################################
 
     # Fit the histogram with the Gaussian model
     hist.Fit(gaus1, "R")
 
-    # Get the mean and stddev of the left peak (gaus1)
-    mean_left_peak = gaus1.GetParameter(1)
-    stddev_left_peak = abs(gaus1.GetParameter(2))
+    # Get the mean and stddev of the peak (gaus1)
+    mean_peak = gaus1.GetParameter(1)
+    stddev_peak = abs(gaus1.GetParameter(2))
 
     # Draw the histogram and individual fit
     c = r.TCanvas()
     hist.Draw()
-    gaus1.SetLineColor(r.kRed)
+    gaus1.SetLineColor(r.kRed) ###########################################################################################################################################
     gaus1.Draw("same")
 
     # Add the mean and stddev values as text on the plot
     text = r.TText()
     text.SetNDC()
     text.SetTextSize(0.03)
-    text.DrawText(0.15, 0.80, f"Mean of the beam peak: {mean_left_peak:.2f}") #################################################################################################
-    text.DrawText(0.15, 0.75, f"Stddev of the beam peak: {stddev_left_peak:.2f}") #############################################################################################
-    text.DrawText(0.15, 0.70, f"Beam on files percentage: {beamOn_true_percentage:.2f}%")
+    text.DrawText(0.15, 0.80, f"Mean of the BEAM peak: {mean_peak:.2f}") #################################################################################################
+    text.DrawText(0.15, 0.75, f"Stddev of the BEAM peak: {stddev_peak:.2f}") #############################################################################################
 
     # Save the canvas to the ROOT file
     root_file.cd()
     c.Write("TimeDiffs_Fit_Canvas")
 
-    return mean_left_peak, stddev_left_peak
+    return mean_peak, stddev_peak
 
 # Create a new TFile for the fitted histogram and canvas
-f_fit = r.TFile(f"FitRun{start_run_number}to{end_run_number}timingCorrection.root", "recreate")
+f_fit = r.TFile(f"FitRun{start_run_number}to{end_run_number}TC.root", "recreate")
 
-# Fit the histogram and get the mean and stddev of the left peak
-mean_left_peak, stddev_left_peak = fit_histogram(h_1d, beamOn_true_percentage, f_fit)
-print("Mean of the peak:", mean_left_peak)
-print("Stddev of the peak:", stddev_left_peak)
+# Fit the histogram and get the mean and stddev of the peak
+mean_peak, stddev_peak = fit_histogram(h_1d, f_fit)
+print("Mean of the peak:", mean_peak)
+print("Stddev of the peak:", stddev_peak)
 
 # Close the fit file
 f_fit.Close()

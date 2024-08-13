@@ -160,7 +160,7 @@ text.DrawText(0.15, 0.75, f"Beam on files percentage: {beamOn_true_percentage:.2
 text.Draw()
 
 # Create a new TFile
-f = r.TFile(f"Run{start_run_number}to{end_run_number}timingCorrection.root", "recreate")
+f = r.TFile(f"Run{start_run_number}to{end_run_number}TC.root", "recreate")
 
 # Write the canvas (including histogram and text) to the file
 canvas.Write()

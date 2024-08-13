@@ -47,7 +47,6 @@ def getTimeDiff(self):
     timeL1 = masked_time1[masked_layer1 == 1]
     timeL2 = masked_time1[masked_layer1 == 2]
     timeL3 = masked_time1[masked_layer1 == 3]
-
     timeL4 = masked_time2[masked_layer2 == 4]
 
     # Ensure all time arrays have the correct shape before finding minimum times
@@ -57,20 +56,23 @@ def getTimeDiff(self):
     timeL3_min = ak.min(ak.fill_none(timeL3, np.inf), axis=1)
     timeL4_min = ak.min(ak.fill_none(timeL4, np.inf), axis=1)
 
-    # Stack the times to easily apply the condition for all layers
+    # Make sure the arrays are uniform before stacking
     stacked_times = ak.zip({
         'L0': timeL0_min,
         'L1': timeL1_min,
         'L2': timeL2_min,
         'L3': timeL3_min,
         'L4': timeL4_min
-    })
+    }, depth_limit=1)  # Ensure we're working with uniform depth arrays
 
     # Create a mask for events with valid times in all layers
     valid_mask = ak.all(stacked_times != np.inf, axis=1)
 
+    # Flatten the mask if necessary to align with the time differences calculation
+    valid_mask_flat = ak.flatten(valid_mask, axis=None)  # Flatten to match the 1D array if needed
+
     # Calculate time differences for valid events
-    time_diffsL30 = ak.where(valid_mask, stacked_times['L3'] - stacked_times['L0'], None)
+    time_diffsL30 = ak.where(valid_mask_flat, stacked_times['L3'] - stacked_times['L0'], None)
 
     # Define custom branch
     self.events['timeDiff'] = time_diffsL30

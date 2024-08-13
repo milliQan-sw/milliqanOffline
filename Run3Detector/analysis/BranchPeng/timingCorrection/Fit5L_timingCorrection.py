@@ -28,7 +28,7 @@ from milliqanPlotter import *
 # Define the function to get the time differences
 def getTimeDiff(self):
     time_diffsL30 = []
-    
+
     # Area mask
     barAreaMask = self.events['area'] > 500000
     slabAreaMask = self.events['area'] > 500000 / 12
@@ -51,9 +51,11 @@ def getTimeDiff(self):
     timeL3 = masked_time1[masked_layer1 == 3]
 
     timeL4 = masked_time2[masked_layer2 == 4]
-
+    print('here')
     # Using Awkward Array's `min` function to find the minimum time per event (this part should be repetitive to ipulse == 0)
+    
     timeL0_min = ak.min(timeL0, axis=1, mask_identity=True)
+    print('here')
     timeL1_min = ak.min(timeL1, axis=1, mask_identity=True)
     timeL2_min = ak.min(timeL2, axis=1, mask_identity=True)
     timeL3_min = ak.min(timeL3, axis=1, mask_identity=True)

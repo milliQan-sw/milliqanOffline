@@ -119,19 +119,10 @@ for run_number in range(start_run_number, end_run_number + 1):
 beamOn_true_percentage = (beamOn_true_count / total_files_count) * 100 if total_files_count > 0 else 0
 
 # Define the necessary branches to run over
-branches = ['pickupFlag', 'boardsMatched', 'timeFit_module_calibrated', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type', 'beamOn']
+branches = ['timeFit_module_calibrated', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type', 'beamOn']
 
 # Define the milliqan cuts object
 mycuts = milliqanCuts()
-
-# require pulses are not pickup
-pickupCut = mycuts.getCut(mycuts.pickupCut, 'pickupCut', cut=True, branches=branches)
-
-# require that all digitizer boards are matched
-boardMatchCut = mycuts.getCut(mycuts.boardsMatched, 'boardMatchCut', cut=True, branches=branches)
-
-# add four layer cut
-fourLayerCut = mycuts.getCut(mycuts.fourLayerCut, 'fourLayerCut', cut=False)
 
 # Define milliqan plotter
 myplotter = milliqanPlotter()
@@ -143,7 +134,7 @@ h_1d = r.TH1F("h_1d", f"Run {start_run_number} to {end_run_number} time differen
 myplotter.addHistograms(h_1d, 'timeDiff')
 
 # Defining the cutflow
-cutflow = [boardMatchCut, pickupCut, mycuts.layerCut, mycuts.getTimeDiff, myplotter.dict['h_1d']]
+cutflow = [mycuts.getTimeDiff, myplotter.dict['h_1d']]
 
 # Create a schedule of the cuts
 myschedule = milliQanScheduler(cutflow, mycuts, myplotter)

@@ -50,7 +50,7 @@ def getTimeDiff(self):
 
     timeL4 = masked_time2[masked_layer2 == 4]
 
-    # Using Awkward Array's `min` function to find the minimum time per event
+    # Using Awkward Array's `min` function to find the minimum time per event (this part should be repetitive to ipulse == 0)
     timeL0_min = ak.min(timeL0, axis=-1, mask_identity=True)
     timeL1_min = ak.min(timeL1, axis=-1, mask_identity=True)
     timeL2_min = ak.min(timeL2, axis=-1, mask_identity=True)

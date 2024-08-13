@@ -50,12 +50,12 @@ def getTimeDiff(self):
 
     timeL4 = masked_time2[masked_layer2 == 4]
 
-    # Using Awkward Array's `min` function to find the minimum time per event (this part should be repetitive to ipulse == 0)
-    timeL0_min = ak.min(timeL0, axis=1, mask_identity=True)
-    timeL1_min = ak.min(timeL1, axis=1, mask_identity=True)
-    timeL2_min = ak.min(timeL2, axis=1, mask_identity=True)
-    timeL3_min = ak.min(timeL3, axis=1, mask_identity=True)
-    timeL4_min = ak.min(timeL4, axis=1, mask_identity=True)
+    # Ensure all time arrays have the correct shape before finding minimum times
+    timeL0_min = ak.min(ak.fill_none(timeL0, np.inf), axis=1)
+    timeL1_min = ak.min(ak.fill_none(timeL1, np.inf), axis=1)
+    timeL2_min = ak.min(ak.fill_none(timeL2, np.inf), axis=1)
+    timeL3_min = ak.min(ak.fill_none(timeL3, np.inf), axis=1)
+    timeL4_min = ak.min(ak.fill_none(timeL4, np.inf), axis=1)
 
     # Stack the times to easily apply the condition for all layers
     stacked_times = ak.zip({
@@ -67,7 +67,7 @@ def getTimeDiff(self):
     })
 
     # Create a mask for events with valid times in all layers
-    valid_mask = ak.all(stacked_times != None, axis=1)
+    valid_mask = ak.all(stacked_times != np.inf, axis=1)
 
     # Calculate time differences for valid events
     time_diffsL30 = ak.where(valid_mask, stacked_times['L3'] - stacked_times['L0'], None)

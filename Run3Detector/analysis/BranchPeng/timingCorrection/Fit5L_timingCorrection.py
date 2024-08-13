@@ -43,17 +43,17 @@ def getTimeDiff(self):
 
     masked_time2 = self.events['timeFit_module_calibrated'][slabFinalPulseMask]
     masked_layer2 = self.events['layer'][slabFinalPulseMask]
-
+    print('here')
     # Masked times per layer
     timeL0 = masked_time1[masked_layer1 == 0]
     timeL1 = masked_time1[masked_layer1 == 1]
     timeL2 = masked_time1[masked_layer1 == 2]
+    print('here')
     timeL3 = masked_time1[masked_layer1 == 3]
 
     timeL4 = masked_time2[masked_layer2 == 4]
     print('here')
     # Using Awkward Array's `min` function to find the minimum time per event (this part should be repetitive to ipulse == 0)
-    
     timeL0_min = ak.min(timeL0, axis=1, mask_identity=True)
     print('here')
     timeL1_min = ak.min(timeL1, axis=1, mask_identity=True)

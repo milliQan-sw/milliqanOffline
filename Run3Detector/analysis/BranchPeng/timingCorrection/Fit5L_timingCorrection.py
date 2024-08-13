@@ -151,15 +151,15 @@ def fit_histogram(hist, root_file):
     # Draw the histogram and individual fit
     c = r.TCanvas()
     hist.Draw()
-    gaus1.SetLineColor(r.kRed) ###########################################################################################################################################
+    gaus1.SetLineColor(r.kRed) # Red for Beam, Blue for Cosmic ###########################################################################################################
     gaus1.Draw("same")
 
     # Add the mean and stddev values as text on the plot
     text = r.TText()
     text.SetNDC()
     text.SetTextSize(0.03)
-    text.DrawText(0.15, 0.80, f"Mean of the BEAM peak: {mean_peak:.2f}") #################################################################################################
-    text.DrawText(0.15, 0.75, f"Stddev of the BEAM peak: {stddev_peak:.2f}") #############################################################################################
+    text.DrawText(0.15, 0.80, f"Mean of the Beam peak: {mean_peak:.2f}") #################################################################################################
+    text.DrawText(0.15, 0.75, f"Stddev of the Cosmic peak: {stddev_peak:.2f}") ###########################################################################################
 
     # Save the canvas to the ROOT file
     root_file.cd()

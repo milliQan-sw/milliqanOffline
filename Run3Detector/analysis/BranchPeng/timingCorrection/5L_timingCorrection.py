@@ -67,10 +67,22 @@ def getTimeDiff(self):
     })
 
     # Replace None values with a large negative number (or any placeholder)
-    stacked_times_filled = ak.fill_none(stacked_times, -999999)
+    stacked_times_filled = ak.zip({
+        'L0': ak.fill_none(stacked_times['L0'], -999999),
+        'L1': ak.fill_none(stacked_times['L1'], -999999),
+        'L2': ak.fill_none(stacked_times['L2'], -999999),
+        'L3': ak.fill_none(stacked_times['L3'], -999999),
+        'L4': ak.fill_none(stacked_times['L4'], -999999)
+    })
 
     # Create a mask for events with valid times in all layers
-    valid_mask = ak.all(stacked_times_filled != -999999, axis=1)
+    valid_mask = (
+        (stacked_times_filled['L0'] != -999999) &
+        (stacked_times_filled['L1'] != -999999) &
+        (stacked_times_filled['L2'] != -999999) &
+        (stacked_times_filled['L3'] != -999999) &
+        (stacked_times_filled['L4'] != -999999)
+    )
 
     # Calculate time differences for valid events
     time_diffsL30 = ak.where(valid_mask, stacked_times_filled['L3'] - stacked_times_filled['L0'], None)

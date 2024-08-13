@@ -67,7 +67,7 @@ def getTimeDiff(self):
     })
 
     # Create a mask for events with valid times in all layers
-    valid_mask = ak.all(stacked_times != None, axis=-1)
+    valid_mask = ak.all(stacked_times != None, axis=1)
 
     # Calculate time differences for valid events
     time_diffsL30 = ak.where(valid_mask, stacked_times['L3'] - stacked_times['L0'], None)

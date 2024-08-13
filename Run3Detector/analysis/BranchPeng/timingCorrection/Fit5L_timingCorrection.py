@@ -109,7 +109,7 @@ for run_number in range(start_run_number, end_run_number + 1):
             file_number += 1
 
 # Define the necessary branches to run over
-branches = ['timeFit_module_calibrated', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type', 'beamOn']
+branches = ['pickupFlag', 'boardsMatched', 'timeFit_module_calibrated', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type', 'beamOn']
 
 # Define the milliqan cuts object
 mycuts = milliqanCuts()

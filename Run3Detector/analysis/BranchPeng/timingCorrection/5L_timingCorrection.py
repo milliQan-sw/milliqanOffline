@@ -72,9 +72,6 @@ def getTimeDiff(self):
     # Calculate time differences for valid events
     time_diffsL30 = ak.where(valid_mask, stacked_times['L3'] - stacked_times['L0'], None)
 
-    # Extend the final list to match the size of the current file
-    time_diffsL30 = ak.fill_none(time_diffsL30, None)
-
     # Define custom branch
     self.events['timeDiff'] = time_diffsL30
 

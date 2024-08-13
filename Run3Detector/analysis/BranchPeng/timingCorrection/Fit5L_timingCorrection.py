@@ -57,20 +57,18 @@ def getTimeDiff(self):
     timeL3_min = ak.min(timeL3, axis=1, mask_identity=True)
     timeL4_min = ak.min(timeL4, axis=1, mask_identity=True)
 
-    # Stack the times to easily apply the condition for all layers
-    stacked_times = ak.zip({
-        'L0': timeL0_min,
-        'L1': timeL1_min,
-        'L2': timeL2_min,
-        'L3': timeL3_min,
-        'L4': timeL4_min
-    })
+    for i in range(len(timeL0_min)):
+        # Require pulses in all 4 layers and the back panel for one event
+        if timeL0_min[i] is not None and timeL1_min[i] is not None and timeL2_min[i] is not None and timeL3_min[i] is not None and timeL4_min[i] is not None:
+            # Calculate time differences only for events with valid times in all layers
+            time_diffsL30.append(timeL3_min[i] - timeL0_min[i])
+    
+    print(time_diffsL30)
 
-    # Create a mask for events with valid times in all layers
-    valid_mask = ak.all(stacked_times != None, axis=1)
-
-    # Calculate time differences for valid events
-    time_diffsL30 = ak.where(valid_mask, stacked_times['L3'] - stacked_times['L0'], None)
+    # Extend the final list to match the size of the current file
+    num_events = len(self.events)
+    num_nones = num_events - len(time_diffsL30)
+    time_diffsL30.extend([None] * num_nones)
 
     # Define custom branch
     self.events['timeDiff'] = time_diffsL30

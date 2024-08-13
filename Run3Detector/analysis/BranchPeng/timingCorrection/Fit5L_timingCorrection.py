@@ -43,23 +43,26 @@ def getTimeDiff(self):
 
     masked_time2 = self.events['timeFit_module_calibrated'][slabFinalPulseMask]
     masked_layer2 = self.events['layer'][slabFinalPulseMask]
-    print('here')
+
     # Masked times per layer
     timeL0 = masked_time1[masked_layer1 == 0]
     timeL1 = masked_time1[masked_layer1 == 1]
     timeL2 = masked_time1[masked_layer1 == 2]
-    print('here')
     timeL3 = masked_time1[masked_layer1 == 3]
 
     timeL4 = masked_time2[masked_layer2 == 4]
-    print('here')
-    # Using Awkward Array's `min` function to find the minimum time per event (this part should be repetitive to ipulse == 0)
-    timeL0_min = ak.min(timeL0, axis=1, mask_identity=True)
-    print('here')
-    timeL1_min = ak.min(timeL1, axis=1, mask_identity=True)
-    timeL2_min = ak.min(timeL2, axis=1, mask_identity=True)
-    timeL3_min = ak.min(timeL3, axis=1, mask_identity=True)
-    timeL4_min = ak.min(timeL4, axis=1, mask_identity=True)
+
+    # Function to get minimum time per event handling None values
+    def minTime(pulse_times):
+        filtered_times = [time for time in pulse_times if time is not None]
+        return min(filtered_times) if filtered_times else None
+
+    # Extract minimum times for each layer
+    timeL0_min = [minTime(event) for event in ak.to_list(timeL0)]
+    timeL1_min = [minTime(event) for event in ak.to_list(timeL1)]
+    timeL2_min = [minTime(event) for event in ak.to_list(timeL2)]
+    timeL3_min = [minTime(event) for event in ak.to_list(timeL3)]
+    timeL4_min = [minTime(event) for event in ak.to_list(timeL4)]
 
     for i in range(len(timeL0_min)):
         # Require pulses in all 4 layers and the back panel for one event

@@ -115,6 +115,12 @@ branches = ['timeFit_module_calibrated', 'height', 'area', 'column', 'row', 'lay
 # Define the milliqan cuts object
 mycuts = milliqanCuts()
 
+# require pulses are not pickup
+pickupCut = mycuts.getCut(mycuts.pickupCut, 'pickupCut', cut=True, branches=branches)
+
+# require that all digitizer boards are matched
+boardMatchCut = mycuts.getCut(mycuts.boardsMatched, 'boardMatchCut', cut=True, branches=branches)
+
 # Define milliqan plotter
 myplotter = milliqanPlotter()
 
@@ -125,7 +131,7 @@ h_1d = r.TH1F("h_1d", f"Run {start_run_number} to {end_run_number} time differen
 myplotter.addHistograms(h_1d, 'timeDiff')
 
 # Defining the cutflow
-cutflow = [mycuts.getTimeDiff, myplotter.dict['h_1d']]
+cutflow = [boardMatchCut, pickupCut, mycuts.getTimeDiff, myplotter.dict['h_1d']]
 
 # Create a schedule of the cuts
 myschedule = milliQanScheduler(cutflow, mycuts, myplotter)

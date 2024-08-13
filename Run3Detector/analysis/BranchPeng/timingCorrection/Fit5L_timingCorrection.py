@@ -36,11 +36,11 @@ def getTimeDiff(self):
     slabFinalPulseMask = slabAreaMask & (self.events['ipulse'] == 0)
 
     # Apply the finalPulseMask
-    masked_time1 = self.events['timeFit_module_calibrated'][barFinalPulseMask]
-    masked_layer1 = self.events['layer'][barFinalPulseMask]
+    masked_time1 = ak.Array(self.events['timeFit_module_calibrated'][barFinalPulseMask])
+    masked_layer1 = ak.Array(self.events['layer'][barFinalPulseMask])
 
-    masked_time2 = self.events['timeFit_module_calibrated'][slabFinalPulseMask]
-    masked_layer2 = self.events['layer'][slabFinalPulseMask]
+    masked_time2 = ak.Array(self.events['timeFit_module_calibrated'][slabFinalPulseMask])
+    masked_layer2 = ak.Array(self.events['layer'][slabFinalPulseMask])
 
     # Masked times per layer
     timeL0 = masked_time1[masked_layer1 == 0]
@@ -71,9 +71,6 @@ def getTimeDiff(self):
 
     # Calculate time differences for valid events
     time_diffsL30 = ak.where(valid_mask, stacked_times['L3'] - stacked_times['L0'], None)
-
-    # Convert to numpy array if necessary
-    time_diffsL30 = ak.to_numpy(time_diffsL30)
 
     # Define custom branch
     self.events['timeDiff'] = time_diffsL30

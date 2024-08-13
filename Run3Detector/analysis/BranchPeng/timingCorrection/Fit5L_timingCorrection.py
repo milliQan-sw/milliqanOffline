@@ -120,6 +120,9 @@ pickupCut = mycuts.getCut(mycuts.pickupCut, 'pickupCut', cut=True, branches=bran
 # require that all digitizer boards are matched
 boardMatchCut = mycuts.getCut(mycuts.boardsMatched, 'boardMatchCut', cut=True, branches=branches)
 
+# add four layer cut
+fourLayerCut = mycuts.getCut(mycuts.fourLayerCut, 'fourLayerCut', cut=False)
+
 # Define milliqan plotter
 myplotter = milliqanPlotter()
 

@@ -36,11 +36,11 @@ def getTimeDiff(self):
     slabFinalPulseMask = slabAreaMask & (self.events['ipulse'] == 0)
 
     # Apply the finalPulseMask
-    masked_time1 = ak.to_numpy(self.events['timeFit_module_calibrated'][barFinalPulseMask])
-    masked_layer1 = ak.to_numpy(self.events['layer'][barFinalPulseMask])
+    masked_time1 = self.events['timeFit_module_calibrated'][barFinalPulseMask]
+    masked_layer1 = self.events['layer'][barFinalPulseMask]
 
-    masked_time2 = ak.to_numpy(self.events['timeFit_module_calibrated'][slabFinalPulseMask])
-    masked_layer2 = ak.to_numpy(self.events['layer'][slabFinalPulseMask])
+    masked_time2 = self.events['timeFit_module_calibrated'][slabFinalPulseMask]
+    masked_layer2 = self.events['layer'][slabFinalPulseMask]
 
     # Masked times per layer
     timeL0 = masked_time1[masked_layer1 == 0]
@@ -50,21 +50,27 @@ def getTimeDiff(self):
 
     timeL4 = masked_time2[masked_layer2 == 4]
 
-    # Ensure all time arrays have the correct shape before finding minimum times
-    timeL0_min = np.min(timeL0) if len(timeL0) > 0 else np.inf
-    timeL1_min = np.min(timeL1) if len(timeL1) > 0 else np.inf
-    timeL2_min = np.min(timeL2) if len(timeL2) > 0 else np.inf
-    timeL3_min = np.min(timeL3) if len(timeL3) > 0 else np.inf
-    timeL4_min = np.min(timeL4) if len(timeL4) > 0 else np.inf
+    # Using Awkward Array's `min` function to find the minimum time per event (this part should be repetitive to ipulse == 0)
+    timeL0_min = ak.min(timeL0, axis=1, mask_identity=True)
+    timeL1_min = ak.min(timeL1, axis=1, mask_identity=True)
+    timeL2_min = ak.min(timeL2, axis=1, mask_identity=True)
+    timeL3_min = ak.min(timeL3, axis=1, mask_identity=True)
+    timeL4_min = ak.min(timeL4, axis=1, mask_identity=True)
 
     # Stack the times to easily apply the condition for all layers
-    stacked_times = np.array([timeL0_min, timeL1_min, timeL2_min, timeL3_min, timeL4_min])
+    stacked_times = ak.zip({
+        'L0': timeL0_min,
+        'L1': timeL1_min,
+        'L2': timeL2_min,
+        'L3': timeL3_min,
+        'L4': timeL4_min
+    })
 
     # Create a mask for events with valid times in all layers
-    valid_mask = np.all(stacked_times != np.inf)
+    valid_mask = ak.all(stacked_times != None, axis=1)
 
     # Calculate time differences for valid events
-    time_diffsL30 = timeL3_min - timeL0_min if valid_mask else None
+    time_diffsL30 = ak.where(valid_mask, stacked_times['L3'] - stacked_times['L0'], None)
 
     # Define custom branch
     self.events['timeDiff'] = time_diffsL30

@@ -33,7 +33,9 @@ import math
 from sklearn.linear_model import LinearRegression
 import matplotlib.colors as mcolors
 
-def filling(typeArr,layerArr,rowArr,columnArr,npeArr,timeArr,NpeT):
+
+#oFFline tag is used to divide the pulse npe(it should be pulse area) from panel by 1000 to get the approximate pulse npe
+def filling(typeArr,layerArr,rowArr,columnArr,npeArr,timeArr,NpeT,oFFline=False):
     PulseNumArr = np.zeros((5, 22)) #count the number of pulse in each channel
     MaxNPEArr = np.zeros((5, 22))
     MaxPTimeArr = np.zeros((5, 22)) #pulse time for each channels that corresponding to the max pulse in the event
@@ -112,10 +114,20 @@ def filling(typeArr,layerArr,rowArr,columnArr,npeArr,timeArr,NpeT):
                     PulseNumArr[rowoffset-3][fillingColumn_offset] += 1  
 
 
-
+        #find the max pulse of current channel
         if npe > MaxNPEArr[rowoffset][fillingColumn_offset]:
-            MaxNPEArr[rowoffset][fillingColumn_offset] = npe
-            MaxPTimeArr[rowoffset][fillingColumn_offset] = time
+            if oFFline:
+                if (type != 0) and (npe/1000 > MaxNPEArr[rowoffset][fillingColumn_offset]) :
+                    MaxNPEArr[rowoffset][fillingColumn_offset] = (npe/1000)
+                    MaxPTimeArr[rowoffset][fillingColumn_offset] = time
+                else:
+                    MaxNPEArr[rowoffset][fillingColumn_offset] = npe
+                    MaxPTimeArr[rowoffset][fillingColumn_offset] = time
+                
+
+            else:
+                MaxNPEArr[rowoffset][fillingColumn_offset] = npe
+                MaxPTimeArr[rowoffset][fillingColumn_offset] = time
     #print(block) 
     
     return MaxPTimeArr,MaxNPEArr,PulseNumArr
@@ -595,7 +607,7 @@ if __name__ == "__main__":
     print(layerArr)
     #NpeT = 20 #my threashold that used to decide whether to highlight the channel
     NpeT = 0.5 #Ryan's study's threashold
-    MaxPTimeArr,MAXNPEarr,arr=filling(typeArr[0],layerArr[0],rowArr[0],columnArr[0],npeArr[0],timeArr[0],NpeT)
+    MaxPTimeArr,MAXNPEarr,arr=filling(typeArr[0],layerArr[0],rowArr[0],columnArr[0],npeArr[0],timeArr[0],NpeT) #things in array[1] is empty, only the first one of each array array[0] is useful
     #ColumnarrST,ROWarrST=findTrack(arr)
     ColumnarrST,ROWarrST=findTackWeight(MAXNPEarr)
     #findTrackSKWeight(MAXNPEarr)
@@ -617,12 +629,19 @@ if __name__ == "__main__":
     
     
     #display the the max NPE for each channel
-    
+    LargestNPE = np.max(MAXNPEarr) # find the largest hit among all of the channel. I need to use this value to change color of text to increase contrast.
+    print(f"LargestNPE{LargestNPE}")
+    print(LargestNPE*0.6)
     for row in range(5):
         for column in range(22):
-            if MAXNPEarr[row,column] > NpeT:
-                MaxNPEText = plt.text(column,4-row,f"{MAXNPEarr[row,column]:.0e}", color="red",fontsize=8)
-                PulseTimeMText = plt.text(column,4-row + 0.5,f"{MaxPTimeArr[row,column]:.0}ns", color="red",fontsize=8)
+            if (MAXNPEarr[row,column] > NpeT) and (MAXNPEarr[row,column] <= (LargestNPE*0.6)):
+                MaxNPEText = plt.text(column,4-row,f"{int(MAXNPEarr[row,column])} PE", color="white",fontsize=8)
+                PulseTimeMText = plt.text(column,4-row + 0.5,f"{round(MaxPTimeArr[row,column], 1)}ns", color="white",fontsize=8)
+                print(f"column{column} row {column} should be white")
+            elif (MAXNPEarr[row,column] > NpeT) and (MAXNPEarr[row,column] > (LargestNPE*0.6)):
+                MaxNPEText = plt.text(column,4-row,f"{int(MAXNPEarr[row,column])} PE", color="black",fontsize=8)
+                PulseTimeMText = plt.text(column,4-row + 0.5,f"{round(MaxPTimeArr[row,column], 1)}ns", color="black",fontsize=8)
+
             if MAXNPEarr[row,column] < NpeT:
                 MAXNPEarr[row,column] = np.nan #remove the pulse under threashold
     
@@ -637,12 +656,12 @@ if __name__ == "__main__":
     ax.add_patch(beamF)
     ax.add_patch(beamB)
     #cosmic panel have the white outline
-    COS70 = patches.Rectangle((1, 0), 1, 4, linewidth=2, edgecolor='white', facecolor='none')
-    COS72 = patches.Rectangle((6, 0), 1, 4, linewidth=2, edgecolor='white', facecolor='none')
-    COS71 = patches.Rectangle((11, 0), 1, 4, linewidth=2, edgecolor='white', facecolor='none')
-    COS73 = patches.Rectangle((16, 0), 1, 4, linewidth=2, edgecolor='white', facecolor='none')
-    Cos68 = patches.Rectangle((2, 4), 9, 1, linewidth=2, edgecolor='white', facecolor='none')
-    Cos69 = patches.Rectangle((12, 4), 9, 1, linewidth=2, edgecolor='white', facecolor='none')
+    COS70 = patches.Rectangle((1, 0), 1, 4, linewidth=2, edgecolor='grey', facecolor='none')
+    COS72 = patches.Rectangle((6, 0), 1, 4, linewidth=2, edgecolor='grey', facecolor='none')
+    COS71 = patches.Rectangle((11, 0), 1, 4, linewidth=2, edgecolor='grey', facecolor='none')
+    COS73 = patches.Rectangle((16, 0), 1, 4, linewidth=2, edgecolor='grey', facecolor='none')
+    Cos68 = patches.Rectangle((2, 4), 9, 1, linewidth=2, edgecolor='grey', facecolor='none')
+    Cos69 = patches.Rectangle((12, 4), 9, 1, linewidth=2, edgecolor='grey', facecolor='none')
     ax.add_patch(COS70)
     ax.add_patch(COS72)
     ax.add_patch(COS73)
@@ -664,7 +683,7 @@ if __name__ == "__main__":
 
     
     plt.imshow(MAXNPEarr, cmap='viridis', origin='upper', norm=mcolors.Normalize(vmin=0.001), extent=[0, 22, 0, 5]) 
-    plt.colorbar(label= f'number of hits above {NpeT} pulse NPE')
+    plt.colorbar(label= 'NPE of first pulse. Display TH {NpeT}NPE')
     #plt.grid(True) #if possible can I create the grid manually to outline the position of panel?
     #plt.show()
 

@@ -31,9 +31,10 @@ import ROOT as r
 import matplotlib.patches as patches
 import math
 from sklearn.linear_model import LinearRegression
+import matplotlib.colors as mcolors
 
 def filling(typeArr,layerArr,rowArr,columnArr,npeArr,timeArr,NpeT):
-    block = np.zeros((5, 22))
+    PulseNumArr = np.zeros((5, 22)) #count the number of pulse in each channel
     MaxNPEArr = np.zeros((5, 22))
     MaxPTimeArr = np.zeros((5, 22)) #pulse time for each channels that corresponding to the max pulse in the event
     for type,layer,row,column,npe,time in zip (typeArr,layerArr,rowArr,columnArr,npeArr,timeArr):
@@ -92,23 +93,23 @@ def filling(typeArr,layerArr,rowArr,columnArr,npeArr,timeArr,NpeT):
         
 
         if npe > NpeT:
-            block[rowoffset][fillingColumn_offset] += 1  
+            PulseNumArr[rowoffset][fillingColumn_offset] += 1  
             if (type == 2):
                 if (column == 0): #top cosmic panel
 
-                    block[rowoffset][fillingColumn_offset+1] += 1
-                    block[rowoffset][fillingColumn_offset+2] += 1  
-                    block[rowoffset][fillingColumn_offset+3] += 1  
-                    block[rowoffset][fillingColumn_offset+4] += 1 
-                    block[rowoffset][fillingColumn_offset+5] += 1
-                    block[rowoffset][fillingColumn_offset+6] += 1
-                    block[rowoffset][fillingColumn_offset+7] += 1
-                    block[rowoffset][fillingColumn_offset+8] += 1
+                    PulseNumArr[rowoffset][fillingColumn_offset+1] += 1
+                    PulseNumArr[rowoffset][fillingColumn_offset+2] += 1  
+                    PulseNumArr[rowoffset][fillingColumn_offset+3] += 1  
+                    PulseNumArr[rowoffset][fillingColumn_offset+4] += 1 
+                    PulseNumArr[rowoffset][fillingColumn_offset+5] += 1
+                    PulseNumArr[rowoffset][fillingColumn_offset+6] += 1
+                    PulseNumArr[rowoffset][fillingColumn_offset+7] += 1
+                    PulseNumArr[rowoffset][fillingColumn_offset+8] += 1
          
                 else: #side cosmic panels
-                    block[rowoffset-1][fillingColumn_offset] += 1  
-                    block[rowoffset-2][fillingColumn_offset] += 1  
-                    block[rowoffset-3][fillingColumn_offset] += 1  
+                    PulseNumArr[rowoffset-1][fillingColumn_offset] += 1  
+                    PulseNumArr[rowoffset-2][fillingColumn_offset] += 1  
+                    PulseNumArr[rowoffset-3][fillingColumn_offset] += 1  
 
 
 
@@ -116,7 +117,8 @@ def filling(typeArr,layerArr,rowArr,columnArr,npeArr,timeArr,NpeT):
             MaxNPEArr[rowoffset][fillingColumn_offset] = npe
             MaxPTimeArr[rowoffset][fillingColumn_offset] = time
     #print(block) 
-    return MaxPTimeArr,MaxNPEArr,block
+    
+    return MaxPTimeArr,MaxNPEArr,PulseNumArr
 
 #this function is not finished yet(fitting function for layer2 and layer3 are not finishsed). 
 # The result looks weird by using 1500.1 378
@@ -591,7 +593,7 @@ if __name__ == "__main__":
 
     print(typeArr)
     print(layerArr)
-    #NpeT = 20 #my threashold
+    #NpeT = 20 #my threashold that used to decide whether to highlight the channel
     NpeT = 0.5 #Ryan's study's threashold
     MaxPTimeArr,MAXNPEarr,arr=filling(typeArr[0],layerArr[0],rowArr[0],columnArr[0],npeArr[0],timeArr[0],NpeT)
     #ColumnarrST,ROWarrST=findTrack(arr)
@@ -603,7 +605,7 @@ if __name__ == "__main__":
 
     #plot the muon track (hard code version)
 
-    #"""
+    """
     for column,row in zip(ColumnarrST,ROWarrST):
         column = [x + 0.5 for x in column]
         row = [x + 0.5 for x in row]
@@ -611,17 +613,18 @@ if __name__ == "__main__":
         #print(f"track ROWarrST {row}") 
         
         plt.plot(column, row, color='red')
-    #"""
+    """
     
     
     #display the the max NPE for each channel
     
     for row in range(5):
         for column in range(22):
-            print(MAXNPEarr)#FIXME:debug
             if MAXNPEarr[row,column] > NpeT:
-                MaxNPEText = plt.text(column,4-row,f"{MAXNPEarr[row,column]:.0e}", color="white",fontsize=8)
-                PulseTimeMText = plt.text(column,4-row + 0.5,f"{MaxPTimeArr[row,column]:.3e}ns", color="white",fontsize=8)
+                MaxNPEText = plt.text(column,4-row,f"{MAXNPEarr[row,column]:.0e}", color="red",fontsize=8)
+                PulseTimeMText = plt.text(column,4-row + 0.5,f"{MaxPTimeArr[row,column]:.0}ns", color="red",fontsize=8)
+            if MAXNPEarr[row,column] < NpeT:
+                MAXNPEarr[row,column] = np.nan #remove the pulse under threashold
     
     #outline the panel
 
@@ -659,8 +662,8 @@ if __name__ == "__main__":
 
     
 
-
-    plt.imshow(arr, cmap='viridis', origin='upper', extent=[0, 22, 0, 5]) 
+    
+    plt.imshow(MAXNPEarr, cmap='viridis', origin='upper', norm=mcolors.Normalize(vmin=0.001), extent=[0, 22, 0, 5]) 
     plt.colorbar(label= f'number of hits above {NpeT} pulse NPE')
     #plt.grid(True) #if possible can I create the grid manually to outline the position of panel?
     #plt.show()

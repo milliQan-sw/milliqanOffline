@@ -465,10 +465,13 @@ if __name__ == "__main__":
     import uproot
     #uptree = uproot.open("/Users/haoliangzheng/CERN_ana/MilliQan_Run1500.11_v35.root:t")
     #uptree = uproot.open("/Users/haoliangzheng/CERN_ana/EventDisplay/MilliQan_Run1190.1_v34.root:t") #event 472/   are a sample event
-    uptree = uproot.open("/Users/haoliangzheng/CERN_ana/EventDisplay/MilliQan_Run1500.1_v35.root:t") # event 527 for this file
+    #uptree = uproot.open("/Users/haoliangzheng/CERN_ana/EventDisplay/MilliQan_Run1500.1_v35.root:t") # event 527 for this file
     #uptree = uproot.open("/Users/haoliangzheng/CERN_ana/EventDisplay/output_1018.root:t")
-    branches = uptree.arrays(["type","layer","row","column","nPE","event","area","timeFit_module_calibrated","chan","ipulse"], entry_stop=100000) #for offline file only
-    #branches = uptree.arrays(["type","layer","row","column","nPE","event","time","chan"])#for sim file only
+    #uptree = uproot.open("/Users/haoliangzheng/CERN_ana/RyanSimValidation/mqData/Run1679.root:t")
+    #uptree = uproot.open("/Users/haoliangzheng/CERN_ana/EventDisplay/MilliQan_Run1176.133_v34.root:t") #R event 471
+    uptree = uproot.open("/Users/haoliangzheng/CERN_ana/EventDisplay/out_110.root:t")
+    #branches = uptree.arrays(["type","layer","row","column","nPE","event","area","timeFit_module_calibrated","chan","ipulse","fileNumber"], entry_stop=10000000000000) #for offline file only
+    branches = uptree.arrays(["type","layer","row","column","nPE","event","time","chan"])#for sim file only
 
     EventNum = int(sys.argv[1])
     #remove pulses outside the trigger window 1200-1500ns
@@ -478,18 +481,29 @@ if __name__ == "__main__":
     """
     for branch in ["type","layer","row","column","nPE","area","timeFit_module_calibrated"]:
         branches[branch] = branches[branch][removePulse_T]
+
     """
 
+    #extra step when using the merged file
+    merge = False
+    fileNumber = 105 #FIXME set it to be arg pars
+    if merge:
+        typeArr= (branches["type"])[branches["fileNumber"]==fileNumber]
+        layerArr = (branches["layer"])[branches["fileNumber"]==fileNumber]
+        rowArr = (branches["row"])[branches["fileNumber"]==fileNumber]
+        columnArr = (branches["column"])[branches["fileNumber"]==fileNumber]
+        npeArr = (branches["nPE"])[branches["fileNumber"]==fileNumber]
+        #timeArr = (branches["timeFit_module_calibrated"])[branches["fileNumber"]==fileNumber]
 
-    firstpulse = True #tag for using the first pulse in the event display
+    firstpulse = False #tag for using the first pulse in the event display
     if firstpulse == True:
         typeArr= (branches["type"][branches["ipulse"]==0])[branches["event"]==EventNum]
         layerArr = (branches["layer"][branches["ipulse"]==0])[branches["event"]==EventNum]
         rowArr = (branches["row"][branches["ipulse"]==0])[branches["event"]==EventNum]
         columnArr = (branches["column"][branches["ipulse"]==0])[branches["event"]==EventNum]
         npeArr = (branches["nPE"][branches["ipulse"]==0])[branches["event"]==EventNum]
-        timeArr = (branches["timeFit_module_calibrated"][branches["ipulse"]==0])[branches["event"]==EventNum]#for offline file only
-        #timeArr = branches["time"][branches["event"]==EventNum]#for sim file only
+        #timeArr = (branches["timeFit_module_calibrated"][branches["ipulse"]==0])[branches["event"]==EventNum]#for offline file only
+        timeArr = branches["time"][branches["event"]==EventNum]#for sim file only
         print(f"timeArr {timeArr}")
     
     else:
@@ -498,8 +512,8 @@ if __name__ == "__main__":
         rowArr = branches["row"][branches["event"]==EventNum]
         columnArr = branches["column"][branches["event"]==EventNum]
         npeArr = branches["nPE"][branches["event"]==EventNum]
-        timeArr = branches["timeFit_module_calibrated"][branches["event"]==EventNum]#for offline file only
-        #timeArr = branches["time"][branches["event"]==EventNum]#for sim file only
+        #timeArr = branches["timeFit_module_calibrated"][branches["event"]==EventNum]#for offline file only
+        timeArr = branches["time"][branches["event"]==EventNum]#for sim file only
         print(f"timeArr {timeArr}")
     
 
@@ -577,7 +591,8 @@ if __name__ == "__main__":
 
     print(typeArr)
     print(layerArr)
-    NpeT = 20
+    #NpeT = 20 #my threashold
+    NpeT = 0.5 #Ryan's study's threashold
     MaxPTimeArr,MAXNPEarr,arr=filling(typeArr[0],layerArr[0],rowArr[0],columnArr[0],npeArr[0],timeArr[0],NpeT)
     #ColumnarrST,ROWarrST=findTrack(arr)
     ColumnarrST,ROWarrST=findTackWeight(MAXNPEarr)
@@ -603,6 +618,7 @@ if __name__ == "__main__":
     
     for row in range(5):
         for column in range(22):
+            print(MAXNPEarr)#FIXME:debug
             if MAXNPEarr[row,column] > NpeT:
                 MaxNPEText = plt.text(column,4-row,f"{MAXNPEarr[row,column]:.0e}", color="white",fontsize=8)
                 PulseTimeMText = plt.text(column,4-row + 0.5,f"{MaxPTimeArr[row,column]:.3e}ns", color="white",fontsize=8)

@@ -770,43 +770,44 @@ class milliqanCuts():
         print(f"BigHit at Top & Bottom row : {ak.count_nonzero(self.events['BigHit_TB_row'])}")
 
         #count how many events can have MUON hits on both top and bottom row. (Validation only)
-        self.events["MUONR0"] = ak.any( (  (self.events["row"] == 0) & (self.events["type"] == 0) & (self.events["muonHit"] == 1) ),axis=1)
-        self.events["MUONR3"] = ak.any( (  (self.events["row"] == 3) & (self.events["type"] == 0) & (self.events["muonHit"] == 1) ),axis=1)
-        self.events["MuonHit_TB_row"] = self.events["MUONR0"] & self.events["MUONR3"]
-        print(f"Muon Hit at Top & Bottom row : {ak.count_nonzero(self.events['MuonHit_TB_row'])}")
+        if offlineData == False:
+            self.events["MUONR0"] = ak.any( (  (self.events["row"] == 0) & (self.events["type"] == 0) & (self.events["muonHit"] == 1) ),axis=1)
+            self.events["MUONR3"] = ak.any( (  (self.events["row"] == 3) & (self.events["type"] == 0) & (self.events["muonHit"] == 1) ),axis=1)
+            self.events["MuonHit_TB_row"] = self.events["MUONR0"] & self.events["MUONR3"]
+            print(f"Muon Hit at Top & Bottom row : {ak.count_nonzero(self.events['MuonHit_TB_row'])}")
 
 
-        self.events["MUONR0L0"] = ak.any( ( (self.events["nPE"] >= NPEcut) & (self.events["row"] == 0) & (self.events["type"] == 0) & (self.events["muonHit"] == 1) &  (self.events["layer"] == 0)),axis=1)
-        self.events["MUONR3L0"] = ak.any( ( (self.events["nPE"] >= NPEcut) & (self.events["row"] == 3) & (self.events["type"] == 0) & (self.events["muonHit"] == 1) & (self.events["layer"] == 0)),axis=1)
+            self.events["MUONR0L0"] = ak.any( ( (self.events["nPE"] >= NPEcut) & (self.events["row"] == 0) & (self.events["type"] == 0) & (self.events["muonHit"] == 1) &  (self.events["layer"] == 0)),axis=1)
+            self.events["MUONR3L0"] = ak.any( ( (self.events["nPE"] >= NPEcut) & (self.events["row"] == 3) & (self.events["type"] == 0) & (self.events["muonHit"] == 1) & (self.events["layer"] == 0)),axis=1)
 
-        self.events["MUONR0L1"] = ak.any( ( (self.events["nPE"] >= NPEcut) & (self.events["row"] == 0) & (self.events["type"] == 0) & (self.events["muonHit"] == 1) &  (self.events["layer"] == 1)),axis=1)
-        self.events["MUONR3L1"] = ak.any( ( (self.events["nPE"] >= NPEcut) & (self.events["row"] == 3) & (self.events["type"] == 0) & (self.events["muonHit"] == 1) & (self.events["layer"] == 1)),axis=1)
+            self.events["MUONR0L1"] = ak.any( ( (self.events["nPE"] >= NPEcut) & (self.events["row"] == 0) & (self.events["type"] == 0) & (self.events["muonHit"] == 1) &  (self.events["layer"] == 1)),axis=1)
+            self.events["MUONR3L1"] = ak.any( ( (self.events["nPE"] >= NPEcut) & (self.events["row"] == 3) & (self.events["type"] == 0) & (self.events["muonHit"] == 1) & (self.events["layer"] == 1)),axis=1)
 
-        self.events["MUONR0L2"] = ak.any( ( (self.events["nPE"] >= NPEcut) & (self.events["row"] == 0) & (self.events["type"] == 0) & (self.events["muonHit"] == 1) &  (self.events["layer"] == 2)),axis=1)
-        self.events["MUONR3L2"] = ak.any( ( (self.events["nPE"] >= NPEcut) & (self.events["row"] == 3) & (self.events["type"] == 0) & (self.events["muonHit"] == 1) & (self.events["layer"] == 2)),axis=1)
+            self.events["MUONR0L2"] = ak.any( ( (self.events["nPE"] >= NPEcut) & (self.events["row"] == 0) & (self.events["type"] == 0) & (self.events["muonHit"] == 1) &  (self.events["layer"] == 2)),axis=1)
+            self.events["MUONR3L2"] = ak.any( ( (self.events["nPE"] >= NPEcut) & (self.events["row"] == 3) & (self.events["type"] == 0) & (self.events["muonHit"] == 1) & (self.events["layer"] == 2)),axis=1)
 
-        self.events["MUONR0L3"] = ak.any( ( (self.events["nPE"] >= NPEcut) & (self.events["row"] == 0) & (self.events["type"] == 0) & (self.events["muonHit"] == 1) &  (self.events["layer"] == 3)),axis=1)
-        self.events["MUONR3L3"] = ak.any( ( (self.events["nPE"] >= NPEcut) & (self.events["row"] == 3) & (self.events["type"] == 0) & (self.events["muonHit"] == 1) & (self.events["layer"] == 3)),axis=1)
+            self.events["MUONR0L3"] = ak.any( ( (self.events["nPE"] >= NPEcut) & (self.events["row"] == 0) & (self.events["type"] == 0) & (self.events["muonHit"] == 1) &  (self.events["layer"] == 3)),axis=1)
+            self.events["MUONR3L3"] = ak.any( ( (self.events["nPE"] >= NPEcut) & (self.events["row"] == 3) & (self.events["type"] == 0) & (self.events["muonHit"] == 1) & (self.events["layer"] == 3)),axis=1)
 
-	#events that contains muon hitting the top and the bottom layers and those muon hit are at same layer 
-        self.events["MuonR31L"] = (self.events['MUONR0L0'] & self.events['MUONR3L0']) | (self.events['MUONR0L1'] & self.events['MUONR3L1']) | (self.events['MUONR0L2'] & self.events['MUONR3L2']) | (self.events['MUONR0L3'] & self.events['MUONR3L3'])
+            #events that contains muon hitting the top and the bottom layers and those muon hit are at same layer 
+            self.events["MuonR31L"] = (self.events['MUONR0L0'] & self.events['MUONR3L0']) | (self.events['MUONR0L1'] & self.events['MUONR3L1']) | (self.events['MUONR0L2'] & self.events['MUONR3L2']) | (self.events['MUONR0L3'] & self.events['MUONR3L3'])
 
-        print(f"L0 Muon Hit at Top & Bottom row : {ak.count_nonzero( (self.events['MUONR0L0']) & (self.events['MUONR3L0']) )}")
-        print(f"L1 Muon Hit at Top & Bottom row : {ak.count_nonzero( (self.events['MUONR0L1']) & (self.events['MUONR3L1']) )}")
-        print(f"L2 Muon Hit at Top & Bottom row : {ak.count_nonzero( (self.events['MUONR0L2']) & (self.events['MUONR3L2']) )}")
-        print(f"L3 Muon Hit at Top & Bottom row : {ak.count_nonzero( (self.events['MUONR0L3']) & (self.events['MUONR3L3']) )}")
+            print(f"L0 Muon Hit at Top & Bottom row : {ak.count_nonzero( (self.events['MUONR0L0']) & (self.events['MUONR3L0']) )}")
+            print(f"L1 Muon Hit at Top & Bottom row : {ak.count_nonzero( (self.events['MUONR0L1']) & (self.events['MUONR3L1']) )}")
+            print(f"L2 Muon Hit at Top & Bottom row : {ak.count_nonzero( (self.events['MUONR0L2']) & (self.events['MUONR3L2']) )}")
+            print(f"L3 Muon Hit at Top & Bottom row : {ak.count_nonzero( (self.events['MUONR0L3']) & (self.events['MUONR3L3']) )}")
 
-        #splash finding algorism for sim analysis #1(need to combine with top and bottom row get the big hit). #2 A layer contains 8 large hits(larger than 150?) on different bar channels.
-        self.events["L0_8"] = ak.count_nonzero(  self.events["nPE"][(self.events["type"]==0) &  (self.events["layer"]==0)] > 150   ,axis=1 ) == 8
-        self.events["L1_8"] = ak.count_nonzero(  self.events["nPE"][(self.events["type"]==0) &  (self.events["layer"]==1)] > 150   ,axis=1 ) == 8
-        self.events["L2_8"] = ak.count_nonzero(  self.events["nPE"][(self.events["type"]==0) &  (self.events["layer"]==2)] > 150   ,axis=1 ) == 8
-        self.events["L3_8"] = ak.count_nonzero(  self.events["nPE"][(self.events["type"]==0) &  (self.events["layer"]==3)] > 150   ,axis=1 ) == 8
+            #splash finding algorism for sim analysis #1(need to combine with top and bottom row get the big hit). #2 A layer contains 8 large hits(larger than 150?) on different bar channels.
+            self.events["L0_8"] = ak.count_nonzero(  self.events["nPE"][(self.events["type"]==0) &  (self.events["layer"]==0)] > 150   ,axis=1 ) == 8
+            self.events["L1_8"] = ak.count_nonzero(  self.events["nPE"][(self.events["type"]==0) &  (self.events["layer"]==1)] > 150   ,axis=1 ) == 8
+            self.events["L2_8"] = ak.count_nonzero(  self.events["nPE"][(self.events["type"]==0) &  (self.events["layer"]==2)] > 150   ,axis=1 ) == 8
+            self.events["L3_8"] = ak.count_nonzero(  self.events["nPE"][(self.events["type"]==0) &  (self.events["layer"]==3)] > 150   ,axis=1 ) == 8
 
-        #print out the event number of the splash event
-        print(f"splash event at layer 0:  {self.events['event'][self.events['L0_8'] & ( (self.events['MUONR0L0']) & (self.events['MUONR3L0']) )]}")
-        print(f"splash event at layer 1:  {self.events['event'][self.events['L1_8'] & ( (self.events['MUONR0L1']) & (self.events['MUONR3L1']) )]}")
-        print(f"splash event at layer 2:  {self.events['event'][self.events['L2_8'] & ( (self.events['MUONR0L2']) & (self.events['MUONR3L2']) )]}")
-        print(f"splash event at layer 3:  {self.events['event'][self.events['L3_8'] & ( (self.events['MUONR0L3']) & (self.events['MUONR3L3']) )]}")
+            #print out the event number of the splash event
+            print(f"splash event at layer 0:  {self.events['event'][self.events['L0_8'] & ( (self.events['MUONR0L0']) & (self.events['MUONR3L0']) )]}")
+            print(f"splash event at layer 1:  {self.events['event'][self.events['L1_8'] & ( (self.events['MUONR0L1']) & (self.events['MUONR3L1']) )]}")
+            print(f"splash event at layer 2:  {self.events['event'][self.events['L2_8'] & ( (self.events['MUONR0L2']) & (self.events['MUONR3L2']) )]}")
+            print(f"splash event at layer 3:  {self.events['event'][self.events['L3_8'] & ( (self.events['MUONR0L3']) & (self.events['MUONR3L3']) )]}")
 
 
 
@@ -815,12 +816,16 @@ class milliqanCuts():
 
         
 
-    def offlinePreProcess(self,cutName = None, cut = None, startTime = 1250, endTime = 1350):
+    def offlinePreProcess(self,cutName = None, cut = None, startTime = 1100, endTime = 1500,firstPulse=True):
         """
         This function is to remove pulse outside specific window when doing comsic muon event offline analysis.
         """
-        removePulse_T = (self.events["timeFit_module_calibrated"] >= startTime) & (self.events["timeFit_module_calibrated"] <=endTime)
-        
+        removePulse = (self.events["timeFit_module_calibrated"] >= startTime) & (self.events["timeFit_module_calibrated"] <=endTime)
+        if firstPulse:
+            FP = self.events["ipulse"] == 0
+            removePulse_T = removePulse & FP 
+        else:
+            removePulse_T = removePulse
         self.events["height"] = self.events["height"][removePulse_T]
         self.events["chan"] = self.events["chan"][removePulse_T]
         self.events["column"] = self.events["column"][removePulse_T]

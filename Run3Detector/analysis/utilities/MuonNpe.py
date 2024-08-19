@@ -28,28 +28,30 @@ import awkward as ak
 
 branches = ["height","timeFit_module_calibrated","chan","runNumber","column","event","fileNumber",'boardsMatched',"pickupFlag","layer","nPE","type","row","area","ipulse"]
 
-filelist = [f'/home/czheng/SimCosmicFlatTree/offlinefile/MilliQan_RunFile.root:t']
-
+#filelist = [f'/home/czheng/SimCosmicFlatTree/MilliQan_Run1176.root:t']
+filelist = [f'/home/czheng/SimCosmicFlatTree/offlinefile/MilliQan_Run1163.242_v34.root:t']
 mycuts = milliqanCuts()
 
 myplotter = milliqanPlotter()
 
 
-OL_sudo_straight = mycuts.getCut(mycuts.sudo_straight,'StraghtCosmic', NPEcut = 10,time = "timeFit_module_calibrated")
-Fourbars = mycuts.getCut(mycuts.NbarsHitsCount,cutName ='FourBars', cut = None, NPECut = 10)
+OL_sudo_straight = mycuts.getCut(mycuts.sudo_straight,'StraghtCosmic', NPEcut = 290,time = "timeFit_module_calibrated")
+Fourbars = mycuts.getCut(mycuts.NbarsHitsCount,'FourBars', cut = None, NPECut = 290)
 
 #adding combine cuts for downwardPath
-CLFourbar = mycuts.getCut(mycuts.combineCuts, 'CLFourbar', ["FourBars", "StraghtCosmic","barCut"])
+CLFourbar = mycuts.getCut(mycuts.combineCuts, 'CLFourbar', ["StraghtCosmic","FourBars", "barCut"])
+#debug
+CLFourbardeg = mycuts.getCut(mycuts.combineCuts, 'CLFourbardeg', ["StraghtCosmic","FourBars"])
+CLFourbar_count = mycuts.getCut(mycuts.countEvent,'placeholder', Countobject= 'CLFourbardeg')
+NPE_4Bar = r.TH1F("NPE_4Bar", "nPE bar; nPE ; pulse", 500, 0, 1000)
 
-
-NPE_4Bar = r.TH1F("Bar_NPE_DW", "nPE bar; nPE ; pulse", 500, 0, 1000)
 
 
 #add hists with tags
 myplotter.addHistograms(NPE_4Bar, 'nPE', 'CLFourbar')
 
 
-cutflow = [mycuts.offlinePreProcess,mycuts.boardsMatched,mycuts.pickupCut,mycuts.EmptyListFilter,mycuts.barCut,mycuts.panelCut,OL_sudo_straight,Fourbars,CLFourbar,NPE_4Bar]
+cutflow = [mycuts.offlinePreProcess,mycuts.boardsMatched,mycuts.pickupCut,mycuts.EmptyListFilter,mycuts.barCut,mycuts.panelCut,OL_sudo_straight,Fourbars,CLFourbardeg,CLFourbar,CLFourbar_count,myplotter.dict['NPE_4Bar']]
 
 myschedule = milliQanScheduler(cutflow, mycuts,myplotter)
 
@@ -57,6 +59,8 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts,fileChecke
 
 myiterator.run()
 
-
-NPE_4Bar.Draw()
+root_file = r.TFile("example.root", "RECREATE")
+#NPE_4Bar.Draw()
+NPE_4Bar.Write()
+root_file.Close()
 

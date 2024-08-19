@@ -29,20 +29,23 @@ import awkward as ak
 branches = ["height","timeFit_module_calibrated","chan","runNumber","column","event","fileNumber",'boardsMatched',"pickupFlag","layer","nPE","type","row","area","ipulse"]
 
 #filelist = [f'/home/czheng/SimCosmicFlatTree/MilliQan_Run1176.root:t']
-filelist = [f'/home/czheng/SimCosmicFlatTree/offlinefile/MilliQan_Run1163.242_v34.root:t']
+filelist = [f'/Users/haoliangzheng/CERN_ana/EventDisplay/MilliQan_Run1176.132_v34.root:t'] #local debug
 mycuts = milliqanCuts()
 
 myplotter = milliqanPlotter()
 
 
 OL_sudo_straight = mycuts.getCut(mycuts.sudo_straight,'StraghtCosmic', NPEcut = 290,time = "timeFit_module_calibrated")
-Fourbars = mycuts.getCut(mycuts.NbarsHitsCount,'FourBars', cut = None, NPECut = 290)
+Fourbars = mycuts.getCut(mycuts.NbarsHitsCount,'NBarsHits', cut = None, NPECut = 290)  #fourbar tag is in NbarsHitsCount
 
 #adding combine cuts for downwardPath
-CLFourbar = mycuts.getCut(mycuts.combineCuts, 'CLFourbar', ["StraghtCosmic","FourBars", "barCut"])
-#debug
-CLFourbardeg = mycuts.getCut(mycuts.combineCuts, 'CLFourbardeg', ["StraghtCosmic","FourBars"])
-CLFourbar_count = mycuts.getCut(mycuts.countEvent,'placeholder', Countobject= 'CLFourbardeg')
+CLFourbar = mycuts.getCut(mycuts.combineCuts, 'CLFourbar', ["StraghtCosmic","fourbar", "barCut"])
+
+
+
+CLFourbardeg = mycuts.getCut(mycuts.combineCuts, 'CLFourbardeg', ["StraghtCosmic","fourbar"])#debug
+FourBars_count = mycuts.getCut(mycuts.countEvent,'placeholder', Countobject= 'fourbar')#debug
+CLFourbar_count = mycuts.getCut(mycuts.countEvent,'placeholder', Countobject= 'CLFourbardeg')#debug
 NPE_4Bar = r.TH1F("NPE_4Bar", "nPE bar; nPE ; pulse", 500, 0, 1000)
 
 
@@ -51,7 +54,7 @@ NPE_4Bar = r.TH1F("NPE_4Bar", "nPE bar; nPE ; pulse", 500, 0, 1000)
 myplotter.addHistograms(NPE_4Bar, 'nPE', 'CLFourbar')
 
 
-cutflow = [mycuts.offlinePreProcess,mycuts.boardsMatched,mycuts.pickupCut,mycuts.EmptyListFilter,mycuts.barCut,mycuts.panelCut,OL_sudo_straight,Fourbars,CLFourbardeg,CLFourbar,CLFourbar_count,myplotter.dict['NPE_4Bar']]
+cutflow = [mycuts.offlinePreProcess,mycuts.boardsMatched,mycuts.pickupCut,mycuts.EmptyListFilter,mycuts.barCut,mycuts.panelCut,OL_sudo_straight,Fourbars,CLFourbardeg,CLFourbar,CLFourbar_count,FourBars_count,myplotter.dict['NPE_4Bar']]
 
 myschedule = milliQanScheduler(cutflow, mycuts,myplotter)
 

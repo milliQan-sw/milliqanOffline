@@ -418,8 +418,10 @@ class milliqanCuts():
             self.events[cutName] = ak.count(uniqueBarArr,axis = 1)
         else:
             uniqueBarArr = ak.Array([np.unique(x) for x in bararr["chan"]])
-            self.events[cutName] = ak.count(uniqueBarArr, axis = 1)
-        print(f"four bars events {self.events['event'][self.events[cutName]==4]}")
+            self.events[cutName] = ak.count_nonzero(uniqueBarArr, axis = 1) #count the number of unique bar for each event 
+            #print(f"four bars events {self.events['event'][self.events[cutName]==4]}")
+            self.events["fourbar"]= self.events[cutName]==4
+
 
 
     def BarNPERatioCalculate(self,cutName = "BarNPERatio",cut = None):

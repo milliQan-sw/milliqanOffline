@@ -571,7 +571,7 @@ class milliqanCuts():
             lxArr[f"CosP01_pre"] = (lxArr["chan"] == 68)
             P01_Time = lxArr[time][lxArr[f"CosP01_pre"]]
             P01_FirstHitTime = ak.min(P01_Time , axis = 1)
-            lxArr["Pre_CosP01"] =  (lxArr[f"CosP01_pre"]) & (lxArr["nPE"] >= (NPEcut/12))  &  (lxArr[time] == P01_FirstHitTime) & (P01_FirstHitTime > 0) 
+            lxArr["Pre_CosP01"] =  (lxArr[f"CosP01_pre"]) & ((lxArr["nPE"]/1000) >= (NPEcut/12))  &  (lxArr[time] == P01_FirstHitTime) & (P01_FirstHitTime > 0) 
             lxArr["Pre_CosP01"] = ak.fill_none(lxArr["Pre_CosP01"],[False], axis = 0) 
             lxArr["CosP01"] = ak.any ( lxArr["Pre_CosP01"],axis = 1)
             
@@ -580,7 +580,7 @@ class milliqanCuts():
             lxArr[f"CosP23_pre"] = (lxArr["chan"] == 72)
             P23_Time = lxArr[time][lxArr[f"CosP23_pre"]]
             P23_FirstHitTime = ak.min(P23_Time , axis = 1)
-            lxArr["Pre_CosP23"] = (lxArr[f"CosP23_pre"]) & (lxArr["nPE"] >= (NPEcut/12))  &  (lxArr[time] == P23_FirstHitTime) & (P23_FirstHitTime  > 0)  
+            lxArr["Pre_CosP23"] = (lxArr[f"CosP23_pre"]) & ((lxArr["nPE"]/1000) >= (NPEcut/12))  &  (lxArr[time] == P23_FirstHitTime) & (P23_FirstHitTime  > 0)  
             lxArr["Pre_CosP23"] = ak.fill_none(lxArr["Pre_CosP23"],[False], axis = 0) 
             lxArr["CosP23"] = ak.any ( lxArr["Pre_CosP23"] , axis = 1)
 

@@ -140,26 +140,7 @@ h_1d = r.TH1F("h_1d", f"Run {start_run_number} to {end_run_number} time differen
 # Add root histogram to plotter
 myplotter.addHistograms(h_1d, 'timeDiff')
 
-############################################################################################################################
-# Ensure events are loaded into an Awkward Array or a pandas DataFrame before applying cuts
-mycuts.events = ak.Array(mycuts.events)  # Convert to an Awkward Array if it’s not already
-
-# Apply the pickupCut and boardsMatched cut with broadcasting beforehand
-pickupFlag_broadcasted, _ = ak.broadcast_arrays(mycuts.events['pickupFlag'], mycuts.events['boardsMatched'])
-boardsMatched_broadcasted, _ = ak.broadcast_arrays(mycuts.events['boardsMatched'], mycuts.events['pickupFlag'])
-
-# Modify the events based on the pickupCut
-for branch in branches:
-    if branch != 'boardsMatched':  # Skip the 'boardsMatched' branch for pickupCut
-        mycuts.events[branch] = mycuts.events[branch][~pickupFlag_broadcasted]
-
-# Modify the events based on the boardsMatched cut
-for branch in branches:
-    if branch != 'boardsMatched':  # Skip the 'boardsMatched' branch
-        mycuts.events[branch] = mycuts.events[branch][boardsMatched_broadcasted]
-############################################################################################################################
-
-# Defining the cutflow | boardMatchCut pickupCut
+# Defining the cutflow
 cutflow = [boardMatchCut, pickupCut, mycuts.getTimeDiff, myplotter.dict['h_1d']]
 
 # Create a schedule of the cuts

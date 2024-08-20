@@ -33,7 +33,7 @@ def getTimeDiff(self):
     barAreaMask = self.events['area'] > 500000
     slabAreaMask = self.events['area'] > 500000 / 12
 
-    print(self.eventsp['type'][self.events['layer'] == 0])
+    print(self.events['type'][self.events['layer'] == 0])
 
     # Pick the first pulse
     barFinalPulseMask = barAreaMask & (self.events['ipulse'] == 0) & (self.events['type'] == 0)

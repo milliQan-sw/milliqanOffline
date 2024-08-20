@@ -34,6 +34,7 @@ def getTimeDiff(self):
     slabAreaMask = self.events['area'] > 500000 / 12
 
     print(self.eventsp['type'][self.events['layer'] == 0])
+
     # Pick the first pulse
     barFinalPulseMask = barAreaMask & (self.events['ipulse'] == 0) & (self.events['type'] == 0)
     slabFinalPulseMask = slabAreaMask & (self.events['ipulse'] == 0) & (self.events['type'] == 0)
@@ -141,8 +142,8 @@ h_1d = r.TH1F("h_1d", f"Run {start_run_number} to {end_run_number} time differen
 # Add root histogram to plotter
 myplotter.addHistograms(h_1d, 'timeDiff')
 
-# Defining the cutflow
-cutflow = [boardMatchCut, pickupCut, mycuts.getTimeDiff, myplotter.dict['h_1d']]
+# Defining the cutflow boardMatchCut, pickupCut, 
+cutflow = [mycuts.getTimeDiff, myplotter.dict['h_1d']]
 
 # Create a schedule of the cuts
 myschedule = milliQanScheduler(cutflow, mycuts, myplotter)

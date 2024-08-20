@@ -141,9 +141,12 @@ h_1d = r.TH1F("h_1d", f"Run {start_run_number} to {end_run_number} time differen
 myplotter.addHistograms(h_1d, 'timeDiff')
 
 ############################################################################################################################
+# Ensure events are loaded into an Awkward Array or a pandas DataFrame before applying cuts
+mycuts.events = ak.Array(mycuts.events)  # Convert to an Awkward Array if it’s not already
+
 # Apply the pickupCut and boardsMatched cut with broadcasting beforehand
-pickupFlag_broadcasted, _ = ak.broadcast_arrays(mycuts.events.pickupFlag, mycuts.events.boardsMatched)
-boardsMatched_broadcasted, _ = ak.broadcast_arrays(mycuts.events.boardsMatched, mycuts.events.pickupFlag)
+pickupFlag_broadcasted, _ = ak.broadcast_arrays(mycuts.events['pickupFlag'], mycuts.events['boardsMatched'])
+boardsMatched_broadcasted, _ = ak.broadcast_arrays(mycuts.events['boardsMatched'], mycuts.events['pickupFlag'])
 
 # Modify the events based on the pickupCut
 for branch in branches:

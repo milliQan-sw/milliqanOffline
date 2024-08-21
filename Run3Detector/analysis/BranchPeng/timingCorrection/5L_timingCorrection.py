@@ -49,6 +49,7 @@ def getTimeDiff(self):
     timeL1 = ak.where(masked_layer1 == 1, masked_time1, -999999)
     timeL2 = ak.where(masked_layer1 == 2, masked_time1, -999999)
     timeL3 = ak.where(masked_layer1 == 3, masked_time1, -999999)
+    
     timeL4 = ak.where(masked_layer2 == 4, masked_time2, -999999)
 
     print(ak.num(timeL0))

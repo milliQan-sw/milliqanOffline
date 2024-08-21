@@ -52,8 +52,6 @@ def getTimeDiff(self):
 
     timeL4 = masked_time2[masked_layer2 == 4]
 
-    print(ak.num(timeL0))
-
     # Find the minimum time per event
     timeL0_min = ak.min(timeL0, axis=1, mask_identity=True)
     timeL1_min = ak.min(timeL1, axis=1, mask_identity=True)
@@ -68,7 +66,7 @@ def getTimeDiff(self):
             # Calculate time differences only for events with valid times in all layers
             time_diffsL30.append(timeL3_min[i] - timeL0_min[i])
     
-    #print(time_diffsL30)
+    print(time_diffsL30)
 
     # Extend the final list to match the size of the current file
     num_events = len(self.events)
@@ -143,7 +141,7 @@ h_1d = r.TH1F("h_1d", f"Run {start_run_number} to {end_run_number} time differen
 myplotter.addHistograms(h_1d, 'timeDiff')
 
 # Defining the cutflow | boardMatchCut, pickupCut, 
-cutflow = [mycuts.getTimeDiff, myplotter.dict['h_1d']]
+cutflow = [boardMatchCut, pickupCut, mycuts.getTimeDiff, myplotter.dict['h_1d']]
 
 # Create a schedule of the cuts
 myschedule = milliQanScheduler(cutflow, mycuts, myplotter)

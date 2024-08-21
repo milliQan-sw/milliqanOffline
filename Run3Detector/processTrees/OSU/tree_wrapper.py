@@ -2,6 +2,7 @@ import os
 import sys
 import subprocess
 import argparse
+import json
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -46,28 +47,7 @@ def singleJob():
         print("In tree wrapper calling subprocess, no matched trigger file")
         subprocess.call('source $PWD/setup.sh && python3 $PWD/scripts/runOfflineFactory.py --inputFile {0} --outputFile {1} --exe ./run.exe --publish'.format(inFile, outFile), shell=True)'''
 
-def main():
-    runNum = -1
-    fileNum = -1
-
-    #if len(sys.argv) < 3:
-    #    print("Need to give process number, version, and input data directory")
-    #    sys.exit(1)
-
-    if args.process == '-1':
-        print("Need to provide process number, exiting")
-        sys.exit(1)
-
-    fileList = open("filelist.txt", "r")
-
-    info = fileList.readlines()
-
-    print("Python trying to run process {0}, file list has {1} entries".format(args.process, len(info)))
-
-    line = info[int(args.process)]
-    runNum = str(int(float(line.split()[0])))
-    fileNum = str(int(float(line.split()[1])))
-    subName = str(args.version)
+'''def singleFile(runNum, fileNum, subName):
 
     if args.slab:
         inFile = args.inputDir + 'MilliQanSlab_Run{0}.{1}_default.root'.format(runNum,fileNum)
@@ -93,12 +73,88 @@ def main():
 
     subprocess.call(cmd, shell=True)
 
-    '''if os.path.exists(triggerFile):
-        print("In tree wrapper calling subprocess, with matched trigger file")
-        subprocess.call('source $PWD/setup.sh && python3 $PWD/scripts/runOfflineFactory.py --inputFile {0} --outputFile {1} -m {2} --exe ./run.exe --publish'.format(inFile, outFile, triggerFile), shell=True)
-    else:
-        print("In tree wrapper calling subprocess, no matched trigger file")
-        subprocess.call('source $PWD/setup.sh && python3 $PWD/scripts/runOfflineFactory.py --inputFile {0} --outputFile {1} --exe ./run.exe --publish'.format(inFile, outFile), shell=True)'''
+    def fullRun():
+        if args.slab:
+            inFile = args.inputDir + 'MilliQanSlab_Run{0}.{1}_default.root'.format(runNum,fileNum)
+            outFile = 'MilliQanSlab_Run{0}.{1}_{2}.root'.format(runNum,fileNum, subName)
+            triggerFile = args.inputDir + "MatchedEventsSlab_Run{0}.{1}_rematch.root".format(runNum, fileNum)
+        else:
+            inFile = args.inputDir + 'MilliQan_Run{0}.{1}_default.root'.format(runNum,fileNum)
+            outFile = 'MilliQan_Run{0}.{1}_{2}.root'.format(runNum,fileNum, subName)
+            triggerFile = args.inputDir + "MatchedEvents_Run{0}.{1}_rematch.root".format(runNum, fileNum)
+
+        print("Input file is {0}\nTrigger File is {1}\nOutput File is {2}".format(inFile, triggerFile, outFile))
+
+        cmd = 'source $PWD/setup.sh && python3 $PWD/scripts/runOfflineFactory.py --inputFile {0} --outputFile {1} --exe ./run.exe --publish'.format(inFile, outFile)
+
+        if os.path.exists(triggerFile):
+            cmd = '{0} -m {1}'.format(cmd, triggerFile)
+        else:
+            print("Trigger file {} does not exist".format(triggerFile))
+
+        if args.slab:
+            print("Processing slab detector data")
+            cmd = '{0} --slab'.format(cmd)
+
+        subprocess.call(cmd, shell=True)'''
+
+
+def main():
+    runNum = -1
+    fileNum = -1
+
+    #if len(sys.argv) < 3:
+    #    print("Need to give process number, version, and input data directory")
+    #    sys.exit(1)
+
+    if args.process == '-1':
+        print("Need to provide process number, exiting")
+        sys.exit(1)
+
+    fileList = open("filelist.json", "r")
+
+    jobList = json.load(fileList)
+    jobs = list(jobList.values())
+    job = jobs[int(args.process)]
+
+    #info = fileList.readlines()
+
+    print("Python trying to run process {0}, file list has {1} entries".format(args.process, len(job)))
+    print("Files to process", job)
+
+    '''line = info[int(args.process)]
+    runNum = str(int(float(line.split()[0])))
+    fileNum = str(int(float(line.split()[1])))'''
+    subName = str(args.version)
+
+    for i, j in enumerate(job):
+        #if i > 2: break #TODO remove this after debugging
+        runNum = j[0]
+        fileNum = j[1]
+        if args.slab:
+            inFile = args.inputDir + 'MilliQanSlab_Run{0}.{1}_default.root'.format(runNum,fileNum)
+            outFile = 'MilliQanSlab_Run{0}.{1}_{2}.root'.format(runNum,fileNum, subName)
+            triggerFile = args.inputDir + "MatchedEventsSlab_Run{0}.{1}_rematch.root".format(runNum, fileNum)
+        else:
+            inFile = args.inputDir + 'MilliQan_Run{0}.{1}_default.root'.format(runNum,fileNum)
+            outFile = 'MilliQan_Run{0}.{1}_{2}.root'.format(runNum,fileNum, subName)
+            triggerFile = args.inputDir + "MatchedEvents_Run{0}.{1}_rematch.root".format(runNum, fileNum)
+
+        print("Input file is {0}\nTrigger File is {1}\nOutput File is {2}".format(inFile, triggerFile, outFile))
+
+        cmd = 'source $PWD/setup.sh && python3 $PWD/scripts/runOfflineFactory.py --inputFile {0} --outputFile {1} --exe ./run.exe --publish'.format(inFile, outFile)
+
+        if os.path.exists(triggerFile):
+            cmd = '{0} -m {1}'.format(cmd, triggerFile)
+        else:
+            print("Trigger file {} does not exist".format(triggerFile))
+
+        if args.slab:
+            print("Processing slab detector data")
+            cmd = '{0} --slab'.format(cmd)
+
+        subprocess.call(cmd, shell=True)
+
 
 if __name__ == "__main__":
 

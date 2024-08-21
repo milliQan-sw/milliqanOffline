@@ -75,7 +75,7 @@ pickupCut = mycuts.getCut(mycuts.pickupCut, 'pickupCut', cut=True, branches=bran
 # Define milliqan plotter
 myplotter = milliqanPlotter()
 
-# Defining the cutflow | boardMatchCut, pickupCut, 
+# Defining the cutflow
 cutflow = [boardMatchCut, pickupCut, mycuts.getEventCount]
 
 # Create a schedule of the cuts

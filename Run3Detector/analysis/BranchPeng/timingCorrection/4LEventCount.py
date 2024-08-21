@@ -27,11 +27,7 @@ from milliqanPlotter import *
 
 # Define the function to get the event count of each channel
 def getEventCount(self):
-    chanL0 = self.events['chan'][self.events['layer'] == 0]
-    chanL1 = self.events['chan'][self.events['layer'] == 0]
-    chanL2 = self.events['chan'][self.events['layer'] == 0]
-    chanL3 = self.events['chan'][self.events['layer'] == 0]
-
+    print()
 
 # Add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getEventCount', getEventCount)

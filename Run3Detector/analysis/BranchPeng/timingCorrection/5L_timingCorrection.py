@@ -60,7 +60,7 @@ def getTimeDiff(self):
 
     timeL4_min = ak.min(timeL4, axis=1, mask_identity=True)
 
-    print(ak.num(timeL0_min))
+    print(ak.num(timeL0))
 
     for i in range(len(timeL0_min)):
         # Require pulses in all 4 layers and the back panel for one event

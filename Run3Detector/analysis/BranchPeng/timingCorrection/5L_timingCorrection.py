@@ -52,8 +52,6 @@ def getTimeDiff(self):
 
     timeL4 = ak.where(masked_layer2 == 4, masked_time2, -999999)
 
-    print(ak.num(timeL0))
-
     # Find the minimum time per event
     timeL0_min = ak.min(timeL0, axis=1, mask_identity=True)
     timeL1_min = ak.min(timeL1, axis=1, mask_identity=True)
@@ -68,7 +66,7 @@ def getTimeDiff(self):
             # Calculate time differences only for events with valid times in all layers
             time_diffsL30.append(timeL3_min[i] - timeL0_min[i])
     
-    #print(time_diffsL30)
+    print(time_diffsL30)
 
     # Extend the final list to match the size of the current file
     num_events = len(self.events)

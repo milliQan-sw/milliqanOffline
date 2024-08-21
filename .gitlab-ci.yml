@@ -7,6 +7,7 @@ stages:
 
 variables:
     DOCKER_IMAGE: carriganm95/milliqan_uproot:latest
+    CI_REGISTRY_IMAGE: carriganm95/milliqan_offline:x86
   
 setup:
     image: $CI_REGISTRY_IMAGE
@@ -28,20 +29,26 @@ setup:
         - sed -i "s|UCSB|GitLab|g" setup.sh
         - sed -i 's/\.\.\///' setup.sh
         - . setup.sh
-        - curl -o input.root https://cernbox.cern.ch/s/4b3s7iRaaP2cVnj/download
         - ./compile.sh test.exe
-        - rm -rf ../../MilliDAQ
+    artifacts:
+      paths:
+        - Run3Detector/test.exe
+        - MilliDAQ/
 
 offlineProduction:
     image: $CI_REGISTRY_IMAGE
     stage: offlineProduction
+    dependencies:
+        - setup
     rules:
         - if: $CI_PIPELINE_SOURCE != "schedule"
     variables:
         GIT_SUBMODULE_STRATEGY: recursive
     script:  
         - cd Run3Detector
-        - python3 scripts/runOfflineFactory.py --inputFile input.root --outputFile output.root --exe ./test.exe
+        - . setup.sh
+        - curl -o MilliQan_Run1426.1_default.root https://cernbox.cern.ch/s/incyVcvuTXPx7m8/download/
+        - python3 scripts/runOfflineFactory.py --inputFile MilliQan_Run1426.1_default.root --outputFile MilliQan_Run1426.1_v35.root --exe ./test.exe
 
 analysis:
     image: $DOCKER_IMAGE
@@ -59,10 +66,10 @@ analysis:
         - python3 analysisCI.py
 
 build image:
-    image: $DOCKER_IMAGE
+    image: docker:24.0.5
     stage: setup
     services:
-        - name: docker:dind
+        - name: docker:24.0.5-dind
     rules:
         - if: $CI_PIPELINE_SOURCE == "schedule"
     variables:

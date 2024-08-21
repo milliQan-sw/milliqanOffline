@@ -37,8 +37,8 @@ def getEventCount(self):
 setattr(milliqanCuts, 'getEventCount', getEventCount)
 
 # Define the range of runs
-start_run_number = 1000 ######################################################################################################################################################
-end_run_number = 1000 ########################################################################################################################################################
+start_run_number = 1000 
+end_run_number = 1000 
 
 # Define a file list to run over
 filelist = []
@@ -48,7 +48,7 @@ for run_number in range(start_run_number, end_run_number + 1):
     file_number = 0
     consecutive_missing_files = 0
     while True:
-        file_path = f"/home/bpeng/muonAnalysis/1000/MilliQan_Run{run_number}.{file_number}_v34.root" #########################################################################
+        file_path = f"/home/bpeng/muonAnalysis/1000/MilliQan_Run{run_number}.{file_number}_v34.root" 
         if os.path.exists(file_path):
             filelist.append(file_path)
             file_number += 1

@@ -45,12 +45,11 @@ def getTimeDiff(self):
     masked_layer2 = ak.where(slabFinalPulseMask, self.events['layer'], -999999)
 
     # Masked times per layer
-    timeL0 = masked_time1[masked_layer1 == 0]
-    timeL1 = masked_time1[masked_layer1 == 1]
-    timeL2 = masked_time1[masked_layer1 == 2]
-    timeL3 = masked_time1[masked_layer1 == 3]
-
-    timeL4 = masked_time2[masked_layer2 == 4]
+    timeL0 = ak.where(masked_layer1 == 0, masked_time1, -999999)
+    timeL1 = ak.where(masked_layer1 == 1, masked_time1, -999999)
+    timeL2 = ak.where(masked_layer1 == 2, masked_time1, -999999)
+    timeL3 = ak.where(masked_layer1 == 3, masked_time1, -999999)
+    timeL4 = ak.where(masked_layer2 == 4, masked_time2, -999999)
 
     # Find the minimum time per event
     timeL0_min = ak.min(timeL0, axis=1, mask_identity=True)
@@ -141,7 +140,7 @@ h_1d = r.TH1F("h_1d", f"Run {start_run_number} to {end_run_number} time differen
 myplotter.addHistograms(h_1d, 'timeDiff')
 
 # Defining the cutflow | boardMatchCut, pickupCut, 
-cutflow = [boardMatchCut, pickupCut, mycuts.getTimeDiff, myplotter.dict['h_1d']]
+cutflow = [mycuts.getTimeDiff, myplotter.dict['h_1d']]
 
 # Create a schedule of the cuts
 myschedule = milliQanScheduler(cutflow, mycuts, myplotter)

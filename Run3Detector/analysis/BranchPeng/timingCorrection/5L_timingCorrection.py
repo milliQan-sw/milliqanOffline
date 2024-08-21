@@ -37,14 +37,13 @@ def getTimeDiff(self):
     barFinalPulseMask = barAreaMask & (self.events['ipulse'] == 0) & (self.events['type'] == 0)
     slabFinalPulseMask = slabAreaMask & (self.events['ipulse'] == 0) & (self.events['type'] == 1)
 
-    # Apply the finalPulseMask
-    masked_time1 = self.events['timeFit_module_calibrated'][barFinalPulseMask]
-    masked_layer1 = self.events['layer'][barFinalPulseMask]
+    # Apply the finalPulseMask using ak.where to keep the array size and replace non-passing pulses with None
+    masked_time1 = ak.where(barFinalPulseMask, self.events['timeFit_module_calibrated'], None)
+    masked_layer1 = ak.where(barFinalPulseMask, self.events['layer'], None)
 
-    masked_time2 = self.events['timeFit_module_calibrated'][slabFinalPulseMask]
-    masked_layer2 = self.events['layer'][slabFinalPulseMask]
+    masked_time2 = ak.where(slabFinalPulseMask, self.events['timeFit_module_calibrated'], None)
+    masked_layer2 = ak.where(slabFinalPulseMask, self.events['layer'], None)
 
-    print(ak.num(self.events['timeFit_module_calibrated']))
     print(ak.num(masked_time1))
 
     # Masked times per layer

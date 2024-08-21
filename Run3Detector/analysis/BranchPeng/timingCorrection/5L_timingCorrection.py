@@ -44,7 +44,7 @@ def getTimeDiff(self):
     masked_time2 = self.events['timeFit_module_calibrated'][slabFinalPulseMask]
     masked_layer2 = self.events['layer'][slabFinalPulseMask]
 
-    print(ak.num(barFinalPulseMask))
+    print(ak.num(masked_time1))
 
     # Masked times per layer
     timeL0 = masked_time1[masked_layer1 == 0]

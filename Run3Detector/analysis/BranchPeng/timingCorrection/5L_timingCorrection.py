@@ -60,8 +60,6 @@ def getTimeDiff(self):
 
     timeL4_min = ak.min(timeL4, axis=1)
 
-    print(timeL0_min)
-
     for i in range(len(timeL0_min)):
         # Require pulses in all 4 layers and the back panel for one event
         if timeL0_min[i] is not None and timeL1_min[i] is not None and timeL2_min[i] is not None and timeL3_min[i] is not None and timeL4_min[i] is not None:

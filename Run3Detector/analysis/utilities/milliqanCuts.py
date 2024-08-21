@@ -325,7 +325,7 @@ class milliqanCuts():
 
         if cut:
             for branch in branches:
-                print(branch)
+                #print(branch)
                 self.events[branch] = self.events[branch][self.events[cutName+'Pulse']]
 
     @mqCut
@@ -406,6 +406,23 @@ class milliqanCuts():
         if cut:
             for branch in branches:
                 self.events[branch] = self.events[branch][selection]  
+
+    @mqCut
+    def triggerCutNot(self, cutName='triggerSelction', trigger=1, cut=False, branches=None):
+
+        triggers = ak.firsts(self.events['tTrigger'])
+        binary_trig = self.to_binary(trigger)
+
+        # Apply the conversion function to each element in the Awkward Array
+        triggers = ak.Array([self.to_binary(i) if i is not None else None for i in triggers])
+        selection = (triggers != binary_trig)
+
+        selection, _ = ak.broadcast_arrays(selection, self.events['tTrigger'])
+        self.events[cutName] = selection
+
+        if cut:
+            for branch in branches:
+                self.events[branch] = self.events[branch][selection]
 
     def getCut(self, func, name, *args, **kwargs):
         if func.__name__ == 'combineCuts':

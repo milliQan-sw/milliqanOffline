@@ -56,7 +56,7 @@ void myLooper::Loop( TString outFile)
       // if (jentry > 10) break;
 
       // Some feedback to the user
-      if ( (jentry % 100000) == 0 ) {
+      if ( (jentry % 1000) == 0 ) {
 	std::cout << "Processing " << jentry << "/" << nentries << std::endl;
       }
 

@@ -37,6 +37,8 @@ def getTimeDiff(self):
     barFinalPulseMask = barAreaMask & (self.events['ipulse'] == 0) & (self.events['type'] == 0)
     slabFinalPulseMask = slabAreaMask & (self.events['ipulse'] == 0) & (self.events['type'] == 1)
 
+    print(ak.to_list(barFinalPulseMask))
+
     # Apply the finalPulseMask
     masked_time1 = self.events['timeFit_module_calibrated'][barFinalPulseMask]
     masked_layer1 = self.events['layer'][barFinalPulseMask]
@@ -66,7 +68,7 @@ def getTimeDiff(self):
             # Calculate time differences only for events with valid times in all layers
             time_diffsL30.append(timeL3_min[i] - timeL0_min[i])
     
-    print(time_diffsL30)
+    #print(time_diffsL30)
 
     # Extend the final list to match the size of the current file
     num_events = len(self.events)

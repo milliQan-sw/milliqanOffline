@@ -140,8 +140,8 @@ h_1d = r.TH1F("h_1d", f"Run {start_run_number} to {end_run_number} time differen
 # Add root histogram to plotter
 myplotter.addHistograms(h_1d, 'timeDiff')
 
-# Defining the cutflow
-cutflow = [boardMatchCut, pickupCut, mycuts.getTimeDiff, myplotter.dict['h_1d']]
+# Defining the cutflow | boardMatchCut, pickupCut, 
+cutflow = [mycuts.getTimeDiff, myplotter.dict['h_1d']]
 
 # Create a schedule of the cuts
 myschedule = milliQanScheduler(cutflow, mycuts, myplotter)

@@ -1,7 +1,7 @@
 #include <RtypesCore.h>
 #include <TFile.h>
 #include <set>
-
+#include "TCanvas.h"
 // Template function to print any vector type
 template <typename T>
 std::ostream& operator<<(std::ostream& os, const std::vector<T>& vec) {
@@ -33,7 +33,7 @@ bool fourLayers(const std::vector<float> &vec) {
 
 int analysis() {
   TFile *file = TFile::Open(
-      "/home/ryan/Documents/Data/MilliQan/beam_muon_slabMilliQan_flat.root");
+      "/home/ryan/Documents/Research/Data/beam_muon_slabMilliQan_flat.root");
   TTree *tree = (TTree *)file->Get("t");
 
   // Setup variables to hold leaves
@@ -66,10 +66,10 @@ int analysis() {
 
     ++four_layer_cut;
 
-    for (const auto &value : time) {
+    for (const auto &value : *time) {
       h_time->Fill(value);
     }
-    for (const auto &value : nPE) {
+    for (const auto &value : *nPE) {
       h_npe->Fill(value);
     }
   }
@@ -82,7 +82,15 @@ int analysis() {
 
 
   // Draw histograms
-  
+  TCanvas *canvas =
+      new TCanvas("canvas", "NPE and Timing Distributions", 400, 400);
+  canvas->Divide(2, 1);
+  canvas->cd(1);
+  h_npe->Draw();
+  canvas->cd(2);
+  h_time->Draw();
+
+  canvas->Update();
   return 0;
 }
 

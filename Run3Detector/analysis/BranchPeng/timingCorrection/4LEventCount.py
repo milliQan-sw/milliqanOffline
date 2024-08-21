@@ -38,7 +38,7 @@ setattr(milliqanCuts, 'getEventCount', getEventCount)
 
 # Define the range of runs
 start_run_number = 1000 
-end_run_number = 1000 
+end_run_number = 1009
 
 # Define a file list to run over
 filelist = [] 

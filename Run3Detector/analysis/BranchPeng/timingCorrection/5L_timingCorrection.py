@@ -38,19 +38,19 @@ def getTimeDiff(self):
     slabFinalPulseMask = slabAreaMask & (self.events['ipulse'] == 0) & (self.events['type'] == 1)
 
     # Apply the finalPulseMask using ak.where to keep the array size and replace non-passing pulses with -999999
-    masked_time1 = ak.where(barFinalPulseMask, self.events['timeFit_module_calibrated'], -999999)
-    masked_layer1 = ak.where(barFinalPulseMask, self.events['layer'], -999999)
+    masked_time1 = ak.where(barFinalPulseMask, self.events['timeFit_module_calibrated'], 9999999)
+    masked_layer1 = ak.where(barFinalPulseMask, self.events['layer'], 9999999)
 
-    masked_time2 = ak.where(slabFinalPulseMask, self.events['timeFit_module_calibrated'], -999999)
-    masked_layer2 = ak.where(slabFinalPulseMask, self.events['layer'], -999999)
+    masked_time2 = ak.where(slabFinalPulseMask, self.events['timeFit_module_calibrated'], 9999999)
+    masked_layer2 = ak.where(slabFinalPulseMask, self.events['layer'], 9999999)
 
     # Masked times per layer
-    timeL0 = ak.where(masked_layer1 == 0, masked_time1, -999999)
-    timeL1 = ak.where(masked_layer1 == 1, masked_time1, -999999)
-    timeL2 = ak.where(masked_layer1 == 2, masked_time1, -999999)
-    timeL3 = ak.where(masked_layer1 == 3, masked_time1, -999999)
+    timeL0 = ak.where(masked_layer1 == 0, masked_time1, 9999999)
+    timeL1 = ak.where(masked_layer1 == 1, masked_time1, 9999999)
+    timeL2 = ak.where(masked_layer1 == 2, masked_time1, 9999999)
+    timeL3 = ak.where(masked_layer1 == 3, masked_time1, 9999999)
 
-    timeL4 = ak.where(masked_layer2 == 4, masked_time2, -999999)
+    timeL4 = ak.where(masked_layer2 == 4, masked_time2, 9999999)
 
     # Find the minimum time per event
     timeL0_min = ak.min(timeL0, axis=1, mask_identity=True)

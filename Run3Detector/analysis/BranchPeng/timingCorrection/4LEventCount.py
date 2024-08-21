@@ -41,7 +41,7 @@ start_run_number = 1000
 end_run_number = 1000 
 
 # Define a file list to run over
-filelist = []
+filelist = [] 
 
 for run_number in range(start_run_number, end_run_number + 1):
     print(f"Processing run number: {run_number}")

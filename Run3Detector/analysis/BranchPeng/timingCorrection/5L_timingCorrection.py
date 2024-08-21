@@ -53,12 +53,12 @@ def getTimeDiff(self):
     timeL4 = ak.where(masked_layer2 == 4, masked_time2, 99999)
 
     # Find the minimum time per event
-    timeL0_min = ak.min(timeL0, axis=1, mask_identity=True)
-    timeL1_min = ak.min(timeL1, axis=1, mask_identity=True)
-    timeL2_min = ak.min(timeL2, axis=1, mask_identity=True)
-    timeL3_min = ak.min(timeL3, axis=1, mask_identity=True)
+    timeL0_min = ak.min(timeL0, axis=1)
+    timeL1_min = ak.min(timeL1, axis=1)
+    timeL2_min = ak.min(timeL2, axis=1)
+    timeL3_min = ak.min(timeL3, axis=1)
 
-    timeL4_min = ak.min(timeL4, axis=1, mask_identity=True)
+    timeL4_min = ak.min(timeL4, axis=1)
 
     print(ak.num(timeL0))
 

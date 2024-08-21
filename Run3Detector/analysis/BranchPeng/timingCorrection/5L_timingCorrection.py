@@ -44,8 +44,6 @@ def getTimeDiff(self):
     masked_time2 = ak.where(slabFinalPulseMask, self.events['timeFit_module_calibrated'], -999999)
     masked_layer2 = ak.where(slabFinalPulseMask, self.events['layer'], -999999)
 
-    print(ak.num(masked_time1))
-
     # Masked times per layer
     timeL0 = masked_time1[masked_layer1 == 0]
     timeL1 = masked_time1[masked_layer1 == 1]
@@ -53,6 +51,8 @@ def getTimeDiff(self):
     timeL3 = masked_time1[masked_layer1 == 3]
 
     timeL4 = masked_time2[masked_layer2 == 4]
+
+    print(ak.num(timeL0))
 
     # Find the minimum time per event
     timeL0_min = ak.min(timeL0, axis=1, mask_identity=True)

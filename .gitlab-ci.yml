@@ -7,6 +7,7 @@ stages:
 
 variables:
     DOCKER_IMAGE: carriganm95/milliqan_uproot:latest
+    CI_REGISTRY_IMAGE: carriganm95/milliqan_offline:x86
   
 setup:
     image: $CI_REGISTRY_IMAGE

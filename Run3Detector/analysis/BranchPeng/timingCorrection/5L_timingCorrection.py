@@ -37,7 +37,7 @@ def getTimeDiff(self):
     barFinalPulseMask = barAreaMask & (self.events['ipulse'] == 0) & (self.events['type'] == 0)
     slabFinalPulseMask = slabAreaMask & (self.events['ipulse'] == 0) & (self.events['type'] == 1)
 
-    print(ak.to_list(barFinalPulseMask))
+    print(ak.num(barFinalPulseMask))
 
     # Apply the finalPulseMask
     masked_time1 = self.events['timeFit_module_calibrated'][barFinalPulseMask]

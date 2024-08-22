@@ -124,7 +124,7 @@ for run_number in range(start_run_number, end_run_number + 1):
 beamOn_true_percentage = (beamOn_true_count / total_files_count) * 100 if total_files_count > 0 else 0
 
 # Define the necessary branches to run over
-branches = ['pickupFlag', 'boardsMatched', 'timeFit_module_calibrated', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type', 'beamOn']
+branches = ['fileNumber', 'runNumber', 'tTrigger', 'event', 'pickupFlag', 'boardsMatched', 'timeFit_module_calibrated', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type', 'beamOn']
 
 # Define the milliqan cuts object
 mycuts = milliqanCuts()

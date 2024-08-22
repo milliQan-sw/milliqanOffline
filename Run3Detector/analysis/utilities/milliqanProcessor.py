@@ -167,6 +167,7 @@ class milliqanProcessor():
             _, events['tTrigger'] = ak.broadcast_arrays(events['pickupFlag'], events['tTrigger'])
             _, events['event'] = ak.broadcast_arrays(events['pickupFlag'], events['event'])
             _, events['boardsMatched'] = ak.broadcast_arrays(events['pickupFlag'], events['boardsMatched'])
+            _, events['beamOn'] = ak.broadcast_arrays(events['pickupFlag'], events['beamOn'])
 
             #_, events['fileNumber'] = ak.broadcast_arrays(events['pickupFlag'], events['fileNumber'])
             #print(events['pickupFlag'][0])

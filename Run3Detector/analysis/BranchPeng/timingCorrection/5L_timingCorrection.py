@@ -34,39 +34,35 @@ def getTimeDiff(self):
     slabAreaMask = self.events['area'] > 500000 / 12
 
     # Pick the first pulse
-    barFinalPulseMask = barAreaMask & (self.events['ipulse'] == 0) & (self.events['type'] == 0)
-    slabFinalPulseMask = slabAreaMask & (self.events['ipulse'] == 0) & (self.events['type'] == 1)
+    barFinalPulseMask = barAreaMask & (self.events['ipulse'] == 0)
+    slabFinalPulseMask = slabAreaMask & (self.events['ipulse'] == 0)
 
-    # Apply the finalPulseMask using ak.where to keep the array size and replace non-passing pulses with -999999
-    masked_time1 = ak.where(barFinalPulseMask, self.events['timeFit_module_calibrated'], 99999)
-    masked_layer1 = ak.where(barFinalPulseMask, self.events['layer'], 99999)
+    # Apply the finalPulseMask
+    masked_time1 = self.events['timeFit_module_calibrated'][barFinalPulseMask]
+    masked_layer1 = self.events['layer'][barFinalPulseMask]
 
-    masked_time2 = ak.where(slabFinalPulseMask, self.events['timeFit_module_calibrated'], 99999)
-    masked_layer2 = ak.where(slabFinalPulseMask, self.events['layer'], 99999)
+    masked_time2 = self.events['timeFit_module_calibrated'][slabFinalPulseMask]
+    masked_layer2 = self.events['layer'][slabFinalPulseMask]
 
     # Masked times per layer
-    timeL0 = ak.where(masked_layer1 == 0, masked_time1, 99999)
-    timeL1 = ak.where(masked_layer1 == 1, masked_time1, 99999)
-    timeL2 = ak.where(masked_layer1 == 2, masked_time1, 99999)
-    timeL3 = ak.where(masked_layer1 == 3, masked_time1, 99999)
+    timeL0 = masked_time1[masked_layer1 == 0]
+    timeL1 = masked_time1[masked_layer1 == 1]
+    timeL2 = masked_time1[masked_layer1 == 2]
+    timeL3 = masked_time1[masked_layer1 == 3]
 
-    timeL4 = ak.where(masked_layer2 == 4, masked_time2, 99999)
+    timeL4 = masked_time2[masked_layer2 == 4]
 
     # Find the minimum time per event
-    timeL0_min = ak.min(timeL0, axis=1)
-    timeL1_min = ak.min(timeL1, axis=1)
-    timeL2_min = ak.min(timeL2, axis=1)
-    timeL3_min = ak.min(timeL3, axis=1)
+    timeL0_min = ak.min(timeL0, axis=1, mask_identity=True)
+    timeL1_min = ak.min(timeL1, axis=1, mask_identity=True)
+    timeL2_min = ak.min(timeL2, axis=1, mask_identity=True)
+    timeL3_min = ak.min(timeL3, axis=1, mask_identity=True)
 
-    timeL4_min = ak.min(timeL4, axis=1)
+    timeL4_min = ak.min(timeL4, axis=1, mask_identity=True)
 
     for i in range(len(timeL0_min)):
         # Require pulses in all 4 layers and the back panel for one event
-        if ((timeL0_min[i] != 99999 and timeL0_min[i] is not None) and 
-        (timeL1_min[i] != 99999 and timeL1_min[i] is not None) and 
-        (timeL2_min[i] != 99999 and timeL2_min[i] is not None) and 
-        (timeL3_min[i] != 99999 and timeL3_min[i] is not None) and 
-        (timeL4_min[i] != 99999 and timeL4_min[i] is not None)):
+        if timeL0_min[i] is not None and timeL1_min[i] is not None and timeL2_min[i] is not None and timeL3_min[i] is not None and timeL4_min[i] is not None:
             # Calculate time differences only for events with valid times in all layers
             time_diffsL30.append(timeL3_min[i] - timeL0_min[i])
     

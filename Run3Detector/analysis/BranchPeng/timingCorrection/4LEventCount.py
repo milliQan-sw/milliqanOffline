@@ -28,7 +28,6 @@ from milliqanPlotter import *
 # Initialize a cumulative event count dictionary
 cumulativeChanEventCount = {(row, column, layer): 0 for row in range(4) for column in range(4) for layer in range(4)}
 
-# Update the getEventCount function to return the event counts instead of printing them
 def getEventCount(self):
     chanEventCount = {(row, column, layer): 0 for row in range(4) for column in range(4) for layer in range(4)}
 

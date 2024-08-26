@@ -57,6 +57,7 @@ end_run_number = 1009
 # Define a file list to run over
 filelist = [] 
 
+# this will add all the files that need to be processed into the filelist
 for run_number in range(start_run_number, end_run_number + 1):
     print(f"Processing run number: {run_number}")
     file_number = 0
@@ -107,7 +108,7 @@ for file in filelist:
     myiterator.run()
     
     # Get the event counts from the current file
-    fileEventCount = mycuts.getEventCount(myiterator)
+    fileEventCount = mycuts.getEventCount()
     
     # Update the cumulative event counts
     for key in cumulativeChanEventCount:

@@ -116,4 +116,4 @@ for file in filelist:
 
 # Print the cumulative event counts after processing all files
 for key, value in cumulativeChanEventCount.items():
-    print(f"Channel {key}: {value} events")
+    print(f"{key}: {value}")

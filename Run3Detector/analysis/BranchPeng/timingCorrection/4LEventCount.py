@@ -105,7 +105,7 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts, myplotter
 # Run the milliqan processor and accumulate results
 for file in filelist:
     # Process the current file
-    myiterator.runFile(file)
+    myiterator.run(file)
     
     # Get the event counts from the current file
     fileEventCount = mycuts.getEventCount(myiterator)

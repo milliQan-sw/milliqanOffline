@@ -104,6 +104,7 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts, myplotter
 
 # Run the milliqan processor and accumulate results
 for file in filelist:
+    print(f'Running file:{file}')
     # Process the current file
     myiterator.run()
     

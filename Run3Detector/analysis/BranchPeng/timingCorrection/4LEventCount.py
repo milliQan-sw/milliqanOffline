@@ -27,7 +27,24 @@ from milliqanPlotter import *
 
 # Define the function to get the event count of each channel
 def getEventCount(self):
-    print()
+    chanEventCount = {(row, column, layer): 0 for row in range(4) for column in range(4) for layer in range(4)}
+
+    for i in range(len(self.events)):
+        for row in range(4):
+            for col in  range(4):
+                chanL0 = self.events[(self.events['layer'] == 0) & (self.events['row'] == row) & (self.events['column'] == col)]
+                chanL1 = self.events[(self.events['layer'] == 1) & (self.events['row'] == row) & (self.events['column'] == col)]
+                chanL2 = self.events[(self.events['layer'] == 2) & (self.events['row'] == row) & (self.events['column'] == col)]
+                chanL3 = self.events[(self.events['layer'] == 3) & (self.events['row'] == row) & (self.events['column'] == col)]
+
+                if chanL0[i] != None and chanL1[i] != None and chanL2[i] != None and chanL3[i] != None:
+                    chanEventCount[(row, col, 0)] += 1
+                    chanEventCount[(row, col, 1)] += 1
+                    chanEventCount[(row, col, 2)] += 1
+                    chanEventCount[(row, col, 3)] += 1
+
+for key, value in chanEventCount.items():
+    print(key, value)
 
 # Add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getEventCount', getEventCount)

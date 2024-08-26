@@ -25,26 +25,28 @@ from milliqanCuts import *
 from milliqanPlotter import *
 
 
-# Define the function to get the event count of each channel
+# Initialize a cumulative event count dictionary
+cumulativeChanEventCount = {(row, column, layer): 0 for row in range(4) for column in range(4) for layer in range(4)}
+
+# Update the getEventCount function to return the event counts instead of printing them
 def getEventCount(self):
     chanEventCount = {(row, column, layer): 0 for row in range(4) for column in range(4) for layer in range(4)}
 
     for i in range(len(self.events)):
         for row in range(4):
-            for col in  range(4):
+            for col in range(4):
                 chanL0 = self.events[(self.events['layer'] == 0) & (self.events['row'] == row) & (self.events['column'] == col)]
                 chanL1 = self.events[(self.events['layer'] == 1) & (self.events['row'] == row) & (self.events['column'] == col)]
                 chanL2 = self.events[(self.events['layer'] == 2) & (self.events['row'] == row) & (self.events['column'] == col)]
                 chanL3 = self.events[(self.events['layer'] == 3) & (self.events['row'] == row) & (self.events['column'] == col)]
 
-                if chanL0[i] != None and chanL1[i] != None and chanL2[i] != None and chanL3[i] != None:
+                if chanL0[i] is not None and chanL1[i] is not None and chanL2[i] is not None and chanL3[i] is not None:
                     chanEventCount[(row, col, 0)] += 1
                     chanEventCount[(row, col, 1)] += 1
                     chanEventCount[(row, col, 2)] += 1
                     chanEventCount[(row, col, 3)] += 1
 
-for key, value in chanEventCount.items():
-    print(key, value)
+    return chanEventCount
 
 # Add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getEventCount', getEventCount)
@@ -100,5 +102,18 @@ myschedule.printSchedule()
 # Create the milliqan processor object
 myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts, myplotter)
 
-# Run the milliqan processor
-myiterator.run()
+# Run the milliqan processor and accumulate results
+for file in filelist:
+    # Process the current file
+    myiterator.runFile(file)
+    
+    # Get the event counts from the current file
+    fileEventCount = mycuts.getEventCount(myiterator)
+    
+    # Update the cumulative event counts
+    for key in cumulativeChanEventCount:
+        cumulativeChanEventCount[key] += fileEventCount[key]
+
+# Print the cumulative event counts after processing all files
+for key, value in cumulativeChanEventCount.items():
+    print(f"Channel {key}: {value} events")

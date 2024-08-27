@@ -30,17 +30,16 @@ def getEventCount(self):
     for row in range(4):
         for col in  range(4):
             for lay in range(4):
-                self.events[f"col{col}_row{row}_lay{lay}_chan_event_mask"] = ak.any(((self.events['layer'] == lay) & (self.events['row'] == row) & (self.events['column'] == col)), axis = 1)
-                self.events[f"col{col}_row{row}_lay{lay}"] = ak.count_nonezero(((self.events['layer'] == 0) & (self.events['row'] == row) & (self.events['column'] == col)), axis = 1) 
-
+                # this branch tells if each event has pulses in current channel
+                self.events[f"col{col}_row{row}_lay{lay}"] = ak.any(((self.events['layer'] == lay) & (self.events['row'] == row) & (self.events['column'] == col)), axis = 1) 
+            
             self.events[f"col{col}_row{row}"] = self.events[f"col{col}_row{row}_lay{0}"] & self.events[f"col{col}_row{row}_lay{1}"] & self.events[f"col{col}_row{row}_lay{2}"] & self.events[f"col{col}_row{row}_lay{3}"]
-
-            #count number of 4 in line event at col = 0 row = 0 layer = 0
-            self.events[f"Num_col{col}_row{row}_lay{lay}"] = ak.count_nonezero(self.events[f"col{col}_row{row}"] & self.events[f"col{col}_row{row}_lay{lay}_1"] )
+            
+            for lay in range(4):
+                #count number of 4 in line event at col = 0 row = 0 layer = 0
+                self.events[f"Num_col{col}_row{row}_lay{lay}"] = ak.count_nonezero(self.events[f"col{col}_row{row}"] & self.events[f"col{col}_row{row}_lay{lay}"] )
     
             
-
-             
 
 # Add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getEventCount', getEventCount)

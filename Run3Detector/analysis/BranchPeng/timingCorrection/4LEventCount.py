@@ -28,17 +28,26 @@ from milliqanPlotter import *
 # Define the function to get the event count of each channel
 def getEventCount(self):
     for row in range(4):
-        for col in  range(4):
+        for col in range(4):
             for lay in range(4):
                 # this branch tells if an event has pulses in current channel (event-based)
-                self.events[f"col{col}_row{row}_lay{lay}"] = ak.any((self.events['layer'] == lay & self.events['row'] == row & self.events['column'] == col), axis = 1) 
+                self.events[f"col{col}_row{row}_lay{lay}"] = ak.any((self.events['layer'] == lay) & (self.events['row'] == row) & (self.events['column'] == col), axis=1) 
             # this branch tells if an event has pulses in all 4 layers (event-based)
-            self.events[f"col{col}_row{row}"] = self.events[f"col{col}_row{row}_lay{0}"] & self.events[f"col{col}_row{row}_lay{1}"] & self.events[f"col{col}_row{row}_lay{2}"] & self.events[f"col{col}_row{row}_lay{3}"]
+            self.events[f"col{col}_row{row}"] = (
+                self.events[f"col{col}_row{row}_lay{0}"] & 
+                self.events[f"col{col}_row{row}_lay{1}"] & 
+                self.events[f"col{col}_row{row}_lay{2}"] & 
+                self.events[f"col{col}_row{row}_lay{3}"]
+            )
             
             for lay in range(4):
                 # count straight line path pulses as events for channels
-                self.events[f"Count_col{col}_row{row}_lay{lay}"] = ak.count_nonezero(self.events[f"col{col}_row{row}"] & self.events[f"col{col}_row{row}_lay{lay}"], axis = 1)
+                self.events[f"Count_col{col}_row{row}_lay{lay}"] = ak.sum(
+                    self.events[f"col{col}_row{row}"] & self.events[f"col{col}_row{row}_lay{lay}"],
+                    axis=1
+                )
                 print(self.events[f"Count_col{col}_row{row}_lay{lay}"])
+
 
 # Add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getEventCount', getEventCount)

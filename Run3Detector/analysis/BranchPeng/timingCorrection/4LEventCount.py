@@ -43,8 +43,8 @@ def getEventCount(self):
                     chanEventCount[(row, col, 2)] += 1
                     chanEventCount[(row, col, 3)] += 1
 
-for key, value in chanEventCount.items():
-    print(key, value)
+    for key, value in chanEventCount.items():
+        print(key, value)                
 
 # Add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getEventCount', getEventCount)

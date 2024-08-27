@@ -44,7 +44,7 @@ def getEventCount(self):
             
             for lay in range(4):
                 # count straight line path pulses as events for channels
-                cumulativeChanEventCount[(col, row, lay)].append(ak.sum(
+                cumulativeChanEventCount[(col, row, lay)] += (ak.sum(
                     self.events[f"col{col}_row{row}"] & self.events[f"col{col}_row{row}_lay{lay}"],
                 ))
                 print(cumulativeChanEventCount)

@@ -44,7 +44,6 @@ def getEventCount(self):
                 # count straight line path pulses as events for channels
                 self.events[f"Count_col{col}_row{row}_lay{lay}"] = ak.sum(
                     self.events[f"col{col}_row{row}"] & self.events[f"col{col}_row{row}_lay{lay}"],
-                    axis=1
                 )
                 print(self.events[f"Count_col{col}_row{row}_lay{lay}"])
 

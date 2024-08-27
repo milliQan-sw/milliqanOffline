@@ -30,9 +30,9 @@ def getEventCount(self):
     for row in range(4):
         for col in  range(4):
             for lay in range(4):
-                # this branch tells if each event has pulses in current channel
+                # this branch tells if an event has pulses in current channel
                 self.events[f"col{col}_row{row}_lay{lay}"] = ak.any(((self.events['layer'] == lay) & (self.events['row'] == row) & (self.events['column'] == col)), axis = 1) 
-            
+            # this branch tells if an event has pulses in all 4 layers
             self.events[f"col{col}_row{row}"] = self.events[f"col{col}_row{row}_lay{0}"] & self.events[f"col{col}_row{row}_lay{1}"] & self.events[f"col{col}_row{row}_lay{2}"] & self.events[f"col{col}_row{row}_lay{3}"]
             
             for lay in range(4):

@@ -42,6 +42,8 @@ def getEventCount(self):
                     chanEventCount[(row, col, 1)] += 1
                     chanEventCount[(row, col, 2)] += 1
                     chanEventCount[(row, col, 3)] += 1
+                else:
+                    break    
 
     for key, value in chanEventCount.items():
         print(key, value)                

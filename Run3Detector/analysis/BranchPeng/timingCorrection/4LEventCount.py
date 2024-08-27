@@ -37,16 +37,16 @@ def getEventCount(self):
                 chanL2 = self.events[(self.events['layer'] == 2) & (self.events['row'] == row) & (self.events['column'] == col)]
                 chanL3 = self.events[(self.events['layer'] == 3) & (self.events['row'] == row) & (self.events['column'] == col)]
 
-                if chanL0[i] != None and chanL1[i] != None and chanL2[i] != None and chanL3[i] != None:
-                    chanEventCount[(row, col, 0)] += 1
-                    chanEventCount[(row, col, 1)] += 1
-                    chanEventCount[(row, col, 2)] += 1
-                    chanEventCount[(row, col, 3)] += 1
-                else:
-                    break    
+                # Check if the length of the arrays are not zero
+                if len(chanL0) > 0 and len(chanL1) > 0 and len(chanL2) > 0 and len(chanL3) > 0:
+                    if chanL0[i] is not None and chanL1[i] is not None and chanL2[i] is not None and chanL3[i] is not None:
+                        chanEventCount[(row, col, 0)] += 1
+                        chanEventCount[(row, col, 1)] += 1
+                        chanEventCount[(row, col, 2)] += 1
+                        chanEventCount[(row, col, 3)] += 1
 
     for key, value in chanEventCount.items():
-        print(key, value)                
+        print(key, value)               
 
 # Add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getEventCount', getEventCount)

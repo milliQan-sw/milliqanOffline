@@ -27,8 +27,10 @@ from milliqanPlotter import *
 
 # Define the function to get the event count of each channel
 def getEventCount(self):
-    for row in range(4):
-        for col in range(4):
+    cumulativeChanEventCount = {(col, row, lay): 0 for col in range(4) for row in range(4) for lay in range(4)}
+
+    for col in range(4):
+        for row in range(4):
             for lay in range(4):
                 # this branch tells if an event has pulses in current channel (event-based)
                 self.events[f"col{col}_row{row}_lay{lay}"] = ak.any((self.events['layer'] == lay) & (self.events['row'] == row) & (self.events['column'] == col), axis=1) 
@@ -42,10 +44,10 @@ def getEventCount(self):
             
             for lay in range(4):
                 # count straight line path pulses as events for channels
-                self.events[f"Count_col{col}_row{row}_lay{lay}"] = ak.sum(
+                cumulativeChanEventCount[(col, row, lay)].append(ak.sum(
                     self.events[f"col{col}_row{row}"] & self.events[f"col{col}_row{row}_lay{lay}"],
-                )
-                print(self.events[f"Count_col{col}_row{row}_lay{lay}"])
+                ))
+                print(cumulativeChanEventCount)
 
 
 # Add our custom function to milliqanCuts

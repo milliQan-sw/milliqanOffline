@@ -27,26 +27,20 @@ from milliqanPlotter import *
 
 # Define the function to get the event count of each channel
 def getEventCount(self):
-    chanEventCount = {(row, column, layer): 0 for row in range(4) for column in range(4) for layer in range(4)}
+    for row in range(4):
+        for col in  range(4):
+            for lay in range(4):
+                self.events[f"col{col}_row{row}_lay{lay}_1"] = ak.any(((self.events['layer'] == 0) & (self.events['row'] == row) & (self.events['column'] == col) ), axis = 1((self.events['layer'] == 0) & (self.events['row'] == row) & (self.events['column'] == col) ), axis = 1)
+                self.events[f"col{col}_row{row}_lay{lay}"] = ak.count_nonezero( ((self.events['layer'] == 0) & (self.events['row'] == row) & (self.events['column'] == col) ), axis = 1) 
 
-    for i in range(len(self.events)):
-        for row in range(4):
-            for col in  range(4):
-                chanL0 = self.events[(self.events['layer'] == 0) & (self.events['row'] == row) & (self.events['column'] == col)]
-                chanL1 = self.events[(self.events['layer'] == 1) & (self.events['row'] == row) & (self.events['column'] == col)]
-                chanL2 = self.events[(self.events['layer'] == 2) & (self.events['row'] == row) & (self.events['column'] == col)]
-                chanL3 = self.events[(self.events['layer'] == 3) & (self.events['row'] == row) & (self.events['column'] == col)]
+            self.events[f"col{col}_row{row}"] = self.events[f"col{col}_row{row}_lay{0}"] & self.events[f"col{col}_row{row}_lay{1}"] & self.events[f"col{col}_row{row}_lay{2}"] & self.events[f"col{col}_row{row}_lay{3}"]
 
-                # Check if the length of the arrays are not zero
-                if len(chanL0) > 0 and len(chanL1) > 0 and len(chanL2) > 0 and len(chanL3) > 0:
-                    if chanL0[i] is not None and chanL1[i] is not None and chanL2[i] is not None and chanL3[i] is not None:
-                        chanEventCount[(row, col, 0)] += 1
-                        chanEventCount[(row, col, 1)] += 1
-                        chanEventCount[(row, col, 2)] += 1
-                        chanEventCount[(row, col, 3)] += 1
+            #count number of 4 in line event at col = 0 row = 0 layer = 0
+            self.events[f"Num_col{col}_row{row}_lay{lay}"] = ak.count_nonezero(self.events[f"col{col}_row{row}"] & self.events[f"col{col}_row{row}_lay{lay}_1"] )
+    
+            
 
-    for key, value in chanEventCount.items():
-        print(key, value)               
+             
 
 # Add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getEventCount', getEventCount)

@@ -38,7 +38,7 @@ def getEventCount(self):
             for lay in range(4):
                 # count straight line path pulses as events for channels
                 self.events[f"Count_col{col}_row{row}_lay{lay}"] = ak.count_nonezero(self.events[f"col{col}_row{row}"] & self.events[f"col{col}_row{row}_lay{lay}"], axis = 1)
-                
+                print(self.events[f"Count_col{col}_row{row}_lay{lay}"])
 
 # Add our custom function to milliqanCuts
 setattr(milliqanCuts, 'getEventCount', getEventCount)

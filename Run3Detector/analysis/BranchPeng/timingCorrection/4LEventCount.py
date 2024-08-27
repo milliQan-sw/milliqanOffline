@@ -36,7 +36,7 @@ def getEventCount(self):
             self.events[f"col{col}_row{row}"] = self.events[f"col{col}_row{row}_lay{0}"] & self.events[f"col{col}_row{row}_lay{1}"] & self.events[f"col{col}_row{row}_lay{2}"] & self.events[f"col{col}_row{row}_lay{3}"]
             
             for lay in range(4):
-                #count number of 4 in line event at col = 0 row = 0 layer = 0
+                # count straight line path pulses as events for channels
                 self.events[f"Num_col{col}_row{row}_lay{lay}"] = ak.count_nonezero(self.events[f"col{col}_row{row}"] & self.events[f"col{col}_row{row}_lay{lay}"] )
     
             

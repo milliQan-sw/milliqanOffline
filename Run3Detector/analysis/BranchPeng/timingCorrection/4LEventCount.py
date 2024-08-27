@@ -47,7 +47,6 @@ def getEventCount(self):
                 cumulativeChanEventCount[(col, row, lay)] += (ak.sum(
                     self.events[f"col{col}_row{row}"] & self.events[f"col{col}_row{row}_lay{lay}"],
                 ))
-    
     print(cumulativeChanEventCount)            
 
 

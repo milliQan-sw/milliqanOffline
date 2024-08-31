@@ -4,30 +4,18 @@
 #include <iterator>
 #include <set>
 #include "TCanvas.h"
+#include "utility.cpp"
+#include "functions.h"
+#include "TTree.h"
+#include "TH1.h"
+#include "TH2.h"
+#include "TLegend.h"
+#include <iostream>
 
-// Template function to print any vector type
-template <typename T>
-std::ostream& operator<<(std::ostream& os, const std::vector<T>& vec) {
-    os << "[";
-    for (size_t i = 0; i < vec.size(); ++i) {
-        os << vec[i];
-        if (i != vec.size() - 1) {
-            os << ", ";  // Add comma and space between elements
-        }
-    }
-    os << "]";
-    return os;
-}
 
-// Function Declarations
-bool fourLayers(const std::vector<float>& vec);
-void timingResolution(const std::vector<float> &nPE,
-                      const std::vector<float> &pmt_time,
-                      const std::vector<float> &time);
-std::vector<int> sortTimes(std::vector<float> layers, std::vector<float> time);
-std::map<int, float> layerTimeDifference(std::vector<float> times, std::vector<float> layers);
 
-int analysis() {
+int main() {
+  //gStyle->SetOptStat("oue");
   TFile *file = TFile::Open(
                             "/home/ryan/Documents/Data/MilliQan/beam_muon_slabMilliQan_flat.root");
   TTree *tree = (TTree *)file->Get("t");
@@ -35,11 +23,15 @@ int analysis() {
   // Setup variables to hold leaves
   std::vector<float> *nPE = 0;
   std::vector<float> *time = 0;
-  std::vector<float> *layer = 0;
+  std::vector<int> *layer = 0;
+  std::vector<int> *column = 0;
+  std::vector<int> *row = 0;
 
-  tree->SetBranchAddress("nPE", &nPE);
+  tree->SetBranchAddress("pmt_nPE", &nPE);
   tree->SetBranchAddress("pmt_time", &time);
-  tree->SetBranchAddress("layer", &layer);
+  tree->SetBranchAddress("pmt_layer", &layer);
+  tree->SetBranchAddress("pmt_row", &row);
+  tree->SetBranchAddress("pmt_column", &column);
 
   Long64_t nEntries = tree->GetEntries();
   //std::cout << "Number of entries " << nEntries << std::endl;
@@ -53,8 +45,10 @@ int analysis() {
   TH1F *h_time_diff_1 = new TH1F("time_diff_1", "Time Difference Between Layer 0 and 1", 100, 0, 20);
   TH1F *h_time_diff_2 = new TH1F("time_diff_2", "Time Difference Between Layer 1 and 2", 100, 0, 20);
   TH1F *h_time_diff_3 = new TH1F("time_diff_3", "Time Difference Between Layer 2 and 3", 100, 0, 20);
+  TH2F *h_npe_dist = new TH2F("npe_dist" , "nPE Distribution", 16, 0, 16, 17, 0, 17);   
 
-  for (Long64_t i = 0; i < nEntries; ++i) {
+  
+  for(Long64_t i = 0; i < nEntries; ++i) {
     tree->GetEntry(i);
     
     if (layer->size() < 4)
@@ -73,20 +67,25 @@ int analysis() {
       h_npe->Fill(value);
     }
 
-    std::cout << *layer << std::endl;
     std::map<int, float> time_difference_between_layers =
-        layerTimeDifference(*time, *layer);
+      layerTimeDifference(*time, *layer, *nPE, 30.);
 
 
     h_time_diff_1->Fill(time_difference_between_layers[0]);
     h_time_diff_2->Fill(time_difference_between_layers[1]);
     h_time_diff_3->Fill(time_difference_between_layers[2]);
-   
-    // // Apply straight path
 
-    
 
-    
+    // Change these to 1D histograms for a certain channel
+    // nPE Distribution
+    for (const auto item : *column) {
+      for (const auto item2 : *row){
+        for (const auto item3 : *nPE){
+          h_npe_dist->Fill(item, item2, item3);
+        }
+      }
+    }
+
     // Timing distribution within a slab
 
   }
@@ -129,69 +128,15 @@ int analysis() {
 
     canvas2->Update();
     canvas2->SaveAs("npe_timing_dist.pdf");
+
+    TCanvas *canvas3 = new TCanvas("canvas", "NPE distribution", 400, 400);
+    canvas3->cd();
+    h_npe_dist->Draw("COLZ");
+    canvas3->Update();
+    canvas3->SaveAs("npe_distribution.pdf");
+    
+      
     return 0;
 }
 
 
-map<int, float> layerTimeDifference(std::vector<float> times, std::vector<float> layers){
-
-  // Place times into a map for easier manipulation
-  map<int, std::vector<float>> times_map = {
-                                        {0, {}},
-                                        {1, {}},
-                                        {2, {}},
-                                        {3, {}}};
-    // Fill times_map with times associated with that layer
-    for (int i=0; i < 4; ++i){
-        auto it = layers.begin();
-        while (it != layers.end()) {
-          // Find layer values inside the layer vector
-        it = std::find(it, layers.end(), i);
-
-        if (it != layers.end()) {
-            int index = std::distance(layers.begin(), it);
-            times_map[i].push_back(times[index]);
-            ++it;
-        }
-        }
-        }
-
-    /* Grab time difference. We want to use the smallest values for each
-       layer so that we can just look at prompt hits and not be bogged down
-       with non-optimal signal paths */
-    
-    map<int, float> time_difference = {
-                                        {0, 0.},
-                                        {1, 0.},
-                                        {2, 0.}
-                                        };
-    for (int i = 0; i + 1 < 4; ++i) {
-      const float time1 = *std::min_element(times_map[i].begin(), times_map[i].end());
-      const float time2 = *std::min_element(times_map[i+1].begin(), times_map[i+1].end());
-      if (time1 > 0 && time2 > 0) {
-        time_difference[i] = abs(time1 - time2);
-      }
-    }
-        
-        return time_difference;
-    }
-
-    void timingResolution(const std::vector<float> &nPE,
-                          const std::vector<float> &pmt_time,
-                          const std::vector<float> &time) {
-
-    }
-
-    bool fourLayers(const std::vector<float> &vec) {
-
-    std::set<float> vecSet(vec.begin(), vec.end());
-    std::set<float> valueSet = {0.,1.,2.,3.};
-
-    for (int value : valueSet) {
-        // This only occurs if the value is not in the set
-        if (vecSet.find(value) == vecSet.end()) {
-        return false;
-        }
-    }
-    return true;
-    }

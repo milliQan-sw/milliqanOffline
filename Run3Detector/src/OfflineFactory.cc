@@ -288,6 +288,16 @@ void OfflineFactory::getLumis(std::string lumiFile){
 
                     }
                 }
+                /*if (!v_lumi.empty()) std::cout << "lumi: " << v_lumi.back() << std::endl;
+                if (!v_fillId.empty())std::cout<< "\n fill: " << v_fillId.back() << std::endl;
+                if (!v_beamType.empty())std::cout<< "\n type: " << v_beamType.back() << std::endl;
+                if (!v_beamEnergy.empty())std::cout<< "\n energy: " << v_beamEnergy.back()  << std::endl;
+                if (!v_betaStar.empty())std::cout<< "\n beta star: " << v_betaStar.back() << std::endl;
+                if (!v_fillStart.empty())std::cout<< "\n fill start: " << v_fillStart.back()<< std::endl;
+                if (!v_fillEnd.empty())std::cout<< "\n fill end: " << v_fillEnd.back()<< std::endl;
+                if (!v_stableBeamStart.empty())std::cout<< "\n stable beam start: " << v_stableBeamStart.back() << std::endl;
+                if (!v_stableBeamEnd.empty())std::cout<< "\n stable beam end: " << v_stableBeamEnd.back() << std::endl;
+                if (!v_beamInFill.empty())std::cout<< "\n beam in fill: " << v_beamInFill.back() << std::endl;*/
             }
 
         }
@@ -310,7 +320,7 @@ void OfflineFactory::getEventLumis(){
 
     auto maxFillEnd = std::max_element(v_fillEnd.begin(), v_fillEnd.end());
     auto minFillBegin = std::min_element(v_fillStart.begin(), v_fillStart.end());
-    
+      
     if (event_time > *maxFillEnd){
         outputTreeContents.beamOn=false;
         outputTreeContents.lumi = -1;
@@ -448,7 +458,7 @@ void OfflineFactory::validateInput(){
     }
     else{ 
         for (int ic = 0; ic < numChan-1; ic++) highThresh.push_back(highThresh.at(0));
-        if(variableThresholds){
+        if(variableThresholds && !isSlab){
             for (int ic = 0; ic < numChan; ic++){
                 if (outputTreeContents.v_triggerThresholds[ic]*10e3 > 50) continue; //if pannel keep default
                 highThresh[ic] = outputTreeContents.v_triggerThresholds[ic]*10e3 - thresholdDecrease;
@@ -1654,6 +1664,7 @@ void OfflineFactory::readWaveData(){
     }
 
     setTotalLumi();
+    std::cout << "sEt lumi" << std::endl;
 
     //std::cout << std::endl;
     

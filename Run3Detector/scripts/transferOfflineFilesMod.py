@@ -113,5 +113,9 @@ if __name__ == '__main__':
     os.system('bash ~/accessEOS.sh')
 
     #transferOfflineFiles(args.input, args.destination, site, version, args.logFile, force=args.force, debug=args.debug)
+<<<<<<< HEAD
     transferOfflineFiles(args.input, '/eos/experiment/milliqan/trees/v35/', 'lxplus', version, args.logFile, force=args.force, debug=args.debug)
+=======
+    transferOfflineFiles(args.input, '/eos/experiment/milliqan/trees/v34/', 'lxplus', version, args.logFile, force=args.force, debug=args.debug)
+>>>>>>> master
 

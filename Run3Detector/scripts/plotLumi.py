@@ -170,7 +170,11 @@ def plotFileOpenTimes(lumis, outDir=None):
 
 if __name__ == "__main__":
 
+<<<<<<< HEAD
     pltDir = '/home/milliqan/scratch0/milliqanOffline/Run3Detector/scripts/plots/'
+=======
+    pltDir = 'plots/'
+>>>>>>> master
     goodRunDir = pltDir + 'goodRuns/'
     rawLumiDir = pltDir + 'rawLumis/'
     perRunDir = pltDir + 'perRun/'
@@ -303,4 +307,8 @@ if __name__ == "__main__":
     plotMQRawTogether(selected_rows23, raw23, outDir=totalLumiDir, name='mqLumisGoodPlusRaw2023')
 
     #plot the average time files are open in runs and average lumis/s in runs
+<<<<<<< HEAD
     plotFileOpenTimes(lumis, outDir=perRunDir)
+=======
+    plotFileOpenTimes(lumis, outDir=perRunDir)
+>>>>>>> master

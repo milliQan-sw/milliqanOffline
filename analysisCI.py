@@ -17,7 +17,7 @@ if __name__ == "__main__":
     filelist = ['notActuallyRun1364.3.root:t']
 
     #define the necessary branches to run over
-    branches = ['pickupFlag', 'boardsMatched', 'timeFit_module_calibrated', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type']
+    branches = ['pickupFlag', 'boardsMatched', 'timeFit_module_calibrated', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type', 'fileNumber', 'runNumber', 'tTrigger', 'event']
 
     #define the milliqan cuts object
     mycuts = milliqanCuts()
@@ -32,7 +32,7 @@ if __name__ == "__main__":
     fourLayerCut = mycuts.getCut(mycuts.fourLayerCut, 'fourLayerCut', cut=False)
 
     #create our combined cut
-    eventCuts = mycuts.getCut(mycuts.combineCuts, 'eventCuts', ['fourLayerCut', 'straightPulseCut', 'firstChanPulse', 'barCut'])
+    eventCuts = mycuts.getCut(mycuts.combineCuts, 'eventCuts', ['fourLayerCut', 'straightLineCutPulse', 'firstChanPulse', 'barCut'])
 
     #define milliqan plotter
     myplotter = milliqanPlotter()

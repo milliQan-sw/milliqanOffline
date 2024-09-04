@@ -6,9 +6,10 @@ name=$(hostname)
 echo $name
 
 host_osu='ohio-state'
+host_osuCompute='compute-0-'
 host_ucsb='cms'
 
-if [[ "$name" == *"$host_osu"* ]]; then
+if [[ "$name" == *"$host_osu"* || "$name" == *"$host_osuCompute"* ]]; then
   echo "Working on OSU T3"
   export MILLIDAQDIR="../../MilliDAQ"
   export ROOT_INCLUDE_PATH=$MILLIDAQDIR/interface/

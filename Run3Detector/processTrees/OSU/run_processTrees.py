@@ -62,6 +62,9 @@ def singleRun():
 
     milliqanOffline = 'milliqanOffline_v' + args.version + '.tar.gz'
 
+    ftype = 'bar'
+    if args.slab: ftype = 'slab'
+
     if args.slab:
         dataDir = '/store/user/milliqan/run3/slab/{0}/{1}/'.format(args.runDir, args.subDir)
     else:
@@ -70,8 +73,8 @@ def singleRun():
     if args.outputDir:
         outDir = args.outputDir
     else:
-        outDir = '/store/user/milliqan/trees/v{}/{}/'.format(args.version, args.runDir)
-    logDir = '/data/users/milliqan/log/trees/v{0}/logs_v{0}_{1}_{2}-{3}/'.format(args.version, args.runDir, args.subDir, now.strftime("%m-%d"))
+        outDir = '/store/user/milliqan/trees/v{}/{}/{}/'.format(args.version, ftype, args.runDir)
+    logDir = '/data/users/milliqan/log/trees/v{0}/logs_v{0}_{1}_{2}_{3}-{4}/'.format(args.version, ftype, args.runDir, args.subDir, now.strftime("%m-%d"))
 
     if(not os.path.isdir(outDir)): os.mkdir(outDir)
     if(not os.path.isdir(logDir)): os.mkdir(logDir)
@@ -143,6 +146,9 @@ def main(runNum, subRun, swVersion, reprocessAllFiles=False):
     milliqanOffline = 'milliqanOffline_v' + swVersion + '.tar.gz'
     #milliqanOffline = 'milliqanOffline_lumi.tar.gz'
 
+    ftype = 'bar'
+    if args.slab: ftype = 'slab'
+
     if args.slab:
         dataDir = '/store/user/milliqan/run3/slab/{0}/{1}/'.format(runNum, subRun)
     else:
@@ -151,8 +157,8 @@ def main(runNum, subRun, swVersion, reprocessAllFiles=False):
     if args.outputDir:
         outDir = args.outputDir
     else:
-        outDir = '/store/user/milliqan/trees/v{}/{}/'.format(swVersion, runNum)
-    logDir = '/data/users/milliqan/log/trees/v{0}/logs_v{0}_{1}_{2}-{3}/'.format(swVersion, runNum, subRun, now.strftime("%m-%d-%H-%M-%S"))
+        outDir = '/store/user/milliqan/trees/v{}/{}/{}/'.format(swVersion, ftype, runNum)
+    logDir = '/data/users/milliqan/log/trees/v{0}/logs_v{0}_{1}_{2}_{3}-{4}/'.format(swVersion, ftype, runNum, subRun, now.strftime("%m-%d-%H-%M-%S"))
 
     if(not os.path.isdir(outDir)): os.mkdir(outDir)
     if(not os.path.isdir(logDir)): os.mkdir(logDir)

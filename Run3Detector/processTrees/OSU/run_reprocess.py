@@ -156,12 +156,21 @@ if __name__=="__main__":
 
     force = args.reprocess
 
-    #TODO add in check to make sure these files exist
     milliDAQ = 'MilliDAQ.tar.gz'
-    milliqanOffline = 'milliqanOffline_v34.tar.gz'
+    milliqanOffline = 'milliqanOffline_v35.tar.gz'
     site = args.site
 
+    if not os.path.exists(milliDAQ):
+        print("Missing the MilliDAQ.tar.gz file, please create this file first...")
+        sys.exit(0)
+    if not os.path.exists(milliqanOffline):
+        print("Missing the milliqanOffline_vX.tar.gz file, please create this file first...")
+        sys.exit(0)
+
     logDir = '/data/users/milliqan/log/reprocess/' + d.strftime('%m_%d_%H')
+
+    if not os.path.exists('condorLogs/'):
+        os.mkdir('condorLogs/')
 
     if(not os.path.isdir(logDir)): os.mkdir(logDir)
     else:

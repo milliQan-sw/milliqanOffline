@@ -80,6 +80,7 @@ def plotMQRawTogether(lumis, raw, var_y1='lumiSum', var_y2='lumiSum', x=0.4, y=0
 
     totalLumi = round(lumis.iloc[-1][var_y1], 2)
     textStr = 'Total Luminosity Recorded: {}'.format(totalLumi)
+    print(textStr)
 
     if fill:
         plt.text(x, y-0.1, textStr+' $fb^{-1}$', fontsize=16, color='blue', ha='center', va='center', transform=plt.gca().transAxes)
@@ -169,7 +170,8 @@ def plotFileOpenTimes(lumis, outDir=None):
 
 if __name__ == "__main__":
 
-    pltDir = 'plots/'
+    pltDir = '/home/milliqan/scratch0/milliqanOffline/Run3Detector/scripts/plots/'
+
     goodRunDir = pltDir + 'goodRuns/'
     rawLumiDir = pltDir + 'rawLumis/'
     perRunDir = pltDir + 'perRun/'
@@ -303,3 +305,4 @@ if __name__ == "__main__":
 
     #plot the average time files are open in runs and average lumis/s in runs
     plotFileOpenTimes(lumis, outDir=perRunDir)
+

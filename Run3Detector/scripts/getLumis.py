@@ -107,7 +107,7 @@ class mqLumiList():
             'fill_type_runtime',
             'delivered_lumi_stablebeams']
 
-        q = omsapi.query("filldetails")
+        q = omsapi.query("fills")
         q.filter('sequence','GLOBAL-RUN')
         q.filter('fill_number', lastRun-1, 'GT') #our runs start at fill 8800
         q.sort("fill_number", asc=False).paginate(per_page = 1000)

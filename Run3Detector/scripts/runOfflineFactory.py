@@ -237,7 +237,6 @@ def copyFromEOS(slab=False):
             lumis[col] = convertTimes(lumis[col])
         lumis.to_json('configuration/barConfigs/mqLumis.json', orient = 'split', compression = 'infer', index = 'true')
 
-
 def convertTimes(input):
     input = input.apply(datetime_to_uint64)
     return input

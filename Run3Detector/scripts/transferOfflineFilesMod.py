@@ -85,7 +85,7 @@ def transferOfflineFiles(input, destination, site, version, logFile, force=False
 
 def parse_args():
     parser=argparse.ArgumentParser()
-    parser.add_argument('-i', '--input', help="Input directory of files to be transferred", type=str, default='/store/user/milliqan/trees/v34/')
+    parser.add_argument('-i', '--input', help="Input directory of files to be transferred", type=str, default='/store/user/milliqan/trees/v35/bar/')
     parser.add_argument('-d', '--destination', help="Destination for files to be transferred to", type=str, default='milliqan@tau.physics.ucsb.edu:/net/cms18/cms18r0/milliqan/Run3Offline/v34/')
     parser.add_argument('-f', '--force', help='Option to force all files to transfer even if they exist at destination', action='store_true')
     parser.add_argument('-l', '--logFile', help='Log file to save output', default='/home/milliqan/scratch0/milliqanTools/out_transferOffline.log')
@@ -113,5 +113,9 @@ if __name__ == '__main__':
     os.system('bash ~/accessEOS.sh')
 
     #transferOfflineFiles(args.input, args.destination, site, version, args.logFile, force=args.force, debug=args.debug)
+<<<<<<< HEAD
+    transferOfflineFiles(args.input, '/eos/experiment/milliqan/trees/v35/', 'lxplus', version, args.logFile, force=args.force, debug=args.debug)
+=======
     transferOfflineFiles(args.input, '/eos/experiment/milliqan/trees/v34/', 'lxplus', version, args.logFile, force=args.force, debug=args.debug)
+>>>>>>> master
 

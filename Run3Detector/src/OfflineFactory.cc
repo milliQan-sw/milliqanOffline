@@ -1638,11 +1638,8 @@ void OfflineFactory::readWaveData(){
         findExtrema();
 
         if (!isSlab){ //temporary while slab has no lumi/good runs
-            std::cout << "Getting event lumis" << std::endl;
             getEventLumis();
-            std::cout << "Got lumis setting runs" << std::endl;
             setGoodRuns();
-            std::cout << "Got runs" <<  std::endl;
         } 
 
         if (outputTreeContents.event_time_fromTDC < firstTDC_time) firstTDC_time = outputTreeContents.event_time_fromTDC; 

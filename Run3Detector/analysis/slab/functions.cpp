@@ -1,7 +1,9 @@
 #include "functions.h"
+#include <map>
 #include <set>
 #include <algorithm>
 #include <stdlib.h>
+#include "TH1F.h"
 
 
 struct eventInfo {
@@ -29,10 +31,9 @@ void timingResolution(const std::vector<float> &nPE,
 
 }
 
-// TODO Turn these to references
-std::map<int, float> layerTimeDifference(const std::vector<float> times,
-                                    const std::vector<int> layers,
-                                    const std::vector<float> nPE, const float npe_cut){
+std::map<int, float> layerTimeDifference(const std::vector<float>& times,
+                                    const std::vector<int>& layers,
+                                    const std::vector<float>& nPE, const float npe_cut){
   // Place times into a std::map for easier manipulation
     std::map<int, eventInfo> times_map;
   // Fill times_std::map with times associated with that layer
@@ -74,3 +75,35 @@ std::map<int, float> layerTimeDifference(const std::vector<float> times,
     }
         return time_difference;
 }
+
+
+std::map<float, std::map<int, float>> scanTimeDifference(std::vector<float> &npeCuts, std::vector<float> &times,
+                        std::vector<int> &layers,
+                        std::vector<float> &nPE,
+                        std::function<std::map<int, float>(
+                            const std::vector<float>&, const std::vector<int>&,
+                            const std::vector<float>&, const float&)>
+                            func) {
+
+  std::map<float, std::map<int, float>> mapCombinedTimeDifference;
+
+  for (const float &npeCut : npeCuts) {
+    std::map<int, float> mapTimeDifference = func(times, layers, nPE, npeCut);
+    mapCombinedTimeDifference[npeCut] = mapTimeDifference;
+  }
+  return mapCombinedTimeDifference;
+}
+
+
+void plotTimeDifference(const std::map<float, std::map<int, float>> &timeDifferences) {
+  // Loop through all keys inside map
+  for (auto const &[npe, timeDiff] : timeDifferences) {
+    TH1F *npeHist1 = new TH1F("timeDiff1", "Time Difference Between Layer 0 and 1", 100, 0, 20);
+    TH1F *npeHist2 = new TH1F("timeDiff2", "Time Difference Between Layer 1 and 2", 100, 0, 20);
+    TH1F *npeHist3 = new TH1F("timeDiff3", "Time Difference Between Layer 2 and 3", 100, 0, 20);
+    // Plot all inside histograms inside the same canvas
+
+  }
+
+}
+

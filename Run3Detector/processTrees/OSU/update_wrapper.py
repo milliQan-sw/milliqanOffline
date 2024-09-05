@@ -46,7 +46,7 @@ def runCombine(runNum, dataDir):
         print("Data directory {0} does not exist, exiting".format(dataDir))
         sys.exit(1)
 
-    cmd = 'singularity exec -B /store/ ../offline.sif python3 test/runCombineFiles.py -r {0} -d {1} --standalone'.format(runNum, dataDir)
+    cmd = 'singularity exec -B /store/,/data /cvmfs/unpacked.cern.ch/registry.hub.docker.com/carriganm95/milliqan_offline\:x86/ python3 test/runCombineFiles.py -r {0} -d {1} --standalone'.format(runNum, dataDir)
     os.system(cmd)
 
 def postJob():

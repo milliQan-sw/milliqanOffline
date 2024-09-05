@@ -318,41 +318,44 @@ void OfflineFactory::setGoodRuns(){
 void OfflineFactory::getEventLumis(){
     Long64_t event_time = outputTreeContents.event_time_fromTDC;
 
-    auto maxFillEnd = std::max_element(v_fillEnd.begin(), v_fillEnd.end());
-    auto minFillBegin = std::min_element(v_fillStart.begin(), v_fillStart.end());
+    if (v_fillEnd.size() > 0 && v_fillStart.size() > 0){
+        auto maxFillEnd = std::max_element(v_fillEnd.begin(), v_fillEnd.end());
+        auto minFillBegin = std::min_element(v_fillStart.begin(), v_fillStart.end());
       
-    if (event_time > *maxFillEnd){
-        outputTreeContents.beamOn=false;
-        outputTreeContents.lumi = -1;
-        outputTreeContents.fillId = -1;
-        outputTreeContents.beamType = TString("None");
-        outputTreeContents.beamEnergy = -1;
-        outputTreeContents.betaStar = -1;
-        outputTreeContents.fillStart = 0;
-        outputTreeContents.fillEnd = 0;
-        outputTreeContents.beamInFill = false;
-        if(firstWarning) {
-            cout << "Warning some events occured after last fill time in mqLumis" << endl;
-            firstWarning=false;
-        }
-        return;
-    }
 
-    if (event_time < *minFillBegin){
-        outputTreeContents.beamOn=false;
-        outputTreeContents.lumi = -1;
-        outputTreeContents.fillId = -1;
-        outputTreeContents.beamType = TString("None");
-        outputTreeContents.beamEnergy = -1;
-        outputTreeContents.betaStar = -1;
-        outputTreeContents.fillStart = 0;
-        outputTreeContents.fillEnd = 0;
-        outputTreeContents.beamInFill = false;        
-        if(firstWarning){
-            cout << "Warning some event occured before first fill time in mqLumis" << endl;
-            firstWarning=false;
+        if (event_time > *maxFillEnd){
+            outputTreeContents.beamOn=false;
+            outputTreeContents.lumi = -1;
+            outputTreeContents.fillId = -1;
+            outputTreeContents.beamType = TString("None");
+            outputTreeContents.beamEnergy = -1;
+            outputTreeContents.betaStar = -1;
+            outputTreeContents.fillStart = 0;
+            outputTreeContents.fillEnd = 0;
+            outputTreeContents.beamInFill = false;
+            if(firstWarning) {
+                cout << "Warning some events occured after last fill time in mqLumis" << endl;
+                firstWarning=false;
+            }
+            return;
         }
-        return;
+
+        if (event_time < *minFillBegin){
+            outputTreeContents.beamOn=false;
+            outputTreeContents.lumi = -1;
+            outputTreeContents.fillId = -1;
+	    outputTreeContents.beamType = TString("None");
+	    outputTreeContents.beamEnergy = -1;
+	    outputTreeContents.betaStar = -1;
+	    outputTreeContents.fillStart = 0;
+	    outputTreeContents.fillEnd = 0;
+	    outputTreeContents.beamInFill = false;        
+	    if(firstWarning){
+	        cout << "Warning some event occured before first fill time in mqLumis" << endl;
+	        firstWarning=false;
+            }
+	    return;
+	}
     }
 
     for(int ifill=0; ifill < v_fillId.size(); ifill++){

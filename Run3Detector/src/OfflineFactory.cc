@@ -514,16 +514,11 @@ void OfflineFactory::processDisplays( vector<int> & eventsToDisplay,TString disp
 void OfflineFactory::process(){
 
     // Testing json stuff
-    cout << "in process" << endl;
     makeOutputTree();
-    cout << "made output tree" <<endl;
     inFile = TFile::Open(inFileName, "READ");
     readMetaData();
-    cout << "read meta data" << endl;
     readWaveData();
-    cout << "read wave data" << endl;
     writeOutputTree();
-    cout << "wrote output tree" << endl;
 }
 void OfflineFactory::process(TString inFileName,TString outFileName)
 {
@@ -1616,7 +1611,6 @@ void OfflineFactory::readWaveData(){
     // int maxEvents = 1;
     int maxEvents = inTree->GetEntries();
     cout<<"Processing "<<maxEvents<<" events in this file"<<endl;
-    cout<<"Starting event loop"<<endl;
     bool showBar = false;
 
     for(int i=0;i<maxEvents;i++){
@@ -1666,11 +1660,7 @@ void OfflineFactory::readWaveData(){
         
     }
 
-    setTotalLumi();
-    std::cout << "sEt lumi" << std::endl;
-
-    //std::cout << std::endl;
-    
+    setTotalLumi();    
 }
 
 void OfflineFactory::writeOutputTree(){

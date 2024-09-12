@@ -157,6 +157,8 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
                 tag += "_"+appendToTag
             if drs:
                 inputType = "DRS"
+            elif slab:
+                inputType = 'MilliQanSlab'
             else:
                 inputType = "MilliQan"
             matched = mergedTriggerFile!="" 

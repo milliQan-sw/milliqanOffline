@@ -15,7 +15,7 @@ from processorConstants import *
 
 class milliqanProcessor():
 
-    def __init__(self, filelist, branches, schedule=None, cuts=None, plotter=None, max_events=None, step_size=10000, qualityLevel="tight", verbosity='minimal'):
+    def __init__(self, filelist, branches, schedule=None, cuts=None, plotter=None, max_events=None, step_size=10000, qualityLevel="override", verbosity='minimal'):
         self.script_dir = os.path.abspath(__file__).replace("milliqanProcessor.py", "")
         self.qualityLevelString = qualityLevel
         self.verbosityString = verbosity

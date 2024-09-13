@@ -2,8 +2,8 @@
 #include "../../../../MilliDAQ/src/GlobalEvent.cc"
 
 
-int convertSim(char *inputFile, char *outputFile) {
-  mdaq::GlobalEvent event();
+int convertSim() {
+  mdaq::GlobalEvent event;
 
   
 

@@ -6,11 +6,6 @@
 #include "TH1F.h"
 
 
-struct eventInfo {
-  std::vector<float> time;
-  std::vector<float> npe;
-};
-
 bool fourLayers(const std::vector<int> &vec) {
     std::set<float> vecSet(vec.begin(), vec.end());
     std::set<float> valueSet = {0.,1.,2.,3.};
@@ -31,50 +26,29 @@ void timingResolution(const std::vector<float> &nPE,
 
 }
 
-std::map<int, float> layerTimeDifference(const std::vector<float>& times,
+std::map<int, eventInfo> layerTimeDifference(const std::vector<float>& times,
                                     const std::vector<int>& layers,
-                                    const std::vector<float>& nPE, const float npe_cut){
+                                    const std::vector<float>& nPE){
   // Place times into a std::map for easier manipulation
     std::map<int, eventInfo> times_map;
   // Fill times_std::map with times associated with that layer
     for (int i=0; i < 4; ++i){
         auto it = layers.begin();
         while (it != layers.end()) {
-          // Find layer values inside the layer vector
-        it = std::find(it, layers.end(), i);
+            // Find layer values inside the layer vector
+            it = std::find(it, layers.end(), i);
 
-        if (it != layers.end()) {
-            int index = std::distance(layers.begin(), it);
-            times_map[i].time.push_back(times[index]);
-            times_map[i].npe.push_back(nPE[index]);
-            ++it;
+            if (it != layers.end()) {
+                int index = std::distance(layers.begin(), it);
+                times_map[i].time.push_back(times[index]);
+                times_map[i].npe.push_back(nPE[index]);
+                ++it;
+                }
         }
-        }
-        }
-
-    /* Grab time difference. We want to use the smallest values for each
-       layer so that we can just look at prompt hits and not be bogged down
-       with non-optimal signal paths. We also apply a nPE  */
-    
-    std::map<int, float> time_difference = {
-                                        {0, 0.},
-                                        {1, 0.},
-                                        {2, 0.}
-                                        };
-    for (int i = 0; i + 1 < 4; ++i) {
-      const float time1 = *std::min_element(times_map[i].time.begin(), times_map[i].time.end());
-      const float time2 = *std::min_element(times_map[i + 1].time.begin(),
-                                            times_map[i+1].time.end());
-      bool break_flag = false;
-      for (const auto npe : times_map[i].npe){
-        if (npe < npe_cut) break_flag = true;}
-      if (break_flag) break;
-      if (time1 > 0 && time2 > 0) {
-        time_difference[i] = abs(time1 - time2);
-      }
     }
-        return time_difference;
+    return times_map;
 }
+
 
 
 std::map<float, std::map<int, float>> scanTimeDifference(std::vector<float> &npeCuts, std::vector<float> &times,
@@ -107,3 +81,13 @@ void plotTimeDifference(const std::map<float, std::map<int, float>> &timeDiffere
 
 }
 
+void fillTimeDifference(TH1F &histogram, std::map<int, eventInfo> timeDifferences,
+                        const int &layer1 , const int &layer2) {
+  std::vector<float>::iterator min_time_layer1 = std::min_element(timeDifferences[layer1].time.begin(),
+                                           timeDifferences[layer1].time.end());
+  std::vector<float>::iterator min_time_layer2 = std::min_element(timeDifferences[layer2].time.begin(),
+                                           timeDifferences[layer2].time.end());
+  const float time_difference = abs(*min_time_layer1 - *min_time_layer2);
+  histogram.Fill(time_difference);
+  return;
+}

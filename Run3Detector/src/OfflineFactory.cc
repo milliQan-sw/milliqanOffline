@@ -45,6 +45,7 @@ OfflineFactory::OfflineFactory(TString inFileName, TString outFileName, TString 
     colors.push_back(860-9); colors.push_back(400-5); colors.push_back(416-8); colors.push_back(880-8); 
 };
 
+// Wrapper function that allows for runs with no run or file number
 OfflineFactory::OfflineFactory(TString inFileName, TString outFileName, TString appendToTag, bool isDRS, bool isSlab) {
     OfflineFactory(inFileName,outFileName,appendToTag,isDRS,isSlab,-1,-1);
 };

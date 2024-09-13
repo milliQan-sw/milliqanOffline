@@ -3,12 +3,14 @@
 #include "TGaxis.h"
 #include "TStyle.h"
 #include "TFile.h"
+#include <RtypesCore.h>
 #include <iostream>
 #include <fstream>
 #include "TMath.h"
 #include "TChain.h"
 #include "/net/cms26/cms26r0/zheng/barsim/milliQanSim/include/mqROOTEvent.hh"
 #include "/net/cms26/cms26r0/zheng/barsim/milliQanSim/include/mqPMTRHit.hh"
+#include "TObject.h"
 //#include "/net/cms18/cms18r0/cms26r0/zheng/barsim/milliQanSim/include/mqROOTEvent.hh"
 //#include "/net/cms18/cms18r0/cms26r0/zheng/barsim/milliQanSim/include/mqPMTRHit.hh"
 //#include "milliQanSim/include/mqROOTEvent.hh"
@@ -27,6 +29,35 @@
 //R__LOAD_LIBRARY(/homes/tianjiad/milliQanSim/build/libBenchCore.so)
 R__LOAD_LIBRARY(/net/cms26/cms26r0/zheng/barsim/milliQanSim/build/libMilliQanCore.so)
 using namespace std;
+
+struct DAQTimeStamp{
+  Int_t fSec;
+  Int_t fNanoSec;
+};
+
+struct digitizers {
+  UInt_t fUniqueID;
+  UInt_t fBits;
+  DAQTimeStamp DAQTimeStamp;
+  UShort_t TriggerCount;
+  UShort_t TimeCount;
+  UChar_t EventId;
+  ULong_t TDC;
+  UInt_t EventSize;
+  UInt_t BoardId;
+  UInt_t Pattern;
+  UInt_t ChannelMask;
+  UInt_t EventCounter;
+  UInt_t TriggerTimeTag;
+  ULong_t TriggerTimeTagRollovers;
+  ULong_t TDCRollovers;
+  Bool_t DataPresent;
+  Float_t waveform;
+  Double_t triggerClockTick;
+  Double_t tdcClockTick;
+  Float_t nanosecondsPerSample;
+  UShort_t nTimesMatched;
+};
 
 
 int simToDataPMT(int simChannel) {
@@ -143,9 +174,33 @@ void waveinject() {
    // Write the tree to the output file
    outfile->cd();
    injectedTree->Write();  // Write the tree with digitizer waveform data
-
+   
    // Close the files
    f->Close();
    outfile->Close();
 }
 
+
+void setupMetadataBranch(Tree *events) {
+
+  events->Branch("digitizers")
+  UInt_t fUniqueID;
+  UInt_t fBits;
+  UInt_t DAQEventNumber;
+  digitizers digitizer;
+
+  fUniqueID = -1;
+  fBits = -1;
+  DAQEventNumber = -1;
+  digitizer.EventCounter = -1;
+  digitizer.EventId = -1;
+  digitizer.EventSize = 0;
+  digitizer.BoardId = 7;
+  digitizer.ChannelMask = 2;
+  digitizer.fUniqueID = fUniqueID;
+  digitizer.fBits = fBits;
+  
+  
+
+  return;
+}

@@ -1,5 +1,7 @@
 #include "./interface/OfflineFactory.h"
 
+#define ENABLE_DEBUG
+
 OfflineFactory::OfflineFactory(TString inFileName, TString outFileName, TString appendToTag, bool isDRS, bool isSlab, int runNumber, int fileNumber) : 
     inFileName(inFileName),
     outFileName(outFileName),
@@ -389,10 +391,30 @@ void OfflineFactory::process(){
     // Testing json stuff
 
     makeOutputTree();
+
+#ifdef ENABLE_DEBUG
+    std::cerr << "makeOutputTree() completed \n";
+#endif
+
     inFile = TFile::Open(inFileName, "READ");
     readMetaData();
+
+#ifdef ENABLE_DEBUG
+    std::cerr << "readMetaData() completed \n";
+#endif
+
     readWaveData();
+
+#ifdef ENABLE_DEBUG
+    std::cerr << "readWaveData() completed \n";
+#endif
+
     writeOutputTree();
+
+#ifdef ENABLE_DEBUG
+    std::cerr << "writeOutputTree() completed \n";
+#endif
+    
 }
 void OfflineFactory::process(TString inFileName,TString outFileName)
 {

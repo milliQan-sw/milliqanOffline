@@ -2,12 +2,13 @@
 
 #define ENABLE_DEBUG
 
-OfflineFactory::OfflineFactory(TString inFileName, TString outFileName, TString appendToTag, bool isDRS, bool isSlab, int runNumber, int fileNumber) : 
+OfflineFactory::OfflineFactory(TString inFileName, TString outFileName, TString appendToTag, bool isDRS, bool isSlab, bool isSim, int runNumber, int fileNumber) : 
     inFileName(inFileName),
     outFileName(outFileName),
     appendToTag(appendToTag),
     isDRS(isDRS),
     isSlab(isSlab),
+    isSim(isSim),
     runNumber(runNumber),
     fileNumber(fileNumber)
 {
@@ -48,8 +49,8 @@ OfflineFactory::OfflineFactory(TString inFileName, TString outFileName, TString 
 };
 
 // Wrapper function that allows for runs with no run or file number
-OfflineFactory::OfflineFactory(TString inFileName, TString outFileName, TString appendToTag, bool isDRS, bool isSlab) {
-    OfflineFactory(inFileName,outFileName,appendToTag,isDRS,isSlab,-1,-1);
+OfflineFactory::OfflineFactory(TString inFileName, TString outFileName, TString appendToTag, bool isDRS, bool isSlab, bool isSim) {
+  OfflineFactory(inFileName,outFileName,appendToTag,isDRS,isSlab,isSim,-1,-1);
 };
 void OfflineFactory::setFriendFile(TString friendFileNameIn){
     friendFileName = friendFileNameIn;

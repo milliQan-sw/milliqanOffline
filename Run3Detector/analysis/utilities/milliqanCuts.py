@@ -13,7 +13,10 @@ def mqCut(func):
     @functools.wraps(func)
     def wrapper(self, *args, **kwargs):  
         func(self, *args, **kwargs)
-        self.cutflowCounter(modified_name)
+        cut=False
+        if 'cut' in kwargs and kwargs['cut']:
+            cut=True
+        self.cutflowCounter(modified_name, cut)
 
     wrapper.__name__ = modified_name
     return wrapper
@@ -29,7 +32,10 @@ def getCutMod(func, myclass, name=None, *dargs, **dkwargs):
     def wrapper(*args, **kwargs):
         #print("Inside wrapper", modified_name, args, kwargs)
         func(myclass, *dargs, **dkwargs)
-        myclass.cutflowCounter(modified_name)
+        cut=False
+        if 'cut' in dkwargs and dkwargs['cut']:
+            cut=True
+        myclass.cutflowCounter(modified_name, cut)
 
     wrapper.__name__ = modified_name
     return wrapper
@@ -41,7 +47,7 @@ class milliqanCuts():
         self.cutflow = {}
         self.counter = 0
 
-    def cutflowCounter(self, name):
+    def cutflowCounter(self, name, cut):
         # Increments events passing each stage of the cutflow
         # Creates each stage during the first pass
 
@@ -60,19 +66,19 @@ class milliqanCuts():
         else:
             remaining = ak.sum(self.events['fileNumber'], axis=1) >= threshold
             remaining = self.events['fileNumber'][remaining]
-            this_cutflow = {'events': len(remaining), 'pulses': len(ak.flatten(self.events['fileNumber']))}
+            this_cutflow = {'events': len(remaining), 'pulses': len(ak.flatten(self.events['fileNumber'])), 'cut': cut}
             self.cutflow[name]=this_cutflow
         self.counter+=1
 
     def getCutflowCounts(self):
         # Prints the value after each batch of events
-        # TODO: Only print at the very end
         print("----------------------------------Cutflow Table------------------------------------")
-        print ("{:<25} {:<20} {:<10}".format('Cut', 'N Passing Events', 'N Passing Pulses'))
+        print ("{:<25} {:<20} {:<20} {:<30}".format('Cut', 'N Passing Events', 'N Passing Pulses', 'Cut Applied'))
         print('-----------------------------------------------------------------------------------')
         for key, value in self.cutflow.items():
             #print(i, len(self.cutflow))
-            print("{:<25} {:<20} {:<10}".format(key, value['events'], value['pulses']))
+            realCut = 'True' if value['cut'] else 'False'
+            print("{:<25} {:<20} {:<20} {:<30}".format(key, value['events'], value['pulses'], realCut))
         print("-----------------------------------------------------------------------------------")
         # Resets the counter at the end of the cutflow
         self.counter=0
@@ -93,22 +99,36 @@ class milliqanCuts():
         dummy = False
 
     @mqCut
-    def pickupCut(self, cutName=None, cut=False, tight=False, branches=None):
+    def fullEventCounter(self, cutName=None, cut=False):
+        dummy = False
+
+    @mqCut
+    def pickupCut(self, cutName='pickupCut', cut=False, tight=False, branches=None):
+        #need to define another cut so that the branch doesn't get cut first, alternatively can ensure it is last in the branches list
+        if tight: mycut = ~self.events.pickupFlagTight
+        else: mycut = ~self.events.pickupFlag
+        self.events[cutName] = mycut
+        '''if 'pickupFlag' in branches: 
+            branches.remove('pickupFlag')
+            branches.append('pickupFlag')
+        if 'pickupFlagTight' in branches:
+            branches.remove('pickupFlagTight')
+            branches.append('pickupFlagTight')
+        '''
         if cut and tight:
             for branch in branches:
-                self.events[branch] = self.events[branch][~self.events.pickupFlag]
+                self.events[branch] = self.events[branch][self.events[cutName]]
         elif cut and not tight:
             for branch in branches:
-                if branch == 'boardsMatched': continue
-                self.events[branch] = self.events[branch][~self.events.pickupFlag]
+                self.events[branch] = self.events[branch][self.events[cutName]]
+
 
     @mqCut
     def boardsMatched(self, cutName=None, cut=False, branches=None):
-        self.events['boardsMatched'], junk = ak.broadcast_arrays(self.events.boardsMatched, self.events.pickupFlag)
+        _, self.events['boardsMatched'] = ak.broadcast_arrays(self.events.pickupFlag, self.events.boardsMatched)
         
         if cut:
             for branch in branches:
-                if branch == 'boardsMatched': continue
                 self.events[branch] = self.events[branch][self.events.boardsMatched]
 
     @mqCut
@@ -183,6 +203,13 @@ class milliqanCuts():
         if cut:
             for branch in branches:
                 self.events[branch] = self.events[branch][self.events[cutName]]
+
+    @mqCut
+    def nPECut(self, cutName='nPECut', nPECut=2, cut=False, branches=None):
+        self.events[cutName] = self.events.nPE >= int(nPECut)
+        if cut:
+            for branch in branches:
+                self.events[branch] = self.events[branch][self.events[cutName]]        
 
     @mqCut
     def heightCut(self, cutName='heightCut', heightCut=800, cut=False, branches=None):
@@ -398,7 +425,9 @@ class milliqanCuts():
 
         # Apply the conversion function to each element in the Awkward Array
         triggers = ak.Array([self.to_binary(i) if i is not None else None for i in triggers])
-        selection = triggers == binary_trig
+        triggers = ak.to_numpy(triggers, allow_missing=True)
+        selection = ak.Array((triggers == binary_trig))
+        selection = ak.fill_none(selection, False)
 
         selection, _ = ak.broadcast_arrays(selection, self.events['tTrigger'])
         self.events[cutName] = selection
@@ -415,7 +444,9 @@ class milliqanCuts():
 
         # Apply the conversion function to each element in the Awkward Array
         triggers = ak.Array([self.to_binary(i) if i is not None else None for i in triggers])
-        selection = (triggers != binary_trig)
+        triggers = ak.to_numpy(triggers, allow_missing=True)
+        selection = ak.Array((triggers != binary_trig))
+        selection = ak.fill_none(selection, False)
 
         selection, _ = ak.broadcast_arrays(selection, self.events['tTrigger'])
         self.events[cutName] = selection

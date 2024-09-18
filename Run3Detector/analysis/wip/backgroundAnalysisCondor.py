@@ -16,10 +16,13 @@ import numpy as np
 import shutil
 
 sys.path.append(os.path.dirname(__file__) + '/utilities/')
+print(sys.path)
 from milliqanProcessor import *
 from milliqanScheduler import *
 from milliqanCuts import *
 from milliqanPlotter import *
+
+print(sys.path)
 
 #################################################################
 ################ condor function definitions ####################
@@ -107,6 +110,17 @@ def threeInLine(self):
         self.events[outputName+'_f2'] = threeStraight_f2
         self.events[outputName+'_f3'] = threeStraight_f3
 
+        #get just the pulses that pass that made the selections
+        _, b0 = ak.broadcast_arrays(self.events.nPE, threeStraight_f0)
+        _, b1 = ak.broadcast_arrays(self.events.nPE, threeStraight_f1)
+        _, b2 = ak.broadcast_arrays(self.events.nPE, threeStraight_f2)
+        _, b3 = ak.broadcast_arrays(self.events.nPE, threeStraight_f3)
+
+        self.events[outputName+'_p0'] = (b0) & ((layer1) | (layer2) | (layer3))
+        self.events[outputName+'_p1'] = (b1) & ((layer0) | (layer2) | (layer3))
+        self.events[outputName+'_p2'] = (b2) & ((layer0) | (layer1) | (layer3))
+        self.events[outputName+'_p3'] = (b3) & ((layer0) | (layer1) | (layer2))
+
         self.events[outputName+'_s0'] = (threeStraight_f0) & (self.events.layer0) & (self.events.nPE >= npeCut)
         self.events[outputName+'_s1'] = (threeStraight_f1) & (self.events.layer1) & (self.events.nPE >= npeCut)
         self.events[outputName+'_s2'] = (threeStraight_f2) & (self.events.layer2) & (self.events.nPE >= npeCut)
@@ -135,30 +149,58 @@ def timeDiff(self, cutName='pulseDiff', cut=False, branches=None):
         cutName2 = 'threeHitPath{}_s2'.format(path)
         cutName3 = 'threeHitPath{}_s3'.format(path)
 
-        anyPath = (self.events[cutName0]) | (self.events[cutName1]) | (self.events[cutName2]) | (self.events[cutName3])
+        pulseCutName0 = 'threeHitPath{}_p0'.format(path)
+        pulseCutName1 = 'threeHitPath{}_p1'.format(path)
+        pulseCutName2 = 'threeHitPath{}_p2'.format(path)
+        pulseCutName3 = 'threeHitPath{}_p3'.format(path)
 
-        #true_indices = ak.where(anyPath)[0]
-        #print("passing", true_indices)
+        #anyPath = (self.events[cutName0]) | (self.events[cutName1]) | (self.events[cutName2]) | (self.events[cutName3])
+        anyPath = ((self.events[pulseCutName0]) | (self.events[pulseCutName1]) | (self.events[pulseCutName2]) | (self.events[pulseCutName3]))
+
+        anyPath0 = anyPath & (self.events.layer0)
+        anyPath3 = anyPath & (self.events.layer3)
 
         times = self.events['timeFit_module_calibrated'][anyPath]
+        times0 = self.events['timeFit_module_calibrated'][anyPath0]
+        times3 = self.events['timeFit_module_calibrated'][anyPath3]
 
         combinations = ak.combinations(times, 2, axis=1)
 
-        #print("combinations", ak.flatten(ak.drop_none(combinations)))
         diffs = abs(combinations['0'] - combinations['1'])
 
         min_ = ak.min(diffs, axis=1, keepdims=True)
         max_ = ak.max(diffs, axis=1, keepdims=True)   
 
+        diff03 = ak.pad_none(times3, 1, axis=1) - ak.pad_none(times0, 1, axis=1)
+
         if path == 0:
             allmin = min_
             allmax = max_ 
+            allDiff = diffs
+            allDiff03 = diff03
+            notStraight = ~anyPath
         else:
             allmin = ak.concatenate([allmin, min_], axis=1)
             allmax = ak.concatenate([allmax, max_], axis=1)
+            allDiff = ak.concatenate([allDiff, diffs], axis=1)
+            allDiff03 = ak.concatenate([allDiff03, diff03], axis=1)
+            notStraight = notStraight & ~anyPath
 
+    #find the times of pulses that are not in straight lines
+    c_times0 = notStraight & self.events.layer0
+    c_times3 = notStraight & self.events.layer3
+
+    times0 = self.events['timeFit_module_calibrated'][c_times0]
+    times3 = self.events['timeFit_module_calibrated'][c_times3]
+
+    diffNotStraight03 = ak.cartesian([times0, times3], axis=1)
+    diffNotStraight03 = diffNotStraight03['1'] - diffNotStraight03['0']
+
+    self.events['allTimeDiff'] = allDiff
     self.events['maxTimeDiff'] = allmax
     self.events['minTimeDiff'] = allmin
+    self.events['timeDiff03'] = allDiff03
+    self.events['timeDiffNotStraight03'] = diffNotStraight03
 
 if __name__ == "__main__":
 
@@ -181,14 +223,15 @@ job = sys.argv[2]
 
 #define a file list to run over
 filelist = getFileList(filelist, job)
+#filelist = filelist[:10] #temporary
 print("Running on files {}".format(filelist))
 
 #find the luminosity of files in filelist
 getLumiofFileList(filelist)
 
 #define the necessary branches to run over
-branches = ['event', 'tTrigger', 'boardsMatched', 'pickupFlag', 'fileNumber', 'runNumber', 'type', 'ipulse', 'nPE',
-            'time_module_calibrated', 'timeFit_module_calibrated', 'row', 'column', 'layer', 'height', 'area']
+branches = ['event', 'tTrigger', 'boardsMatched', 'pickupFlag', 'fileNumber', 'runNumber', 'type', 'ipulse', 'nPE', 'chan',
+            'time_module_calibrated', 'timeFit_module_calibrated', 'row', 'column', 'layer', 'height', 'area', 'npulses']
 
 #define the milliqan cuts object
 mycuts = milliqanCuts()
@@ -208,11 +251,17 @@ muonHeightCut = mycuts.getCut(mycuts.heightCut, 'muonHeightCut', heightCut=1200,
 #muon area cut
 muonAreaCut = getCutMod(mycuts.areaCut, mycuts, 'muonAreaCut', areaCut=0, cut=True, branches=branches)
 
+#nPE cut
+nPECut = getCutMod(mycuts.nPECut, mycuts, 'nPECut', nPECut=2, cut=True, branches=branches)
+
 #bar only cut
 barCut = getCutMod(mycuts.barCut, mycuts, 'barCut', cut=True, branches=branches)
 
 #get rid of any zero bias triggers
 triggerCutNot = mycuts.getCut(mycuts.triggerCutNot, 'notzbTrigger', trigger=4096, cut=True, branches=branches)
+
+#select only zero bias triggers (for sfs)
+triggerCut = mycuts.getCut(mycuts.triggerCut, 'zbTrigger', trigger=4096, cut=True, branches=branches)
 
 #define milliqan plotter
 myplotter = milliqanPlotter()
@@ -225,16 +274,20 @@ xmax = 1500
 
 '''h_pulseTime03 = r.TH2F("h_pulseTime03", "Pulse Times Between Layer 0 and 3", bins, xmin, xmax, bins, xmin, xmax)
 h_L0Times = r.TH1F('h_L0Times', "Pulse Times Layer 0", 400, 1100, 1500)
-h_L3Times = r.TH1F('h_L3Times', "Pulse Times Layer 3", 400, 1100, 1500)
-h_TimeDiff = r.TH1F('h_TimeDiff', "Difference in Layer 0 and 3 Times", 100, -50, 50)'''
+h_L3Times = r.TH1F('h_L3Times', "Pulse Times Layer 3", 400, 1100, 1500)'''
+h_TimeDiffStraight = r.TH1F('h_TimeDiffStraight', "Difference in Layer 0 and 3 Times Pointing Paths", 100, -50, 50)
+h_TimeDiff = r.TH1F('h_TimeDiff', "Difference in Layer 0 and 3 Times Non-Pointing Paths", 100, -50, 50)
+
 h_height = r.TH1F('h_height', "Height of Passing Pulses", 650, 0, 1300)
 h_area = r.TH1F('h_area', "Area of Passing Pulses", 1000, 0, 100e4)
 h_layer = r.TH1F('h_layer', 'Layer of Passing Pulses', 4, 0, 4)
 h_fourLayer = r.TH1F('h_fourLayer', 'Layer of Passing Pulses in Events with 4 Layers', 4, 0, 4)
 h_trigger = r.TH1F('h_trigger', 'Triggers Passing Cuts', 5000, 0, 5000)
+h_channel = r.TH1F('h_channel', 'Channel of Hits', 80, 0, 80)
 
 h_minTimeDiff = r.TH1F('h_minTimeDiff', 'Min Time Difference Between Straight Path Hits', 100, 0, 100)
 h_maxTimeDiff = r.TH1F('h_maxTimeDiff', 'Max Time Difference Between Straight Path Hits', 100, 0, 100)
+h_allTimeDiff = r.TH1F('h_allTimeDiff', 'All Time Differences Between Straight Path Hits', 100, 0, 100)
 
 h_triggers = r.TH1F('h_triggers', 'Triggers of Passing Events', 16, 0, 16)
 h_row = r.TH1F('h_row', 'Row of Passing Pulses', 4, 0, 4)
@@ -398,92 +451,97 @@ firstPulse = getCutMod(mycuts.firstPulseCut, mycuts, 'firstPulseCut', cutName='f
 #add root histogram to plotter
 '''myplotter.addHistograms(h_pulseTime03, ['straightPathL0Time', 'straightPathL3Time'])
 myplotter.addHistograms(h_L0Times, 'straightPathL0Time')
-myplotter.addHistograms(h_L3Times, 'straightPathL3Time')
-myplotter.addHistograms(h_TimeDiff, 'straightPathDiffL03')'''
+myplotter.addHistograms(h_L3Times, 'straightPathL3Time')'''
+myplotter.addHistograms(h_TimeDiffStraight, 'timeDiff03')
+myplotter.addHistograms(h_TimeDiff, 'timeDiffNotStraight03')
 myplotter.addHistograms(h_height, 'height')
 myplotter.addHistograms(h_area, 'area')
 myplotter.addHistograms(h_layer, 'layer')
 myplotter.addHistograms(h_trigger, 'tTrigger')
+myplotter.addHistograms(h_channel, 'chan')
+
 #myplotter.addHistograms(h_triggers, 'triggerCut2')
 myplotter.addHistograms(h_row, 'row')
 myplotter.addHistograms(h_column, 'column')
-myplotter.addHistograms(h_posL0, ['row', 'column'], 'layer0')
-myplotter.addHistograms(h_posL1, ['row', 'column'], 'layer1')
-myplotter.addHistograms(h_posL2, ['row', 'column'], 'layer2')
-myplotter.addHistograms(h_posL3, ['row', 'column'], 'layer3')
+myplotter.addHistograms(h_posL0, ['column', 'row'], 'layer0')
+myplotter.addHistograms(h_posL1, ['column', 'row'], 'layer1')
+myplotter.addHistograms(h_posL2, ['column', 'row'], 'layer2')
+myplotter.addHistograms(h_posL3, ['column', 'row'], 'layer3')
 
 myplotter.addHistograms(h_fourLayer, 'layer', 'fourLayerCut')
 
 myplotter.addHistograms(h_maxTimeDiff, 'maxTimeDiff')
 myplotter.addHistograms(h_minTimeDiff, 'minTimeDiff')
+myplotter.addHistograms(h_allTimeDiff, 'allTimeDiff')
 
-myplotter.addHistograms(h_threeInLinePath0_f0, ['row', 'column'], 'threeHitPath0_s0')
-myplotter.addHistograms(h_threeInLinePath1_f0, ['row', 'column'], 'threeHitPath1_s0')
-myplotter.addHistograms(h_threeInLinePath2_f0, ['row', 'column'], 'threeHitPath2_s0')
-myplotter.addHistograms(h_threeInLinePath3_f0, ['row', 'column'], 'threeHitPath3_s0')
-myplotter.addHistograms(h_threeInLinePath4_f0, ['row', 'column'], 'threeHitPath4_s0')
-myplotter.addHistograms(h_threeInLinePath5_f0, ['row', 'column'], 'threeHitPath5_s0')
-myplotter.addHistograms(h_threeInLinePath6_f0, ['row', 'column'], 'threeHitPath6_s0')
-myplotter.addHistograms(h_threeInLinePath7_f0, ['row', 'column'], 'threeHitPath7_s0')
-myplotter.addHistograms(h_threeInLinePath8_f0, ['row', 'column'], 'threeHitPath8_s0')
-myplotter.addHistograms(h_threeInLinePath9_f0, ['row', 'column'], 'threeHitPath9_s0')
-myplotter.addHistograms(h_threeInLinePath10_f0, ['row', 'column'], 'threeHitPath10_s0')
-myplotter.addHistograms(h_threeInLinePath11_f0, ['row', 'column'], 'threeHitPath11_s0')
-myplotter.addHistograms(h_threeInLinePath12_f0, ['row', 'column'], 'threeHitPath12_s0')
-myplotter.addHistograms(h_threeInLinePath13_f0, ['row', 'column'], 'threeHitPath13_s0')
-myplotter.addHistograms(h_threeInLinePath14_f0, ['row', 'column'], 'threeHitPath14_s0')
-myplotter.addHistograms(h_threeInLinePath15_f0, ['row', 'column'], 'threeHitPath15_s0')
 
-myplotter.addHistograms(h_threeInLinePath0_f1, ['row', 'column'], 'threeHitPath0_s1')
-myplotter.addHistograms(h_threeInLinePath1_f1, ['row', 'column'], 'threeHitPath1_s1')
-myplotter.addHistograms(h_threeInLinePath2_f1, ['row', 'column'], 'threeHitPath2_s1')
-myplotter.addHistograms(h_threeInLinePath3_f1, ['row', 'column'], 'threeHitPath3_s1')
-myplotter.addHistograms(h_threeInLinePath4_f1, ['row', 'column'], 'threeHitPath4_s1')
-myplotter.addHistograms(h_threeInLinePath5_f1, ['row', 'column'], 'threeHitPath5_s1')
-myplotter.addHistograms(h_threeInLinePath6_f1, ['row', 'column'], 'threeHitPath6_s1')
-myplotter.addHistograms(h_threeInLinePath7_f1, ['row', 'column'], 'threeHitPath7_s1')
-myplotter.addHistograms(h_threeInLinePath8_f1, ['row', 'column'], 'threeHitPath8_s1')
-myplotter.addHistograms(h_threeInLinePath9_f1, ['row', 'column'], 'threeHitPath9_s1')
-myplotter.addHistograms(h_threeInLinePath10_f1, ['row', 'column'], 'threeHitPath10_s1')
-myplotter.addHistograms(h_threeInLinePath11_f1, ['row', 'column'], 'threeHitPath11_s1')
-myplotter.addHistograms(h_threeInLinePath12_f1, ['row', 'column'], 'threeHitPath12_s1')
-myplotter.addHistograms(h_threeInLinePath13_f1, ['row', 'column'], 'threeHitPath13_s1')
-myplotter.addHistograms(h_threeInLinePath14_f1, ['row', 'column'], 'threeHitPath14_s1')
-myplotter.addHistograms(h_threeInLinePath15_f1, ['row', 'column'], 'threeHitPath15_s1')
+myplotter.addHistograms(h_threeInLinePath0_f0, ['column', 'row'], 'threeHitPath0_s0')
+myplotter.addHistograms(h_threeInLinePath1_f0, ['column', 'row'], 'threeHitPath1_s0')
+myplotter.addHistograms(h_threeInLinePath2_f0, ['column', 'row'], 'threeHitPath2_s0')
+myplotter.addHistograms(h_threeInLinePath3_f0, ['column', 'row'], 'threeHitPath3_s0')
+myplotter.addHistograms(h_threeInLinePath4_f0, ['column', 'row'], 'threeHitPath4_s0')
+myplotter.addHistograms(h_threeInLinePath5_f0, ['column', 'row'], 'threeHitPath5_s0')
+myplotter.addHistograms(h_threeInLinePath6_f0, ['column', 'row'], 'threeHitPath6_s0')
+myplotter.addHistograms(h_threeInLinePath7_f0, ['column', 'row'], 'threeHitPath7_s0')
+myplotter.addHistograms(h_threeInLinePath8_f0, ['column', 'row'], 'threeHitPath8_s0')
+myplotter.addHistograms(h_threeInLinePath9_f0, ['column', 'row'], 'threeHitPath9_s0')
+myplotter.addHistograms(h_threeInLinePath10_f0, ['column', 'row'], 'threeHitPath10_s0')
+myplotter.addHistograms(h_threeInLinePath11_f0, ['column', 'row'], 'threeHitPath11_s0')
+myplotter.addHistograms(h_threeInLinePath12_f0, ['column', 'row'], 'threeHitPath12_s0')
+myplotter.addHistograms(h_threeInLinePath13_f0, ['column', 'row'], 'threeHitPath13_s0')
+myplotter.addHistograms(h_threeInLinePath14_f0, ['column', 'row'], 'threeHitPath14_s0')
+myplotter.addHistograms(h_threeInLinePath15_f0, ['column', 'row'], 'threeHitPath15_s0')
 
-myplotter.addHistograms(h_threeInLinePath0_f2, ['row', 'column'], 'threeHitPath0_s2')
-myplotter.addHistograms(h_threeInLinePath1_f2, ['row', 'column'], 'threeHitPath1_s2')
-myplotter.addHistograms(h_threeInLinePath2_f2, ['row', 'column'], 'threeHitPath2_s2')
-myplotter.addHistograms(h_threeInLinePath3_f2, ['row', 'column'], 'threeHitPath3_s2')
-myplotter.addHistograms(h_threeInLinePath4_f2, ['row', 'column'], 'threeHitPath4_s2')
-myplotter.addHistograms(h_threeInLinePath5_f2, ['row', 'column'], 'threeHitPath5_s2')
-myplotter.addHistograms(h_threeInLinePath6_f2, ['row', 'column'], 'threeHitPath6_s2')
-myplotter.addHistograms(h_threeInLinePath7_f2, ['row', 'column'], 'threeHitPath7_s2')
-myplotter.addHistograms(h_threeInLinePath8_f2, ['row', 'column'], 'threeHitPath8_s2')
-myplotter.addHistograms(h_threeInLinePath9_f2, ['row', 'column'], 'threeHitPath9_s2')
-myplotter.addHistograms(h_threeInLinePath10_f2, ['row', 'column'], 'threeHitPath10_s2')
-myplotter.addHistograms(h_threeInLinePath11_f2, ['row', 'column'], 'threeHitPath11_s2')
-myplotter.addHistograms(h_threeInLinePath12_f2, ['row', 'column'], 'threeHitPath12_s2')
-myplotter.addHistograms(h_threeInLinePath13_f2, ['row', 'column'], 'threeHitPath13_s2')
-myplotter.addHistograms(h_threeInLinePath14_f2, ['row', 'column'], 'threeHitPath14_s2')
-myplotter.addHistograms(h_threeInLinePath15_f2, ['row', 'column'], 'threeHitPath15_s2')
+myplotter.addHistograms(h_threeInLinePath0_f1, ['column', 'row'], 'threeHitPath0_s1')
+myplotter.addHistograms(h_threeInLinePath1_f1, ['column', 'row'], 'threeHitPath1_s1')
+myplotter.addHistograms(h_threeInLinePath2_f1, ['column', 'row'], 'threeHitPath2_s1')
+myplotter.addHistograms(h_threeInLinePath3_f1, ['column', 'row'], 'threeHitPath3_s1')
+myplotter.addHistograms(h_threeInLinePath4_f1, ['column', 'row'], 'threeHitPath4_s1')
+myplotter.addHistograms(h_threeInLinePath5_f1, ['column', 'row'], 'threeHitPath5_s1')
+myplotter.addHistograms(h_threeInLinePath6_f1, ['column', 'row'], 'threeHitPath6_s1')
+myplotter.addHistograms(h_threeInLinePath7_f1, ['column', 'row'], 'threeHitPath7_s1')
+myplotter.addHistograms(h_threeInLinePath8_f1, ['column', 'row'], 'threeHitPath8_s1')
+myplotter.addHistograms(h_threeInLinePath9_f1, ['column', 'row'], 'threeHitPath9_s1')
+myplotter.addHistograms(h_threeInLinePath10_f1, ['column', 'row'], 'threeHitPath10_s1')
+myplotter.addHistograms(h_threeInLinePath11_f1, ['column', 'row'], 'threeHitPath11_s1')
+myplotter.addHistograms(h_threeInLinePath12_f1, ['column', 'row'], 'threeHitPath12_s1')
+myplotter.addHistograms(h_threeInLinePath13_f1, ['column', 'row'], 'threeHitPath13_s1')
+myplotter.addHistograms(h_threeInLinePath14_f1, ['column', 'row'], 'threeHitPath14_s1')
+myplotter.addHistograms(h_threeInLinePath15_f1, ['column', 'row'], 'threeHitPath15_s1')
 
-myplotter.addHistograms(h_threeInLinePath0_f3, ['row', 'column'], 'threeHitPath0_s3')
-myplotter.addHistograms(h_threeInLinePath1_f3, ['row', 'column'], 'threeHitPath1_s3')
-myplotter.addHistograms(h_threeInLinePath2_f3, ['row', 'column'], 'threeHitPath2_s3')
-myplotter.addHistograms(h_threeInLinePath3_f3, ['row', 'column'], 'threeHitPath3_s3')
-myplotter.addHistograms(h_threeInLinePath4_f3, ['row', 'column'], 'threeHitPath4_s3')
-myplotter.addHistograms(h_threeInLinePath5_f3, ['row', 'column'], 'threeHitPath5_s3')
-myplotter.addHistograms(h_threeInLinePath6_f3, ['row', 'column'], 'threeHitPath6_s3')
-myplotter.addHistograms(h_threeInLinePath7_f3, ['row', 'column'], 'threeHitPath7_s3')
-myplotter.addHistograms(h_threeInLinePath8_f3, ['row', 'column'], 'threeHitPath8_s3')
-myplotter.addHistograms(h_threeInLinePath9_f3, ['row', 'column'], 'threeHitPath9_s3')
-myplotter.addHistograms(h_threeInLinePath10_f3, ['row', 'column'], 'threeHitPath10_s3')
-myplotter.addHistograms(h_threeInLinePath11_f3, ['row', 'column'], 'threeHitPath11_s3')
-myplotter.addHistograms(h_threeInLinePath12_f3, ['row', 'column'], 'threeHitPath12_s3')
-myplotter.addHistograms(h_threeInLinePath13_f3, ['row', 'column'], 'threeHitPath13_s3')
-myplotter.addHistograms(h_threeInLinePath14_f3, ['row', 'column'], 'threeHitPath14_s3')
-myplotter.addHistograms(h_threeInLinePath15_f3, ['row', 'column'], 'threeHitPath15_s3')
+myplotter.addHistograms(h_threeInLinePath0_f2, ['column', 'row'], 'threeHitPath0_s2')
+myplotter.addHistograms(h_threeInLinePath1_f2, ['column', 'row'], 'threeHitPath1_s2')
+myplotter.addHistograms(h_threeInLinePath2_f2, ['column', 'row'], 'threeHitPath2_s2')
+myplotter.addHistograms(h_threeInLinePath3_f2, ['column', 'row'], 'threeHitPath3_s2')
+myplotter.addHistograms(h_threeInLinePath4_f2, ['column', 'row'], 'threeHitPath4_s2')
+myplotter.addHistograms(h_threeInLinePath5_f2, ['column', 'row'], 'threeHitPath5_s2')
+myplotter.addHistograms(h_threeInLinePath6_f2, ['column', 'row'], 'threeHitPath6_s2')
+myplotter.addHistograms(h_threeInLinePath7_f2, ['column', 'row'], 'threeHitPath7_s2')
+myplotter.addHistograms(h_threeInLinePath8_f2, ['column', 'row'], 'threeHitPath8_s2')
+myplotter.addHistograms(h_threeInLinePath9_f2, ['column', 'row'], 'threeHitPath9_s2')
+myplotter.addHistograms(h_threeInLinePath10_f2, ['column', 'row'], 'threeHitPath10_s2')
+myplotter.addHistograms(h_threeInLinePath11_f2, ['column', 'row'], 'threeHitPath11_s2')
+myplotter.addHistograms(h_threeInLinePath12_f2, ['column', 'row'], 'threeHitPath12_s2')
+myplotter.addHistograms(h_threeInLinePath13_f2, ['column', 'row'], 'threeHitPath13_s2')
+myplotter.addHistograms(h_threeInLinePath14_f2, ['column', 'row'], 'threeHitPath14_s2')
+myplotter.addHistograms(h_threeInLinePath15_f2, ['column', 'row'], 'threeHitPath15_s2')
+
+myplotter.addHistograms(h_threeInLinePath0_f3, ['column', 'row'], 'threeHitPath0_s3')
+myplotter.addHistograms(h_threeInLinePath1_f3, ['column', 'row'], 'threeHitPath1_s3')
+myplotter.addHistograms(h_threeInLinePath2_f3, ['column', 'row'], 'threeHitPath2_s3')
+myplotter.addHistograms(h_threeInLinePath3_f3, ['column', 'row'], 'threeHitPath3_s3')
+myplotter.addHistograms(h_threeInLinePath4_f3, ['column', 'row'], 'threeHitPath4_s3')
+myplotter.addHistograms(h_threeInLinePath5_f3, ['column', 'row'], 'threeHitPath5_s3')
+myplotter.addHistograms(h_threeInLinePath6_f3, ['column', 'row'], 'threeHitPath6_s3')
+myplotter.addHistograms(h_threeInLinePath7_f3, ['column', 'row'], 'threeHitPath7_s3')
+myplotter.addHistograms(h_threeInLinePath8_f3, ['column', 'row'], 'threeHitPath8_s3')
+myplotter.addHistograms(h_threeInLinePath9_f3, ['column', 'row'], 'threeHitPath9_s3')
+myplotter.addHistograms(h_threeInLinePath10_f3, ['column', 'row'], 'threeHitPath10_s3')
+myplotter.addHistograms(h_threeInLinePath11_f3, ['column', 'row'], 'threeHitPath11_s3')
+myplotter.addHistograms(h_threeInLinePath12_f3, ['column', 'row'], 'threeHitPath12_s3')
+myplotter.addHistograms(h_threeInLinePath13_f3, ['column', 'row'], 'threeHitPath13_s3')
+myplotter.addHistograms(h_threeInLinePath14_f3, ['column', 'row'], 'threeHitPath14_s3')
+myplotter.addHistograms(h_threeInLinePath15_f3, ['column', 'row'], 'threeHitPath15_s3')
 
 myplotter.addHistograms(h_threeInLineCountPath0_f0, 'threeHitPath0_f0')
 myplotter.addHistograms(h_threeInLineCountPath1_f0, 'threeHitPath1_f0')
@@ -558,7 +616,15 @@ myplotter.addHistograms(h_threeInLineCountPath15_f3, 'threeHitPath15_f3')
 '''cutflow = [boardMatchCut, pickupCut, triggerCut2, pulseTime, muonAreaCut, mycuts.layerCut,
             myplotter.dict['h_height'], myplotter.dict['h_area'], myplotter.dict['h_layer'], myplotter.dict['h_triggers']]'''
 
-cutflow = [mycuts.totalEventCounter, boardMatchCut, pickupCut, barCut, pulseTime, firstPulse, triggerCutNot, mycuts.layerCut, mycuts.threeInLine, mycuts.fourLayerCut, mycuts.timeDiff,
+cutflow = [mycuts.totalEventCounter, 
+            boardMatchCut, 
+            triggerCutNot,
+            pickupCut, 
+            barCut, 
+            pulseTime, 
+            firstPulse, 
+            nPECut, 
+            mycuts.layerCut, mycuts.threeInLine, mycuts.fourLayerCut, mycuts.timeDiff,
             myplotter.dict['h_height'], myplotter.dict['h_area'], myplotter.dict['h_layer'], myplotter.dict['h_fourLayer'],
             myplotter.dict['h_row'], myplotter.dict['h_column'], 
             myplotter.dict['h_posL0'], myplotter.dict['h_posL1'], myplotter.dict['h_posL2'], myplotter.dict['h_posL3']]

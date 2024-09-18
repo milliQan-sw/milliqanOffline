@@ -13,6 +13,7 @@ def parse_args():
     parser.add_argument("-r", "--resubmit", help="Argument to automatically resubmit any jobs that failed", action='store_true')
     parser.add_argument("-m", "--merge", help="Argument to merge all successful root files", action='store_true')
     parser.add_argument("-o", "--outputDir", help="Optionally pass the name of output directory", type=str)
+    parser.add_argument("-t", "--tarFile", help="Recreate tar file", action='store_true')
     parser.add_argument("--dryRun", help="Option to run without submitting", action='store_true')
     args = parser.parse_args()
     return args
@@ -23,6 +24,7 @@ def writeCondorSub(exe, script, nJobs, filelist, outDir, includeDirs, requiremen
     Universe = vanilla
     +IsLocalJob = true
     Rank = TARGET.IsLocalSlot
+    +IsSmallJob = true
     requirements = machine != "compute-0-2" && machine != "compute-0-4" &&  machine != "compute-0-30"
     request_disk = {8}
     request_memory = {7}
@@ -35,7 +37,8 @@ def writeCondorSub(exe, script, nJobs, filelist, outDir, includeDirs, requiremen
     should_transfer_files   = Yes
     when_to_transfer_output = ON_EXIT
     transfer_input_files = {1}, {2}, {3}, milliqanProcessing.tar.gz, mqLumis.json, goodRunsList.json
-    getenv = true
+    transfer_output_files = ""
+    getenv = false
     queue {0}
     """.format(nJobs,exe,script,filelist,outDir,includeDirs,requirements[0],requirements[1],requirements[2])
 
@@ -51,7 +54,7 @@ def getRunFile(filename):
     file = int(filename.split('.')[1].split('_')[0])
     return run, file
 
-def getFilesLocal(startRun=-1, stopRun=10e9, beam=None, goodRun=None, dataDir='/store/user/milliqan/trees/v34/'):
+def getFilesLocal(startRun=-1, stopRun=10e9, beam=None, goodRun=None, dataDir='/store/user/milliqan/trees/v35/bar/', debug=False):
 
     runList = []
 
@@ -66,6 +69,8 @@ def getFilesLocal(startRun=-1, stopRun=10e9, beam=None, goodRun=None, dataDir='/
             
             for filename in os.listdir(root+directory):
 
+                if debug and len(runList) > 10: break
+
                 if not filename.endswith('.root'): continue
                 run, file = getRunFile(filename)
 
@@ -74,7 +79,7 @@ def getFilesLocal(startRun=-1, stopRun=10e9, beam=None, goodRun=None, dataDir='/
                 if stopRun is None:
                     if run == startRun: inRange = True
                 else:
-                  if run >= startRun and run <= stopRun: inRange = True
+                  if run >= startRun and run < stopRun: inRange = True
 
                 #print("File {} in range {}".format(filename, inRange))
 
@@ -83,17 +88,17 @@ def getFilesLocal(startRun=-1, stopRun=10e9, beam=None, goodRun=None, dataDir='/
                 #check if there is beam if desired
                 if beam is not None:
                     beamOn = checkBeam(mqLumis, run, file, branch='beamInFill')
-
+                    if beamOn == None: continue
                     if (beam and not beamOn) or (not beam and beamOn): continue
 
                 #check good runs list
                 if goodRun is not None:
-                    isGoodRun = checkGoodRun(goodRuns, run, file)
+                    isGoodRun = checkGoodRun(goodRuns, run, file, branch=goodRun)
 
                     if not isGoodRun: continue
 
                 #add file to runlist
-                runList.append('{}{}/{}'.format(root, directory, filename))
+                runList.append('{}{}/{}:t'.format(root, directory, filename))
 
     return runList
 
@@ -105,7 +110,9 @@ def checkGoodRun(goodRuns, run, file, branch='goodRunTight'):
 
 def checkBeam(mqLumis, run, file, branch='beam'):
     #print("check beam run {} file {}".format(run, file))
-    beam = mqLumis[branch].loc[(mqLumis['run'] == run) & (mqLumis['file'] == file)].values[0]
+    beam = mqLumis[branch].loc[(mqLumis['run'] == run) & (mqLumis['file'] == file)]
+    if beam.size == 0: return None
+    beam = beam.values[0]
     return beam
 
 def copyConfigs():
@@ -181,6 +188,7 @@ def checkFailures(outputDir):
 
 def mergeFiles(outputDir, filesToMerge, includeDirs, name='mergedOutput.root'):
 
+    filesToMerge = [outputDir+'/'+f for f in filesToMerge]
     files = ' '.join(filesToMerge)
 
     with open('mergeScript.sh', 'w') as fout:
@@ -226,15 +234,20 @@ if __name__ == "__main__":
     singularity_image = ''
     exe = 'condor_exe.sh'
     fileListName = 'filelist.json'
-    outputDir = '/abyss/users/mcarrigan/milliqan/backgroundAnalysis_1600_noBeamInFill'
+    outputDir = '/abyss/users/mcarrigan/milliqan/backgroundAnalysis_1400_noBeamInFill'
     requirements = ['1', '1500MB', '3000MB'] #CPU, Memory, Disk
     includeDirs = '/store/,/data/,/abyss/'
+
+    if args.tarFile:
+        createTarFile()
+        sys.exit(0)
     
     if args.outputDir:
         outputDir = args.outputDir
 
     if args.resubmit or args.merge:
         filesToResubmit, filesToMerge = checkFailures(outputDir)
+        print("There are {} file to resubmit and {} files available to merge".format(len(filesToResubmit), len(filesToMerge)))
         if args.merge:
             mergeFiles(outputDir, filesToMerge, includeDirs)
         if args.resubmit:
@@ -248,7 +261,7 @@ if __name__ == "__main__":
 
     createTarFile()
 
-    filesList = getFilesLocal(startRun=1600, stopRun=1700, beam=False, goodRun=None)
+    filesList = getFilesLocal(startRun=1400, stopRun=1500, beam=False, goodRun='goodRunTight', debug=False)
 
     nJobs = createRunList(filesList, name=fileListName, nFilesPerJob=nFilesPerJob)
 

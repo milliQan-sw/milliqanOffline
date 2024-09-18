@@ -160,13 +160,15 @@ class milliqanProcessor():
 
             total_events += len(events)
 
+            broadcastChan = 'npulses'
+
             #print(events['tTrigger'][0])
             #_, events['boardMatchCut'] = ak.broadcast_arrays(events['pickupFlag'], events['boardMatchCut'])
-            _, events['fileNumber'] = ak.broadcast_arrays(events['pickupFlag'], events['fileNumber'])
-            _, events['runNumber'] = ak.broadcast_arrays(events['pickupFlag'], events['runNumber'])
-            _, events['tTrigger'] = ak.broadcast_arrays(events['pickupFlag'], events['tTrigger'])
-            _, events['event'] = ak.broadcast_arrays(events['pickupFlag'], events['event'])
-            _, events['boardsMatched'] = ak.broadcast_arrays(events['pickupFlag'], events['boardsMatched'])
+            _, events['fileNumber'] = ak.broadcast_arrays(events[broadcastChan], events['fileNumber'])
+            _, events['runNumber'] = ak.broadcast_arrays(events[broadcastChan], events['runNumber'])
+            _, events['tTrigger'] = ak.broadcast_arrays(events[broadcastChan], events['tTrigger'])
+            _, events['event'] = ak.broadcast_arrays(events[broadcastChan], events['event'])
+            _, events['boardsMatched'] = ak.broadcast_arrays(events[broadcastChan], events['boardsMatched'])
 
             #_, events['fileNumber'] = ak.broadcast_arrays(events['pickupFlag'], events['fileNumber'])
             #print(events['pickupFlag'][0])

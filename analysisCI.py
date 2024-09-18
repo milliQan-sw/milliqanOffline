@@ -17,7 +17,7 @@ if __name__ == "__main__":
     filelist = ['notActuallyRun1364.3.root:t']
 
     #define the necessary branches to run over
-    branches = ['pickupFlag', 'boardsMatched', 'timeFit_module_calibrated', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type', 'fileNumber', 'runNumber', 'tTrigger', 'event']
+    branches = ['pickupFlag', 'boardsMatched', 'timeFit_module_calibrated', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type', 'fileNumber', 'runNumber', 'tTrigger', 'event', 'npulses']
 
     #define the milliqan cuts object
     mycuts = milliqanCuts()

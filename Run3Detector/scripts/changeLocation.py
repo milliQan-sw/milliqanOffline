@@ -10,6 +10,7 @@ import transferFiles
 import shutil
 import argparse
 from utilities import fileTypes
+import ROOT as r
 
 def parse_args():
     parser=argparse.ArgumentParser()
@@ -53,23 +54,68 @@ def moveFiles(db, site, source, dest):
 
 
 def updateLocations(db, directory, site, raw=True, debug=False):
+    filesProcessed = 0
+    tempDebug = True
 
+    #temp
+    copyFrom = db.milliQanOfflineDatasets.find_one({"_id": "1300_2_v34_MilliQan_OSU"})
+    print("fopyFrom", copyFrom)
+    return
     for subdir, dirs, files in os.walk(directory):
         for filename in files:
             if not goodFile(filename): continue
+            if filesProcessed > 1: break
 
             runNumber, fileNumber, fileType = getFileDetails(filename)
 
-            if debug: print('File: {0} \n\tRunNumber: {1} \n\tFileNumber: {2} \n\tFileType: {3}'.format(filename, runNumber, fileNumber, fileType))
+            if debug: print('File: {0} \n\tRunNumber: {1} \n\tFileNumber: {2} \n\tFileType: {3} \n\tDirectory: {4}'.format(filename, runNumber, fileNumber, fileType, directory))
 
             if raw:
                 db.milliQanRawDatasets.update_one({ "run" : runNumber, "file" : fileNumber, "site" : site, "type" : fileType},
                                                   { '$set': {"location" : directory}})
+            if tempDebug:
+                version = directory.split('/')[5]
+                _id = "{}_{}_{}_{}_{}".format(runNumber, fileNumber, version, fileType, "OSU")
+                _idMod = "{}_{}_{}_{}_{}".format(runNumber, fileNumber, version, fileType, "Other")
+                initialEntry = db.milliQanOfflineDatasets.find_one({"_id": _idMod})
+                print("initialEntry:", initialEntry, initialEntry==True)
+                if 'chanMap' not in initialEntry.keys():
+                    fin = r.TFile.Open(directory + filename)
+                    isMatched = fin.Get("triggerMatched_true")
+                    matched=False
+                    try:
+                        if isMatched.GetName() == "triggerMatched_true":
+                            matched=True
+                            print("file is trigger Matched")
+                    except:
+                        print("not trigger matched")
+                    fin.Close()
+                    db.milliQanOfflineDatasets.update_one({ "run" : runNumber, "file" : fileNumber, "site" : site,
+                                                            "type" : fileType, "version": version},
+                                                            { '$set': {"location" : directory, 
+                                                                       "site": "OSU", 
+                                                                        "_id": _id,
+                                                                        "timingCalibrations": copyFrom['timingCalibrations'],
+                                                                        "speAreas": copyFrom['speAreas'],
+                                                                        "chanMap": copyFrom['chanMap'],
+                                                                        "pedestals": copyFrom['pedestals'],
+                                                                        "pulseParams": copyFrom['pulseParams'],
+                                                                        "sampleRate": copyFrom['sampleRate'],
+                                                                        "matched": matched,
+                                                            }}, upsert=True)
+                elif initialEntry['location'].startswith('/var/opt/'):
+                    print("updating locations...")
+                    success = db.milliQanOfflineDatasets.update_one({ "run" : runNumber, "file" : fileNumber, "site" : "Other",
+                                                            "type" : fileType, "version": version},
+                                                            { '$set': {"location" : directory, "site": "OSU", "_id": _id}})
+                    print("updated location", success.matched_count, directory)
             else:
-                db.milliQanOfflineDatasets.update_one({ "run" : runNumber, "file" : fileNumber, "site" : site, "type" : fileType},
-                                                      { '$set': {"location" : directory}})
+                version = directory.split('/')[5]
+                db.milliQanOfflineDatasets.update_one({ "run" : runNumber, "file" : fileNumber, "site" : site, 
+                                                        "type" : fileType, "version": version},
+                                                        { '$set': {"location" : directory}}, upsert=True)
             print("Updated database for file {0}".format(filename))
-
+            filesProcessed+=1
 
 def main():
     

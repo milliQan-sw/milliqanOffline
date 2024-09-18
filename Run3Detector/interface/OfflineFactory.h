@@ -94,6 +94,7 @@ struct offline_tree_{
     bool beamOn; 
     ulong fillStart; //milliseconds since unix epoch
     ulong fillEnd; //milliseconds since unix epoch
+    bool beamInFill;
 
     //pulse vectors
     vector<int> v_pulseIndex;
@@ -133,8 +134,8 @@ struct offline_tree_{
     vector<float> v_triggerBand_max;
     vector<float> v_triggerBand_maxTime;
     vector<float> v_triggerBand_RMS;
-    vector<float> v_sideband_mean_calib;
-    vector<float> v_sideband_RMS_calib;
+    vector<float> v_sideband_mean_raw;
+    vector<float> v_sideband_RMS_raw;
     vector<Long64_t> v_groupTDC_g0;
     vector<Long64_t> v_groupTDC_g1;
     vector<Long64_t> v_groupTDC_g2;
@@ -251,6 +252,7 @@ private:
     int dynamicPedestalTotalSamples = 400;
     int dynamicPedestalConsecutiveSamples = 16;
     float dynamicPedestalGranularity = 0.25;
+    float tdcCorrection[6]; //set to max number of boards
 
     bool goodRunLoose;
     bool goodRunMedium;
@@ -268,6 +270,7 @@ private:
     vector<ulong> v_fillEnd;
     vector<ulong> v_stableBeamStart;
     vector<ulong> v_stableBeamEnd;
+    vector<bool> v_beamInFill;
 
     //Declare global variables
     double arrayVoltageDRS[100][1024];
@@ -287,6 +290,8 @@ private:
     TTree * outTree;
     TTree * trigMetaData;
     TTree * trigMetaDataCopy;
+
+    bool writeTriggerMetaData=false;
     offline_tree_ outputTreeContents;
     bool triggerFileMatched;
     vector<TColor *> palette;

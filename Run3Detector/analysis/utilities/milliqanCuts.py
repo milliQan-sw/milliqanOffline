@@ -122,7 +122,6 @@ class milliqanCuts():
             for branch in branches:
                 self.events[branch] = self.events[branch][self.events[cutName]]
 
-
     @mqCut
     def boardsMatched(self, cutName=None, cut=False, branches=None):
         _, self.events['boardsMatched'] = ak.broadcast_arrays(self.events.pickupFlag, self.events.boardsMatched)
@@ -195,7 +194,13 @@ class milliqanCuts():
                                             )
         if cut: self.events = self.events[self.events.oneHitPerLayerCut]            
         self.cutflowCounter()
-
+    #create mask for pulses passing height cut
+    def heightCut(self, cutName='heightCut', cut=1200, branches=None):
+        self.events[cutName] = self.events.height >= int(cut)
+        if branches:
+            for branch in branches:
+                self.events[branch] = self.events[branch][self.events[cutName]]
+                
     #create mask for pulses passing area cuts
     @mqCut
     def areaCut(self, cutName='areaCut', areaCut=50000, cut=False, branches=None):
@@ -373,10 +378,10 @@ class milliqanCuts():
     @mqCut
     def threeAreaSaturatedInLine(self, areaCut=50000):
         #make sure 3 layers have saturating hits
-        sat_0 = self.events.area[(self.events.eventCuts) & (self.events.layer0) & (self.events.area >= areaCut) & (self.events.straightPulseCut)]
-        sat_1 = self.events.area[(self.events.eventCuts) & (self.events.layer1) & (self.events.area >= areaCut) & (self.events.straightPulseCut)]
-        sat_2 = self.events.area[(self.events.eventCuts) & (self.events.layer2) & (self.events.area >= areaCut) & (self.events.straightPulseCut)]
-        sat_3 = self.events.area[(self.events.eventCuts) & (self.events.layer3) & (self.events.area >= areaCut) & (self.events.straightPulseCut)]
+        sat_0 = self.events.area[(self.events.eventCuts) & (self.events.layer0) & (self.events.area >= areaCut) & (self.events.straightLineCutPulse)]
+        sat_1 = self.events.area[(self.events.eventCuts) & (self.events.layer1) & (self.events.area >= areaCut) & (self.events.straightLineCutPulse)]
+        sat_2 = self.events.area[(self.events.eventCuts) & (self.events.layer2) & (self.events.area >= areaCut) & (self.events.straightLineCutPulse)]
+        sat_3 = self.events.area[(self.events.eventCuts) & (self.events.layer3) & (self.events.area >= areaCut) & (self.events.straightLineCutPulse)]
         
         self.events['three_sat'] = ak.any(sat_0, axis=1) & ak.any(sat_1, axis=1) & ak.any(sat_2, axis=1) | (ak.any(sat_0, axis=1) & ak.any(sat_1, axis=1) & ak.any(sat_3, axis=1)) | (ak.any(sat_0, axis=1) & ak.any(sat_2, axis=1) & ak.any(sat_3, axis=1)) | (ak.any(sat_1, axis=1) & ak.any(sat_2, axis=1) & ak.any(sat_3, axis=1))
         self.events['four_sat'] = ak.any(sat_0, axis=1) & ak.any(sat_1, axis=1) & ak.any(sat_2, axis=1) & (ak.any(sat_3, axis=1))
@@ -385,10 +390,10 @@ class milliqanCuts():
     @mqCut
     def threeHeightSaturatedInLine(self, heightCut=50000):
         #make sure 3 layers have saturating hits
-        sat_0 = self.events.area[(self.events.eventCuts) & (self.events.layer0) & (self.events.area >= heightCut) & (self.events.straightPulseCut)]
-        sat_1 = self.events.area[(self.events.eventCuts) & (self.events.layer1) & (self.events.area >= heightCut) & (self.events.straightPulseCut)]
-        sat_2 = self.events.area[(self.events.eventCuts) & (self.events.layer2) & (self.events.area >= heightCut) & (self.events.straightPulseCut)]
-        sat_3 = self.events.area[(self.events.eventCuts) & (self.events.layer3) & (self.events.area >= heightCut) & (self.events.straightPulseCut)]
+        sat_0 = self.events.area[(self.events.eventCuts) & (self.events.layer0) & (self.events.area >= heightCut) & (self.events.straightLineCutPulse)]
+        sat_1 = self.events.area[(self.events.eventCuts) & (self.events.layer1) & (self.events.area >= heightCut) & (self.events.straightLineCutPulse)]
+        sat_2 = self.events.area[(self.events.eventCuts) & (self.events.layer2) & (self.events.area >= heightCut) & (self.events.straightLineCutPulse)]
+        sat_3 = self.events.area[(self.events.eventCuts) & (self.events.layer3) & (self.events.area >= heightCut) & (self.events.straightLineCutPulse)]
         
         self.events['three_sat'] = ak.any(sat_0, axis=1) & ak.any(sat_1, axis=1) & ak.any(sat_2, axis=1) | (ak.any(sat_0, axis=1) & ak.any(sat_1, axis=1) & ak.any(sat_3, axis=1)) | (ak.any(sat_0, axis=1) & ak.any(sat_2, axis=1) & ak.any(sat_3, axis=1)) | (ak.any(sat_1, axis=1) & ak.any(sat_2, axis=1) & ak.any(sat_3, axis=1))
         self.events['four_sat'] = ak.any(sat_0, axis=1) & ak.any(sat_1, axis=1) & ak.any(sat_2, axis=1) & (ak.any(sat_3, axis=1))

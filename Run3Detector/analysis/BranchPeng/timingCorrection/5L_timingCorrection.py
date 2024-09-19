@@ -140,8 +140,8 @@ h_1d = r.TH1F("h_1d", f"Run {start_run_number} to {end_run_number} time differen
 # Add root histogram to plotter
 myplotter.addHistograms(h_1d, 'timeDiff')
 
-# Defining the cutflow 
-cutflow = [boardMatchCut, pickupCut, mycuts.getTimeDiff, myplotter.dict['h_1d']]
+# Defining the cutflow boardMatchCut, pickupCut, 
+cutflow = [mycuts.getTimeDiff, myplotter.dict['h_1d']]
 
 # Create a schedule of the cuts
 myschedule = milliQanScheduler(cutflow, mycuts, myplotter)
@@ -167,7 +167,7 @@ text.DrawText(0.15, 0.75, f"Beam on files percentage: {beamOn_true_percentage:.2
 text.Draw()
 
 # Create a new TFile
-f = r.TFile(f"Run{start_run_number}to{end_run_number}TC.root", "recreate")
+f = r.TFile(f"Run{start_run_number}to{end_run_number}TC_withoutPreCut.root", "recreate")
 
 # Write the canvas (including histogram and text) to the file
 canvas.Write()

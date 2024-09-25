@@ -158,8 +158,8 @@ struct offline_tree_{
 //Offline factory class used to produce offline tree output
 class OfflineFactory {
 public:
-    OfflineFactory(TString,TString,TString,bool,bool);
-    OfflineFactory(TString,TString,TString, bool, bool, int, int);
+    OfflineFactory(TString,TString,TString,bool,bool,bool);
+    OfflineFactory(TString,TString,TString, bool, bool,bool, int, int);
     // virtual ~OfflineFactory();
     void makeOutputTree();
     void loadJsonConfig(string);

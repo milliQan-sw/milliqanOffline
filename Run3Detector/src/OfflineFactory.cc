@@ -50,7 +50,7 @@ OfflineFactory::OfflineFactory(TString inFileName, TString outFileName, TString 
 
 // Wrapper function that allows for runs with no run or file number
 OfflineFactory::OfflineFactory(TString inFileName, TString outFileName, TString appendToTag, bool isDRS, bool isSlab, bool isSim) {
-    OfflineFactory(inFileName,outFileName,appendToTag,isDRS,isSlab,-1,-1);
+  OfflineFactory(inFileName,outFileName,appendToTag,isDRS,isSlab,isSim,-1,-1);
 };
 void OfflineFactory::setFriendFile(TString friendFileNameIn){
     friendFileName = friendFileNameIn;

@@ -215,6 +215,7 @@ private:
     int fileNumber;
     bool isDRS;
     bool isSlab;
+    bool isSim;
     mdaq::GlobalEvent * evt = new mdaq::GlobalEvent();
     mdaq::DemonstratorConfiguration * cfg = new mdaq::DemonstratorConfiguration();
     TString* fileOpenTime;

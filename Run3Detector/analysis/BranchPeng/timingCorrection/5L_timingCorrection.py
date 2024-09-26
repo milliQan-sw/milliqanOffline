@@ -159,7 +159,7 @@ myiterator.run()
 canvas = r.TCanvas("canvas", "canvas", 800, 600)
 h_1d.Draw()
 
-# Add text to the histogram
+# Add beamOn rate text to the histogram
 text = r.TText()
 text.SetNDC()
 text.SetTextSize(0.03)

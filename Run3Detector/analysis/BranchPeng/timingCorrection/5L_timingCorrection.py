@@ -42,12 +42,14 @@ def getTimeDiff(self):
     masked_layer1 = self.events['layer'][barFinalPulseMask]
 
     # Masked times per layer
+    timeLn1 = masked_time1[masked_layer1 == -1]
     timeL0 = masked_time1[masked_layer1 == 0]
     timeL1 = masked_time1[masked_layer1 == 1]
     timeL2 = masked_time1[masked_layer1 == 2]
     timeL3 = masked_time1[masked_layer1 == 3]
 
     # Find the minimum time per event (This should be repetitive to ipulse == 0)
+    timeLn1_min = ak.min(timeLn1, axis=1, mask_identity=True)
     timeL0_min = ak.min(timeL0, axis=1, mask_identity=True)
     timeL1_min = ak.min(timeL1, axis=1, mask_identity=True)
     timeL2_min = ak.min(timeL2, axis=1, mask_identity=True)
@@ -55,7 +57,7 @@ def getTimeDiff(self):
 
     for i in range(len(timeL0_min)):
         # Require pulses in all 4 layers and the front slab for one event
-        if timeL0_min[i] is not None and timeL1_min[i] is not None and timeL2_min[i] is not None and timeL3_min[i] is not None:
+        if timeL0_min[i] is not None and timeL1_min[i] is not None and timeL2_min[i] is not None and timeL3_min[i] is not None and timeLn1_min[i] is not None:
             # Calculate time differences only for events with valid times in all layers
             time_diffsL30.append(timeL3_min[i] - timeL0_min[i])
     

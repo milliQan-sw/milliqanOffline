@@ -38,15 +38,15 @@ def getTimeDiff(self):
     barFinalPulseMask = barAreaMask & (self.events['ipulse'] == 0)
 
     # Apply the finalPulseMask
-    masked_time1 = self.events['timeFit_module_calibrated'][barFinalPulseMask]
-    masked_layer1 = self.events['layer'][barFinalPulseMask]
+    masked_time = self.events['timeFit_module_calibrated'][barFinalPulseMask]
+    masked_layer = self.events['layer'][barFinalPulseMask]
 
     # Masked times per layer
-    timeLn1 = masked_time1[masked_layer1 == -1]
-    timeL0 = masked_time1[masked_layer1 == 0]
-    timeL1 = masked_time1[masked_layer1 == 1]
-    timeL2 = masked_time1[masked_layer1 == 2]
-    timeL3 = masked_time1[masked_layer1 == 3]
+    timeLn1 = masked_time[masked_layer1 == -1]
+    timeL0 = masked_time[masked_layer1 == 0]
+    timeL1 = masked_time[masked_layer1 == 1]
+    timeL2 = masked_time[masked_layer1 == 2]
+    timeL3 = masked_time[masked_layer1 == 3]
 
     # Find the minimum time per event (This should be repetitive to ipulse == 0)
     timeLn1_min = ak.min(timeLn1, axis=1, mask_identity=True)

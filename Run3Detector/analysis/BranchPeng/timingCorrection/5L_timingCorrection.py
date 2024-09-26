@@ -89,7 +89,7 @@ filelist = []
 beamOn_true_count = 0
 total_files_count = 0
 
-# To define the filelist and calculate beamOn rate
+# To specify the filelist and calculate beamOn rate
 for run_number in range(start_run_number, end_run_number + 1):
     print(f"Processing run number: {run_number}")
     file_number = 0

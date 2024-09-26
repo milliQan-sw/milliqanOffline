@@ -86,6 +86,9 @@ mycuts = milliqanCuts()
 # require that all digitizer boards are matched
 boardMatchCut = mycuts.getCut(mycuts.boardsMatched, 'boardMatchCut', cut=True, branches=branches)
 
+# require pulses are not pickup
+pickupCut = mycuts.getCut(mycuts.pickupCut, 'pickupCut', cut=True, branches=branches)
+
 # Define milliqan plotter
 myplotter = milliqanPlotter()
 

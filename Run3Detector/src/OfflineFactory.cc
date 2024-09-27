@@ -1421,12 +1421,15 @@ vector<vector<pair<float,float>>> OfflineFactory::readWaveDataPerEvent(int i){
     //Loop over channels
     vector<vector<pair<float,float> > > allPulseBounds;
     outputTreeContents.boardsMatched = true;
-    for(int idig=0; idig < nDigitizers; idig++){
-        if(evt->digitizers[idig].TDC[0] == 0) {
-            outputTreeContents.boardsMatched = false;
-            break;
+    if (!isSim){
+        for(int idig=0; idig < nDigitizers; idig++){
+            if(evt->digitizers[idig].TDC[0] == 0) {
+                outputTreeContents.boardsMatched = false;
+                break;
+            }
         }
     }
+
     for(int ic=0;ic<numChan;ic++){
         //Pulse finding
         allPulseBounds.push_back(processChannel(ic));
@@ -1851,12 +1854,13 @@ void OfflineFactory::loadWavesSim(){
         // a preprocessing step.
         TH1D* tempWaveform =  new TH1D(Form("waveform_%i", ic), "Waveform",
                                        maxSamples, 0,
-                                       maxSamples * nanosecondsPerSample); 
+                                       maxSamples * 2.5); 
         for (int i = 0; i < maxSamples; ++i){
           tempWaveform->Fill(i, waveforms[board][chan][i]);
         }
         waves[ic] = tempWaveform;
     }
+}
 }
 
 void OfflineFactory::writeVersion(){

@@ -196,6 +196,7 @@ private:
     void loadBranches();
     void loadWavesMilliDAQ();
     void loadWavesDRS();
+    void loadWavesSim();
     void validateInput();
     void writeVersion();
     ulong getUnixTime(TString&);

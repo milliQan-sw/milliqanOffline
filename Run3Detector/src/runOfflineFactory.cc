@@ -26,7 +26,7 @@ int main(int argc, char **argv){
     //Read input and output files (necessary arguments)
     bool versionMode = cmdOptionExists(argv, argv + argc, "-v");
     if (versionMode){
-        OfflineFactory offlineFactory = OfflineFactory("","","",false,false,-1,-1);
+      OfflineFactory offlineFactory = OfflineFactory("","","",false,false,true,-1,-1);
         std::cout << offlineFactory.getVersion() << std::endl;
         return 0;
     }
@@ -66,7 +66,7 @@ int main(int argc, char **argv){
     }
 
     std::cout << "Running in standard mode with:\nInput file: " << inputFilenameChar << "\nOutput file: " << outputFilenameChar << std::endl;
-    OfflineFactory offlineFactory = OfflineFactory(inputFilenameChar,outputFilenameChar,appendToTag,isDRSdata,isSlab,runNumber,fileNumber);
+    OfflineFactory offlineFactory = OfflineFactory(inputFilenameChar,outputFilenameChar,appendToTag,isDRSdata,isSlab,isSim, runNumber,fileNumber);
 
     //Read configuration files
     char * configChar = getCmdOption(argv, argv + argc, "-c");
@@ -84,13 +84,17 @@ int main(int argc, char **argv){
 	}
     std::cout << "Configuration: " << configChar << std::endl;
     }
-    
+
+    std::clog << "Setting friend file" << std::endl;
     offlineFactory.setFriendFile(mergedTriggerFile);
 
     std::string lumiFile;
+    std::clog << "Setting lumi file" << std::endl;
     if (isSlab) lumiFile = TString(offlineDir) + "/configuration/slabConfigs/mqLumisSlab.json";
     else lumiFile = TString(offlineDir) + "/configuration/barConfigs/mqLumis.json";
-    offlineFactory.getLumis(lumiFile);
+
+    std::clog << "Running getLumis" << std::endl;
+    //offlineFactory.getLumis(lumiFile);
 
     if (displayMode) {
 	if (isDRSdata){

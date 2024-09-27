@@ -32,19 +32,26 @@ def parse_args():
     parser.add_argument("--drs",help="DRS input",action="store_true",default=False)
     parser.add_argument("--display",help="Display events",type=int,nargs="+")
     parser.add_argument("--slab", help="Forces slab detector configuration", action="store_true", default=False)
+    parser.add_argument("--sim", help="Use offlinefactory tailored for sim data", action="store_true", default=False)
     args = parser.parse_args()
     return args
 def validateOutput(outputFile,runNumber=-1,fileNumber=-1):
+    print("Inside validateOutput")
     foundBad = False
     try:
+        print("Attempting to read outputFile")
         f1 = r.TFile(outputFile,"READ")
+        print("Getting t branch")
         t = f1.Get("t")
+        print("Getting entries")
         nevts = t.GetEntries()
         # print "[RSR] ntuple has %i events and expected %i" % (t.GetEntries(), expectednevts)
         # if int(expectednevts) > 0 and int(t.GetEntries()) != int(expectednevts):
         #     print "[RSR] nevents mismatch"
         #     foundBad = True
+        print("Right before getting tag")
         tagObj = f1.Get("tag")
+        print("After getting tag")
         if not tagObj:
             tagObj = f1.Get("tag_{}_{}".format(runNumber,fileNumber))
         tag = tagObj.GetTitle()
@@ -56,7 +63,7 @@ def validateOutput(outputFile,runNumber=-1,fileNumber=-1):
         print ("removing output file because it does not deserve to live (result will not be published)")
         os.system("rm "+outputFile)
     return tag 
-def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publish,database,appendToTag,mergedTriggerFile,drs,display, slab,runNumber=None,fileNumber=None):
+def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publish,database,appendToTag,mergedTriggerFile,drs,display, slab, sim, runNumber=None,fileNumber=None):
     if force_publish:
         publish = True
     if runNumber == None:
@@ -112,6 +119,8 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
         argList.append("--display "+",".join([str(x) for x in display]))
     if slab:
         argList.append("--slab")
+    if sim:
+        argList.append("--sim")
     args = " ".join(argList)
 
     # from subprocess import Popen, PIPE, CalledProcessError

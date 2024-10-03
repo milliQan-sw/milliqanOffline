@@ -28,22 +28,22 @@ import awkward as ak
 
 branches = ["height","timeFit_module_calibrated","chan","runNumber","column","event","fileNumber",'boardsMatched',"pickupFlag","layer","nPE","type","row","area","ipulse"]
 
-#filelist = [f'/home/czheng/SimCosmicFlatTree/MilliQan_Run1176.root:t']
-filelist = [f'/Users/haoliangzheng/CERN_ana/EventDisplay/MilliQan_Run1176.132_v34.root:t'] #local debug
+filelist = [f'/home/czheng/SimCosmicFlatTree/MilliQan_Run1176.root:t']
+#filelist = [f'/Users/haoliangzheng/CERN_ana/EventDisplay/MilliQan_Run1176.132_v34.root:t'] #local debug
 mycuts = milliqanCuts()
 
 myplotter = milliqanPlotter()
 
 
-OL_sudo_straight = mycuts.getCut(mycuts.sudo_straight,'StraghtCosmic', NPEcut = 290,time = "timeFit_module_calibrated")
-Fourbars = mycuts.getCut(mycuts.NbarsHitsCount,'NBarsHits', cut = None, NPECut = 290)  #fourbar tag is in NbarsHitsCount
+OL_sudo_straight = mycuts.getCut(mycuts.sudo_straight,'StraghtCosmic', NPEcut = 10,time = "timeFit_module_calibrated")
+Fourbars = mycuts.getCut(mycuts.NbarsHitsCount,'NBarsHits', cut = None, NPECut = 2)  #fourbar tag is in NbarsHitsCount
 
 #adding combine cuts for downwardPath
-CLFourbar = mycuts.getCut(mycuts.combineCuts, 'CLFourbar', ["StraghtCosmic","fourbar", "barCut"])
+CLFourbar = mycuts.getCut(mycuts.combineCuts, 'CLFourbar', ["downwardPath","fourbar", "barCut"])
 
 
 
-CLFourbardeg = mycuts.getCut(mycuts.combineCuts, 'CLFourbardeg', ["StraghtCosmic","fourbar"])#debug
+CLFourbardeg = mycuts.getCut(mycuts.combineCuts, 'CLFourbardeg', ["downwardPath","fourbar"])#debug
 FourBars_count = mycuts.getCut(mycuts.countEvent,'placeholder', Countobject= 'fourbar')#debug
 CLFourbar_count = mycuts.getCut(mycuts.countEvent,'placeholder', Countobject= 'CLFourbardeg')#debug
 NPE_4Bar = r.TH1F("NPE_4Bar", "nPE bar; nPE ; pulse", 500, 0, 1000)

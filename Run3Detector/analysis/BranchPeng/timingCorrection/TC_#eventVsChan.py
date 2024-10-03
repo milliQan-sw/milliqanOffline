@@ -38,7 +38,7 @@ def getTimeDiff(self):
     barFinalPulseMask = barAreaMask & timeWindowMask & topSideMask & (self.events['ipulse'] == 0)
 
     # Apply the finalPulseMask
-    masked_time = self.events['timeFit_module_calibrated'][barFinalPulseMask]
+    masked_time = self.events['chan'][barFinalPulseMask]
     masked_layer = self.events['layer'][barFinalPulseMask]
 
     # Masked times per layer

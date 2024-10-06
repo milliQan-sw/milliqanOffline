@@ -34,7 +34,7 @@ def getTimeDiff(self):
     timeWindowMask = (self.events['timeFit_module_calibrated'] > 1000) & (self.events['timeFit_module_calibrated'] < 1500)
     topSideMask = self.events['area'][self.events['type'] == 2] < 100000
     
-    for i in len(self.events):
+    for i in range(self.events):
         if self.events['layer'][i] == 1:
             print(self.events['type'][i])
 

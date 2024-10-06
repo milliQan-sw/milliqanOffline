@@ -87,19 +87,23 @@ filelist = []
 
 # To specify the filelist
 for run_number in range(start_run_number, end_run_number + 1):
-    print(f"Processing run number: {run_number}")
+    print(f"Starting processing for run number: {run_number}")
     file_number = 0
     consecutive_missing_files = 0
     while True:
         file_path = f"/home/bpeng/muonAnalysis/1000/MilliQan_Run{run_number}.{file_number}_v34.root" 
         if os.path.exists(file_path):
+            print(f"Found file: {file_path}")
             filelist.append(file_path)
+            consecutive_missing_files = 0  # Reset counter since file was found
         else:
+            print(f"File not found: {file_path}")
             consecutive_missing_files += 1
-            if consecutive_missing_files >= 10: # the patience of running missing files is 10
+            if consecutive_missing_files >= 10:
                 print(f"No more files found after {file_number} for run {run_number}")
                 break
-            file_number += 1
+        file_number += 1
+print(f"Total files collected: {len(filelist)}")
 
 # Define the necessary branches to run over
 branches = ['fileNumber', 'runNumber', 'tTrigger', 'event', 'pickupFlag', 'boardsMatched', 'timeFit_module_calibrated', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type', 'beamOn']

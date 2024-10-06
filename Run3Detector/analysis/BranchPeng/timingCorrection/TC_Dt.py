@@ -33,7 +33,7 @@ def getTimeDiff(self):
     barAreaMask = self.events['nPE'] > 100
     timeWindowMask = (self.events['timeFit_module_calibrated'] > 1000) & (self.events['timeFit_module_calibrated'] < 1500)
     topSideMask = self.events['area'][self.events['type'] == 2] < 100000
-    print(self.events['type'][self.events['layer'] == -1])
+    print(self.events['type'][self.events['layer'] == 4])
 
     # Pick the first pulse
     barFinalPulseMask = barAreaMask & timeWindowMask & topSideMask & (self.events['ipulse'] == 0)

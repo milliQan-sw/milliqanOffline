@@ -106,7 +106,7 @@ for run_number in range(start_run_number, end_run_number + 1):
 print(f"Total files collected: {len(filelist)}")
 
 # Define the necessary branches to run over
-branches = ['fileNumber', 'runNumber', 'tTrigger', 'event', 'pickupFlag', 'boardsMatched', 'timeFit_module_calibrated', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type', 'beamOn']
+branches = ['fileNumber', 'runNumber', 'tTrigger', 'event', 'pickupFlag', 'boardsMatched', 'timeFit_module_calibrated', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type', 'nPE']
 
 # Define the milliqan cuts object
 mycuts = milliqanCuts()

@@ -88,7 +88,6 @@ filelist = []
 # To specify the filelist
 for run_number in range(start_run_number, end_run_number + 1):
     print(f"Starting processing for run number: {run_number}")
-    file_number = 0
     consecutive_missing_files = 0
     while True:
         file_path = f"/home/bpeng/muonAnalysis/1000/MilliQan_Run{run_number}.{file_number}_v34.root" 
@@ -102,7 +101,6 @@ for run_number in range(start_run_number, end_run_number + 1):
             if consecutive_missing_files >= 10: # Set the patience as 10
                 print(f"No more files found after {file_number} for run {run_number}")
                 break
-        file_number += 1
 print(f"Total files collected: {len(filelist)}")
 
 # Define the necessary branches to run over

@@ -84,10 +84,8 @@ end_run_number = 1549
 
 # Define a file list to run over
 filelist = []
-beamOn_true_count = 0
-total_files_count = 0
 
-# To specify the filelist and calculate beamOn rate
+# To specify the filelist
 for run_number in range(start_run_number, end_run_number + 1):
     print(f"Processing run number: {run_number}")
     file_number = 0
@@ -96,27 +94,12 @@ for run_number in range(start_run_number, end_run_number + 1):
         file_path = f"/home/bpeng/muonAnalysis/1500/MilliQan_Run{run_number}.{file_number}_v34.root" 
         if os.path.exists(file_path):
             filelist.append(file_path)
-            try:
-                with uproot.open(file_path) as file:
-                    tree = file["t"]
-                    beamOn = tree["beamOn"].array(library="np")
-                    if np.any(beamOn):
-                        beamOn_true_count += 1
-                    total_files_count += 1
-                print(f"Processed file: {file_path}")
-            except Exception as e:
-                print(f"Error processing file {file_path}: {e}")
-            file_number += 1
-            consecutive_missing_files = 0
         else:
             consecutive_missing_files += 1
-            if consecutive_missing_files >= 10:
+            if consecutive_missing_files >= 10: # the patience of running missing files is 10
                 print(f"No more files found after {file_number} for run {run_number}")
                 break
             file_number += 1
-
-# Calculate the beamOn percentage
-beamOn_true_percentage = (beamOn_true_count / total_files_count) * 100 if total_files_count > 0 else 0
 
 # Define the necessary branches to run over
 branches = ['fileNumber', 'runNumber', 'tTrigger', 'event', 'pickupFlag', 'boardsMatched', 'timeFit_module_calibrated', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type', 'beamOn']
@@ -157,13 +140,6 @@ myiterator.run()
 # Draw the histogram
 canvas = r.TCanvas("canvas", "canvas", 800, 600)
 h_1d.Draw()
-
-# Add beamOn rate text to the histogram
-text = r.TText()
-text.SetNDC()
-text.SetTextSize(0.03)
-text.DrawText(0.15, 0.75, f"Beam on files percentage: {beamOn_true_percentage:.2f}%")
-text.Draw()
 
 # Create a new TFile
 f = r.TFile(f"Run{start_run_number}to{end_run_number}Dt.root", "recreate")

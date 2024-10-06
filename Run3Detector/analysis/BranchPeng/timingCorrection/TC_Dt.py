@@ -99,7 +99,7 @@ for run_number in range(start_run_number, end_run_number + 1):
         else:
             print(f"File not found: {file_path}")
             consecutive_missing_files += 1
-            if consecutive_missing_files >= 10:
+            if consecutive_missing_files >= 10: # Set the patience as 10
                 print(f"No more files found after {file_number} for run {run_number}")
                 break
         file_number += 1

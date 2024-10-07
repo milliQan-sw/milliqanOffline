@@ -60,13 +60,13 @@ def getTimeDiff(self):
 
     # Loop over events, calculating time differences if all layers have non-empty arrays
     for i in range(len(timeL0_flat)):
-        if (timeL0_flat[i] is not None and timeL0_flat[i] is not None and 
-            timeL0_flat[i] is not None and timeL0_flat[i] is not None and 
-            timeL0_flat[i] is not None):
+        if (timeL0_flat[i] is not None and timeL1_flat[i] is not None and 
+            timeL2_flat[i] is not None and timeL3_flat[i] is not None and 
+            timeLn1_flat[i] is not None):
             # Compute the time difference for each event
             time_diffsL30.append(timeL3_flat[i] - timeL0_flat[i])
         else:
-            # Append None if any layer is missing pulses
+            # Append None if an event does not have any pulse in required layers
             time_diffsL30.append(None)
 
 # No need to pad with None at the end, since we're appending None for missing data

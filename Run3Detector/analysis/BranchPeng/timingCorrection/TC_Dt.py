@@ -35,6 +35,18 @@ def getTimeDiff(self):
     panelMask = self.events['area'][self.events['type'] == 2] < 100000 # type bar = 0, slab = 1, panel = 2
     firstPulseMask = self.events['ipulse'] == 0
 
+    # Check shapes of individual masks
+    print("Shape of barAreaMask:", ak.num(barAreaMask))
+    print("Shape of timeWindowMask:", ak.num(timeWindowMask))
+    print("Shape of panelMask:", ak.num(panelMask))
+    print("Shape of firstPulseMask:", ak.num(firstPulseMask))
+
+    # Broadcast masks to compatible shapes
+    barAreaMask, timeWindowMask, panelMask, firstPulseMask = ak.broadcast_arrays(
+        barAreaMask, timeWindowMask, panelMask, firstPulseMask
+    )
+
+
     # Pick the first pulse
     barFinalPulseMask = barAreaMask & timeWindowMask & panelMask & firstPulseMask
 

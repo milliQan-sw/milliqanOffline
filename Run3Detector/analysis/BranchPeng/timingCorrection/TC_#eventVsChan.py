@@ -49,22 +49,19 @@ def getTimeDiff(self):
     timeL1 = masked_time[masked_layer == 1]
     timeL2 = masked_time[masked_layer == 2]
     timeL3 = masked_time[masked_layer == 3]
-    timeLn1 = masked_time[masked_layer == -1]
 
     # Flatten the 2D lists into 1D
     timeL0_flat = ak.min(timeL0, axis=1, mask_identity=True)
     timeL1_flat = ak.min(timeL1, axis=1, mask_identity=True)
     timeL2_flat = ak.min(timeL2, axis=1, mask_identity=True)
     timeL3_flat = ak.min(timeL3, axis=1, mask_identity=True)
-    timeLn1_flat = ak.min(timeLn1, axis=1, mask_identity=True)
 
     # Loop over events, calculating time differences if all layers have non-empty arrays
     for i in range(len(timeL0_flat)):
-        if (timeL0_flat[i] is not None 
+        if (    timeL0_flat[i] is not None 
             and timeL1_flat[i] is not None  
             and timeL2_flat[i] is not None 
-            and timeL3_flat[i] is not None 
-            and timeLn1_flat[i] is not None
+            and timeL3_flat[i] is not None
             ):
             # Compute the time difference for each event
             time_diffsL30.append(timeL3_flat[i] - timeL0_flat[i])

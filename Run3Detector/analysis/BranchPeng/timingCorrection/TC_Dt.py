@@ -44,19 +44,12 @@ def getTimeDiff(self):
     masked_time = self.events['timeFit_module_calibrated'][finalMask]
     masked_layer = self.events['layer'][finalMask]
 
-    # Divide Masked times by layer
-    timeL0 = masked_time[masked_layer == 0]
-    timeL1 = masked_time[masked_layer == 1]
-    timeL2 = masked_time[masked_layer == 2]
-    timeL3 = masked_time[masked_layer == 3]
-    timeLn1 = masked_time[masked_layer == -1]
-
-    # Flatten the 2D list into 1D
-    timeL0_flat = ak.flatten(timeL0, axis=1)
-    timeL1_flat = ak.flatten(timeL1, axis=1)
-    timeL2_flat = ak.flatten(timeL2, axis=1)
-    timeL3_flat = ak.flatten(timeL3, axis=1)
-    timeLn1_flat = ak.flatten(timeLn1, axis=1)
+    # Divide Masked times by layer and flatten the 2D lists into 1D
+    timeL0_flat = ak.flatten(masked_time[masked_layer == 0], axis=1)
+    timeL1_flat = ak.flatten(masked_time[masked_layer == 1], axis=1)
+    timeL2_flat = ak.flatten(masked_time[masked_layer == 2], axis=1)
+    timeL3_flat = ak.flatten(masked_time[masked_layer == 3], axis=1)
+    timeLn1_flat = ak.flatten(masked_time[masked_layer == -1], axis=1)
 
     # Loop over events, calculating time differences if all layers have non-empty arrays
     for i in range(len(timeL0_flat)):

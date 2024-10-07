@@ -37,10 +37,10 @@ def getTimeDiff(self):
     cutEvents = self.events[self.events['chan'] == 0]
     print(len(cutEvents))
     for i in range(len(cutEvents)):
-        if len(cutEvents[i]) != None
-        for j in range(len(cutEvents[i])):
-            if cutEvents[i][j] != None:
-                print(cutEvents['type'][i][j])
+        if len(cutEvents[i]) != None:
+            for j in range(len(cutEvents[i])):
+                if cutEvents[i][j] != None:
+                    print(cutEvents['type'][i][j])
 
 
     # Pick the first pulse

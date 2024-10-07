@@ -67,14 +67,14 @@ def getEventbyChan(self):
             accumulatedChan.append(chanL2_flat[i])
             accumulatedChan.append(chanL3_flat[i])
 
+    print('Number of chan with pulse:', len(accumulatedChan))
+    
     # Extend the final list to match the size of the current file
     num_events = len(self.events)
     num_nones = num_events - len(accumulatedChan)
     accumulatedChan.extend([None] * num_nones)
 
     self.events['accumulatedChan'] = accumulatedChan
-    
-    print('Number of chan with pulse:', len(accumulatedChan))
 
 
 # Add our custom function to milliqanCuts

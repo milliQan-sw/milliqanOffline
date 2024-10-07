@@ -65,6 +65,7 @@ def getTimeDiff(self):
             ):
             # Compute the time difference for each event
             time_diffsL30.append(timeL3_flat[i] - timeL0_flat[i])
+            
             print('Time difference added: ', timeL3_flat[i] - timeL0_flat[i])  
         else:
             # Append None if an event does not have any pulse in all required layers (so we know which event)

@@ -53,6 +53,10 @@ def getTimeDiff(self):
 
     print(len(timeL0_flat))
     print(ak.num(masked_time[masked_layer == 0]))
+    print(ak.num(masked_time[masked_layer == 1]))
+    print(ak.num(masked_time[masked_layer == 2]))
+    print(ak.num(masked_time[masked_layer == 3]))
+    print(ak.num(masked_time[masked_layer == -1]))
 
     # Loop over events, calculating time differences if all layers have non-empty arrays
     for i in range(len(timeL0_flat)):

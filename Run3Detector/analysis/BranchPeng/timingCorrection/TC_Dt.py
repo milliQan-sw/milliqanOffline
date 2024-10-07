@@ -36,7 +36,7 @@ def getTimeDiff(self):
     
     cutEvents = self.events[self.events['chan'] == 0]
     for i in range(len(cutEvents)):
-        for j in range(len(cutEvents[i]))
+        for j in range(len(cutEvents[i])):
             if cutEvents[i][j] != None:
                 print(cutEvents['type'][i][j])
 

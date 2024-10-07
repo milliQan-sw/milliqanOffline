@@ -58,7 +58,7 @@ def getTimeDiff(self):
 
     # Loop over events, calculating time differences if all layers have non-empty arrays
     for i in range(len(timeL0_flat)):
-        if (timeL0_flat[i] is not None 
+        if (    timeL0_flat[i] is not None 
             and timeL1_flat[i] is not None  
             and timeL2_flat[i] is not None 
             and timeL3_flat[i] is not None

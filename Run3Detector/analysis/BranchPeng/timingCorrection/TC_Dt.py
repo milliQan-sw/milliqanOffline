@@ -68,8 +68,11 @@ def getTimeDiff(self):
         else:
             # Append None if an event does not have any pulse in all required layers to keep the branch size
             time_diffsL30.append(None)
-        
-        print(time_diffsL30)    
+         
+
+    for eventIndex in range(len(time_diffsL30)):
+            if time_diffsL30[eventIndex] != None:
+                print(time_diffsL30[eventIndex])  
 
     self.events['timeDiff'] = time_diffsL30
 

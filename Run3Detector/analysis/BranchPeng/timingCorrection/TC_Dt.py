@@ -50,7 +50,7 @@ def getTimeDiff(self):
 
     timeLn1 = masked_time[masked_layer == -1]
 
-    # Find the minimum time per event (This should be repetitive to ipulse == 0)
+    # Find the minimum time per event (This should be repetitive to ipulse == 0, doing this just to flatten the 2D list into 1D)
     timeL0_min = ak.min(timeL0, axis=1, mask_identity=True)
     timeL1_min = ak.min(timeL1, axis=1, mask_identity=True)
     timeL2_min = ak.min(timeL2, axis=1, mask_identity=True)

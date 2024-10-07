@@ -25,9 +25,9 @@ from milliqanCuts import *
 from milliqanPlotter import *
 
 
-# Define the function to get the time differences
-def getTimeDiff(self):
-    time_diffsL30 = []
+# Define the function to get the event count by channel
+def getEventbyChan(self):
+    accumulatedChan = []
 
     # Pulse mask
     firstPulseMask = self.events['ipulse'] == 0
@@ -41,38 +41,37 @@ def getTimeDiff(self):
     finalMask = npeMask & timeWindowMask & panelMask & firstPulseMask
 
     # Apply the finalPulseMask
-    masked_time = self.events['chan'][finalMask]
+    masked_chan = self.events['chan'][finalMask]
     masked_layer = self.events['layer'][finalMask]
 
-    # Divide Masked times by layer and flatten the 2D lists into 1D
-    timeL0 = masked_time[masked_layer == 0]
-    timeL1 = masked_time[masked_layer == 1]
-    timeL2 = masked_time[masked_layer == 2]
-    timeL3 = masked_time[masked_layer == 3]
+    # Divide Masked chan by layer and flatten the 2D lists into 1D
+    chanL0 = masked_chan[masked_layer == 0]
+    chanL1 = masked_chan[masked_layer == 1]
+    chanL2 = masked_chan[masked_layer == 2]
+    chanL3 = masked_chan[masked_layer == 3]
 
     # Flatten the 2D lists into 1D
-    timeL0_flat = ak.min(timeL0, axis=1, mask_identity=True)
-    timeL1_flat = ak.min(timeL1, axis=1, mask_identity=True)
-    timeL2_flat = ak.min(timeL2, axis=1, mask_identity=True)
-    timeL3_flat = ak.min(timeL3, axis=1, mask_identity=True)
+    chanL0_flat = ak.min(chanL0, axis=1, mask_identity=True)
+    chanL1_flat = ak.min(chanL1, axis=1, mask_identity=True)
+    chanL2_flat = ak.min(chanL2, axis=1, mask_identity=True)
+    chanL3_flat = ak.min(chanL3, axis=1, mask_identity=True)
 
-    # Loop over events, calculating time differences if all layers have non-empty arrays
-    for i in range(len(timeL0_flat)):
-        if (    timeL0_flat[i] is not None 
-            and timeL1_flat[i] is not None  
-            and timeL2_flat[i] is not None 
-            and timeL3_flat[i] is not None
+    for i in range(len(chanL0_flat)):
+        if (    chanL0_flat[i] is not None 
+            and chanL1_flat[i] is not None  
+            and chanL2_flat[i] is not None 
+            and chanL3_flat[i] is not None
             ):
-            time_diffsL30.append(timeL0_flat[i])
-            time_diffsL30.append(timeL1_flat[i])
-            time_diffsL30.append(timeL2_flat[i])
-            time_diffsL30.append(timeL3_flat[i])
+            accumulatedChan.append(chanL0_flat[i])
+            accumulatedChan.append(chanL1_flat[i])
+            accumulatedChan.append(chanL2_flat[i])
+            accumulatedChan.append(chanL3_flat[i])
 
-    self.events['timeDiff'] = time_diffsL30
+    self.events['accumulatedChan'] = accumulatedChan
 
 
 # Add our custom function to milliqanCuts
-setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)
+setattr(milliqanCuts, 'getEventbyChan', getEventbyChan)
 
 # Define the range of runs
 start_run_number = 1540
@@ -120,13 +119,13 @@ pickupCut = mycuts.getCut(mycuts.pickupCut, 'pickupCut', cut=True, branches=bran
 myplotter = milliqanPlotter()
 
 # Create a 1D root histogram
-h_1d = r.TH1F("h_1d", f"Run {start_run_number} to {end_run_number} time difference", 80, 0, 80)
+h_1d = r.TH1F("h_1d", f"Run {start_run_number} to {end_run_number} eventByChan", 80, 0, 80)
 
 # Add root histogram to plotter
 myplotter.addHistograms(h_1d, 'timeDiff')
 
 # Defining the cutflow 
-cutflow = [boardMatchCut, pickupCut, mycuts.getTimeDiff, myplotter.dict['h_1d']]
+cutflow = [boardMatchCut, pickupCut, mycuts.getEventbyChan, myplotter.dict['h_1d']]
 
 # Create a schedule of the cuts
 myschedule = milliQanScheduler(cutflow, mycuts, myplotter)
@@ -145,7 +144,7 @@ canvas = r.TCanvas("canvas", "canvas", 800, 600)
 h_1d.Draw()
 
 # Create a new TFile
-f = r.TFile(f"Run{start_run_number}to{end_run_number}Dt.root", "recreate")
+f = r.TFile(f"Run{start_run_number}to{end_run_number}eventByChan.root", "recreate")
 
 # Write the canvas (including histogram and text) to the file
 canvas.Write()

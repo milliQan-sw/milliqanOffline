@@ -51,18 +51,18 @@ def getTimeDiff(self):
     timeL3 = masked_time[masked_layer == 3]
     timeLn1 = masked_time[masked_layer == -1]
 
-    # Find the minimum time per event (This should be repetitive to ipulse == 0, doing this just to flatten the 2D list into 1D)
-    timeL0_min = ak.min(timeL0, axis=1, mask_identity=True)
-    timeL1_min = ak.min(timeL1, axis=1, mask_identity=True)
-    timeL2_min = ak.min(timeL2, axis=1, mask_identity=True)
-    timeL3_min = ak.min(timeL3, axis=1, mask_identity=True)
-    timeLn1_min = ak.min(timeLn1, axis=1, mask_identity=True)
+    # Flatten the 2D list into 1D
+    timeL0_flat = ak.flatten(timeL0, axis=1)
+    timeL1_flat = ak.flatten(timeL1, axis=1)
+    timeL2_flat = ak.flatten(timeL2, axis=1)
+    timeL3_flat = ak.flatten(timeL3, axis=1)
+    timeLn1_flat = ak.flatten(timeLn1, axis=1)
 
-    for i in range(len(timeL0_min)):
+    for i in range(len(timeL0_flat)):
         # Require pulses in all 4 layers and the front slab for one event
-        if timeL0_min[i] is not None and timeL1_min[i] is not None and timeL2_min[i] is not None and timeL3_min[i] is not None and timeLn1_min[i] is not None:
+        if timeL0_flat[i] is not None and timeL1_flat[i] is not None and timeL2_flat[i] is not None and timeL3_flat[i] is not None and timeLn1_flat[i] is not None:
             # Calculate time differences only for events with valid times in all layers
-            time_diffsL30.append(timeL3_min[i] - timeL0_min[i])
+            time_diffsL30.append(timeL3_flat[i] - timeL0_flat[i])
     
     print(time_diffsL30)
 

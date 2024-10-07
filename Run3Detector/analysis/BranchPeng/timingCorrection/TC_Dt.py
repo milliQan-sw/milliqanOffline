@@ -95,7 +95,6 @@ for run_number in range(start_run_number, end_run_number + 1):
     file_number = 0
     consecutive_missing_files = 0
     while True:
-        # Adjust file path to use dynamic folder path
         file_path = f"{folder_path}/MilliQan_Run{run_number}.{file_number}_v34.root" 
         if os.path.exists(file_path):
             print(f"Found file: {file_path}")

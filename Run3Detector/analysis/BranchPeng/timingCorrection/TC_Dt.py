@@ -34,7 +34,10 @@ def getTimeDiff(self):
     timeWindowMask = (self.events['timeFit_module_calibrated'] > 1000) & (self.events['timeFit_module_calibrated'] < 1500)
     topSideMask = self.events['area'][self.events['type'] == 2] < 100000
     
-    print(self.events['type'][self.events['chan'] == 0])
+    cutEvents = self.events[self.events['chan'] == 0]
+    for i in range(len(cutEvents)):
+        if ak.any(cutEvents[i]):
+            print(cutEvents['type'][i])
 
 
     # Pick the first pulse

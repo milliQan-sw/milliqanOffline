@@ -35,6 +35,7 @@ def getTimeDiff(self):
     topSideMask = self.events['area'][self.events['type'] == 2] < 100000
     
     cutEvents = self.events[self.events['chan'] == 0]
+    print(len(cutEvents))
     for i in range(len(cutEvents)):
         for j in range(len(cutEvents[i])):
             if cutEvents[i][j] != None:

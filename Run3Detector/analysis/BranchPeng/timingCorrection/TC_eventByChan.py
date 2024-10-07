@@ -126,7 +126,7 @@ pickupCut = mycuts.getCut(mycuts.pickupCut, 'pickupCut', cut=True, branches=bran
 myplotter = milliqanPlotter()
 
 # Create a 1D root histogram
-h_1d = r.TH1F("h_1d", f"Run {start_run_number} to {end_run_number} eventByChan", 80, 0, 80)
+h_1d = r.TH1F("h_1d", f"Run {start_run_number} to {end_run_number} Event Count VS Chan", 80, 0, 80)
 
 # Add root histogram to plotter
 myplotter.addHistograms(h_1d, 'timeDiff')

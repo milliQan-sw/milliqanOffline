@@ -35,8 +35,9 @@ def getTimeDiff(self):
     topSideMask = self.events['area'][self.events['type'] == 2] < 100000
     
     for i in range(len(self.events)):
-        if self.events['layer'][i] == 1:
+        if ak.any(self.events['layer'][i] == 1):
             print(self.events['type'][i])
+
 
     # Pick the first pulse
     barFinalPulseMask = barAreaMask & timeWindowMask & topSideMask & (self.events['ipulse'] == 0)

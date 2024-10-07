@@ -58,20 +58,19 @@ def getTimeDiff(self):
     timeL3_flat = ak.flatten(timeL3, axis=1)
     timeLn1_flat = ak.flatten(timeLn1, axis=1)
 
+    # Loop over events, calculating time differences if all layers have non-empty arrays
     for i in range(len(timeL0_flat)):
-        # Require pulses in all 4 layers and the front slab for one event
-        if timeL0_flat[i] is not None and timeL1_flat[i] is not None and timeL2_flat[i] is not None and timeL3_flat[i] is not None and timeLn1_flat[i] is not None:
-            # Calculate time differences only for events with valid times in all layers
+        # Check if all arrays are non-empty for the current event
+        if (len(timeL0_flat[i]) > 0 and len(timeL1_flat[i]) > 0 and 
+            len(timeL2_flat[i]) > 0 and len(timeL3_flat[i]) > 0 and 
+            len(timeLn1_flat[i]) > 0):
+            # Compute the time difference for each event
             time_diffsL30.append(timeL3_flat[i] - timeL0_flat[i])
-    
-    print(time_diffsL30)
+        else:
+            # Append None if any layer is missing pulses
+            time_diffsL30.append(None)
 
-    # Extend the final list to match the size of the current file
-    num_events = len(self.events)
-    num_nones = num_events - len(time_diffsL30)
-    time_diffsL30.extend([None] * num_nones)
-
-    # Define custom branch
+# No need to pad with None at the end, since we're appending None for missing data
     self.events['timeDiff'] = time_diffsL30
 
 

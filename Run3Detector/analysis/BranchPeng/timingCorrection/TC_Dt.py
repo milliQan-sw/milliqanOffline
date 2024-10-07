@@ -81,8 +81,8 @@ def getTimeDiff(self):
 setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)
 
 # Define the range of runs
-start_run_number = 1599
-end_run_number = 1600
+start_run_number = 1000
+end_run_number = 1626
 
 # Define a file list to run over
 filelist = []

@@ -45,11 +45,18 @@ def getTimeDiff(self):
     masked_layer = self.events['layer'][finalMask]
 
     # Divide Masked times by layer and flatten the 2D lists into 1D
-    timeL0_flat = ak.fill_none(ak.firsts(masked_time[masked_layer == 0]), None)
-    timeL1_flat = ak.fill_none(ak.firsts(masked_time[masked_layer == 1]), None)
-    timeL2_flat = ak.fill_none(ak.firsts(masked_time[masked_layer == 2]), None)
-    timeL3_flat = ak.fill_none(ak.firsts(masked_time[masked_layer == 3]), None)
-    timeLn1_flat = ak.fill_none(ak.firsts(masked_time[masked_layer == -1]), None)
+    timeL0 = masked_time[masked_layer == 0]
+    timeL1 = masked_time[masked_layer == 1]
+    timeL2 = masked_time[masked_layer == 2]
+    timeL3 = masked_time[masked_layer == 3]
+    timeLn1 = masked_time[masked_layer == -1]
+
+    # Flatten the 2D lists into 1D
+    timeL0_flat = ak.min(timeL0, axis=1, mask_identity=True)
+    timeL1_flat = ak.min(timeL1, axis=1, mask_identity=True)
+    timeL2_flat = ak.min(timeL2, axis=1, mask_identity=True)
+    timeL3_flat = ak.min(timeL3, axis=1, mask_identity=True)
+    timeLn1_flat = ak.min(timeLn1, axis=1, mask_identity=True)
 
     # Loop over events, calculating time differences if all layers have non-empty arrays
     for i in range(len(timeL0_flat)):

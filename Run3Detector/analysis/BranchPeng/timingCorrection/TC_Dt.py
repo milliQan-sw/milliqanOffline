@@ -29,12 +29,12 @@ from milliqanPlotter import *
 def getTimeDiff(self):
     time_diffsL30 = []
 
-    # Area mask
+    # Pulse mask
     firstPulseMask = self.events['ipulse'] == 0
     barAreaMask = self.events['nPE'] > 100
     timeWindowMask = (self.events['timeFit_module_calibrated'] > 1000) & (self.events['timeFit_module_calibrated'] < 1500)
-    # type bar = 0, slab = 1, panel = 2
-    panelMask = self.events['area'][self.events['type'] == 2] < 100000 
+    # Event mask
+    panelMask = self.events['area'][self.events['type'] == 2] < 100000 # type bar = 0, slab = 1, panel = 2
     
     # Pick the first pulse
     barFinalPulseMask = barAreaMask & timeWindowMask & panelMask & firstPulseMask

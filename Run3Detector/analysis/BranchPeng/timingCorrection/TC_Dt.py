@@ -69,7 +69,7 @@ def getTimeDiff(self):
             # Append None if an event does not have any pulse in all required layers (so we know which event)
             time_diffsL30.append(None)
          
-
+    # Print out the time differences
     for eventIndex in range(len(time_diffsL30)):
             if time_diffsL30[eventIndex] != None:
                 print(time_diffsL30[eventIndex])  

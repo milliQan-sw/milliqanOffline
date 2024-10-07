@@ -85,7 +85,7 @@ setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)
 
 # Define the range of runs
 start_run_number = 1000
-end_run_number = 1200
+end_run_number = 1009
 
 # Define a file list to run over
 filelist = []

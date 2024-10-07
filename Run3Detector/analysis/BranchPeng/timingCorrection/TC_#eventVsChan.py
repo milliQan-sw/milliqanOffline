@@ -29,46 +29,54 @@ from milliqanPlotter import *
 def getTimeDiff(self):
     time_diffsL30 = []
 
-    # Area mask
-    barAreaMask = self.events['nPE'] > 100
-    timeWindowMask = self.events['timeFit_module_calibrated'] > 1000 & self.events['timeFit_module_calibrated'] < 1500
-    topSideMask = self.events['area'][self.events['type'] == 2] < 100000
+    # Pulse mask
+    firstPulseMask = self.events['ipulse'] == 0
+    npeMask = self.events['nPE'] > 100
+    timeWindowMask = (self.events['timeFit_module_calibrated'] > 1000) & (self.events['timeFit_module_calibrated'] < 1500)
 
+    # Event mask
+    panelMask = ak.any(self.events['area'][self.events['type'] == 2] < 100000, axis=1) # type bar = 0, slab = 1, panel = 2
+    
     # Pick the first pulse
-    barFinalPulseMask = barAreaMask & timeWindowMask & topSideMask & (self.events['ipulse'] == 0)
+    finalMask = npeMask & timeWindowMask & panelMask & firstPulseMask
 
     # Apply the finalPulseMask
-    masked_time = self.events['chan'][barFinalPulseMask]
-    masked_layer = self.events['layer'][barFinalPulseMask]
+    masked_time = self.events['timeFit_module_calibrated'][finalMask]
+    masked_layer = self.events['layer'][finalMask]
 
-    # Masked times per layer
-    timeLn1 = masked_time[masked_layer == -1]
+    # Divide Masked times by layer and flatten the 2D lists into 1D
     timeL0 = masked_time[masked_layer == 0]
     timeL1 = masked_time[masked_layer == 1]
     timeL2 = masked_time[masked_layer == 2]
     timeL3 = masked_time[masked_layer == 3]
+    timeLn1 = masked_time[masked_layer == -1]
 
-    # Find the minimum time per event (This should be repetitive to ipulse == 0)
-    timeLn1_min = ak.min(timeLn1, axis=1, mask_identity=True)
-    timeL0_min = ak.min(timeL0, axis=1, mask_identity=True)
-    timeL1_min = ak.min(timeL1, axis=1, mask_identity=True)
-    timeL2_min = ak.min(timeL2, axis=1, mask_identity=True)
-    timeL3_min = ak.min(timeL3, axis=1, mask_identity=True)
+    # Flatten the 2D lists into 1D
+    timeL0_flat = ak.min(timeL0, axis=1, mask_identity=True)
+    timeL1_flat = ak.min(timeL1, axis=1, mask_identity=True)
+    timeL2_flat = ak.min(timeL2, axis=1, mask_identity=True)
+    timeL3_flat = ak.min(timeL3, axis=1, mask_identity=True)
+    timeLn1_flat = ak.min(timeLn1, axis=1, mask_identity=True)
 
-    for i in range(len(timeL0_min)):
-        # Require pulses in all 4 layers and the front slab for one event
-        if timeL0_min[i] is not None and timeL1_min[i] is not None and timeL2_min[i] is not None and timeL3_min[i] is not None and timeLn1_min[i] is not None:
-            # Calculate time differences only for events with valid times in all layers
-            time_diffsL30.append(timeL3_min[i] - timeL0_min[i])
-    
-    print(time_diffsL30)
+    # Loop over events, calculating time differences if all layers have non-empty arrays
+    for i in range(len(timeL0_flat)):
+        if (timeL0_flat[i] is not None 
+            and timeL1_flat[i] is not None  
+            and timeL2_flat[i] is not None 
+            and timeL3_flat[i] is not None 
+            and timeLn1_flat[i] is not None
+            ):
+            # Compute the time difference for each event
+            time_diffsL30.append(timeL3_flat[i] - timeL0_flat[i])
+        else:
+            # Append None if an event does not have any pulse in all required layers (so we know which event)
+            time_diffsL30.append(None)
+         
+    # Print out the time differences
+    for eventIndex in range(len(time_diffsL30)):
+            if time_diffsL30[eventIndex] != None:
+                print(time_diffsL30[eventIndex])  
 
-    # Extend the final list to match the size of the current file
-    num_events = len(self.events)
-    num_nones = num_events - len(time_diffsL30)
-    time_diffsL30.extend([None] * num_nones)
-
-    # Define custom branch
     self.events['timeDiff'] = time_diffsL30
 
 
@@ -76,47 +84,37 @@ def getTimeDiff(self):
 setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)
 
 # Define the range of runs
-start_run_number = 1540 
-end_run_number = 1549 
+start_run_number = 1540
+end_run_number = 1541
 
 # Define a file list to run over
 filelist = []
-beamOn_true_count = 0
-total_files_count = 0
 
-# To specify the filelist and calculate beamOn rate
+# To specify the filelist
 for run_number in range(start_run_number, end_run_number + 1):
-    print(f"Processing run number: {run_number}")
+    # Determine folder based on run number (using integer division)
+    folder_number = (run_number // 100) * 100
+    folder_path = f"/home/bpeng/muonAnalysis/{folder_number}"
+    
+    print(f"Starting processing for run number: {run_number} in folder: {folder_path}")
     file_number = 0
     consecutive_missing_files = 0
     while True:
-        file_path = f"/home/bpeng/muonAnalysis/1500/MilliQan_Run{run_number}.{file_number}_v34.root" 
+        file_path = f"{folder_path}/MilliQan_Run{run_number}.{file_number}_v34.root" 
         if os.path.exists(file_path):
+            print(f"Found file: {file_path}")
             filelist.append(file_path)
-            try:
-                with uproot.open(file_path) as file:
-                    tree = file["t"]
-                    beamOn = tree["beamOn"].array(library="np")
-                    if np.any(beamOn):
-                        beamOn_true_count += 1
-                    total_files_count += 1
-                print(f"Processed file: {file_path}")
-            except Exception as e:
-                print(f"Error processing file {file_path}: {e}")
-            file_number += 1
-            consecutive_missing_files = 0
+            consecutive_missing_files = 0  # Reset counter since file was found
         else:
+            print(f"File not found: {file_path}")
             consecutive_missing_files += 1
-            if consecutive_missing_files >= 10:
+            if consecutive_missing_files >= 10:  # Set the patience as 10
                 print(f"No more files found after {file_number} for run {run_number}")
                 break
-            file_number += 1
-
-# Calculate the beamOn percentage
-beamOn_true_percentage = (beamOn_true_count / total_files_count) * 100 if total_files_count > 0 else 0
+        file_number += 1
 
 # Define the necessary branches to run over
-branches = ['fileNumber', 'runNumber', 'tTrigger', 'event', 'pickupFlag', 'boardsMatched', 'timeFit_module_calibrated', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type', 'beamOn']
+branches = ['fileNumber', 'runNumber', 'tTrigger', 'event', 'pickupFlag', 'boardsMatched', 'timeFit_module_calibrated', 'height', 'area', 'column', 'row', 'layer', 'chan', 'ipulse', 'type', 'nPE', 'beamOn']
 
 # Define the milliqan cuts object
 mycuts = milliqanCuts()
@@ -154,13 +152,6 @@ myiterator.run()
 # Draw the histogram
 canvas = r.TCanvas("canvas", "canvas", 800, 600)
 h_1d.Draw()
-
-# Add beamOn rate text to the histogram
-text = r.TText()
-text.SetNDC()
-text.SetTextSize(0.03)
-text.DrawText(0.15, 0.75, f"Beam on files percentage: {beamOn_true_percentage:.2f}%")
-text.Draw()
 
 # Create a new TFile
 f = r.TFile(f"Run{start_run_number}to{end_run_number}Dt.root", "recreate")

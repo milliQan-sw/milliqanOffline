@@ -66,8 +66,8 @@ def getEventbyChan(self):
             accumulatedChan.append(chanL1_flat[i])
             accumulatedChan.append(chanL2_flat[i])
             accumulatedChan.append(chanL3_flat[i])
+            print('Channel added: ', chanL0_flat[i], chanL1_flat[i], chanL2_flat[i], chanL3_flat[i])
 
-    print('Number of chan with pulse:', len(accumulatedChan))
     
     # Extend the final list to match the size of the current file
     num_events = len(self.events)

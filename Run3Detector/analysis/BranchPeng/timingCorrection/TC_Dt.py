@@ -44,7 +44,7 @@ def getTimeDiff(self):
     masked_time = self.events['timeFit_module_calibrated'][finalMask]
     masked_layer = self.events['layer'][finalMask]
 
-    # Masked times per layer
+    # Divide Masked times by layer
     timeL0 = masked_time[masked_layer == 0]
     timeL1 = masked_time[masked_layer == 1]
     timeL2 = masked_time[masked_layer == 2]

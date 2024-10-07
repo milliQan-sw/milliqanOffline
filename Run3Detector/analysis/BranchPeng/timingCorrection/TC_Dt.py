@@ -32,15 +32,7 @@ def getTimeDiff(self):
     # Area mask
     barAreaMask = self.events['nPE'] > 100
     timeWindowMask = (self.events['timeFit_module_calibrated'] > 1000) & (self.events['timeFit_module_calibrated'] < 1500)
-    topSideMask = self.events['area'][self.events['type'] == 2] < 100000
-    
-    cutEvents = self.events[self.events['chan'] == 75]
-    print(len(cutEvents))
-    for i in range(len(cutEvents)):
-        if cutEvents[i] is not None:
-            print(cutEvents[i]['type'])
-
-
+    topSideMask = self.events['area'][self.events['type'] == 2] < 100000 # type bar = 0, slab = 1, panel = 2
 
     # Pick the first pulse
     barFinalPulseMask = barAreaMask & timeWindowMask & topSideMask & (self.events['ipulse'] == 0)

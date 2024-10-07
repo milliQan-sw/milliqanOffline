@@ -31,11 +31,12 @@ def getTimeDiff(self):
 
     # Area mask
     barAreaMask = self.events['nPE'] > 100
-    timeWindowMask = (self.events['timeFit_module_calibrated'] > 1000) & (self.events['timeFit_module_calibrated'] < 1500)
-    topSideMask = self.events['area'][self.events['type'] == 2] < 100000 # type bar = 0, slab = 1, panel = 2
+    timeWindowMask = self.events['timeFit_module_calibrated'] > 1000 & self.events['timeFit_module_calibrated'] < 1500
+    panelMask = self.events['area'][self.events['type'] == 2] < 100000 # type bar = 0, slab = 1, panel = 2
+    firstPulseMask = self.events['ipulse'] == 0
 
     # Pick the first pulse
-    barFinalPulseMask = barAreaMask & timeWindowMask & topSideMask & (self.events['ipulse'] == 0)
+    barFinalPulseMask = barAreaMask & timeWindowMask & panelMask & firstPulseMask
 
     # Apply the finalPulseMask
     masked_time = self.events['timeFit_module_calibrated'][barFinalPulseMask]

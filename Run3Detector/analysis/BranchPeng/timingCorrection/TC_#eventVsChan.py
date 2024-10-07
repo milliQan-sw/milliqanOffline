@@ -41,7 +41,7 @@ def getTimeDiff(self):
     finalMask = npeMask & timeWindowMask & panelMask & firstPulseMask
 
     # Apply the finalPulseMask
-    masked_time = self.events['timeFit_module_calibrated'][finalMask]
+    masked_time = self.events['chan'][finalMask]
     masked_layer = self.events['layer'][finalMask]
 
     # Divide Masked times by layer and flatten the 2D lists into 1D
@@ -63,16 +63,10 @@ def getTimeDiff(self):
             and timeL2_flat[i] is not None 
             and timeL3_flat[i] is not None
             ):
-            # Compute the time difference for each event
-            time_diffsL30.append(timeL3_flat[i] - timeL0_flat[i])
-        else:
-            # Append None if an event does not have any pulse in all required layers (so we know which event)
-            time_diffsL30.append(None)
-         
-    # Print out the time differences
-    for eventIndex in range(len(time_diffsL30)):
-            if time_diffsL30[eventIndex] != None:
-                print(time_diffsL30[eventIndex])  
+            time_diffsL30.append(timeL0_flat[i])
+            time_diffsL30.append(timeL1_flat[i])
+            time_diffsL30.append(timeL2_flat[i])
+            time_diffsL30.append(timeL3_flat[i])
 
     self.events['timeDiff'] = time_diffsL30
 
@@ -126,7 +120,7 @@ pickupCut = mycuts.getCut(mycuts.pickupCut, 'pickupCut', cut=True, branches=bran
 myplotter = milliqanPlotter()
 
 # Create a 1D root histogram
-h_1d = r.TH1F("h_1d", f"Run {start_run_number} to {end_run_number} time difference", 100, -50, 50)
+h_1d = r.TH1F("h_1d", f"Run {start_run_number} to {end_run_number} time difference", 80, 0, 80)
 
 # Add root histogram to plotter
 myplotter.addHistograms(h_1d, 'timeDiff')

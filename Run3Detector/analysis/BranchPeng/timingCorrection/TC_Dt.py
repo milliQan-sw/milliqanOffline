@@ -72,7 +72,7 @@ def getTimeDiff(self):
     # Print out the time differences
     for eventIndex in range(len(time_diffsL30)):
             if time_diffsL30[eventIndex] != None:
-                print(time_diffsL30[eventIndex])  
+                print('Time difference added: ', time_diffsL30[eventIndex])  
 
     self.events['timeDiff'] = time_diffsL30
 

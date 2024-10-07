@@ -87,11 +87,16 @@ filelist = []
 
 # To specify the filelist
 for run_number in range(start_run_number, end_run_number + 1):
-    print(f"Starting processing for run number: {run_number}")
+    # Determine folder based on run number (using integer division)
+    folder_number = (run_number // 100) * 100
+    folder_path = f"/home/bpeng/muonAnalysis/{folder_number}"
+    
+    print(f"Starting processing for run number: {run_number} in folder: {folder_path}")
     file_number = 0
     consecutive_missing_files = 0
     while True:
-        file_path = f"/home/bpeng/muonAnalysis/1100/MilliQan_Run{run_number}.{file_number}_v34.root" 
+        # Adjust file path to use dynamic folder path
+        file_path = f"{folder_path}/MilliQan_Run{run_number}.{file_number}_v34.root" 
         if os.path.exists(file_path):
             print(f"Found file: {file_path}")
             filelist.append(file_path)
@@ -99,7 +104,7 @@ for run_number in range(start_run_number, end_run_number + 1):
         else:
             print(f"File not found: {file_path}")
             consecutive_missing_files += 1
-            if consecutive_missing_files >= 10: # Set the patience as 10
+            if consecutive_missing_files >= 10:  # Set the patience as 10
                 print(f"No more files found after {file_number} for run {run_number}")
                 break
         file_number += 1

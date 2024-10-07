@@ -64,7 +64,8 @@ def getTimeDiff(self):
             and timeL1_flat[i] is not None  
             and timeL2_flat[i] is not None 
             and timeL3_flat[i] is not None 
-            and timeLn1_flat[i] is not None):
+            and timeLn1_flat[i] is not None
+            ):
             # Compute the time difference for each event
             time_diffsL30.append(timeL3_flat[i] - timeL0_flat[i])
         else:

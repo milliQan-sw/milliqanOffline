@@ -35,7 +35,7 @@ def getTimeDiff(self):
     timeWindowMask = (self.events['timeFit_module_calibrated'] > 1000) & (self.events['timeFit_module_calibrated'] < 1500)
 
     # Event mask
-    panelMask = self.events['area'][self.events['type'] == 2] < 100000 # type bar = 0, slab = 1, panel = 2
+    panelMask = ak.any(self.events['area'][self.events['type'] == 2] < 100000, axis=1) # type bar = 0, slab = 1, panel = 2
     
     # Pick the first pulse
     finalMask = npeMask & timeWindowMask & panelMask & firstPulseMask

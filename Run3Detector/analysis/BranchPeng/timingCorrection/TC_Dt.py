@@ -27,8 +27,6 @@ from milliqanPlotter import *
 
 # Define the function to get the time differences
 def getTimeDiff(self):
-    time_diffsL30 = []
-
     # Event based mask
     panelMask = ak.any(self.events['area'][self.events['type'] == 2] < 100000, axis=1) # type bar = 0, slab = 1, panel = 2
 
@@ -66,11 +64,12 @@ def getTimeDiff(self):
 
     # Initialize straightLine4LMask with False for all events
     straightLine4LMask = ak.Array([False] * len(self.events))
-
-    # OR combine all row-column specific masks to get a final event-based mask
     for mask in straightLineBoolDict.values():
         straightLine4LMask = straightLine4LMask | mask
             
+    
+    finalMask = straightLine4LMask & combinedMask
+    time_diffsL30 = []
 
 
 

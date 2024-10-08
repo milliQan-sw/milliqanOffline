@@ -56,10 +56,13 @@ def getEventbyChan(self):
     chanL2_flat = ak.min(chanL2, axis=1, mask_identity=True)
     chanL3_flat = ak.min(chanL3, axis=1, mask_identity=True)
 
+    print(len(chanL0_flat))
+    print(len(chanL1_flat))
+    print(len(chanL2_flat))
+    print(len(chanL3_flat))
+
     # Require hit in layers
     layerHitMask = ((chanL0_flat != None) & (chanL1_flat != None) & (chanL2_flat != None) & (chanL3_flat != None))
-
-    print('length of layerHitMask', len(layerHitMask))
 
     # Final mask to apply
     finalMask = combinedMask & layerHitMask

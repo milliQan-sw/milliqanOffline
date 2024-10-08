@@ -68,9 +68,9 @@ def getTimeDiff(self):
         straightLine4LMask = straightLine4LMask | mask
     
     finalMask = straightLine4LMask & combinedMask
-    ################################################################# finished defining masks
+    ############################################################################################# finished defining masks
 
-    
+
     time_left_L0 = self.events['timeFit_module_calibrated'][finalMask & (self.events['layer'] == 0)]
     time_left_L1 = self.events['timeFit_module_calibrated'][finalMask & (self.events['layer'] == 1)]
     time_left_L2 = self.events['timeFit_module_calibrated'][finalMask & (self.events['layer'] == 2)]

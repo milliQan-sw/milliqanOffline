@@ -68,9 +68,9 @@ def getEventbyChan(self):
         straightLine4LMask = straightLine4LMask | mask
     
     finalMask = straightLine4LMask & combinedMask
-    ################################################################# finished defining masks
+    ############################################################################################# finished defining masks
 
-    
+
     accumulatedChan = []
 
     # Loop over channels

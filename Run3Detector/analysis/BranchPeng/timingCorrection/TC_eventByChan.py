@@ -37,7 +37,7 @@ def getEventbyChan(self):
     # Event mask
     panelMask = ak.any(self.events['area'][self.events['type'] == 2] < 100000, axis=1) # type bar = 0, slab = 1, panel = 2
     
-    # Combined cut
+    # Combined mask
     combinedMask = npeMask & timeWindowMask & panelMask & firstPulseMask
 
     # Apply the finalMask

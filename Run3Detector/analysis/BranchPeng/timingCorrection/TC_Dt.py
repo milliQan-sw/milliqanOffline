@@ -69,8 +69,7 @@ def getTimeDiff(self):
 
     # OR combine all row-column specific masks to get a final event-level mask
     for mask in straightLineBoolDict.values():
-        straightLine4LMask |= mask  # This will update the mask to True for any event that passes at least one condition
-
+        straightLine4LMask = straightLine4LMask | mask
             
 
 

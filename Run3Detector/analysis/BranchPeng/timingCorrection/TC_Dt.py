@@ -29,41 +29,28 @@ from milliqanPlotter import *
 def getTimeDiff(self):
     time_diffsL30 = []
 
-    # Pulse mask
+    # Pulse based mask
     firstPulseMask = self.events['ipulse'] == 0
     npeMask = self.events['nPE'] > 100
     timeWindowMask = (self.events['timeFit_module_calibrated'] > 1000) & (self.events['timeFit_module_calibrated'] < 1500)
 
-    # Event mask
+    # Event based mask
     panelMask = ak.any(self.events['area'][self.events['type'] == 2] < 100000, axis=1) # type bar = 0, slab = 1, panel = 2
     
     # Combined mask
     combinedMask = npeMask & timeWindowMask & firstPulseMask & panelMask
 
-    # Apply the finalMask
-    masked_time = self.events['timeFit_module_calibrated'][combinedMask]
-    masked_layer = self.events['layer'][combinedMask]
-
-    # Divide Masked times by layer and flatten the 2D lists into 1D
-    timeL0 = masked_time[masked_layer == 0]
-    timeL1 = masked_time[masked_layer == 1]
-    timeL2 = masked_time[masked_layer == 2]
-    timeL3 = masked_time[masked_layer == 3]
-
-    # Flatten the 2D lists into 1D
-    #timeL0_flat = ak.min(timeL0, axis=1, mask_identity=True)
-    #timeL1_flat = ak.min(timeL1, axis=1, mask_identity=True)
-    #timeL2_flat = ak.min(timeL2, axis=1, mask_identity=True)
-    #timeL3_flat = ak.min(timeL3, axis=1, mask_identity=True)
-
-    # 
+    # Loop over 16 straight lines
     for col in range(4):
         for row in range(4):
             locationMask = (self.events['col'] == col) & (self.events['row'] == row) & combinedMask
+            masked_time = self.events['timeFit_module_calibrated'][locationMask]
+            masked_layer = self.events['layer'][locationMask]
 
 
 
-    #self.events['timeDiff'] = time_diffsL30
+
+    self.events['timeDiff'] = time_diffsL30
 
 
 # Add our custom function to milliqanCuts

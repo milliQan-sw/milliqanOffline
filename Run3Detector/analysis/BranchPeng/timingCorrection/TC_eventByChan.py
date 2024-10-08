@@ -27,45 +27,51 @@ from milliqanPlotter import *
 
 # Define the function to get the event count by channel
 def getEventbyChan(self):
-    accumulatedChan = []
+    # Event based mask
+    panelMask = ak.any(self.events['area'][self.events['type'] == 2] < 100000, axis=1) # type bar = 0, slab = 1, panel = 2
 
-    # Pulse mask
+    # Pulse based mask
     firstPulseMask = self.events['ipulse'] == 0
     npeMask = self.events['nPE'] > 100
     timeWindowMask = (self.events['timeFit_module_calibrated'] > 1000) & (self.events['timeFit_module_calibrated'] < 1500)
-
-    # Event mask
-    panelMask = ak.any(self.events['area'][self.events['type'] == 2] < 100000, axis=1) # type bar = 0, slab = 1, panel = 2
     
     # Combined mask
-    combinedMask = npeMask & timeWindowMask & panelMask & firstPulseMask
+    combinedMask = npeMask & timeWindowMask & firstPulseMask & panelMask
 
-    # Apply the finalMask
-    masked_chan = self.events['chan'][combinedMask]
-    masked_layer = self.events['layer'][combinedMask]
+    # Develop straight line mask with layer hit
+    straightLineBoolDict = {}
+    for col in range(4):
+        for row in range(4):
+            locationMask = (self.events['column'] == col) & (self.events['row'] == row) & combinedMask
 
-    # Divide Masked chan by layer and flatten the 2D lists into 1D
-    chanL0 = masked_chan[masked_layer == 0]
-    chanL1 = masked_chan[masked_layer == 1]
-    chanL2 = masked_chan[masked_layer == 2]
-    chanL3 = masked_chan[masked_layer == 3]
+            masked_time = self.events['timeFit_module_calibrated'][locationMask]
+            masked_layer = self.events['layer'][locationMask]
 
-    # Flatten the 2D lists into 1D
-    chanL0_flat = ak.min(chanL0, axis=1, mask_identity=True)
-    chanL1_flat = ak.min(chanL1, axis=1, mask_identity=True)
-    chanL2_flat = ak.min(chanL2, axis=1, mask_identity=True)
-    chanL3_flat = ak.min(chanL3, axis=1, mask_identity=True)
+            # Masks for individual layers
+            timeL0 = masked_time[masked_layer == 0]
+            timeL1 = masked_time[masked_layer == 1]
+            timeL2 = masked_time[masked_layer == 2]
+            timeL3 = masked_time[masked_layer == 3]
 
-    # Require hits in layers
-    layerHitMask = ~(
-        ak.is_none(chanL0_flat) | 
-        ak.is_none(chanL1_flat) | 
-        ak.is_none(chanL2_flat) | 
-        ak.is_none(chanL3_flat)
-        )
+            # Flatten and check if all layers are present in each event
+            hasL0 = ~ak.is_none(ak.min(timeL0, axis=1, mask_identity=True))
+            hasL1 = ~ak.is_none(ak.min(timeL1, axis=1, mask_identity=True))
+            hasL2 = ~ak.is_none(ak.min(timeL2, axis=1, mask_identity=True))
+            hasL3 = ~ak.is_none(ak.min(timeL3, axis=1, mask_identity=True))
 
-    # Final mask to apply
-    finalMask = combinedMask & layerHitMask
+            # Event based mask: events with first pulses in 4 layers will be kept
+            straightLineBoolDict[(col, row)] = hasL0 & hasL1 & hasL2 & hasL3
+
+    # Initialize straightLine4LMask with False for all events
+    straightLine4LMask = ak.Array([False] * len(self.events))
+    for mask in straightLineBoolDict.values():
+        straightLine4LMask = straightLine4LMask | mask
+    
+    finalMask = straightLine4LMask & combinedMask
+    ################################################################# finished defining masks
+
+    
+    accumulatedChan = []
 
     # Loop over channels
     for i in range(80):

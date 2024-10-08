@@ -56,6 +56,7 @@ def getEventbyChan(self):
     chanL2_flat = ak.min(chanL2, axis=1, mask_identity=True)
     chanL3_flat = ak.min(chanL3, axis=1, mask_identity=True)
 
+    # Require hits in layers
     layerHitMask = ~(
         ak.is_none(chanL0_flat) | 
         ak.is_none(chanL1_flat) | 

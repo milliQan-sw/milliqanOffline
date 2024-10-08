@@ -40,7 +40,7 @@ def getTimeDiff(self):
     # Combined mask
     combinedMask = npeMask & timeWindowMask & firstPulseMask & panelMask
 
-    # Straight line mask with layer hit required
+    # Straight line mask with layer hit required (pulse based)
     for col in range(4):
         for row in range(4):
 

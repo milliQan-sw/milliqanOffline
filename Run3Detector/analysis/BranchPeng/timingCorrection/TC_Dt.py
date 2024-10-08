@@ -40,9 +40,8 @@ def getTimeDiff(self):
     # Combined mask
     combinedMask = npeMask & timeWindowMask & firstPulseMask & panelMask
 
-    # Initialize mask for straight line events with pulses in all four layers
-    straightLine4LMask = ak.ArrayBuilder()
-
+    # Develop straight line mask with layer hit
+    straightLineBoolDict = {}
     for col in range(4):
         for row in range(4):
             locationMask = (self.events['col'] == col) & (self.events['row'] == row) & combinedMask
@@ -63,13 +62,15 @@ def getTimeDiff(self):
             hasL3 = ~ak.is_none(ak.min(timeL3, axis=1, mask_identity=True))
 
             # Event based mask: events with first pulses in 4 layers will be kept
-            eventMask = hasL0 & hasL1 & hasL2 & hasL3
+            straightLineBoolDict[(col, row)] = hasL0 & hasL1 & hasL2 & hasL3
 
-            # Append result to straightLine4LMask
-            straightLine4LMask.append(eventMask)
+    # Initialize straightLine4LMask with False for all events
+    straightLine4LMask = ak.zeros_like(next(iter(straightLineBoolDict.values())))
 
-    # Finalize the straightLine4LMask by converting it to an awkward array
-    straightLine4LMask = ak.to_array(straightLine4LMask)
+    # OR combine all row-column specific masks to get a final event-level mask
+    for mask in straightLineBoolDict.values():
+        straightLine4LMask |= mask  # This will update the mask to True for any event that passes at least one condition
+
             
 
 

@@ -27,48 +27,29 @@ from milliqanPlotter import *
 
 # Define the function to get the event count by channel
 def getEventbyChan(self):
-    accumulatedChan = []
-
     # Pulse mask
     firstPulseMask = self.events['ipulse'] == 0
     npeMask = self.events['nPE'] > 100
     timeWindowMask = (self.events['timeFit_module_calibrated'] > 1000) & (self.events['timeFit_module_calibrated'] < 1500)
-
-    # Event mask
-    panelMask = ak.any(self.events['area'][self.events['type'] == 2] < 100000, axis=1) # type bar = 0, slab = 1, panel = 2
     
-    # Pick the first pulse
+    # Event mask
+    panelMask = ak.any(self.events['area'][self.events['type'] == 2] < 100000, axis=1)
+    
+    # Combine masks for all conditions
     finalMask = npeMask & timeWindowMask & panelMask & firstPulseMask
 
-    # Apply the finalPulseMask
+    # Masked channel and layer data
     masked_chan = self.events['chan'][finalMask]
     masked_layer = self.events['layer'][finalMask]
 
-    # Divide Masked chan by layer and flatten the 2D lists into 1D
-    chanL0 = masked_chan[masked_layer == 0]
-    chanL1 = masked_chan[masked_layer == 1]
-    chanL2 = masked_chan[masked_layer == 2]
-    chanL3 = masked_chan[masked_layer == 3]
-
-    # Flatten the 2D lists into 1D
-    chanL0_flat = ak.min(chanL0, axis=1, mask_identity=True)
-    chanL1_flat = ak.min(chanL1, axis=1, mask_identity=True)
-    chanL2_flat = ak.min(chanL2, axis=1, mask_identity=True)
-    chanL3_flat = ak.min(chanL3, axis=1, mask_identity=True)
-
-    for i in range(len(chanL0_flat)):
-        if (    chanL0_flat[i] is not None 
-            and chanL1_flat[i] is not None  
-            and chanL2_flat[i] is not None 
-            and chanL3_flat[i] is not None
-            ):
-            accumulatedChan.append(chanL0_flat[i])
-            accumulatedChan.append(chanL1_flat[i])
-            accumulatedChan.append(chanL2_flat[i])
-            accumulatedChan.append(chanL3_flat[i])
-
-            print('Channel added: ', chanL0_flat[i], chanL1_flat[i], chanL2_flat[i], chanL3_flat[i])
+    # Group by layer and filter for non-`None` values across all required layers
+    all_layers_mask = ak.all([masked_layer == layer for layer in range(4)], axis=0)
+    valid_chan = masked_chan[all_layers_mask]
     
+    # Flatten and extract non-`None` channels
+    flattened_channels = ak.flatten(valid_chan, axis=1)
+    accumulatedChan = flattened_channels.to_list()
+
     # Extend the final list to match the size of the current file
     num_events = len(self.events)
     num_nones = num_events - len(accumulatedChan)

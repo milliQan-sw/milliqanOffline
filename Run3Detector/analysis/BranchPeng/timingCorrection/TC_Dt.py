@@ -50,22 +50,18 @@ def getTimeDiff(self):
     timeL2 = masked_time[masked_layer == 2]
     timeL3 = masked_time[masked_layer == 3]
 
-    print(ak.num(timeL0))
-    print(ak.num(timeL1))
-    print(ak.num(timeL2))
-    print(ak.num(timeL3))
-    print(ak.num(self.events))
-
     # Flatten the 2D lists into 1D
-    timeL0_flat = ak.min(timeL0, axis=1, mask_identity=True)
-    timeL1_flat = ak.min(timeL1, axis=1, mask_identity=True)
-    timeL2_flat = ak.min(timeL2, axis=1, mask_identity=True)
-    timeL3_flat = ak.min(timeL3, axis=1, mask_identity=True)
+    #timeL0_flat = ak.min(timeL0, axis=1, mask_identity=True)
+    #timeL1_flat = ak.min(timeL1, axis=1, mask_identity=True)
+    #timeL2_flat = ak.min(timeL2, axis=1, mask_identity=True)
+    #timeL3_flat = ak.min(timeL3, axis=1, mask_identity=True)
 
     # 
     for col in range(4):
         for row in range(4):
-            location = (self.events['col'] == col) & (self.events['row'] == row)
+            locationMask = (self.events['col'] == col) & (self.events['row'] == row) & combinedMask
+
+
 
     #self.events['timeDiff'] = time_diffsL30
 

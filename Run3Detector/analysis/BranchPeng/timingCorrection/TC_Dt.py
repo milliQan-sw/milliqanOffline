@@ -69,12 +69,18 @@ def getTimeDiff(self):
             
     
     finalMask = straightLine4LMask & combinedMask
-    time_diffsL30 = []
 
+    time_left_L0 = self.events['timeFit_module_calibrated'][finalMask & (self.events['layer'] == 0)]
+    time_left_L1 = self.events['timeFit_module_calibrated'][finalMask & (self.events['layer'] == 1)]
+    time_left_L2 = self.events['timeFit_module_calibrated'][finalMask & (self.events['layer'] == 2)]
+    time_left_L3 = self.events['timeFit_module_calibrated'][finalMask & (self.events['layer'] == 3)]
 
+    time_left_L0_flat = ak.min(time_left_L0, axis=1, mask_identity=True)
+    time_left_L1_flat = ak.min(time_left_L1, axis=1, mask_identity=True)
+    time_left_L2_flat = ak.min(time_left_L2, axis=1, mask_identity=True)
+    time_left_L3_flat = ak.min(time_left_L3, axis=1, mask_identity=True)
 
-
-
+    time_diffsL30 = time_left_L3_flat - time_left_L0_flat
 
     self.events['timeDiff'] = time_diffsL30
 

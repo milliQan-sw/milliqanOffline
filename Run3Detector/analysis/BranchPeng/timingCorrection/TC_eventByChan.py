@@ -37,12 +37,12 @@ def getEventbyChan(self):
     # Event mask
     panelMask = ak.any(self.events['area'][self.events['type'] == 2] < 100000, axis=1) # type bar = 0, slab = 1, panel = 2
     
-    # Pick the first pulse
-    finalMask = npeMask & timeWindowMask & panelMask & firstPulseMask
+    # Combined cut
+    combinedMask = npeMask & timeWindowMask & panelMask & firstPulseMask
 
-    # Apply the finalPulseMask
-    masked_chan = self.events['chan'][finalMask]
-    masked_layer = self.events['layer'][finalMask]
+    # Apply the finalMask
+    masked_chan = self.events['chan'][combinedMask]
+    masked_layer = self.events['layer'][combinedMask]
 
     # Divide Masked chan by layer and flatten the 2D lists into 1D
     chanL0 = masked_chan[masked_layer == 0]
@@ -56,18 +56,20 @@ def getEventbyChan(self):
     chanL2_flat = ak.min(chanL2, axis=1, mask_identity=True)
     chanL3_flat = ak.min(chanL3, axis=1, mask_identity=True)
 
-    for i in range(len(chanL0_flat)):
-        if (    chanL0_flat[i] is not None 
-            and chanL1_flat[i] is not None  
-            and chanL2_flat[i] is not None 
-            and chanL3_flat[i] is not None
-            ):
-            accumulatedChan.append(chanL0_flat[i])
-            accumulatedChan.append(chanL1_flat[i])
-            accumulatedChan.append(chanL2_flat[i])
-            accumulatedChan.append(chanL3_flat[i])
+    # Require hit in layers
+    layerHitMask = ((chanL0_flat != None) & (chanL1_flat != None) & (chanL2_flat != None) & (chanL3_flat != None))
 
-            print('Channel added: ', chanL0_flat[i], chanL1_flat[i], chanL2_flat[i], chanL3_flat[i])
+    # Final mask to apply
+    finalMask = combinedMask & layerHitMask
+
+    # Loop over channels
+    for i in range(80):
+        eventMask = self.events['chan'][finalMask] == i
+        eventCount = ak.sum(ak.any(eventMask, axis=1))
+        print(f"Event count for channel {i}: {eventCount}")
+        # Append 'eventCount' many of channel 'i' into the list
+        accumulatedChan.extend([i] * eventCount)
+
     
     # Extend the final list to match the size of the current file
     num_events = len(self.events)

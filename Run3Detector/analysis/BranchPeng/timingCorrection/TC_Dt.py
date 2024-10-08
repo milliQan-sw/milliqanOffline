@@ -69,8 +69,7 @@ def getTimeDiff(self):
             straightLine4LMask.append(eventMask)
 
     # Finalize the straightLine4LMask by converting it to an awkward array
-    straightLine4LMask = ak.concatenate(straightLine4LMask.snapshot())
-
+    straightLine4LMask = ak.to_array(straightLine4LMask)
             
 
 

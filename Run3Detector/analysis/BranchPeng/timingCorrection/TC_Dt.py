@@ -65,7 +65,7 @@ def getTimeDiff(self):
             straightLineBoolDict[(col, row)] = hasL0 & hasL1 & hasL2 & hasL3
 
     # Initialize straightLine4LMask with False for all events
-    straightLine4LMask = ak.zeros_like(next(iter(straightLineBoolDict.values())))
+    straightLine4LMask = ak.Array([False] * len(self.events))
 
     # OR combine all row-column specific masks to get a final event-level mask
     for mask in straightLineBoolDict.values():

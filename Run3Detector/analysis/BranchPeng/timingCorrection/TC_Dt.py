@@ -41,7 +41,7 @@ def getTimeDiff(self):
     finalMask = npeMask & timeWindowMask & panelMask & firstPulseMask
 
     # Apply the finalPulseMask
-    masked_time = self.events['chan'][finalMask]
+    masked_time = self.events['timeFit_module_calibrated'][finalMask]
     masked_layer = self.events['layer'][finalMask]
 
     # Divide Masked times by layer and flatten the 2D lists into 1D

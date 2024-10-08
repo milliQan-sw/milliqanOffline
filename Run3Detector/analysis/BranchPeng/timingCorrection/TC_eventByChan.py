@@ -129,7 +129,7 @@ myplotter = milliqanPlotter()
 h_1d = r.TH1F("h_1d", f"Run {start_run_number} to {end_run_number} Event Count VS Chan", 80, 0, 80)
 
 # Add root histogram to plotter
-myplotter.addHistograms(h_1d, 'timeDiff')
+myplotter.addHistograms(h_1d, 'accumulatedChan')
 
 # Defining the cutflow 
 cutflow = [boardMatchCut, pickupCut, mycuts.getEventbyChan, myplotter.dict['h_1d']]

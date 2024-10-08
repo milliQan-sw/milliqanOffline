@@ -56,7 +56,7 @@ def getTimeDiff(self):
             timeL2 = masked_time[masked_layer == 2]
             timeL3 = masked_time[masked_layer == 3]
 
-            # Flatten and check if all layers are present in each outer list (event)
+            # Flatten and check if all layers are present in each event
             hasL0 = ~ak.is_none(ak.min(timeL0, axis=1, mask_identity=True))
             hasL1 = ~ak.is_none(ak.min(timeL1, axis=1, mask_identity=True))
             hasL2 = ~ak.is_none(ak.min(timeL2, axis=1, mask_identity=True))

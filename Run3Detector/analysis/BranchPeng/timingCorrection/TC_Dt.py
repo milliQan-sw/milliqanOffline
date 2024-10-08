@@ -62,7 +62,7 @@ def getTimeDiff(self):
             hasL2 = ~ak.is_none(ak.min(timeL2, axis=1, mask_identity=True))
             hasL3 = ~ak.is_none(ak.min(timeL3, axis=1, mask_identity=True))
 
-            # Event based mask: keep events/firstPulses that have pulses in 4 layers in current straight line (since we only want the first pulse of each event)
+            # Event based mask: events with first pulses in 4 layers will be kept
             eventMask = hasL0 & hasL1 & hasL2 & hasL3
 
             # Append result to straightLine4LMask

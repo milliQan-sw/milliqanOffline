@@ -59,6 +59,8 @@ def getEventbyChan(self):
     # Require hit in layers
     layerHitMask = ((chanL0_flat != None) & (chanL1_flat != None) & (chanL2_flat != None) & (chanL3_flat != None))
 
+    print('length of layerHitMask', len(layerHitMask))
+
     # Final mask to apply
     finalMask = combinedMask & layerHitMask
 

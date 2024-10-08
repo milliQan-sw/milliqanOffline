@@ -60,7 +60,14 @@ def getEventbyChan(self):
             hasL3 = ~ak.is_none(ak.min(timeL3, axis=1, mask_identity=True))
 
             # Event based mask: events with first pulses in 4 layers will be kept
-            straightLineBoolDict[(col, row)] = hasL0 & hasL1 & hasL2 & hasL3
+            #straightLineBoolDict[(col, row)] = hasL0 & hasL1 & hasL2 & hasL3
+
+            # Or 3 layers hit
+            straightLineBoolDict[(col, row)] = ((hasL0 & hasL1 & hasL2) |
+                                                (hasL0 & hasL1 & hasL3) |
+                                                (hasL0 & hasL2 & hasL3) |
+                                                (hasL1 & hasL2 & hasL3)
+                                                )
 
     # Initialize straightLine4LMask with False for all events
     straightLine4LMask = ak.Array([False] * len(self.events))

@@ -41,7 +41,7 @@ def getTimeDiff(self):
     finalMask = npeMask & timeWindowMask & panelMask & firstPulseMask
 
     # Apply the finalPulseMask
-    masked_time = self.events['timeFit_module_calibrated'][finalMask]
+    masked_time = self.events['chan'][finalMask]
     masked_layer = self.events['layer'][finalMask]
 
     # Divide Masked times by layer and flatten the 2D lists into 1D
@@ -65,7 +65,7 @@ def getTimeDiff(self):
             ):
             # Compute the time difference for each event
             time_diffsL30.append(timeL3_flat[i] - timeL0_flat[i])
-            
+
             print('Time difference added: ', timeL3_flat[i] - timeL0_flat[i])  
         else:
             # Append None if an event does not have any pulse in all required layers (so we know which event)
@@ -79,7 +79,7 @@ setattr(milliqanCuts, 'getTimeDiff', getTimeDiff)
 
 # Define the range of runs
 start_run_number = 1540
-end_run_number = 1541
+end_run_number = 1540
 
 # Define a file list to run over
 filelist = []

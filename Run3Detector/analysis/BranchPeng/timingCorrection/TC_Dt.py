@@ -38,7 +38,7 @@ def getTimeDiff(self):
     panelMask = ak.any(self.events['area'][self.events['type'] == 2] < 100000, axis=1) # type bar = 0, slab = 1, panel = 2
     
     # Combined mask
-    combinedMask = npeMask & timeWindowMask & panelMask & firstPulseMask
+    combinedMask = npeMask & timeWindowMask & firstPulseMask
 
     # Apply the finalMask
     masked_time = self.events['timeFit_module_calibrated'][combinedMask]

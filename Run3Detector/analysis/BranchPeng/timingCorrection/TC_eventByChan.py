@@ -93,8 +93,8 @@ def getEventbyChan(self):
 setattr(milliqanCuts, 'getEventbyChan', getEventbyChan)
 
 # Define the range of runs
-start_run_number = 1000
-end_run_number = 1626
+start_run_number = 1541
+end_run_number = 1541
 
 # Define a file list to run over
 filelist = []

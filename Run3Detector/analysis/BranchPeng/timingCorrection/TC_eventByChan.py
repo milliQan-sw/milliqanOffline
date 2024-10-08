@@ -70,7 +70,6 @@ def getEventbyChan(self):
         # Append 'eventCount' many of channel 'i' into the list
         accumulatedChan.extend([i] * eventCount)
 
-    
     # Extend the final list to match the size of the current file
     num_events = len(self.events)
     num_nones = num_events - len(accumulatedChan)

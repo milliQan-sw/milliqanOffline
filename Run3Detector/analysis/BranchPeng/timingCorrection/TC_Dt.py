@@ -66,7 +66,6 @@ def getTimeDiff(self):
     straightLine4LMask = ak.Array([False] * len(self.events))
     for mask in straightLineBoolDict.values():
         straightLine4LMask = straightLine4LMask | mask
-            
     
     finalMask = straightLine4LMask & combinedMask
 

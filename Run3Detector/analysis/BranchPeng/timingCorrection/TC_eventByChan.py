@@ -71,7 +71,6 @@ def getEventbyChan(self):
     for i in range(80):
         eventMask = self.events['chan'][finalMask] == i
         eventCount = ak.sum(ak.any(eventMask, axis=1))
-        print(f"Event count for channel {i}: {eventCount}")
 
         # Append 'eventCount' many of channel 'i' into the list
         accumulatedChan.extend([i] * eventCount)

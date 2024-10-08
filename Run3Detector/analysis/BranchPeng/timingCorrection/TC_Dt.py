@@ -40,24 +40,36 @@ def getTimeDiff(self):
     # Combined mask
     combinedMask = npeMask & timeWindowMask & firstPulseMask & panelMask
 
-    # Straight line mask with layer hit required (pulse based)
+    # Initialize mask for straight line events with pulses in all four layers
+    straightLine4LMask = ak.ArrayBuilder()
+
     for col in range(4):
         for row in range(4):
-
             locationMask = (self.events['col'] == col) & (self.events['row'] == row) & combinedMask
 
             masked_time = self.events['timeFit_module_calibrated'][locationMask]
             masked_layer = self.events['layer'][locationMask]
 
+            # Masks for individual layers
             timeL0 = masked_time[masked_layer == 0]
             timeL1 = masked_time[masked_layer == 1]
             timeL2 = masked_time[masked_layer == 2]
             timeL3 = masked_time[masked_layer == 3]
 
-            timeL0_flat = ak.min(timeL0, axis=1, mask_identity=True)
-            timeL1_flat = ak.min(timeL1, axis=1, mask_identity=True)
-            timeL2_flat = ak.min(timeL2, axis=1, mask_identity=True)
-            timeL3_flat = ak.min(timeL3, axis=1, mask_identity=True)
+            # Flatten and check if all layers are present in each outer list (event)
+            hasL0 = ~ak.is_none(ak.min(timeL0, axis=1, mask_identity=True))
+            hasL1 = ~ak.is_none(ak.min(timeL1, axis=1, mask_identity=True))
+            hasL2 = ~ak.is_none(ak.min(timeL2, axis=1, mask_identity=True))
+            hasL3 = ~ak.is_none(ak.min(timeL3, axis=1, mask_identity=True))
+
+            # Event mask for pulses across all four layers
+            eventMask = hasL0 & hasL1 & hasL2 & hasL3
+
+            # Append result to straightLine4LMask
+            straightLine4LMask.append(eventMask)
+
+    # Finalize the straightLine4LMask by converting it to an awkward array
+    straightLine4LMask = ak.concatenate(straightLine4LMask.snapshot())
 
             
 

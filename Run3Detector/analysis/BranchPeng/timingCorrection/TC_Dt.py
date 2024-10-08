@@ -44,7 +44,7 @@ def getTimeDiff(self):
     straightLineBoolDict = {}
     for col in range(4):
         for row in range(4):
-            locationMask = (self.events['col'] == col) & (self.events['row'] == row) & combinedMask
+            locationMask = (self.events['column'] == col) & (self.events['row'] == row) & combinedMask
 
             masked_time = self.events['timeFit_module_calibrated'][locationMask]
             masked_layer = self.events['layer'][locationMask]

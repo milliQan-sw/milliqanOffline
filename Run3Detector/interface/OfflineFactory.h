@@ -223,7 +223,7 @@ private:
     TString* fileCloseTime;
     vector<float> highThresh = {15.};
     vector<float> lowThresh = {5.};
-    vector<int> nConsecSamples = {3};
+    vector<int> nConsecSamples = {1};
     vector<int> nConsecSamplesEnd = {1};
     vector< vector<int> > chanMap;
     vector<float> timingCalibrations;
@@ -276,6 +276,7 @@ private:
     int tEvtNum = 0;
     int tRunNum = 0;
     int tTBEvent = 0;
+  float waveform[5][16][maxSamples] = {{{0}}};
 
     Long64_t firstTDC_time=10e15;
     Long64_t lastTDC_time=-1;

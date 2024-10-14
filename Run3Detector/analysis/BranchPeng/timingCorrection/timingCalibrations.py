@@ -9,7 +9,7 @@ def getRunTime():
     beamOffRuns=[1300, 1800]
 
     #open the lumi file
-    lumis = pd.read_json('mqLumis.json', orient = 'split', compression = 'infer')
+    lumis = pd.read_json('/share/scratch0/peng/CMSSW_12_4_11_patch3/src/milliqanOffline/Run3Detector/configuration/mqLumis.json', orient='split', compression='infer')
 
     #make sure start/stop are datetimes
     lumis['start'] = pd.to_datetime(lumis['start'])

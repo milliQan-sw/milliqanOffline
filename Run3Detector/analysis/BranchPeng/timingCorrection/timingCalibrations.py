@@ -149,7 +149,11 @@ if __name__ == "__main__":
         stats.AddText(f"  StdDev: {f_off.GetParameter(2):.2f}")
         stats.AddText(f"  Chi2/NDOF: {f_off.GetChisquare()/f_off.GetNDF():.2f}")
 
-        stats.Draw()
+        # Ensure the TPaveText is the last item drawn
+        stats.Draw("same")
+    
+        # Force an update to the canvas
+        timeCanvases[i//16].Update()
 
     
     #write all plots to output file

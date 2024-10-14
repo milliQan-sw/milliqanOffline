@@ -131,30 +131,14 @@ if __name__ == "__main__":
         f_on.Draw("same")
         f_off.Draw("same")
 
-        # Create and position TPaveText box for fit parameters
-        stats = r.TPaveText(0.6, 0.6, 0.9, 0.9, "NDC")
-        stats.SetTextAlign(12)
-        stats.SetTextSize(0.03)
-        stats.SetFillColor(0)
-
-        # Add mean, stddev, and chi2/ndof for beamOn
-        stats.AddText(f"Beam On (Blue):")
-        stats.AddText(f"  Mean: {f_on.GetParameter(1):.2f}")
-        stats.AddText(f"  StdDev: {f_on.GetParameter(2):.2f}")
-        stats.AddText(f"  Chi2/NDOF: {f_on.GetChisquare()/f_on.GetNDF():.2f}")
-
-        # Add mean, stddev, and chi2/ndof for beamOff
-        stats.AddText(f"Beam Off (Red):")
-        stats.AddText(f"  Mean: {f_off.GetParameter(1):.2f}")
-        stats.AddText(f"  StdDev: {f_off.GetParameter(2):.2f}")
-        stats.AddText(f"  Chi2/NDOF: {f_off.GetChisquare()/f_off.GetNDF():.2f}")
-
-        # Ensure the TPaveText is the last item drawn
-        stats.Draw("same")
-    
-        # Force an update to the canvas
-        timeCanvases[i//16].Update()
-
+        text = r.TLatex()
+        text.SetNDC()
+        text.SetTextSize(0.03)
+        text.SetTextAlign(12)
+        text.DrawLatex(0.6, 0.8, f"Beam On (Blue): Mean: {f_on.GetParameter(1):.2f}, StdDev: {f_on.GetParameter(2):.2f}")
+        text.DrawLatex(0.6, 0.7, f"Chi2/NDOF: {f_on.GetChisquare()/f_on.GetNDF():.2f}")
+        text.DrawLatex(0.6, 0.6, f"Beam Off (Red): Mean: {f_off.GetParameter(1):.2f}, StdDev: {f_off.GetParameter(2):.2f}")
+        text.DrawLatex(0.6, 0.5, f"Chi2/NDOF: {f_off.GetChisquare()/f_off.GetNDF():.2f}")
     
     #write all plots to output file
     fout.cd()

@@ -47,8 +47,8 @@ if __name__ == "__main__":
     runTimeOn, runTimeOff = getRunTime()
 
     #open the plots of time difference between front slab and each channel for beam on/off
-    f_beamOn = r.TFile.Open('timingCorrection_beamOn.root', 'READ')
-    f_beamOff = r.TFile.Open('timingCorrection_beamOff.root', 'READ')
+    f_beamOn = r.TFile.Open('/data/users/mcarrigan/milliqan/timingCorrections/timingCorrection_beamOn.root', 'READ')
+    f_beamOff = r.TFile.Open('/data/users/mcarrigan/milliqan/timingCorrections/timingCorrection_beamOff.root', 'READ')
 
     #create a TCanvas for plots of each layer
     c_l1 = r.TCanvas("c_l1", "Layer 1", 1400, 1400)

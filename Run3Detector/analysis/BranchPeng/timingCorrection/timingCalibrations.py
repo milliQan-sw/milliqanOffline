@@ -130,7 +130,7 @@ if __name__ == "__main__":
         h_off.Draw("hist same")
         f_on.Draw("same")
         f_off.Draw("same")
-
+        '''
         text = r.TLatex()
         text.SetNDC()
         text.SetTextSize(0.03)
@@ -139,6 +139,7 @@ if __name__ == "__main__":
         text.DrawLatex(0.6, 0.7, f"Chi2/NDOF: {f_on.GetChisquare()/f_on.GetNDF():.2f}")
         text.DrawLatex(0.6, 0.6, f"Beam Off (Red): Mean: {f_off.GetParameter(1):.2f}, StdDev: {f_off.GetParameter(2):.2f}")
         text.DrawLatex(0.6, 0.5, f"Chi2/NDOF: {f_off.GetChisquare()/f_off.GetNDF():.2f}")
+        '''
     
     #write all plots to output file
     fout.cd()

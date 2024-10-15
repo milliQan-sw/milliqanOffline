@@ -756,13 +756,13 @@ class milliqanCuts():
         #check the number of events that can pass the cosmic straight cut
         print(f"cosmic straight : {len(self.events['event'][self.events['StraghtCosmic']])}")
         
-        #extra script for cosmic muon tag validation by using event number
-        ENum_ST = self.events["event"][self.events["StraghtCosmic"]]
-        ENum_DW = self.events["event"][self.events["downwardPath"]]
-        ENum_CL = self.events["event"][self.events["Clean_MuonEvent"]]
-        print(f"ENum_ST {ENum_ST}")
-        print(f"ENum_DW {ENum_DW}")
-        print(f"ENum_CL {ENum_CL}")
+        #extra script for cosmic muon tag validation by using event number(uncomment it if you need to debug)
+        #ENum_ST = self.events["event"][self.events["StraghtCosmic"]]
+        #ENum_DW = self.events["event"][self.events["downwardPath"]]
+        #ENum_CL = self.events["event"][self.events["Clean_MuonEvent"]]
+        #print(f"ENum_ST {ENum_ST}")
+        #print(f"ENum_DW {ENum_DW}")
+        #print(f"ENum_CL {ENum_CL}")
 
 
         #count how many events can have big hits on both top and bottom row. (Validation only)
@@ -900,6 +900,66 @@ class milliqanCuts():
         #there is a need to do the check like above. 
         #self.events["IncompleteMuonE"] = self.events["muonEvent"] & ~self.events["DetectableMuon"]
 
+    #codes for finding the cosmic muon nPE lower bound
+    #assuming preproecs is finish(pick out the pulse in the specific window, remove the pulse thatn i != 0)
+    def bigHitLayer(self):
+        lxArr = ak.copy(self.events)
+        
+        lxArr[f"CosP00_pre"] = (lxArr["chan"] == 68) & (lxArr["nPE"] >= 10000) #panel Npe = area
+        lxArr[f"CosP01_pre"] = (lxArr["chan"] == 69) & (lxArr["nPE"] >= 10000) #panel Npe = area
+        lxArr[f"BarL0_pre"] = (lxArr["type"] == 0) & (lxArr["row"] == 0) & (lxArr["layer"] == 0) & (lxArr["nPE"] >= 10)
+        lxArr[f"BarL1_pre"] = (lxArr["type"] == 0) & (lxArr["row"] == 0) & (lxArr["layer"] == 1) & (lxArr["nPE"] >= 10)
+        lxArr[f"BarL2_pre"] = (lxArr["type"] == 0) & (lxArr["row"] == 0) & (lxArr["layer"] == 2) & (lxArr["nPE"] >= 10)
+        lxArr[f"BarL3_pre"] = (lxArr["type"] == 0) & (lxArr["row"] == 0) & (lxArr["layer"] == 3) & (lxArr["nPE"] >= 10)
+        self.events["BHL0"] = ak.any(lxArr[f"CosP00_pre"],axis = 1) & ak.any(lxArr[f"BarL0_pre"],axis = 1) #layer 1 has big hit
+        self.events["BHL1"] = ak.any(lxArr[f"CosP00_pre"],axis = 1) & ak.any(lxArr[f"BarL1_pre"],axis = 1)
+        self.events["BHL2"] = ak.any(lxArr[f"CosP01_pre"],axis = 1) & ak.any(lxArr[f"BarL2_pre"],axis = 1)
+        self.events["BHL3"] = ak.any(lxArr[f"CosP01_pre"],axis = 1) & ak.any(lxArr[f"BarL3_pre"],axis = 1)
+
+
+
+    #modified based on NbarsHitsCount. It count the number of  bar four different layers separatly.
+    def NbarsHitsCountLay(self,cutName = None, NPECut = 100):
+
+
+        bararr = ak.copy(self.events)
+    
+        bararr["chanL0"] = bararr["chan"][(bararr["type"]==0) & (bararr["nPE"]>=NPECut) & (bararr["layer"]==0)]
+        bararr["chanL1"] = bararr["chan"][(bararr["type"]==0) & (bararr["nPE"]>=NPECut) & (bararr["layer"]==1)]
+        bararr["chanL2"] = bararr["chan"][(bararr["type"]==0) & (bararr["nPE"]>=NPECut) & (bararr["layer"]==2)]
+        bararr["chanL3"] = bararr["chan"][(bararr["type"]==0) & (bararr["nPE"]>=NPECut) & (bararr["layer"]==3)]
+
+        
+        uniqueBarArrL0 = ak.Array([np.unique(x) for x in bararr["chanL0"]])
+        uniqueBarArrL1 = ak.Array([np.unique(x) for x in bararr["chanL1"]])
+        uniqueBarArrL2 = ak.Array([np.unique(x) for x in bararr["chanL2"]])
+        uniqueBarArrL3 = ak.Array([np.unique(x) for x in bararr["chanL3"]])
+
+
+        NumLBarL0 = ak.count_nonzero(uniqueBarArrL0, axis = 1) #count the number of unique bar at layer 0
+        NumLBarL1 = ak.count_nonzero(uniqueBarArrL1, axis = 1)
+        NumLBarL2 = ak.count_nonzero(uniqueBarArrL2, axis = 1)
+        NumLBarL3 = ak.count_nonzero(uniqueBarArrL3, axis = 1)
+        #print(f"four bars events {self.events['event'][self.events[cutName]==4]}")
+        self.events["Lay0Fl"]= (NumLBarL0>=4) # Lay0Fl: layer 0 at least have four large hit
+        self.events["Lay1Fl"]= (NumLBarL1>=4)
+        self.events["Lay2Fl"]= (NumLBarL2>=4)
+        self.events["Lay3Fl"]= (NumLBarL3>=4)
+
+        #count the 
+        #"""
+        #self.events["MuonL0"] is pulse based.
+        print(f' l0 inline {ak.count_nonzero( self.events["BHL0"] & ak.any(self.events["MuonL0"]) )}')  #large hit layer +  four hits in a line
+        print(f' l0 M4hits {ak.count_nonzero( self.events["BHL0"]  & ak.any(self.events["Lay0Fl"]))}') #large hit layer +  layer has more than 4 unique hits
+        print(f' l1 inline {ak.count_nonzero( self.events["BHL1"] & ak.any(self.events["MuonL1"]))}') 
+        print(f' l1 M4hits {ak.count_nonzero( self.events["BHL1"]  & ak.any(self.events["Lay1Fl"]))}')
+        print(f' l2 inline {ak.count_nonzero( self.events["BHL2"] & ak.any(self.events["MuonL2"]))}') 
+        print(f' l2 M4hits {ak.count_nonzero( self.events["BHL2"]  & ak.any(self.events["Lay2Fl"]))}')
+        print(f' l3 inline {ak.count_nonzero( self.events["BHL3"] & ak.any(self.events["MuonL3"]))}') 
+        print(f' l3 M4hits {ak.count_nonzero( self.events["BHL3"]  & ak.any(self.events["Lay3Fl"]))}')
+
+        
+        #"""
 
 
     def getCut(self, func, name, *args, **kwargs):

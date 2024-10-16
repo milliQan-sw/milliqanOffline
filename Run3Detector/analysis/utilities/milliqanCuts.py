@@ -757,12 +757,15 @@ class milliqanCuts():
         print(f"cosmic straight : {len(self.events['event'][self.events['StraghtCosmic']])}")
         
         #extra script for cosmic muon tag validation by using event number(uncomment it if you need to debug)
-        #ENum_ST = self.events["event"][self.events["StraghtCosmic"]]
-        #ENum_DW = self.events["event"][self.events["downwardPath"]]
-        #ENum_CL = self.events["event"][self.events["Clean_MuonEvent"]]
-        #print(f"ENum_ST {ENum_ST}")
-        #print(f"ENum_DW {ENum_DW}")
-        #print(f"ENum_CL {ENum_CL}")
+        """
+        ENum_ST = self.events["event"][self.events["StraghtCosmic"]]
+        ENum_DW = self.events["event"][self.events["downwardPath"]]
+        ENum_CL = self.events["event"][self.events["Clean_MuonEvent"]]
+        print(f"ENum_ST {ENum_ST}")
+        print(f"ENum_DW {ENum_DW}")
+        print(f"ENum_CL {ENum_CL}")
+        """
+        
 
 
         #count how many events can have big hits on both top and bottom row. (Validation only)
@@ -946,20 +949,18 @@ class milliqanCuts():
         self.events["Lay2Fl"]= (NumLBarL2>=4)
         self.events["Lay3Fl"]= (NumLBarL3>=4)
 
-        #count the 
-        #"""
-        #self.events["MuonL0"] is pulse based.
-        print(f' l0 inline {ak.count_nonzero( self.events["BHL0"] & ak.any(self.events["MuonL0"]) )}')  #large hit layer +  four hits in a line
-        print(f' l0 M4hits {ak.count_nonzero( self.events["BHL0"]  & ak.any(self.events["Lay0Fl"]))}') #large hit layer +  layer has more than 4 unique hits
-        print(f' l1 inline {ak.count_nonzero( self.events["BHL1"] & ak.any(self.events["MuonL1"]))}') 
-        print(f' l1 M4hits {ak.count_nonzero( self.events["BHL1"]  & ak.any(self.events["Lay1Fl"]))}')
-        print(f' l2 inline {ak.count_nonzero( self.events["BHL2"] & ak.any(self.events["MuonL2"]))}') 
-        print(f' l2 M4hits {ak.count_nonzero( self.events["BHL2"]  & ak.any(self.events["Lay2Fl"]))}')
-        print(f' l3 inline {ak.count_nonzero( self.events["BHL3"] & ak.any(self.events["MuonL3"]))}') 
-        print(f' l3 M4hits {ak.count_nonzero( self.events["BHL3"]  & ak.any(self.events["Lay3Fl"]))}')
-
+        #find the correlation of a layer has four large hit and those four large hit can form a straight line
         
-        #"""
+        #self.events["MuonL0"] is pulse based.
+        print(f' l0 inline {ak.count_nonzero( self.events["BHL0"] & ak.any(self.events["MuonL0"],axis=1) )}')  #large hit layer +  four hits in a line
+        print(f' l0 M4hits {ak.count_nonzero( self.events["BHL0"]  & self.events["Lay0Fl"])}') #large hit layer +  layer has more than 4 unique hits
+        print(f' l1 inline {ak.count_nonzero( self.events["BHL1"] & ak.any(self.events["MuonL1"],axis=1))}') 
+        print(f' l1 M4hits {ak.count_nonzero( self.events["BHL1"]  & self.events["Lay1Fl"])}')
+        print(f' l2 inline {ak.count_nonzero( self.events["BHL2"] & ak.any(self.events["MuonL2"],axis=1))}') 
+        print(f' l2 M4hits {ak.count_nonzero( self.events["BHL2"]  & self.events["Lay2Fl"])}')
+        print(f' l3 inline {ak.count_nonzero( self.events["BHL3"] & ak.any(self.events["MuonL3"],axis=1))}') 
+        print(f' l3 M4hits {ak.count_nonzero( self.events["BHL3"]  & self.events["Lay3Fl"])}')
+
 
 
     def getCut(self, func, name, *args, **kwargs):

@@ -73,11 +73,14 @@ def checkCondorJobs():
     logDir = 'condorLogs/'
     current_jobs = {}
     for filename in os.listdir(logDir):
-        with open(logDir+filename, 'r') as fin:
-            last_line = fin.readlines()[-1].strip()
-            if len(last_line) == 0: continue
-            condor_job = last_line.split()[-1].replace('.', '')
-            current_jobs[filename] = int(condor_job)
+        try:
+            with open(logDir+filename, 'r') as fin:
+                last_line = fin.readlines()[-1].strip()
+                if len(last_line) == 0: continue
+                condor_job = last_line.split()[-1].replace('.', '')
+                current_jobs[filename] = int(condor_job)
+        except Exception as e:
+            print("Error reading {}, with exception {}".format(logDir+filename, e))
     return current_jobs
 
 def getRunningJobs(username='milliqan'):
@@ -224,7 +227,7 @@ if __name__=="__main__":
     error                   = {2}error_$(PROCESS).txt
     should_transfer_files   = Yes
     when_to_transfer_output = ON_EXIT
-    transfer_input_files = {1}, {3}, {4}, offline.sif, update_wrapper.py, update.sh
+    transfer_input_files = {1}, {3}, {4}, update_wrapper.py, update.sh
     getenv = true
     queue {0}
     """.format(len(runsToProcess),filelist,logDir,milliDAQ,milliqanOffline,site)

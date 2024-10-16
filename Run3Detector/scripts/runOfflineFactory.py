@@ -29,7 +29,7 @@ def parse_args():
     parser.add_argument("-m","--mergedTriggerFile",help="Trigger file friend tree",type=str,default="")
     parser.add_argument("-e","--exe",help="Executable to run",type=str,default="./script.exe")
     parser.add_argument("-d","--database",help="Database string",default=None)
-    parser.add_argument("-p","--publish",help="Publish dataset",action="store_true",default=False)
+    parser.add_argument("-p","--publish",help="Publish dataset",nargs="?",const=True,type=str,default=False)
     parser.add_argument("-f","--force_publish",help="Force publish dataset",action="store_true",default=False)
     parser.add_argument("-c","--configurations",help="JSON Configuration files or string",type=str,nargs="+")
     parser.add_argument("--drs",help="DRS input",action="store_true",default=False)
@@ -62,7 +62,7 @@ def validateOutput(outputFile,runNumber=-1,fileNumber=-1):
         os.system("rm "+outputFile)
     return tag 
 def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publish,database,appendToTag,mergedTriggerFile,drs,display, slab,runNumber=None,fileNumber=None):
-    if force_publish:
+    if force_publish and not publish:
         publish = True
     if runNumber == None:
         try:
@@ -157,10 +157,29 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
                 tag += "_"+appendToTag
             if drs:
                 inputType = "DRS"
+            elif slab:
+                inputType = 'MilliQanSlab'
             else:
                 inputType = "MilliQan"
             matched = mergedTriggerFile!="" 
-            publishDataset(configurationsJSON,inputFile,outputFile,fileNumber,runNumber,tag,site=site,inputType=inputType,matched=matched,force_publish=force_publish,db=db)
+            publishing_inputs = {
+                'configurationsJSON': configurationsJSON,
+                'inputFile': inputFile,
+                'outputFile': os.path.abspath(outputFile),
+                'fileNumber': fileNumber,
+                'runNumber': runNumber,
+                'tag': tag,
+                'site': site,
+                'inputType': inputType,
+                'matched': matched
+            }
+            if publish and isinstance(publish, str):
+                publish = eval(publish)
+                for k, v in publish.items():
+                    publishing_inputs[k] = v
+            publishDataset(publishing_inputs['configurationsJSON'],publishing_inputs['inputFile'],publishing_inputs['outputFile'], publishing_inputs['fileNumber'],
+                           publishing_inputs['runNumber'],publishing_inputs['tag'],site=publishing_inputs['site'],inputType=publishing_inputs['inputType'],matched=publishing_inputs['matched'],
+                           force_publish=force_publish,db=db)
         return tag != None
 def getId(runNumber,fileNumber,tag,inputType,site):
     _id = "{}_{}_{}_{}_{}".format(runNumber,fileNumber,tag,inputType,site)
@@ -173,11 +192,11 @@ def publishDataset(configurationsJSON,inputFile,outputFile,fileNumber,runNumber,
     milliQanOfflineDataset["run"] = runNumber
     milliQanOfflineDataset["file"] = fileNumber
     milliQanOfflineDataset["version"] = tag
-    milliQanOfflineDataset["location"] = os.path.abspath(outputFile)
+    milliQanOfflineDataset["location"] = outputFile
     milliQanOfflineDataset["type"] = inputType
     milliQanOfflineDataset["site"] = site
     milliQanOfflineDataset["matched"] = matched
-
+    
     nX = 0
     #Check for existing entry
     for x in (db.milliQanOfflineDatasets.find({"_id" : _id})):
@@ -203,11 +222,11 @@ def getConfigs(runNum, offlineDir):
     runs = json.load(fin)
     fin.close()
     for key, value in runs.items():
-        print(key, value)
+        #print(key, value)
         if len(value) > 1:
             if value[0] <= runNum <= value[1]: return key
         else:
-            print(runNum)
+            #print(runNum)
             if runNum >= value[0]: return key
     print("Did not find the correct channel map for run {}".format(runNum))
     sys.exit(1)

@@ -318,41 +318,44 @@ void OfflineFactory::setGoodRuns(){
 void OfflineFactory::getEventLumis(){
     Long64_t event_time = outputTreeContents.event_time_fromTDC;
 
-    auto maxFillEnd = std::max_element(v_fillEnd.begin(), v_fillEnd.end());
-    auto minFillBegin = std::min_element(v_fillStart.begin(), v_fillStart.end());
+    if (v_fillEnd.size() > 0 && v_fillStart.size() > 0){
+        auto maxFillEnd = std::max_element(v_fillEnd.begin(), v_fillEnd.end());
+        auto minFillBegin = std::min_element(v_fillStart.begin(), v_fillStart.end());
       
-    if (event_time > *maxFillEnd){
-        outputTreeContents.beamOn=false;
-        outputTreeContents.lumi = -1;
-        outputTreeContents.fillId = -1;
-        outputTreeContents.beamType = TString("None");
-        outputTreeContents.beamEnergy = -1;
-        outputTreeContents.betaStar = -1;
-        outputTreeContents.fillStart = 0;
-        outputTreeContents.fillEnd = 0;
-        outputTreeContents.beamInFill = false;
-        if(firstWarning) {
-            cout << "Warning some events occured after last fill time in mqLumis" << endl;
-            firstWarning=false;
-        }
-        return;
-    }
 
-    if (event_time < *minFillBegin){
-        outputTreeContents.beamOn=false;
-        outputTreeContents.lumi = -1;
-        outputTreeContents.fillId = -1;
-        outputTreeContents.beamType = TString("None");
-        outputTreeContents.beamEnergy = -1;
-        outputTreeContents.betaStar = -1;
-        outputTreeContents.fillStart = 0;
-        outputTreeContents.fillEnd = 0;
-        outputTreeContents.beamInFill = false;        
-        if(firstWarning){
-            cout << "Warning some event occured before first fill time in mqLumis" << endl;
-            firstWarning=false;
+        if (event_time > *maxFillEnd){
+            outputTreeContents.beamOn=false;
+            outputTreeContents.lumi = -1;
+            outputTreeContents.fillId = -1;
+            outputTreeContents.beamType = TString("None");
+            outputTreeContents.beamEnergy = -1;
+            outputTreeContents.betaStar = -1;
+            outputTreeContents.fillStart = 0;
+            outputTreeContents.fillEnd = 0;
+            outputTreeContents.beamInFill = false;
+            if(firstWarning) {
+                cout << "Warning some events occured after last fill time in mqLumis" << endl;
+                firstWarning=false;
+            }
+            return;
         }
-        return;
+
+        if (event_time < *minFillBegin){
+            outputTreeContents.beamOn=false;
+            outputTreeContents.lumi = -1;
+            outputTreeContents.fillId = -1;
+	    outputTreeContents.beamType = TString("None");
+	    outputTreeContents.beamEnergy = -1;
+	    outputTreeContents.betaStar = -1;
+	    outputTreeContents.fillStart = 0;
+	    outputTreeContents.fillEnd = 0;
+	    outputTreeContents.beamInFill = false;        
+	    if(firstWarning){
+	        cout << "Warning some event occured before first fill time in mqLumis" << endl;
+	        firstWarning=false;
+            }
+	    return;
+	}
     }
 
     for(int ifill=0; ifill < v_fillId.size(); ifill++){
@@ -511,16 +514,11 @@ void OfflineFactory::processDisplays( vector<int> & eventsToDisplay,TString disp
 void OfflineFactory::process(){
 
     // Testing json stuff
-    cout << "in process" << endl;
     makeOutputTree();
-    cout << "made output tree" <<endl;
     inFile = TFile::Open(inFileName, "READ");
     readMetaData();
-    cout << "read meta data" << endl;
     readWaveData();
-    cout << "read wave data" << endl;
     writeOutputTree();
-    cout << "wrote output tree" << endl;
 }
 void OfflineFactory::process(TString inFileName,TString outFileName)
 {
@@ -1613,7 +1611,6 @@ void OfflineFactory::readWaveData(){
     // int maxEvents = 1;
     int maxEvents = inTree->GetEntries();
     cout<<"Processing "<<maxEvents<<" events in this file"<<endl;
-    cout<<"Starting event loop"<<endl;
     bool showBar = false;
 
     for(int i=0;i<maxEvents;i++){
@@ -1663,11 +1660,7 @@ void OfflineFactory::readWaveData(){
         
     }
 
-    setTotalLumi();
-    std::cout << "sEt lumi" << std::endl;
-
-    //std::cout << std::endl;
-    
+    setTotalLumi();    
 }
 
 void OfflineFactory::writeOutputTree(){

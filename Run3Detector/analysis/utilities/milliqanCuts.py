@@ -944,21 +944,21 @@ class milliqanCuts():
         NumLBarL2 = ak.count_nonzero(uniqueBarArrL2, axis = 1)
         NumLBarL3 = ak.count_nonzero(uniqueBarArrL3, axis = 1)
         #print(f"four bars events {self.events['event'][self.events[cutName]==4]}")
-        self.events["Lay0Fl"]= (NumLBarL0>=4) # Lay0Fl: layer 0 at least have four large hit
-        self.events["Lay1Fl"]= (NumLBarL1>=4)
-        self.events["Lay2Fl"]= (NumLBarL2>=4)
-        self.events["Lay3Fl"]= (NumLBarL3>=4)
+        self.events["Lay0Fl"]= (NumLBarL0>=4) &  (NumLBarL0<=7)  # Lay0Fl: layer 0 at least have four large hit
+        self.events["Lay1Fl"]= (NumLBarL1>=4) &  (NumLBarL0<=7)
+        self.events["Lay2Fl"]= (NumLBarL2>=4) &  (NumLBarL0<=7)
+        self.events["Lay3Fl"]= (NumLBarL3>=4) &  (NumLBarL0<=7)
 
         #find the correlation of a layer has four large hit and those four large hit can form a straight line
         
         #self.events["MuonL0"] is pulse based.
-        print(f' l0 inline {ak.count_nonzero( self.events["BHL0"] & ak.any(self.events["MuonL0"],axis=1) )}')  #large hit layer +  four hits in a line
+        print(f' l0 inline {ak.count_nonzero(self.events["Lay0Fl"] & self.events["BHL0"] & ak.any(self.events["MuonL0"],axis=1) )}')  #large hit layer +  four hits in a line
         print(f' l0 M4hits {ak.count_nonzero( self.events["BHL0"]  & self.events["Lay0Fl"])}') #large hit layer +  layer has more than 4 unique hits
-        print(f' l1 inline {ak.count_nonzero( self.events["BHL1"] & ak.any(self.events["MuonL1"],axis=1))}') 
+        print(f' l1 inline {ak.count_nonzero( self.events["Lay1Fl"] & self.events["BHL1"] & ak.any(self.events["MuonL1"],axis=1))}') 
         print(f' l1 M4hits {ak.count_nonzero( self.events["BHL1"]  & self.events["Lay1Fl"])}')
-        print(f' l2 inline {ak.count_nonzero( self.events["BHL2"] & ak.any(self.events["MuonL2"],axis=1))}') 
+        print(f' l2 inline {ak.count_nonzero( self.events["Lay2Fl"] & self.events["BHL2"] & ak.any(self.events["MuonL2"],axis=1))}') 
         print(f' l2 M4hits {ak.count_nonzero( self.events["BHL2"]  & self.events["Lay2Fl"])}')
-        print(f' l3 inline {ak.count_nonzero( self.events["BHL3"] & ak.any(self.events["MuonL3"],axis=1))}') 
+        print(f' l3 inline {ak.count_nonzero( self.events["Lay3Fl"] & self.events["BHL3"] & ak.any(self.events["MuonL3"],axis=1))}') 
         print(f' l3 M4hits {ak.count_nonzero( self.events["BHL3"]  & self.events["Lay3Fl"])}')
 
 

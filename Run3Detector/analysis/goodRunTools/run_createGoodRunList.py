@@ -97,6 +97,7 @@ def getDirectories(dataDir='/store/user/milliqan/run3/bar/'):
     np.savetxt('directoryList.txt', np.array(directories), fmt='%s')
 
     return len(directories)
+
 if __name__=="__main__":
 
     args = parse_args()
@@ -111,7 +112,7 @@ if __name__=="__main__":
     if args.runDir: mainDir = args.runDir
     if args.subDir: subDir = args.subDir
 
-    logDir = '/data/users/mcarrigan/log/goodRunLists/' + d.strftime('%m_%d_%H')
+    logDir = '/data/users/milliqan/log/goodRunLists/' + d.strftime('%m_%d_%H')
     #logDir = '/abyss/users/mcarrigan/'
 
     condorFile = 'goodRunCondor.sub'

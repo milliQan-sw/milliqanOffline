@@ -10,6 +10,18 @@ tar -xzvf MilliDAQ.tar.gz
 
 cp tree_wrapper.py milliqanOffline/Run3Detector/
 cp filelist*.json milliqanOffline/Run3Detector/filelist.json
+if [ -e mqLumis.json ]; then
+    cp mqLumis.json milliqanOffline/Run3Detector/configuration/barConfigs/
+fi
+if [ -e mqLumisSlab.json]; then
+    cp mqLumis.json milliqanOffline/Run3Detector/configuration/slabConfigs/
+fi
+if [ -e goodRunsList.json ]; then
+    cp goodRunsList.json milliqanOffline/Run3Detector/configuration/barConfigs/
+fi
+if [ -e goodRunsListSlab.json ]; then
+    cp goodRunsListSlab.json milliqanOffline/Run3Detector/configuration/slabConfigs/
+fi
 
 for ARG in "$@"; do
     if [ $ARG == "-m" ]; then
@@ -47,17 +59,17 @@ if [ $# -gt 6 ]; then
     echo Running single job $6 $7
     if $7; then
         echo "Processing slab data"
-        singularity exec -B ../../milliqanOffline/,../../MilliDAQ,/store/ /cvmfs/unpacked.cern.ch/registry.hub.docker.com/carriganm95/milliqan_offline\:x86/ python3 tree_wrapper.py -s $6 -i $2 -v $5 --slab
+        singularity exec -B ../../milliqanOffline/,../../MilliDAQ,/store/ /cvmfs/unpacked.cern.ch/registry.hub.docker.com/carriganm95/milliqan_offline\:x86/ python3 tree_wrapper.py -s $6 -i $2 -v $5 -o $4 --slab
     else
-        singularity exec -B ../../milliqanOffline/,../../MilliDAQ,/store/ /cvmfs/unpacked.cern.ch/registry.hub.docker.com/carriganm95/milliqan_offline\:x86/ python3 tree_wrapper.py -s $6 -i $2 -v $5
+        singularity exec -B ../../milliqanOffline/,../../MilliDAQ,/store/ /cvmfs/unpacked.cern.ch/registry.hub.docker.com/carriganm95/milliqan_offline\:x86/ python3 tree_wrapper.py -s $6 -i $2 -v $5 -o $4
     fi
 else
     echo Trying to run process number $1
     if $6; then
         echo "Processing slab data"
-        singularity exec -B ../../milliqanOffline/,../../MilliDAQ,/store/ /cvmfs/unpacked.cern.ch/registry.hub.docker.com/carriganm95/milliqan_offline\:x86/ python3 tree_wrapper.py -p $1 -i $2 -v $5 --slab
+        singularity exec -B ../../milliqanOffline/,../../MilliDAQ,/store/ /cvmfs/unpacked.cern.ch/registry.hub.docker.com/carriganm95/milliqan_offline\:x86/ python3 tree_wrapper.py -p $1 -i $2 -v $5 -o $4 --slab
     else
-        singularity exec -B ../../milliqanOffline/,../../MilliDAQ,/store/ /cvmfs/unpacked.cern.ch/registry.hub.docker.com/carriganm95/milliqan_offline\:x86/ python3 tree_wrapper.py -p $1 -i $2 -v $5
+        singularity exec -B ../../milliqanOffline/,../../MilliDAQ,/store/ /cvmfs/unpacked.cern.ch/registry.hub.docker.com/carriganm95/milliqan_offline\:x86/ python3 tree_wrapper.py -p $1 -i $2 -v $5 -o $4
     fi
 fi
 
@@ -69,15 +81,9 @@ if [ ${#outputFiles[@]} -gt 0 ]; then
     for file in "${outputFiles[@]}"; do
         echo "Changing location of file $file to $4 in mongoDB"
         mv "$file" "$4"
-        singularity exec -B ../../milliqanOffline/,../../MilliDAQ,/store/ /cvmfs/unpacked.cern.ch/registry.hub.docker.com/carriganm95/milliqan_offline:x86/ python3 $PWD/scripts/utilities.py -i "$file" -l "$4" -s "OSU"
     done
 else
     echo "No files matched the pattern"
 fi
 
-#if [ ! -z $outputFiles -a $outputFiles != " " ]; then
-#    echo "Changing location of file $outputFiles to $4 in mongoDB"
-#    mv $outputFiles $4
-#    singularity exec -B ../../milliqanOffline/,../../MilliDAQ,/store/ /cvmfs/unpacked.cern.ch/registry.hub.docker.com/carriganm95/milliqan_offline\:x86/ python3 $PWD/scripts/utilities.py -i "$outputFiles" -l "$4" -s "OSU"
-#fi
 

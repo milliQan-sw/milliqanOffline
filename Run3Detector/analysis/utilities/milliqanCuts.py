@@ -945,9 +945,9 @@ class milliqanCuts():
         NumLBarL3 = ak.count_nonzero(uniqueBarArrL3, axis = 1)
         #print(f"four bars events {self.events['event'][self.events[cutName]==4]}")
         self.events["Lay0Fl"]= (NumLBarL0>=4) &  (NumLBarL0<=7)  # Lay0Fl: layer 0 at least have four large hit
-        self.events["Lay1Fl"]= (NumLBarL1>=4) &  (NumLBarL0<=7)
-        self.events["Lay2Fl"]= (NumLBarL2>=4) &  (NumLBarL0<=7)
-        self.events["Lay3Fl"]= (NumLBarL3>=4) &  (NumLBarL0<=7)
+        self.events["Lay1Fl"]= (NumLBarL1>=4) &  (NumLBarL1<=7)
+        self.events["Lay2Fl"]= (NumLBarL2>=4) &  (NumLBarL2<=7)
+        self.events["Lay3Fl"]= (NumLBarL3>=4) &  (NumLBarL3<=7)
 
         #find the correlation of a layer has four large hit and those four large hit can form a straight line
         

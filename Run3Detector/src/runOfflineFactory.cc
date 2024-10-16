@@ -39,6 +39,9 @@ int main(int argc, char **argv){
     if (isDRSdata) std::cout << "Assuming DRS input" << std::endl;
     bool isSlab = cmdOptionExists(argv, argv + argc, "--slab");
     if (isSlab) std::cout << "Running with slab configuration" << std::endl;
+
+    bool isSim = cmdOptionExists(argv, argv + argc, "--sim");
+    if (isSim) std::cout << "Running with sim data" << std::endl;
     //char * DRS_num = getCmdOption(argv, argv + argc, "-DRS_num");
     //char * numChanDRS = getCmdOption(argv, argv + argc, "-nDRSchan");
     int runNumber = -1;

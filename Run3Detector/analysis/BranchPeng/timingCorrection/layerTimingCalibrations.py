@@ -93,49 +93,46 @@ if __name__ == "__main__":
         [-40, 0], [-40, 0], [-40, 0], [-40, 0], [-40, 0], [-40, 0], [-40, 0], [-40, 0]
     ]
 
-    #loop over all 64 channels
-    for i in range(64):
+    h_timeDiff_beamOn.Scale(1./runTimeOn)
+    h_timeDiff_beamOff.Scale(1./runTimeOff)
+    h_timeDiff_beamOn.Draw("hist")
+    h_timeDiff_beamOn.SetTitle("Time Difference L3-L0")
+    h_timeDiff_beamOn.GetXaxis().SetTitle("#Delta t (ns)")
+    h_timeDiff_beamOn.GetYaxis().SetTitle("Events/s")
+    h_timeDiff_beamOff.Draw("hist same")
 
-        #get the plot of time difference between front pannel and channel i 
-        h_on = f_beamOn.Get(f'h_timeDiffFrontPanel{i}')
-        h_off = f_beamOff.Get(f'h_timeDiffFrontPanel{i}')
+    f_on = r.TF1('f_on', 'gaus', -20, 20)
+    f_onMod = r.TF1('f_onMod', 'gaus', -20, 20)
+    f_off = r.TF1('f_off', 'gaus', -40, 10)
 
-        #scale each plot by the total run time so they are normalized
-        h_on.Scale(1./runTimeOn)
-        h_off.Scale(1./runTimeOff)
+    out_on = h_timeDiff_beamOn.Fit(f_on, "0", "", -20, 20)
+    out_off = h_timeDiff_beamOff.Fit(f_off, "0", "", -40, 10)
 
-        #create gaussian functions
-        f_on = r.TF1('f_on', 'gaus', boundsOn[i][0], boundsOn[i][1])
-        f_off = r.TF1('f_off', 'gaus', boundsOff[i][0], boundsOff[i][1])
+    f_off.SetLineColor(2)
+    f_on.SetLineColor(4)
+    f_on.Draw("same")
+    f_off.Draw("same")
 
-        #optionally set fit parameter limits if fits need it
-        '''f_off.SetParLimits(0, 1e-30, 1)
-        f_off.SetParLimits(1, -40, -10)
-        f_off.SetParLimits(2, 1e-2, 5)'''
+    h_timeDiff_mod = h_timeDiff_beamOn.Clone()
+    for ibin in range(h_timeDiff_beamOn.GetNbinsX()):
+        center = h_timeDiff_beamOn.GetBinCenter(ibin)
+        bkgd = f_off.Eval(center)
+        if bkgd < 0: bkgd = 0
+        beamOnVal = h_timeDiff_beamOn.GetBinContent(ibin)
+        fillVal = beamOnVal - bkgd
+        print(f"beam val {beamOnVal}, background {bkgd}, fill {fillVal}")
+        h_timeDiff_mod.SetBinContent(ibin, fillVal)
 
-        #fit plots
-        h_on.Fit(f_on, "0", "", boundsOn[i][0], boundsOn[i][1])
-        h_off.Fit(f_off, "0", "", boundsOff[i][0], boundsOff[i][1])
+    out_onMod = h_timeDiff_mod.Fit(f_onMod, "0", "", -20, 20)
+    f_onMod.SetLineColor(1)
+    h_timeDiff_mod.SetLineColor(1)
+    f_onMod.Draw("same")
+    h_timeDiff_mod.Draw("same")
 
-        f_off.SetLineColor(2)
-        f_on.SetLineColor(4)
+    l1 = r.TLegend(0.2, 0.7, 0.4, 0.9)
+    l1.AddEntry(h_timeDiff_beamOn, "Beam On #mu {}, #sigma {}".format(round(f_on.GetParameter(1), 2), round(f_on.GetParameter(2), 2)), "l")
+    l1.AddEntry(h_timeDiff_beamOff, "Beam Off #mu {}, #sigma {}".format(round(f_off.GetParameter(1), 2), round(f_off.GetParameter(2), 2)), "l")
+    l1.AddEntry(h_timeDiff_mod, "Beam On Mod #mu {}, #sigma {}".format(round(f_onMod.GetParameter(1), 2), round(f_onMod.GetParameter(2), 2)), "l")
 
-        #change to correct canvas
-        if i%16 == 0:
-            timeCanvases[i//16].cd()
-        timeCanvases[i//16].cd(i%16+1)
-
-        #draw plots on canvas
-        h_on.Draw("hist")
-        h_off.Draw("hist same")
-        f_on.Draw("same")
-        f_off.Draw("same")
-    
-    #write all plots to output file
-    fout.cd()
-    c_l1.Write("FitsL1")
-    c_l2.Write("FitsL2")
-    c_l3.Write("FitsL3")
-    c_l4.Write("FitsL4")
-
-    fout.Close()
+    l1.Draw()
+    c1.Draw()

@@ -70,6 +70,15 @@ class milliqanCuts():
             self.cutflow[name]=this_cutflow
         self.counter+=1
 
+        '''if name=='firstPulseMax':
+            print("firstPulseMax")
+            print(self.cutflow[name])
+            print(remaining)
+        if name=='pickupCut':
+            print("pickupCut")
+            print(self.cutflow[name])
+            print(remaining)'''
+
     def getCutflowCounts(self):
         # Prints the value after each batch of events
         print("----------------------------------Cutflow Table------------------------------------")
@@ -157,17 +166,19 @@ class milliqanCuts():
 
     #event level mask selecting events with hits in 4 layers
     @mqCut
-    def fourLayerCut(self, cutName=None, cut=False, branches=None):
-        self.events['fourLayerCut'] =(ak.any(self.events.layer==0, axis=1) & 
-                                      ak.any(self.events.layer==1, axis=1) & 
-                                      ak.any(self.events.layer==2, axis=1) & 
-                                      ak.any(self.events.layer==3, axis=1))
+    def fourLayerCut(self, cutName='fourLayerCut', cut=False, branches=None):
+        allLayers =(ak.any(self.events.layer==0, axis=1) & 
+                    ak.any(self.events.layer==1, axis=1) & 
+                    ak.any(self.events.layer==2, axis=1) & 
+                    ak.any(self.events.layer==3, axis=1))
+        _, allLayers = ak.broadcast_arrays(self.events.npulses, allLayers)
+        self.events[cutName] = allLayers
         if cut: 
             for branch in branches:
                 self.events[branch] = self.events[branch][self.events.fourLayerCut]
 
     @mqCut
-    def oneHitPerLayerCut(self, cutName=None, cut=False, multipleHits=False):
+    def oneHitPerLayerCut(self, cutName='oneHitPerLayerCut', cut=False, multipleHits=False, branches=None):
         if multipleHits:
             layer0 = (self.events.layer==0) & (self.events['type']==0)
             layer1 = (self.events.layer==1) & (self.events['type']==0)
@@ -179,25 +190,32 @@ class milliqanCuts():
             unique2 = ak.Array([np.unique(x) for x in self.events.chan[layer2]])
             unique3 = ak.Array([np.unique(x) for x in self.events.chan[layer3]])
     
-            self.events['oneHitPerLayerCut'] = (
-                                            (ak.count_nonzero(unique0, axis=1)==1) &
-                                            (ak.count_nonzero(unique1, axis=1)==1) &
-                                            (ak.count_nonzero(unique2, axis=1)==1) &
-                                            (ak.count_nonzero(unique3, axis=1)==1)
-                                            )
+            layerCut = (
+                        (ak.count_nonzero(unique0, axis=1)==1) &
+                        (ak.count_nonzero(unique1, axis=1)==1) &
+                        (ak.count_nonzero(unique2, axis=1)==1) &
+                        (ak.count_nonzero(unique3, axis=1)==1)
+                        )
         else:
-            self.events['oneHitPerLayerCut'] = (
-                                            (ak.count_nonzero((self.events.layer==0) & (self.events['type']==0), axis=1)==1) &
-                                            (ak.count_nonzero((self.events.layer==1) & (self.events['type']==0), axis=1)==1) &
-                                            (ak.count_nonzero((self.events.layer==2) & (self.events['type']==0), axis=1)==1) &
-                                            (ak.count_nonzero((self.events.layer==3) & (self.events['type']==0), axis=1)==1)
-                                            )
-        if cut: self.events = self.events[self.events.oneHitPerLayerCut]            
-        self.cutflowCounter()
+            layerCut = (
+                        (ak.count_nonzero((self.events.layer==0) & (self.events['type']==0), axis=1)==1) &
+                        (ak.count_nonzero((self.events.layer==1) & (self.events['type']==0), axis=1)==1) &
+                        (ak.count_nonzero((self.events.layer==2) & (self.events['type']==0), axis=1)==1) &
+                        (ak.count_nonzero((self.events.layer==3) & (self.events['type']==0), axis=1)==1)
+                        )
+
+        #because this is an event level cut, need to broadcast to pulses
+        _, layerCut = ak.broadcast_arrays(self.events.npulses, layerCut)
+        self.events[cutName] = layerCut
+
+        if cut: 
+            for branch in branches:
+                self.events[branch] = self.events[branch][self.events[cutName]]           
+
     #create mask for pulses passing height cut
-    def heightCut(self, cutName='heightCut', cut=1200, branches=None):
-        self.events[cutName] = self.events.height >= int(cut)
-        if branches:
+    def heightCut(self, cutName='heightCut', heightCut=1200, cut=False, branches=None):
+        self.events[cutName] = self.events.height >= int(heightCut)
+        if cut:
             for branch in branches:
                 self.events[branch] = self.events[branch][self.events[cutName]]
                 
@@ -249,6 +267,18 @@ class milliqanCuts():
             for branch in branches:
                 self.events[branch] = self.events[branch][self.events[cutName]]
 
+    @mqCut
+    def panelVeto(self, cutName='panelVeto', nPECut=None, cut=False, branches=None):
+        if nPECut:
+            panelVeto = ak.any((self.events['type'] == 2) & (self.events['nPE'] > nPECut), axis=1)
+        else:
+            panelVeto = ak.any(self.events['type'] == 2, axis=1)
+        _, self.events[cutName] = ak.broadcast_arrays(self.events.npulses, ~panelVeto)
+        if cut:
+            for branch in branches:
+                self.events[branch] = self.events[branch][self.events[cutName]]
+
+
     #selection events that have hits in a straight path
     #option allowedMove will select events that only move one bar horizontally/vertically
     @mqCut
@@ -261,18 +291,16 @@ class milliqanCuts():
         #bool to decide if 1 bar movement should be found
         allowedMove = False
 
-        debugEvt = 1191
-
         for i, x in enumerate(range(4)):
             for j, y in enumerate(range(4)):
 
                 rowCut = self.events.row == y
                 colCut = self.events.column == x
 
-                r_tmp0 = (rowCut[self.events.layer0] & colCut[self.events.layer0])
-                r_tmp1 = (rowCut[self.events.layer1] & colCut[self.events.layer1])
-                r_tmp2 = (rowCut[self.events.layer2] & colCut[self.events.layer2])
-                r_tmp3 = (rowCut[self.events.layer3] & colCut[self.events.layer3])
+                r_tmp0 = (rowCut[self.events.layer==0] & colCut[self.events.layer==0])
+                r_tmp1 = (rowCut[self.events.layer==1] & colCut[self.events.layer==1])
+                r_tmp2 = (rowCut[self.events.layer==2] & colCut[self.events.layer==2])
+                r_tmp3 = (rowCut[self.events.layer==3] & colCut[self.events.layer==3])
 
 
                 row_pass = ak.any(r_tmp0, axis=1) & ak.any(r_tmp1, axis=1) & ak.any(r_tmp2, axis=1) & ak.any(r_tmp3, axis=1)
@@ -285,22 +313,22 @@ class milliqanCuts():
                     colCut_p1 = self.events.column == x+1
                     colCut_m1 = self.events.column == x-1
                     if(y > 0): 
-                        m1_c0_r1 = (rowCut_m1[self.events.layer1]) & (colCut[self.events.layer1])
-                        m2_c0_r1 = (rowCut_m1[self.events.layer2]) & (colCut[self.events.layer2])
-                        m3_c0_r1 = (rowCut_m1[self.events.layer3]) & (colCut[self.events.layer3])
+                        m1_c0_r1 = (rowCut_m1[self.events.layer==1]) & (colCut[self.events.layer==1])
+                        m2_c0_r1 = (rowCut_m1[self.events.layer==2]) & (colCut[self.events.layer==2])
+                        m3_c0_r1 = (rowCut_m1[self.events.layer==3]) & (colCut[self.events.layer==3])
                     if(x > 0): 
-                        m1_c1_r0 = (rowCut[self.events.layer1]) & (colCut_m1[self.events.layer1])
-                        m2_c1_r0 = (rowCut[self.events.layer2]) & (colCut_m1[self.events.layer2])
-                        m3_c1_r0 = (rowCut[self.events.layer3]) & (colCut_m1[self.events.layer3])
+                        m1_c1_r0 = (rowCut[self.events.layer==1]) & (colCut_m1[self.events.layer==1])
+                        m2_c1_r0 = (rowCut[self.events.layer==2]) & (colCut_m1[self.events.layer==2])
+                        m3_c1_r0 = (rowCut[self.events.layer==3]) & (colCut_m1[self.events.layer==3])
 
                     if(y < 4): 
-                        p1_c0_r1 = (rowCut_p1[self.events.layer1]) & (colCut[self.events.layer1])
-                        p2_c0_r1 = (rowCut_p1[self.events.layer2]) & (colCut[self.events.layer2])
-                        p3_c0_r1 = (rowCut_p1[self.events.layer3]) & (colCut[self.events.layer3])
+                        p1_c0_r1 = (rowCut_p1[self.events.layer==1]) & (colCut[self.events.layer==1])
+                        p2_c0_r1 = (rowCut_p1[self.events.layer==2]) & (colCut[self.events.layer==2])
+                        p3_c0_r1 = (rowCut_p1[self.events.layer==3]) & (colCut[self.events.layer==3])
                     if(x < 4): 
-                        p1_c1_r0 = (rowCut[self.events.layer1]) & (colCut_p1[self.events.layer1])
-                        p2_c1_r0 = (rowCut[self.events.layer2]) & (colCut_p1[self.events.layer2])
-                        p3_c1_r0 = (rowCut[self.events.layer3]) & (colCut_p1[self.events.layer3])
+                        p1_c1_r0 = (rowCut[self.events.layer==1]) & (colCut_p1[self.events.layer==1])
+                        p2_c1_r0 = (rowCut[self.events.layer==2]) & (colCut_p1[self.events.layer==2])
+                        p3_c1_r0 = (rowCut[self.events.layer==3]) & (colCut_p1[self.events.layer==3])
 
                     if(x > 0):
                         combos.append(ak.any(r_tmp0, axis=1) & ak.any(r_tmp1, axis=1) & ak.any(r_tmp2, axis=1) & ak.any(m3_c1_r0, axis=1)) #layer3 col decrease
@@ -459,6 +487,68 @@ class milliqanCuts():
         if cut:
             for branch in branches:
                 self.events[branch] = self.events[branch][selection]
+
+    @mqCut
+    def firstPulseCut(self, cutName='firstPulse', cut=False, branches=None):
+
+        self.events[cutName] = self.events.ipulse == 0
+
+        if cut:
+            for branch in branches:
+                self.events[branch] = self.events[branch][self.events[cutName]]
+
+    @mqCut
+    def threeInLine(self, cutName='threeInLine', cut=False, branches=None):
+        npeCut = 2
+
+        for path in range(16):
+
+            row = path//4
+            col = path%4
+
+            outputName = 'threeHitPath{}'.format(path)
+
+            #print("Checking three in line for path {}, row {}, col {}, with area cut {}".format(path, row, col, areaCut))
+
+            layer0 = (self.events.layer == 0) & (self.events.nPE >= npeCut) & (self.events.row == row) & (self.events.column == col)
+            layer1 = (self.events.layer == 1) & (self.events.nPE >= npeCut) & (self.events.row == row) & (self.events.column == col)
+            layer2 = (self.events.layer == 2) & (self.events.nPE >= npeCut) & (self.events.row == row) & (self.events.column == col)
+            layer3 = (self.events.layer == 3) & (self.events.nPE >= npeCut) & (self.events.row == row) & (self.events.column == col)
+
+            threeStraight_f0 = ak.any(layer1, axis=1) & ak.any(layer2, axis=1) & ak.any(layer3, axis=1)
+            threeStraight_f1 = ak.any(layer0, axis=1) & ak.any(layer2, axis=1) & ak.any(layer3, axis=1)
+            threeStraight_f2 = ak.any(layer0, axis=1) & ak.any(layer1, axis=1) & ak.any(layer3, axis=1)
+            threeStraight_f3 = ak.any(layer0, axis=1) & ak.any(layer1, axis=1) & ak.any(layer2, axis=1)
+
+            self.events[outputName+'_f0'] = threeStraight_f0
+            self.events[outputName+'_f1'] = threeStraight_f1
+            self.events[outputName+'_f2'] = threeStraight_f2
+            self.events[outputName+'_f3'] = threeStraight_f3
+
+            #get just the pulses that pass that made the selections
+            _, b0 = ak.broadcast_arrays(self.events.nPE, threeStraight_f0)
+            _, b1 = ak.broadcast_arrays(self.events.nPE, threeStraight_f1)
+            _, b2 = ak.broadcast_arrays(self.events.nPE, threeStraight_f2)
+            _, b3 = ak.broadcast_arrays(self.events.nPE, threeStraight_f3)
+
+            self.events[outputName+'_p0'] = (b0) & ((layer1) | (layer2) | (layer3))
+            self.events[outputName+'_p1'] = (b1) & ((layer0) | (layer2) | (layer3))
+            self.events[outputName+'_p2'] = (b2) & ((layer0) | (layer1) | (layer3))
+            self.events[outputName+'_p3'] = (b3) & ((layer0) | (layer1) | (layer2))
+
+            self.events[outputName+'_s0'] = (threeStraight_f0) & (self.events.layer == 0) & (self.events.nPE >= npeCut)
+            self.events[outputName+'_s1'] = (threeStraight_f1) & (self.events.layer == 1) & (self.events.nPE >= npeCut)
+            self.events[outputName+'_s2'] = (threeStraight_f2) & (self.events.layer == 2) & (self.events.nPE >= npeCut)
+            self.events[outputName+'_s3'] = (threeStraight_f3) & (self.events.layer == 3) & (self.events.nPE >= npeCut)
+
+            allPulses = (self.events[outputName+'_p0'] | self.events[outputName+'_p1'] | self.events[outputName+'_p2'] | self.events[outputName+'_p3'])
+
+            if path == 0:
+                allPaths = allPulses
+            else:
+                allPaths = allPaths | allPulses
+
+        self.events['threeHitPath_allPulses'] = allPaths
 
     def getCut(self, func, name, *args, **kwargs):
         if func.__name__ == 'combineCuts':

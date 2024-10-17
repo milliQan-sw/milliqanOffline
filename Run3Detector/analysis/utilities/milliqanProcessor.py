@@ -50,7 +50,7 @@ class milliqanProcessor():
             
         #goodJson_array = ak.from_json(pathlib.Path("goodRuns.json"))
         #goodJson_array = ak.from_json(pathlib.Path("../goodRunTools/goodRunsMerged.json"))
-        goodJson_array = ak.from_json(pathlib.Path(self.script_dir + "/../../configuration/barConfigs/goodRunsList.json"))
+        goodJson_array = ak.from_json(pathlib.Path(self.script_dir + "../wip/goodRunsList.json"))
         data = ak.Array(goodJson_array['data'])
         goodJson = ak.zip({
             'run': data[:, 0],

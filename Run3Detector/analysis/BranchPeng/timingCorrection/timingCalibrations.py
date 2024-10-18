@@ -134,4 +134,3 @@ if __name__ == "__main__":
     c_l4.Write("FitsL4")
 
     fout.Close()
-    

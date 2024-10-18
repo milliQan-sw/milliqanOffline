@@ -430,7 +430,7 @@ if __name__ == "__main__":
     cutflow = [mycuts.totalEventCounter, mycuts.fullEventCounter, 
                 boardMatchCut, 
                 pickupCut, 
-                #panelVeto, #only use with beam on data
+                panelVeto, #only use with beam on data
                 firstPulseCut,
                 nPECut,
                 centralTime,

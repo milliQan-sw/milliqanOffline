@@ -2,6 +2,7 @@ import pandas as pd
 import ROOT as r 
 
 def getRunTime():
+    
     # Define the runs used in beam on/off data
     beamOnRuns = [1400, 1800]
     beamOffRuns = [1300, 1800]

@@ -67,7 +67,7 @@ def getLumiofFileList(filelist):
 
     inputFiles = [getRunFile(x.split('/')[-1]) for x in filelist]
 
-    #mqLumis = shutil.copy('/eos/experiment/milliqan/Configs/mqLumis.json', 'mqLumis.json')
+    mqLumis = shutil.copy('/eos/experiment/milliqan/Configs/mqLumis.json', 'mqLumis.json')
     lumis = pd.read_json('mqLumis.json', orient = 'split', compression = 'infer')
 
     lumis['start'] = pd.to_datetime(lumis['start'])

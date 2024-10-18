@@ -243,7 +243,7 @@ def pulseTime(self):
 if __name__ == "__main__":
 
 
-    goodRuns = loadJson('/share/scratch0/peng/CMSSW_12_4_11_patch3/src/milliqanOffline/Run3Detector/configuration/barConfigs/goodRunsList.json')
+    goodRuns = loadJson('/share/scratch0/peng/CMSSW_12_4_11_patch3/src/milliqanOffline/Run3Detector/configuration/goodRunsList.json')
     lumis = loadJson('/share/scratch0/peng/CMSSW_12_4_11_patch3/src/milliqanOffline/Run3Detector/configuration/mqLumis.json')
 
     #get list of files to look at

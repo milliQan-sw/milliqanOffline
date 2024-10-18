@@ -748,7 +748,7 @@ void OfflineFactory::readMetaData(){
             }*/
         }
     }
-    else{
+    else if(!isSim){
         //ADD SOMETHING TO DRS INPUT SUCH THAT THIS CAN BE EASILY READ!
         //output_trees_test/CMS31.root
         metadata->SetBranchAddress("samplingRate", &sampleRate);
@@ -757,6 +757,7 @@ void OfflineFactory::readMetaData(){
         metadata->SetBranchAddress("board_ids", &boardsDRS);
         metadata->SetBranchAddress("channels", &chansDRS);
         metadata->GetEntry(0);
+        cout << "Number of channels: " << numChan << endl;
         chanArray = new TArrayI(numChan);
         boardArray = new TArrayI(numChan);
         for (int ic =0; ic < numChan; ic++){
@@ -764,6 +765,25 @@ void OfflineFactory::readMetaData(){
             boardArray->AddAt(boardsDRS[ic],ic);
         }
     }
+    // For sim data
+    else{
+
+      cout << " TEST" << endl;
+      float secondsPerSample;
+      metadata->SetBranchAddress("secondsPerSample", &secondsPerSample);
+      metadata->SetBranchAddress("numChan", &numChan);
+      metadata->GetEntry(0);
+      chanArray = new TArrayI(numChan);
+      boardArray = new TArrayI(numChan);
+      sampleRate = 1.0/(secondsPerSample*1e+09);
+      clog << "Number of channels: " << numChan << endl;
+      clog << "Seconds per sample: " << secondsPerSample << endl;
+      for (int ic=0; ic < numChan; ++ic){
+        chanArray->SetAt(ic % 16, ic);
+        boardArray->SetAt(ic/16,ic);
+      }
+    }
+      
 }
 
 void OfflineFactory::makeOutputTree(){
@@ -916,7 +936,7 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
         int type= chanMap[ic][3];
         int colorIndex = ic;
         if(ic>63) colorIndex=ic-64;
-        //cout<<"Channel,ic,column,row,layer,type: "<<i<<" "<<ic<<" "<<column<<" "<<row<<" "<<layer<<" "<<type<<endl;
+        //clog<<"Channel,ic,column,row,layer,type: "<<i<<" "<<ic<<" "<<column<<" "<<row<<" "<<layer<<" "<<type<<endl;
         h1cosmetic(wavesShifted[ic],colorIndex,colors);
         if(type==1) wavesShifted[ic]->SetLineStyle(3);
         if(type==2) wavesShifted[ic]->SetLineStyle(7);
@@ -1507,6 +1527,7 @@ vector<vector<pair<float,float>>> OfflineFactory::readWaveDataPerEvent(int i){
                 prevTDC=initTDC;
             }
         }
+        clog << "Read timing information" << endl;
         Long64_t thisTDC;
         if(evt->digitizers[0].DataPresent) thisTDC = evt->digitizers[0].TDC[0];
         else thisTDC=prevTDC;
@@ -1521,29 +1542,34 @@ vector<vector<pair<float,float>>> OfflineFactory::readWaveDataPerEvent(int i){
         // outputTreeContents.event_t_string = TTimeStamp(outputTreeContents.event_time_fromTDC).AsString("s");
         //update previous TDC holder for next event
         prevTDC = thisTDC;
-        for (int ib =0; ib < numBoards; ib++){
+        clog << "About to loop through digitizer boards" << endl;
+        if (!isSim){
+            for (int ib =0; ib < numBoards; ib++){
 
-            int secs = evt->digitizers[ib].DAQTimeStamp.GetSec();
-            //This defines the time in seconds in standard unix epoch since 1970
-            outputTreeContents.event_time.push_back(secs);
+                int secs = evt->digitizers[ib].DAQTimeStamp.GetSec();
+                //This defines the time in seconds in standard unix epoch since 1970
+                outputTreeContents.event_time.push_back(secs);
 
-            outputTreeContents.event_trigger_time_tag.push_back(evt->digitizers[ib].TriggerTimeTag);
-            //
-            //event_t_string = evt->digitizers[0].DAQTimeStamp.AsString("s");
-            //
-            // Can probably uncomment this bit once all groups connected?
-            outputTreeContents.v_groupTDC_g0.push_back(evt->digitizers[ib].TDC[0]);
-            outputTreeContents.v_groupTDC_g1.push_back(evt->digitizers[ib].TDC[1]);
-            outputTreeContents.v_groupTDC_g2.push_back(evt->digitizers[ib].TDC[2]);
-            outputTreeContents.v_groupTDC_g3.push_back(evt->digitizers[ib].TDC[3]);
-            outputTreeContents.v_groupTDC_g4.push_back(evt->digitizers[ib].TDC[4]);
-            outputTreeContents.v_groupTDC_g5.push_back(evt->digitizers[ib].TDC[5]);
-            outputTreeContents.v_groupTDC_g6.push_back(evt->digitizers[ib].TDC[6]);
-            outputTreeContents.v_groupTDC_g7.push_back(evt->digitizers[ib].TDC[7]);
+                outputTreeContents.event_trigger_time_tag.push_back(evt->digitizers[ib].TriggerTimeTag);
+                //
+                //event_t_string = evt->digitizers[0].DAQTimeStamp.AsString("s");
+                //
+                // Can probably uncomment this bit once all groups connected?
+                outputTreeContents.v_groupTDC_g0.push_back(evt->digitizers[ib].TDC[0]);
+                outputTreeContents.v_groupTDC_g1.push_back(evt->digitizers[ib].TDC[1]);
+                outputTreeContents.v_groupTDC_g2.push_back(evt->digitizers[ib].TDC[2]);
+                outputTreeContents.v_groupTDC_g3.push_back(evt->digitizers[ib].TDC[3]);
+                outputTreeContents.v_groupTDC_g4.push_back(evt->digitizers[ib].TDC[4]);
+                outputTreeContents.v_groupTDC_g5.push_back(evt->digitizers[ib].TDC[5]);
+                outputTreeContents.v_groupTDC_g6.push_back(evt->digitizers[ib].TDC[6]);
+                outputTreeContents.v_groupTDC_g7.push_back(evt->digitizers[ib].TDC[7]);
 
-            outputTreeContents.present.push_back(evt->digitizers[ib].DataPresent);
+                outputTreeContents.present.push_back(evt->digitizers[ib].DataPresent);
+            }
         }
+        clog << "About to load waves from MilliDAQ" << endl;
         loadWavesMilliDAQ();
+        clog << "Loaded waves" << endl;
     }
     else loadWavesDRS();
     //Loop over channels
@@ -1568,7 +1594,7 @@ vector<vector<pair<float,float>>> OfflineFactory::readWaveDataPerEvent(int i){
             tdcCorrection[i] = 0;
         }
     }
-
+    clog << "Completed board matching" << endl;
     totalPulseCount = 0;
     for(int ic=0;ic<numChan;ic++){
         //Pulse finding
@@ -1576,7 +1602,7 @@ vector<vector<pair<float,float>>> OfflineFactory::readWaveDataPerEvent(int i){
     }   
 
     outputTreeContents.DAQEventNumber = evt->DAQEventNumber;
-    
+    clog << "Finished setting up pulse bounds" << endl;
     return allPulseBounds;
 }
     
@@ -1623,10 +1649,12 @@ void OfflineFactory::readWaveData(){
         //for(int i=825;i<826;i++){
         //cout<<"------------- Event="<<i<<"  -----------------"<<endl;
         resetOutBranches();
+        clog << "Reset Branches" << endl;
         //Process each event
         vector<vector<pair<float,float> > > allPulseBounds;
         outputTreeContents.event=i;
         allPulseBounds = readWaveDataPerEvent(i);
+        clog << "Read wave data" << endl;
         outputTreeContents.tClockCycles = tClockCycles;
         outputTreeContents.tTime = tTime;
         outputTreeContents.tStartTime = tStartTime;
@@ -1636,7 +1664,7 @@ void OfflineFactory::readWaveData(){
         outputTreeContents.tEvtNum = tEvtNum;
         outputTreeContents.tRunNum = tRunNum;
         outputTreeContents.tTBEvent = tTBEvent;
-
+        clog << "Set outputTreeContents" << endl;
         findExtrema();
 
         if (!isSlab){ //temporary while slab has no lumi/good runs
@@ -1756,7 +1784,7 @@ pair<float,float> OfflineFactory::measureSideband(int ic){
 
 }
 vector< pair<float,float> > OfflineFactory::findPulses(int ic){
-
+  clog << "Inside findPulses" << endl;
     vector<pair<float,float> > bounds;
     float tstart = sideband_range[1]+1;
     int istart = waves[ic]->FindBin(tstart);
@@ -1768,11 +1796,12 @@ vector< pair<float,float> > OfflineFactory::findPulses(int ic){
     //int i_begin = 0;
     int i_stop_searching = waves[ic]->GetNbinsX()-nConsecSamples[ic];
     int i_stop_final_pulse = waves[ic]->GetNbinsX();
-    //std::cout << "start: " << i_begin << ", stop: " << i_stop_searching << std::endl;
+    std::clog << "start: " << i_begin << ", stop: " << i_stop_searching << std::endl;
 
     for (int i=istart; i<i_stop_searching || (inpulse && i<i_stop_final_pulse); i++) {
         float v = waves[ic]->GetBinContent(i);
         if (!inpulse) {
+          clog << " Finding pulses" << endl;
             if (v<lowThresh[ic]) {   
                 nover = 0;     // If v dips below the low threshold, store the value of the sample index as i_begin
                 i_begin = i;
@@ -1789,6 +1818,7 @@ vector< pair<float,float> > OfflineFactory::findPulses(int ic){
             }
         }
         else {  // Called if we have a pulse
+          clog << "Theres a pulse" << endl;
             if (v<highThresh[ic]) nunder++;   // If the pulse dips below the threshold, sum the number of sample indices for which this is true
             else if (v >= highThresh[ic]){
                 nunder = 0;           // If the pulse stays above threshold, set nunder back to zero
@@ -1796,6 +1826,7 @@ vector< pair<float,float> > OfflineFactory::findPulses(int ic){
             // If the nunder is above or equal to 12 (or we reach the end of the file) store the values of the pulse bounds
             if (nunder>=nConsecSamplesEnd[ic] || i==(i_stop_final_pulse-1)) { 
                 bounds.push_back({(float)waves[ic]->GetBinLowEdge(i_begin), (float)waves[ic]->GetBinLowEdge(i+1)-0.01});
+                clog << "waveform bounds" << (float)waves[ic]->GetBinLowEdge(i_begin) <<" "<<  (float)waves[ic]->GetBinLowEdge(i+1)-0.01 << endl;
                 // cout<<"i_begin, i: "<<i_begin<<" "<<i<<endl;       // i_begin is the 
                 inpulse = false;
                 nover = 0;
@@ -1956,6 +1987,7 @@ void OfflineFactory::loadWavesMilliDAQ(){
         //board = ic<=15 ? 0 : 1;
         board = boardArray->GetAt(ic);
         chan = chanArray->GetAt(ic);
+        clog << "board, chan" << board << "," << chan << endl;
         waves[ic] = (TH1D*)evt->GetWaveform(board, chan, Form("digitizers[%i].waveform[%i]",board,ic));  
         if (isSlab) waves[ic]->Scale(-1);
     }

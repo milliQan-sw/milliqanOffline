@@ -85,14 +85,14 @@ if __name__ == "__main__":
         # Scale each histogram by the total run time for normalization
         h_on.Scale(1. / runTimeOn)
         h_off.Scale(1. / runTimeOff)
-
+        '''
         # Subtract beamOff data from beamOn data directly
         for bin in range(1, h_on.GetNbinsX() + 1):
             beamOn_value = h_on.GetBinContent(bin)
             beamOff_value = h_off.GetBinContent(bin)
             adjusted_value = beamOn_value - beamOff_value
             h_on.SetBinContent(bin, adjusted_value)
-
+        '''
         # Create Gaussian functions for fitting
         f_on = r.TF1('f_on', 'gaus', boundsOn[i][0], boundsOn[i][1])
         f_off = r.TF1('f_off', 'gaus', boundsOff[i][0], boundsOff[i][1])
@@ -115,7 +115,7 @@ if __name__ == "__main__":
         f_on.Draw("same")
         f_off.Draw("same")
 
-        
+        '''
         text = r.TLatex()
         text.SetNDC()
         text.SetTextSize(0.03)
@@ -123,7 +123,7 @@ if __name__ == "__main__":
         text.DrawLatex(0.6, 0.8, f"Beam On (Blue): Mean: {f_on.GetParameter(1):.2f}")
         text.DrawLatex(0.6, 0.7, f"StdDev: {f_on.GetParameter(2):.2f}")
         text.DrawLatex(0.6, 0.6, f"Chi2/NDOF: {f_on.GetChisquare()/f_on.GetNDF():.2f}")
-        '''
+        
         text.DrawLatex(0.6, 0.6, f"Beam Off (Red): Mean: {f_off.GetParameter(1):.2f}, StdDev: {f_off.GetParameter(2):.2f}")
         text.DrawLatex(0.6, 0.5, f"Chi2/NDOF: {f_off.GetChisquare()/f_off.GetNDF():.2f}")
         '''

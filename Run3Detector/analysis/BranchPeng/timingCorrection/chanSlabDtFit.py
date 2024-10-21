@@ -120,8 +120,9 @@ if __name__ == "__main__":
         text.SetNDC()
         text.SetTextSize(0.03)
         text.SetTextAlign(12)
-        text.DrawLatex(0.6, 0.8, f"Beam On (Blue): Mean: {f_on.GetParameter(1):.2f}, StdDev: {f_on.GetParameter(2):.2f}")
-        text.DrawLatex(0.6, 0.7, f"Chi2/NDOF: {f_on.GetChisquare()/f_on.GetNDF():.2f}")
+        text.DrawLatex(0.6, 0.8, f"Beam On (Blue): Mean: {f_on.GetParameter(1):.2f}")
+        text.DrawLatex(0.6, 0.7, f"StdDev: {f_on.GetParameter(2):.2f}")
+        text.DrawLatex(0.6, 0.6, f"Chi2/NDOF: {f_on.GetChisquare()/f_on.GetNDF():.2f}")
         '''
         text.DrawLatex(0.6, 0.6, f"Beam Off (Red): Mean: {f_off.GetParameter(1):.2f}, StdDev: {f_off.GetParameter(2):.2f}")
         text.DrawLatex(0.6, 0.5, f"Chi2/NDOF: {f_off.GetChisquare()/f_off.GetNDF():.2f}")

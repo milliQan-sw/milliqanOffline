@@ -45,7 +45,7 @@ if __name__ == "__main__":
 
     # Open the timing correction files for beam on/off
     f_beamOn = r.TFile.Open('/data/users/mcarrigan/milliqan/timingCorrections/timingCorrection_beamOn.root', 'READ')
-    f_beamOff = r.TFile.Open('/data/users/mcarrigan/milliqan/timingCorrections/timingCorrection_beamOff.root', 'READ')
+    f_beamOff = r.TFile.Open('/data/users/mcarrigan/milliqan/timingCorrections/timingCorrection_beamOff_panelVeto.root', 'READ')
 
     # Create TCanvases for each layer
     c_l1 = r.TCanvas("c_l1", "Layer 1", 1400, 1400)

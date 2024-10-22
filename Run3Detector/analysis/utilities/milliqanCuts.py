@@ -971,8 +971,8 @@ class milliqanCuts():
         print(f' l3 inline {inlinel3}') 
         print(f' l3 M4hits {M4hitsl3}')
 
-        print(f' inline {inlinel0 + inlinel1 + inlinel2 + inlinel3}'})
-        print(f' M4hits {M4hitsl0 + M4hitsl1 + M4hitsl2 + M4hitsl3}'})
+        print(f' inline {inlinel0 + inlinel1 + inlinel2 + inlinel3}')
+        print(f' M4hits {M4hitsl0 + M4hitsl1 + M4hitsl2 + M4hitsl3}')
 
     def getCut(self, func, name, *args, **kwargs):
         if func.__name__ == 'combineCuts':

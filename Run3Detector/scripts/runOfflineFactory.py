@@ -87,8 +87,8 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
     #copy files from eos
     copyFromEOS()
 
+    offlineDir = os.getenv("OFFLINEDIR")
     if not configurations:
-        offlineDir = os.getenv("OFFLINEDIR")
         if drs:
             configurations = [offlineDir+"/configuration/pulseFinding/pulseFindingDRS.json"]
         if slab:

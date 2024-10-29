@@ -122,6 +122,8 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
         argList.append("--display "+",".join([str(x) for x in display]))
     if slab:
         argList.append("--slab")
+    if sim:
+        argList.append("--sim")
     args = " ".join(argList)
 
     # from subprocess import Popen, PIPE, CalledProcessError

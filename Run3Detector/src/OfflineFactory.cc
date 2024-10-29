@@ -440,6 +440,7 @@ void OfflineFactory::validateInput(){
         outputTreeContents.nConsecSamples_ = nConsecSamples;
 
     }
+    std::clog << "Verified nConsecSamples" << std::endl;
     if (nConsecSamplesEnd.size() > 1){
         if (nConsecSamplesEnd.size() != numChan) throw length_error("nConsecSamplesEnd should be length "+std::to_string(numChan) + "or 1");
     }
@@ -447,6 +448,7 @@ void OfflineFactory::validateInput(){
         for (int ic = 0; ic < numChan-1; ic++) nConsecSamplesEnd.push_back(nConsecSamplesEnd.at(0));
         outputTreeContents.nConsecSamplesEnd_ = nConsecSamplesEnd;
     }
+    std::clog << "Verified nConsecSamplesEnd" << std::endl;
     if (lowThresh.size() > 1){
         if (lowThresh.size() != numChan) throw length_error("lowThresh should be length "+std::to_string(numChan) + "or 1");
     }
@@ -454,12 +456,15 @@ void OfflineFactory::validateInput(){
         for (int ic = 0; ic < numChan-1; ic++) lowThresh.push_back(lowThresh.at(0));
         outputTreeContents.lowThreshold_ = lowThresh;
     }
+    std::clog << "Verified lowThresh" << std::endl;
     if (highThresh.size() > 1){
         if (highThresh.size() != numChan) throw length_error("highThresh should be length "+std::to_string(numChan) + "or 1");
     }
-    else{ 
+    else {
+      std::clog << "highTresh.size() <= 1" << std::endl;
         for (int ic = 0; ic < numChan-1; ic++) highThresh.push_back(highThresh.at(0));
-        if(variableThresholds && !isSlab){
+        if(variableThresholds && !isSlab && !isSim){
+          std::clog << "variableThresholds==true && isSlab==false" << std::endl;
             for (int ic = 0; ic < numChan; ic++){
                 if (outputTreeContents.v_triggerThresholds[ic]*10e3 > 50) continue; //if pannel keep default
                 highThresh[ic] = outputTreeContents.v_triggerThresholds[ic]*10e3 - thresholdDecrease;
@@ -467,6 +472,7 @@ void OfflineFactory::validateInput(){
         }
         outputTreeContents.highThreshold_ = highThresh;
     }
+    std::clog << "Verified highThresh" << std::endl;
     ////Calibrations
     if (timingCalibrations.size() > 0){
         if (timingCalibrations.size() != numChan) throw length_error("timingCalibrations should be length "+std::to_string(numChan));
@@ -474,6 +480,7 @@ void OfflineFactory::validateInput(){
     else{ 
         for (int ic = 0; ic < numChan; ic++) timingCalibrations.push_back(0);
     }
+    std::clog << "Verified timingCalibrations" << std::endl;
     if (pedestals.size() > 0){
         if (pedestals.size() != numChan) throw length_error("pedestals should be length "+std::to_string(numChan));
         for (int ic = 0; ic < numChan; ic++) pedestals[ic] = 0;
@@ -481,12 +488,14 @@ void OfflineFactory::validateInput(){
     else{ 
         for (int ic = 0; ic < numChan; ic++) pedestals.push_back(0);
     }
+    std::clog << "Verified pedestals" << std::endl;
     if (speAreas.size() > 0){
         if (speAreas.size() != numChan) throw length_error("speAreas should be length "+std::to_string(numChan));
     }
     else{ 
         for (int ic = 0; ic < numChan; ic++) speAreas.push_back(1);
     }
+    std::clog << "Verified speAreas" << std::endl;
 }
 //Convenience function to produce offline tree output
 //Makedisplays and then not save the output tree //makeoutputtree is not called
@@ -1628,6 +1637,7 @@ void OfflineFactory::displayEvents(std::vector<int> & eventsToDisplay,TString di
 //Pulse finding and per channel processing
 void OfflineFactory::readWaveData(){
     validateInput();
+    std::clog << "Validated input data" << std::endl;
     inTree = (TTree*)inFile->Get("Events"); 
     if (inTree->GetEntries() == 0){
         throw runtime_error("There are no entries in this tree... exiting");
@@ -1638,6 +1648,7 @@ void OfflineFactory::readWaveData(){
 	  triggerFileMatched = true;
     }
     loadBranches();
+    std::clog << "Loaded branches" << std::endl;
     // int maxEvents = 1;
     int maxEvents = inTree->GetEntries();
     cout<<"Processing "<<maxEvents<<" events in this file"<<endl;
@@ -1667,7 +1678,7 @@ void OfflineFactory::readWaveData(){
         clog << "Set outputTreeContents" << endl;
         findExtrema();
 
-        if (!isSlab){ //temporary while slab has no lumi/good runs
+        if (!isSlab && !isSim){ //temporary while slab has no lumi/good runs
             std::cout << "Getting event lumis" << std::endl;
             getEventLumis();
             std::cout << "Got lumis setting runs" << std::endl;
@@ -1801,7 +1812,6 @@ vector< pair<float,float> > OfflineFactory::findPulses(int ic){
     for (int i=istart; i<i_stop_searching || (inpulse && i<i_stop_final_pulse); i++) {
         float v = waves[ic]->GetBinContent(i);
         if (!inpulse) {
-          clog << " Finding pulses" << endl;
             if (v<lowThresh[ic]) {   
                 nover = 0;     // If v dips below the low threshold, store the value of the sample index as i_begin
                 i_begin = i;

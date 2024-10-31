@@ -52,16 +52,14 @@ if __name__ == "__main__":
     c_l2 = r.TCanvas("c_l2", "Layer 2", 1400, 1400)
     c_l3 = r.TCanvas("c_l3", "Layer 3", 1400, 1400)
     c_l4 = r.TCanvas("c_l4", "Layer 4", 1400, 1400)
-    c_l5 = r.TCanvas("c_l5", "Layer 5", 1400, 1400)
 
     # Divide each canvas into 16 plots for each channel in a layer
     c_l1.Divide(4, 4)
     c_l2.Divide(4, 4)
     c_l3.Divide(4, 4)
     c_l4.Divide(4, 4)
-    c_l5.Divide(4, 4)
 
-    timeCanvases = [c_l1, c_l2, c_l3, c_l4, c_l5]
+    timeCanvases = [c_l1, c_l2, c_l3, c_l4]
 
     # Define fit bounds for each channel in beam on and off datasets
     boundsOn = [
@@ -76,18 +74,15 @@ if __name__ == "__main__":
 
         [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30],
         [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-7, 2]
-
-        [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30],
-        [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-7, 2]
     ]
 
     boundsOff = [
-        [-40, 0]] * 80
+        [-40, 0]] * 64
     
     mean_values = []
 
-    # Loop over all 80 channels
-    for i in range(80):
+    # Loop over all 64 channels
+    for i in range(64):
         # Get the time difference histogram for beam on and beam off data
         h_on = f_beamOn.Get(f'h_timeDiffFrontPanel{i}')
         h_off = f_beamOff.Get(f'h_timeDiffFrontPanel{i}')
@@ -151,5 +146,4 @@ if __name__ == "__main__":
     c_l2.Write("FitsL2")
     c_l3.Write("FitsL3")
     c_l4.Write("FitsL4")
-    c_l5.Write("FitsL5")
     fout.Close()

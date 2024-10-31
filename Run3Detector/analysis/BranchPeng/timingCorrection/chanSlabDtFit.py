@@ -82,7 +82,7 @@ if __name__ == "__main__":
     mean_values = []
 
     # Loop over all 64 channels
-    for i in range(64):
+    for i in range(80):
         # Get the time difference histogram for beam on and beam off data
         h_on = f_beamOn.Get(f'h_timeDiffFrontPanel{i}')
         h_off = f_beamOff.Get(f'h_timeDiffFrontPanel{i}')

@@ -65,10 +65,13 @@ if __name__ == "__main__":
     boundsOn = [
         [-25, -13], [-40, 0], [-40, 0], [-20, -12], [-35, -22], [-25, -19], [-32, -21], [-40, 0],
         [-40, 0], [-25, -13], [-40, 0], [-40, 0], [-40, 0], [-35, -23], [-40, 0], [-40, 0],
+
         [-15, -9], [-20, -12], [-30, 10], [-30, 10], [-30, 10], [-25, -15], [-20, -13], [-30, 10],
         [-30, 10], [-30, 10], [-30, 10], [-30, 10], [-30, 10], [-30, 10], [-30, 10], [-30, 10],
+
         [-20, 20], [-20, 20], [-20, 20], [-20, 20], [-20, 20], [-20, 20], [-20, 20], [-20, 20],
         [-20, 20], [-20, 20], [-20, 20], [-20, 20], [-20, 20], [-20, 20], [-20, 20], [-20, 20],
+        
         [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30],
         [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-7, 2]
     ]
@@ -105,10 +108,6 @@ if __name__ == "__main__":
         f_off.SetLineColor(2)  # Red for beamOff
         f_on.SetLineColor(4)   # Blue for adjusted beamOn
 
-        # Print the mean value of the histogram in 15 decimal places
-        mean_value = f_on.GetParameter(1)
-        print(f"Histogram {i} mean value: {mean_value:.15f}")
-
         # Select the correct canvas and pad
         timeCanvases[i // 16].cd()
         timeCanvases[i // 16].cd(i % 16 + 1)
@@ -127,12 +126,21 @@ if __name__ == "__main__":
         text.DrawLatex(0.6, 0.7, f"StdDev: {f_on.GetParameter(2):.2f}")
         text.DrawLatex(0.6, 0.6, f"Chi2/NDOF: {f_on.GetChisquare()/f_on.GetNDF():.2f}")
 
+    mean_values = []
 
+    # Print the mean values in the desired format after the loop
+    print('"timingMeans": [', end='')
+    for i, mean in enumerate(mean_values):
+        if i < len(mean_values) - 1:
+            print(f"{mean:.15f}, ", end='')
+        else:
+            print(f"{mean:.15f}", end='')  # No comma for the last value
+    print(']')
+    
     # Write all canvases to the output file
     fout.cd()
     c_l1.Write("FitsL1")
     c_l2.Write("FitsL2")
     c_l3.Write("FitsL3")
     c_l4.Write("FitsL4")
-
     fout.Close()

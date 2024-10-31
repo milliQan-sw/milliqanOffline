@@ -100,7 +100,7 @@ if __name__ == "__main__":
         for bin in range(1, h_on.GetNbinsX() + 1):
             beamOn_value = h_on.GetBinContent(bin)
             beamOff_value = h_off.GetBinContent(bin)
-            adjusted_value = beamOn_value - beamOff_value
+            adjusted_value = beamOn_value - beamOff_value # subtraction made here
             h_on.SetBinContent(bin, adjusted_value)
     
         # Create Gaussian functions for fitting
@@ -109,11 +109,10 @@ if __name__ == "__main__":
 
         # Fit the adjusted beamOn histogram and beamOff histogram
         h_on.Fit(f_on, "0", "", boundsOn[i][0], boundsOn[i][1])
-        # h_off.Fit(f_off, "0", "", boundsOff[i][0], boundsOff[i][1])
+        # h_off.Fit(f_off, "0", "", boundsOff[i][0], boundsOff[i][1]) don't fit beamOff line as there are too few
 
         # Set line colors for visualization
-        f_off.SetLineColor(2)  # Red for beamOff
-        f_on.SetLineColor(4)   # Blue for adjusted beamOn
+        f_on.SetLineColor(4)
 
         # Select the correct canvas and pad
         timeCanvases[i // 16].cd()
@@ -132,18 +131,6 @@ if __name__ == "__main__":
         text.DrawLatex(0.6, 0.8, f"Mean: {f_on.GetParameter(1):.4f}")
         text.DrawLatex(0.6, 0.7, f"StdDev: {f_on.GetParameter(2):.2f}")
         text.DrawLatex(0.6, 0.6, f"Chi2/NDOF: {f_on.GetChisquare()/f_on.GetNDF():.2f}")
-
-        mean_value = f_on.GetParameter(1)
-        mean_values.append(mean_value)
-
-    # Print the mean values in the desired format after the loop
-    print('"timingMeans": [', end='')
-    for i, mean in enumerate(mean_values):
-        if i < len(mean_values) - 1:
-            print(f"{mean:.15f}, ", end='')
-        else:
-            print(f"{mean:.15f}", end='')  # No comma for the last value
-    print(']')
     
     # Write all canvases to the output file
     fout.cd()

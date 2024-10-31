@@ -120,9 +120,9 @@ if __name__ == "__main__":
         text.SetNDC()
         text.SetTextSize(0.03)
         text.SetTextAlign(12)
-        text.DrawLatex(0.6, 0.8, f"Mean: {f_on.GetParameter(1):.3f}")
-        text.DrawLatex(0.6, 0.7, f"StdDev: {f_on.GetParameter(2):.3f}")
-        text.DrawLatex(0.6, 0.6, f"Chi2/NDOF: {f_on.GetChisquare()/f_on.GetNDF():.3f}")
+        text.DrawLatex(0.6, 0.8, f"Mean: {f_on.GetParameter(1):.4f}")
+        text.DrawLatex(0.6, 0.7, f"StdDev: {f_on.GetParameter(2):.2f}")
+        text.DrawLatex(0.6, 0.6, f"Chi2/NDOF: {f_on.GetChisquare()/f_on.GetNDF():.2f}")
 
     # Write all canvases to the output file
     fout.cd()

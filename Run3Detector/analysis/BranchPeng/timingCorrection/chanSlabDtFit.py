@@ -45,7 +45,7 @@ if __name__ == "__main__":
 
     # Open the timing correction files for beam on/off
     f_beamOn = r.TFile.Open('/data/users/mcarrigan/milliqan/timingCorrections/timingCorrection_beamOn.root', 'READ')
-    f_beamOff = r.TFile.Open('/data/users/mcarrigan/milliqan/timingCorrections/timingCorrection_beamOff.root', 'READ')
+    f_beamOff = r.TFile.Open('/data/users/mcarrigan/milliqan/timingCorrections/timingCorrection_beamOff_panelVeto.root', 'READ')
 
     # Create TCanvases for each layer
     c_l1 = r.TCanvas("c_l1", "Layer 1", 1400, 1400)
@@ -65,13 +65,10 @@ if __name__ == "__main__":
     boundsOn = [
         [-25, -13], [-40, 0], [-40, 0], [-20, -12], [-35, -22], [-25, -19], [-32, -21], [-40, 0],
         [-40, 0], [-25, -13], [-40, 0], [-40, 0], [-40, 0], [-35, -23], [-40, 0], [-40, 0],
-
         [-15, -9], [-20, -12], [-30, 10], [-30, 10], [-30, 10], [-25, -15], [-20, -13], [-30, 10],
         [-30, 10], [-30, 10], [-30, 10], [-30, 10], [-30, 10], [-30, 10], [-30, 10], [-30, 10],
-
         [-20, 20], [-20, 20], [-20, 20], [-20, 20], [-20, 20], [-20, 20], [-20, 20], [-20, 20],
         [-20, 20], [-20, 20], [-20, 20], [-20, 20], [-20, 20], [-20, 20], [-20, 20], [-20, 20],
-        
         [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30],
         [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-7, 2]
     ]
@@ -88,21 +85,21 @@ if __name__ == "__main__":
         # Scale each histogram by the total run time for normalization
         h_on.Scale(1. / runTimeOn)
         h_off.Scale(1. / runTimeOff)
-
+        
         # Subtract beamOff data from beamOn data directly
         for bin in range(1, h_on.GetNbinsX() + 1):
             beamOn_value = h_on.GetBinContent(bin)
             beamOff_value = h_off.GetBinContent(bin)
             adjusted_value = beamOn_value - beamOff_value
             h_on.SetBinContent(bin, adjusted_value)
-
+        
         # Create Gaussian functions for fitting
         f_on = r.TF1('f_on', 'gaus', boundsOn[i][0], boundsOn[i][1])
         f_off = r.TF1('f_off', 'gaus', boundsOff[i][0], boundsOff[i][1])
 
         # Fit the adjusted beamOn histogram and beamOff histogram
         h_on.Fit(f_on, "0", "", boundsOn[i][0], boundsOn[i][1])
-        h_off.Fit(f_off, "0", "", boundsOff[i][0], boundsOff[i][1])
+        #h_off.Fit(f_off, "0", "", boundsOff[i][0], boundsOff[i][1])
 
         # Set line colors for visualization
         f_off.SetLineColor(2)  # Red for beamOff
@@ -117,6 +114,19 @@ if __name__ == "__main__":
         h_off.Draw("hist same")
         f_on.Draw("same")
         f_off.Draw("same")
+
+        
+        text = r.TLatex()
+        text.SetNDC()
+        text.SetTextSize(0.03)
+        text.SetTextAlign(12)
+        text.DrawLatex(0.6, 0.8, f"Beam On (Blue): Mean: {f_on.GetParameter(1):.2f}")
+        text.DrawLatex(0.6, 0.7, f"StdDev: {f_on.GetParameter(2):.2f}")
+        text.DrawLatex(0.6, 0.6, f"Chi2/NDOF: {f_on.GetChisquare()/f_on.GetNDF():.2f}")
+        '''
+        text.DrawLatex(0.6, 0.6, f"Beam Off (Red): Mean: {f_off.GetParameter(1):.2f}, StdDev: {f_off.GetParameter(2):.2f}")
+        text.DrawLatex(0.6, 0.5, f"Chi2/NDOF: {f_off.GetChisquare()/f_off.GetNDF():.2f}")
+        '''
 
     # Write all canvases to the output file
     fout.cd()

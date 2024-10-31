@@ -1,21 +1,25 @@
-
-
-
-import sys
-
-sys.path.append('/root/lib/')
-
-import ROOT as r
+# Importing packages
 import os
 import json
-import pandas as pd
-import uproot 
+import ROOT as r
+import uproot
+import hist
+import matplotlib.pyplot as plt
 import awkward as ak
-import array as arr
 import numpy as np
-import shutil
-
-sys.path.append(os.path.dirname(__file__) + '/../utilities/')
+import pandas as pd
+import array as arr
+import sys
+import concurrent.futures
+# Get the current script directory
+script_dir = os.path.dirname(os.path.abspath(__file__))
+# Try to find the utilities directory in the current directory
+utilities_dir = os.path.join(script_dir, '..', 'utilities')
+if not os.path.exists(utilities_dir):
+    # If not found, adjust the path to look one level higher
+    utilities_dir = os.path.join(script_dir, '..', '..', 'utilities')
+# Add the utilities directory to the Python path
+sys.path.append(utilities_dir)
 from milliqanProcessor import *
 from milliqanScheduler import *
 from milliqanCuts import *
@@ -65,7 +69,7 @@ def getLumiofFileList(filelist):
     inputFiles = [getRunFile(x.split('/')[-1]) for x in filelist]
 
     #mqLumis = shutil.copy('/eos/experiment/milliqan/Configs/mqLumis.json', 'mqLumis.json')
-    lumis = pd.read_json('mqLumis.json', orient = 'split', compression = 'infer')
+    lumis = pd.read_json('/share/scratch0/peng/CMSSW_12_4_11_patch3/src/milliqanOffline/Run3Detector/configuration/mqLumis.json', orient = 'split', compression = 'infer')
 
     lumis['start'] = pd.to_datetime(lumis['start'])
     lumis['stop'] = pd.to_datetime(lumis['stop'])
@@ -240,8 +244,8 @@ def pulseTime(self):
 if __name__ == "__main__":
 
 
-    goodRuns = loadJson('goodRunsList.json')
-    lumis = loadJson('mqLumis.json')
+    goodRuns = loadJson('/share/scratch0/peng/CMSSW_12_4_11_patch3/src/milliqanOffline/Run3Detector/configuration/goodRunsList.json')
+    lumis = loadJson('/share/scratch0/peng/CMSSW_12_4_11_patch3/src/milliqanOffline/Run3Detector/configuration/mqLumis.json')
 
     #get list of files to look at
     files = []
@@ -427,7 +431,7 @@ if __name__ == "__main__":
     cutflow = [mycuts.totalEventCounter, mycuts.fullEventCounter, 
                 boardMatchCut, 
                 pickupCut, 
-                #panelVeto, #only use with beam on data
+                panelVeto, #only use with beam on data
                 firstPulseCut,
                 nPECut,
                 centralTime,

@@ -335,7 +335,7 @@ if __name__ == "__main__":
     fourLayerCut = getCutMod(mycuts.fourLayerCut, mycuts, 'fourLayerCut', cut=True, branches=branches)
 
     #panel veto
-    panelVeto = getCutMod(mycuts.panelVeto, mycuts, 'panelVeto', nPECut=40e3, cut=True, branches=branches)
+    #panelVeto = getCutMod(mycuts.panelVeto, mycuts, 'panelVeto', nPECut=40e3, cut=True, branches=branches)
 
     #nPE Cut
     nPECut = getCutMod(mycuts.nPECut, mycuts, 'nPECut', nPECut=200, cut=True, branches=branches)
@@ -416,7 +416,7 @@ if __name__ == "__main__":
     nbins = 100
     minx = -50
     maxx = 50
-    
+
     for i in range(80):
         h_name = 'h_timeDiffFrontPanel{}'.format(i)
         h = r.TH1F(h_name, "Time Difference Between Front Panel and Channel {}".format(i), nbins, minx, maxx)

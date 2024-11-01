@@ -335,7 +335,7 @@ if __name__ == "__main__":
     fourLayerCut = getCutMod(mycuts.fourLayerCut, mycuts, 'fourLayerCut', cut=True, branches=branches)
 
     #panel veto
-    #panelVeto = getCutMod(mycuts.panelVeto, mycuts, 'panelVeto', nPECut=40e3, cut=True, branches=branches)
+    panelVeto = getCutMod(mycuts.panelVeto, mycuts, 'panelVeto', nPECut=40e3, cut=True, branches=branches)
 
     #nPE Cut
     nPECut = getCutMod(mycuts.nPECut, mycuts, 'nPECut', nPECut=200, cut=True, branches=branches)

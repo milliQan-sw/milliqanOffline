@@ -38,7 +38,7 @@ if __name__ == "__main__":
     r.gROOT.SetBatch(1)
 
     # Define output file to write out ROOT plots
-    fout = r.TFile.Open("timingCalibrationPlots.root", "RECREATE")
+    fout = r.TFile.Open("timingCalibrationPlots_5L.root", "RECREATE")
 
     # Get the total run time for beam on/off
     runTimeOn, runTimeOff = getRunTime()

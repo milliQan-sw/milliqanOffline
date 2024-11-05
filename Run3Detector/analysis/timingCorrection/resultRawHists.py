@@ -276,7 +276,7 @@ if __name__ == "__main__":
         "/store/user/milliqan/trees/v35/bar/1700/MilliQan_Run1702.67_v35.root:t",
         "/store/user/milliqan/trees/v35/bar/1700/MilliQan_Run1702.68_v35.root:t"
         ]
-    
+    '''
     filelist = [
         #'../skim/MilliQan_Run1000_v35_skim_beamOn_tight.root',
         #'../skim/MilliQan_Run1100_v35_skim_beamOn_tight.root',
@@ -286,7 +286,7 @@ if __name__ == "__main__":
         '../skim/MilliQan_Run1500_v35_skim_beamOn_tight.root',
         '../skim/MilliQan_Run1600_v35_skim_beamOn_tight.root',
         '../skim/MilliQan_Run1700_v35_skim_beamOn_tight.root'
-    ]
+    ]'''
 
     filelist = [
         '../skim/MilliQan_Run1300_v35_skim_beamOff_tight.root',

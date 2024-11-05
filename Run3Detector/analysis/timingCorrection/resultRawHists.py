@@ -252,7 +252,9 @@ if __name__ == "__main__":
     #define a file list to run over
     #TODO select only beam on or beam off
     dataDir = '/store/user/milliqan/trees/v35/bar/1500/'
-    '''filelist = []
+    
+    filelist = []
+
     for filename in os.listdir(dataDir):
         if 'Run1541' not in filename: continue
         run = int(filename.split('Run')[1].split('.')[0])
@@ -260,9 +262,9 @@ if __name__ == "__main__":
         #beamOn = checkBeam(lumis, run, file, branch='beamInFill')
         #if beam and not beamOn: continue
         #if not beam and beamOn: continue
-        filelist.append('/'.join([dataDir, filename])+':t')'''
+        filelist.append('/'.join([dataDir, filename])+':t')
     
-    '''filelist = [        
+    filelist = [        
         "/store/user/milliqan/trees/v35/bar/1700/MilliQan_Run1702.59_v35.root:t",
         "/store/user/milliqan/trees/v35/bar/1700/MilliQan_Run1702.60_v35.root:t",
         "/store/user/milliqan/trees/v35/bar/1700/MilliQan_Run1702.61_v35.root:t",
@@ -273,8 +275,8 @@ if __name__ == "__main__":
         "/store/user/milliqan/trees/v35/bar/1700/MilliQan_Run1702.66_v35.root:t",
         "/store/user/milliqan/trees/v35/bar/1700/MilliQan_Run1702.67_v35.root:t",
         "/store/user/milliqan/trees/v35/bar/1700/MilliQan_Run1702.68_v35.root:t"
-        ]'''
-    '''filelist = [
+        ]
+    filelist = [
         #'../skim/MilliQan_Run1000_v35_skim_beamOn_tight.root',
         #'../skim/MilliQan_Run1100_v35_skim_beamOn_tight.root',
         #'../skim/MilliQan_Run1200_v35_skim_beamOn_tight.root',
@@ -283,7 +285,7 @@ if __name__ == "__main__":
         '../skim/MilliQan_Run1500_v35_skim_beamOn_tight.root',
         '../skim/MilliQan_Run1600_v35_skim_beamOn_tight.root',
         '../skim/MilliQan_Run1700_v35_skim_beamOn_tight.root'
-    ]'''
+    ]
 
     filelist = [
         '../skim/MilliQan_Run1300_v35_skim_beamOff_tight.root',

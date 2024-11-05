@@ -1,25 +1,17 @@
-# Importing packages
+import sys
+sys.path.append('/root/lib/')
+
+import ROOT as r
 import os
 import json
-import ROOT as r
-import uproot
-import hist
-import matplotlib.pyplot as plt
-import awkward as ak
-import numpy as np
 import pandas as pd
+import uproot 
+import awkward as ak
 import array as arr
-import sys
-import concurrent.futures
-# Get the current script directory
-script_dir = os.path.dirname(os.path.abspath(__file__))
-# Try to find the utilities directory in the current directory
-utilities_dir = os.path.join(script_dir, '..', 'utilities')
-if not os.path.exists(utilities_dir):
-    # If not found, adjust the path to look one level higher
-    utilities_dir = os.path.join(script_dir, '..', '..', 'utilities')
-# Add the utilities directory to the Python path
-sys.path.append(utilities_dir)
+import numpy as np
+import shutil
+
+sys.path.append(os.path.dirname(__file__) + '/../utilities/')
 from milliqanProcessor import *
 from milliqanScheduler import *
 from milliqanCuts import *
@@ -69,7 +61,7 @@ def getLumiofFileList(filelist):
     inputFiles = [getRunFile(x.split('/')[-1]) for x in filelist]
 
     #mqLumis = shutil.copy('/eos/experiment/milliqan/Configs/mqLumis.json', 'mqLumis.json')
-    lumis = pd.read_json('/share/scratch0/peng/CMSSW_12_4_11_patch3/src/milliqanOffline/Run3Detector/configuration/mqLumis.json', orient = 'split', compression = 'infer')
+    lumis = pd.read_json('mqLumis.json', orient = 'split', compression = 'infer')
 
     lumis['start'] = pd.to_datetime(lumis['start'])
     lumis['stop'] = pd.to_datetime(lumis['stop'])
@@ -244,8 +236,8 @@ def pulseTime(self):
 if __name__ == "__main__":
 
 
-    goodRuns = loadJson('/share/scratch0/peng/CMSSW_12_4_11_patch3/src/milliqanOffline/Run3Detector/configuration/goodRunsList.json')
-    lumis = loadJson('/share/scratch0/peng/CMSSW_12_4_11_patch3/src/milliqanOffline/Run3Detector/configuration/mqLumis.json')
+    goodRuns = loadJson('goodRunsList.json')
+    lumis = loadJson('mqLumis.json')
 
     #get list of files to look at
     files = []
@@ -282,7 +274,7 @@ if __name__ == "__main__":
         "/store/user/milliqan/trees/v35/bar/1700/MilliQan_Run1702.67_v35.root:t",
         "/store/user/milliqan/trees/v35/bar/1700/MilliQan_Run1702.68_v35.root:t"
         ]'''
-    filelist = [
+    '''filelist = [
         #'../skim/MilliQan_Run1000_v35_skim_beamOn_tight.root',
         #'../skim/MilliQan_Run1100_v35_skim_beamOn_tight.root',
         #'../skim/MilliQan_Run1200_v35_skim_beamOn_tight.root',
@@ -291,8 +283,8 @@ if __name__ == "__main__":
         '../skim/MilliQan_Run1500_v35_skim_beamOn_tight.root',
         '../skim/MilliQan_Run1600_v35_skim_beamOn_tight.root',
         '../skim/MilliQan_Run1700_v35_skim_beamOn_tight.root'
-    ]
-    '''
+    ]'''
+
     filelist = [
         '../skim/MilliQan_Run1300_v35_skim_beamOff_tight.root',
         '../skim/MilliQan_Run1400_v35_skim_beamOff_tight.root',
@@ -300,7 +292,7 @@ if __name__ == "__main__":
         '../skim/MilliQan_Run1600_v35_skim_beamOff_tight.root',
         '../skim/MilliQan_Run1700_v35_skim_beamOff_tight.root',
     ]
-    '''
+
     print("Running on files {}".format(filelist))
 
     #find the luminosity of files in filelist
@@ -416,8 +408,7 @@ if __name__ == "__main__":
     nbins = 100
     minx = -50
     maxx = 50
-
-    for i in range(80):
+    for i in range(64):
         h_name = 'h_timeDiffFrontPanel{}'.format(i)
         h = r.TH1F(h_name, "Time Difference Between Front Panel and Channel {}".format(i), nbins, minx, maxx)
         channelToPanelHists.append(h)
@@ -432,7 +423,7 @@ if __name__ == "__main__":
     cutflow = [mycuts.totalEventCounter, mycuts.fullEventCounter, 
                 boardMatchCut, 
                 pickupCut, 
-                panelVeto,
+                #panelVeto, #only use with beam on data
                 firstPulseCut,
                 nPECut,
                 centralTime,
@@ -479,6 +470,6 @@ if __name__ == "__main__":
     myschedule.cutFlowPlots()
 
     #save plots
-    myplotter.saveHistograms("timingCorrection{}.root".format('_beamOn'))
+    myplotter.saveHistograms("timingCorrection{}.root".format('_beamOff'))
 
     mycuts.getCutflowCounts()

@@ -252,7 +252,7 @@ if __name__ == "__main__":
     #define a file list to run over
     #TODO select only beam on or beam off
     dataDir = '/store/user/milliqan/trees/v35/bar/1500/'
-    
+
     filelist = []
 
     for filename in os.listdir(dataDir):
@@ -276,6 +276,7 @@ if __name__ == "__main__":
         "/store/user/milliqan/trees/v35/bar/1700/MilliQan_Run1702.67_v35.root:t",
         "/store/user/milliqan/trees/v35/bar/1700/MilliQan_Run1702.68_v35.root:t"
         ]
+    
     filelist = [
         #'../skim/MilliQan_Run1000_v35_skim_beamOn_tight.root',
         #'../skim/MilliQan_Run1100_v35_skim_beamOn_tight.root',

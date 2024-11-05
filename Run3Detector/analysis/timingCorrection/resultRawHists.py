@@ -242,7 +242,7 @@ if __name__ == "__main__":
     #get list of files to look at
     files = []
 
-    beam = True
+    beam = False
 
     #get the filelist and job number
     '''filelist = sys.argv[1]

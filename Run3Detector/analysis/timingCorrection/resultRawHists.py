@@ -251,10 +251,11 @@ if __name__ == "__main__":
 
     #define a file list to run over
     #TODO select only beam on or beam off
+    '''
     dataDir = '/store/user/milliqan/trees/v35/bar/1500/'
 
     filelist = []
-    '''
+    
     for filename in os.listdir(dataDir):
         if 'Run1541' not in filename: continue
         run = int(filename.split('Run')[1].split('.')[0])

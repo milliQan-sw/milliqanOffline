@@ -4,6 +4,9 @@ import sys
 import os
 import shutil
 import glob
+from datetime import datetime
+from mongoConnect import *
+import ROOT as r
 
 def getRun():
     fin = open(sys.argv[3], 'r')
@@ -12,24 +15,16 @@ def getRun():
     return runNum
 
 def initialize():
+
     print("Running on compute node: {}".format(os.uname()[1]))
 
-    if not len(sys.argv) > 3:
-        print("Need to provide run number, data directory, and matching list, exiting")
+    if not len(sys.argv) > 4:
+        print("Need to provide run number, data directory, matching list, and site exiting")
         sys.exit(1)
 
     if not os.path.exists(sys.argv[2]):
         print("Data directory {0} does not exist, exiting".format(sys.argv[2]))
         sys.exit(1)
-    
-    #output directory should be the same as data directory
-    '''if not os.path.exists(sys.argv[2]):
-        try:
-            os.mkdir(sys.argv[2])
-        except:
-            print("Output directory {0} does not exist and couldn't create it, exiting".format(sys.argv[2]))
-            sys.exit(1)
-    '''
     
     if not os.path.exists(os.getcwd() + '/MilliDAQ/'):
         os.system('tar -xzf MilliDAQ.tar.gz')
@@ -46,7 +41,30 @@ def runCombine(runNum):
 
 def postJob():
 
+    db = mongoConnect()
+
     for file in glob.glob('MatchedEvents*.root'):
+        runNum = file.split('Run')[1].split('.')[0]
+        fileNum = file.split('.')[1].split('_')[0]
+        site = sys.argv[4]
+        ctime = datetime.fromtimestamp(os.path.getctime(file))
+        fin = r.TFile.Open(file)
+        mytree = fin.Get('matchedTrigEvents')
+        selected_entries = mytree.Draw(">>selList", "trigger>0", "entrylist")
+        selected_entries = r.gDirectory.Get("selList").GetN()
+        total = mytree.GetEntries()
+        match_rate = selected_entries / total
+        fin.Close()
+        _id = '{}_{}_MatchedEvents_{}'.format(runNum, fileNum, site)
+        query = {'_id' : _id}
+        update = {'run' : int(runNum),
+                  'file' : int(fileNum),
+                  'site': site, 
+                  'location' : sys.argv[2],
+                  'type' : 'MatchedEvents',
+                  'time' : ctime,
+                  'trigMatchFrac' : match_rate}
+        db.milliQanRawDatasets.update_one(query, {'$set': update}, upsert=True)
         shutil.copy(file, sys.argv[2])
 
 if __name__ == "__main__":

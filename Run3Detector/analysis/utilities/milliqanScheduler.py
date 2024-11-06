@@ -21,30 +21,32 @@ class milliQanScheduler():
     def setEvents(self, events):
         self.events = events
         self.cuts.events = self.events
-        self.plotter.events = self.events
+        if (self.plotter  != None):
+            self.plotter.events = self.events
+        else:
+            print("MilliQan Scheduler: Please be aware that plotter is not being used now")
 
     def addToSchedule(self, input):
         name = None
-
         if isinstance(input, milliqanPlot):
             self.schedule.append(input)
             return
         
         if isinstance(input, partial):
             name = input.func.__name__
-        elif input.__code__.co_name == '<lambda>':
-            #print("Lambda:", input)
-            name = input.__parent__
+        elif hasattr(input, '__code__') and input.__code__.co_name == '<lambda>':
+                name = input.__parent__
+        elif hasattr(input, '__code__') and input.__code__.co_name == 'decorator':
+            name = input.__name__.split()[1]
         else:
-            #print("Name", input.__name__)
             name = input.__name__
         
         if name in globals() or name in locals():
             self.schedule.append(input)
-        elif name in dir(milliqanCuts):
+        elif name in dir(milliqanCuts) or name in dir(self.cuts):
             self.schedule.append(input)
         else:
-            print("Function {0} does not exist".format(name))
+            print("MilliQan Scheduler: Function {0} does not exist".format(name))
 
     def createSchedule(self):
         for input in self.inputs:

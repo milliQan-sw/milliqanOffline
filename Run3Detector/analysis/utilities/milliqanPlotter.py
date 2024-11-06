@@ -1,4 +1,4 @@
-from ROOT import TH1, TH2, TGraph
+from ROOT import TH1, TH2, TGraph, TFile
 import awkward as ak
 from array import array
 import numpy as np
@@ -12,14 +12,38 @@ class milliqanPlot():
         self.cut = cut
 
     def plot(self, events):
-        if self.cut:
-            output = ak.flatten(events[self.variables][events[self.cut]],axis=None)
+        if isinstance(self.variables, list):
+            if self.cut:
+                if self.cut == 'first': #cut to get just first pulse for plotting event level
+                    output = [ak.flatten(ak.firsts(events[x]),axis=None) for x in self.variables]
+                else:
+                    output = [ak.flatten(events[x][events[self.cut]],axis=None) for x in self.variables]
+            else:
+                output = [ak.drop_none(events[x]) for x in self.variables]
+                output = [ak.flatten(y,axis=None) for y in output]
+            #2D histograms
+            if len(output) == 2 and len(output[0])>0:
+                myarray0 = array('d', output[0])
+                myarray1 = array('d', output[1])
+                self.histogram.FillN(len(myarray0), myarray0, myarray1, np.ones(len(myarray0)))
+            #3d histograms
+            elif len(output) == 3 and len(output[0])>0:
+                print("MilliQan Plotter: No 3d printing capabilities yet!")
+                
         else:
-            output = ak.drop_none(events[self.variables])
-            output = ak.flatten(output,axis=None)
-        myarray = array('d', output)
-        if len(myarray) > 0:
-            self.histogram.FillN(len(myarray), myarray, np.ones(len(myarray)))
+            if self.cut:
+                if self.cut == 'first': #cut to get just first pulse for plotting event level
+                    output = ak.flatten(ak.firsts(events[self.variables]),axis=None)
+                else:
+                    output = ak.flatten(events[self.variables][events[self.cut]],axis=None)
+            else:
+                output = ak.drop_none(events[self.variables])
+                output = ak.flatten(output,axis=None)
+            myarray = array('d', output)
+            #print("plotter:", myarray)
+            #1D histograms
+            if len(myarray)>0:
+                self.histogram.FillN(len(myarray), myarray, np.ones(len(myarray)))
 
 class milliqanPlotter():
 
@@ -43,3 +67,12 @@ class milliqanPlotter():
         h_ = milliqanPlot(histogram, variable, cut)
         self.histograms.append(h_)
         self.updateDict(h_)
+
+    def saveHistograms(self, outputFile):
+        fout = TFile.Open(outputFile, 'RECREATE')
+        fout.cd()
+
+        for hist in self.histograms:
+            hist.histogram.Write()
+
+        #fout.Close()

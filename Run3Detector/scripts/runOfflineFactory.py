@@ -11,6 +11,9 @@ import traceback
 from pprint import pprint
 from mongoConnect import mongoConnect
 from subprocess import Popen, PIPE
+import pandas as pd
+import numpy as np
+from datetime import datetime
 
 site = os.getenv("OFFLINESITE")
 if not site:
@@ -40,6 +43,7 @@ def validateOutput(outputFile,runNumber=-1,fileNumber=-1):
         f1 = r.TFile(outputFile,"READ")
         t = f1.Get("t")
         nevts = t.GetEntries()
+        print("Output file {} has {} events".format(outputFile, nevts))
         # print "[RSR] ntuple has %i events and expected %i" % (t.GetEntries(), expectednevts)
         # if int(expectednevts) > 0 and int(t.GetEntries()) != int(expectednevts):
         #     print "[RSR] nevents mismatch"
@@ -48,6 +52,7 @@ def validateOutput(outputFile,runNumber=-1,fileNumber=-1):
         if not tagObj:
             tagObj = f1.Get("tag_{}_{}".format(runNumber,fileNumber))
         tag = tagObj.GetTitle()
+        f1.Close()
     except Exception as ex:
         msg = traceback.format_exc()
         if "EDProductGetter" not in msg:
@@ -66,7 +71,8 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
                 fileNumber = 0
             else:
                 runNumber = int(inputFile.split("/")[-1].split("Run")[-1].split(".")[0])
-                fileNumber = int(inputFile.split("/")[-1].split(".")[1].split("_")[0])    
+                fileNumber = int(inputFile.split("/")[-1].split(".")[1].split("_")[0]) 
+                print("Run, {}, File, {}".format(inputFile.split("/")[-1].split("Run")[-1].split(".")[0], inputFile.split("/")[-1].split(".")[1].split("_")[0]))   
         except:
             if publish:
                 print ("Could not identify file and/or run number so cannot publish")
@@ -77,6 +83,9 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
         print("Can't publish in display mode!")
         exit()
     
+    #copy files from eos
+    copyFromEOS()
+
     if not configurations:
         offlineDir = os.getenv("OFFLINEDIR")
         if drs:
@@ -84,11 +93,11 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
         if slab:
             chanConfig = offlineDir + "/configuration/slabConfigs/" + getConfigs(runNumber, offlineDir+'/configuration/slabConfigs') + '.json'
             print("Using the chan config", chanConfig)
-            configurations = [chanConfig, offlineDir+"/configuration/pulseFinding/pulseFindingTest.json"]
+            configurations = [chanConfig, offlineDir+"/configuration/pulseFinding/pulseFindingSlab.json"]
         else:
             chanConfig = offlineDir + "/configuration/barConfigs/" + getConfigs(runNumber, offlineDir+'/configuration/barConfigs') + '.json'
             print("Using the chan config", chanConfig)
-            configurations = [chanConfig,offlineDir+"/configuration/pulseFinding/pulseFindingTest.json"]
+            configurations = [chanConfig,offlineDir+"/configuration/pulseFinding/pulseFindingBar.json"]
 
     if "{" in configurations and "}" in configurations:
         configurationsJSONString = configurations
@@ -188,20 +197,59 @@ def publishDataset(configurationsJSON,inputFile,outputFile,fileNumber,runNumber,
     return True
 
 def getConfigs(runNum, offlineDir):
-    if runNum == -1 and 'barConfigs' in offlineDir: return 'configRun1097_present'
+    if runNum == -1 and 'barConfigs' in offlineDir: return 'configRun1296_present'
     elif runNum == -1 and 'slabConfigs' in offlineDir: return 'configRun0_present'
     fin = open(offlineDir+"/runInfo.json")
     runs = json.load(fin)
     fin.close()
     for key, value in runs.items():
+        print(key, value)
         if len(value) > 1:
-            if runNum in range(value[0], value[1]): return key
+            if value[0] <= runNum <= value[1]: return key
         else:
             print(runNum)
             if runNum >= value[0]: return key
-    print("Did not find the correct channel map")
+    print("Did not find the correct channel map for run {}".format(runNum))
     sys.exit(1)
 
+def copyFromEOS(slab=False):
+
+    if not slab and not os.path.exists('configuration/barConfigs/goodRunsList.json'): 
+        print("Warning (runOfflineFactory.py): goodRunsList.json is not available locally, trying to access from eos")
+        try:
+            os.system('cp /eos/experiment/milliqan/Configs/goodRunsList.json configuration/slabConfigs/')
+        except:
+            print("Error (runOfflineFactory.py): could not access the goodRunList.json on eos or locally")
+    
+    if not slab:
+        if not os.path.exists('configuration/barConfigs/mqLumis.json'):
+            print("Warning (runOfflineFactory.py): mqLumis.json is not available locally, trying to access from eos")
+            try:
+                os.system('cp /eos/experiment/milliqan/Configs/mqLumis.json configuration/barConfigs/')
+            except:
+                print("Error (runOfflineFactory.py): unable to access the mqLumis file on eos or locally")
+        
+        #make datetimes into uint64 to be read by c++
+        lumis = pd.read_json('configuration/barConfigs/mqLumis.json', orient = 'split', compression = 'infer')
+        convert_cols = ['start', 'stop', 'fillStart', 'fillEnd', 'startStableBeam', 'endStableBeam']
+
+        for col in convert_cols:
+            lumis[col] = convertTimes(lumis[col])
+        lumis.to_json('configuration/barConfigs/mqLumis.json', orient = 'split', compression = 'infer', index = 'true')
+
+
+def convertTimes(input):
+    input = input.apply(datetime_to_uint64)
+    return input
+
+def datetime_to_uint64(x):
+    if isinstance(x, str):  # If x is a string
+        dt = datetime.strptime(x, '%Y-%m-%dT%H:%M:%S.%fZ')
+        return np.uint64(dt.timestamp())
+    elif isinstance(x, list):  # If x is a list
+        timestamps = [datetime_to_uint64(item) for item in x]
+        return timestamps
+    return x  # Return unchanged if x is None or some other non-string value
 
 if __name__ == "__main__":
     valid = runOfflineFactory(**vars(parse_args()))

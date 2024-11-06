@@ -24,12 +24,16 @@ def transferOfflineFiles(input, destination, site, version, logFile, force=False
     os.system("echo '" + time.strftime("%c") + " Attempting to transfer data files ...' >> " + logFile)
     allIds = []
     allInputs = []
-    for subdir, dirs, files in os.walk(input):
-        for file in files:
-            runNumber, fileNumber, dataType = getFileDetails(file)
-            _id = "{}_{}_{}_{}_{}".format(runNumber,fileNumber,version,dataType,site)
-            allIds.append(_id)
-            allInputs.append(os.path.join(subdir, file))
+    #for subdir, dirs, files in os.walk(input):
+    print("LOOPING OVER OFFLINE FILES", input)
+    for inputFile in sorted(glob.glob(input + "/*/*.root"), key=os.path.getmtime, reverse=True):
+        file = inputFile.split('/')[-1]
+        subdir = inputFile.split(file)[0]
+        #for file in files:
+        runNumber, fileNumber, dataType = getFileDetails(inputFile)
+        _id = "{}_{}_{}_{}_{}".format(runNumber,fileNumber,version,dataType,site)
+        allIds.append(_id)
+        allInputs.append(os.path.join(subdir, file))
 
     idsOut,inputsOut,entriesInDB, currentLocations = checkMongoDB(db,allIds,allInputs,force, offline=True)
     for _id,inputFile,entryInMongo,currentLocation in zip(idsOut,inputsOut,entriesInDB, currentLocations):
@@ -57,19 +61,28 @@ def transferOfflineFiles(input, destination, site, version, logFile, force=False
                 if debug: 
                     print('File: {0} \n\tRunNumber: {1} \n\tFileNumber: {2} \n\tFileType: {3} \n\tSite: {4}'.format(_id, runNumber, fileNumber, dataType, 'OSU'))            
                 milliQanOfflineDataset = db.milliQanOfflineDatasets.find_one({'run' : int(runNumber), 'file' : int(fileNumber), 'type' : dataType, 'site' : 'OSU', 'version' : ver})
-                milliQanOfflineDataset['_id'] = _id
-                milliQanOfflineDataset['site'] = site
-                milliQanOfflineDataset['location'] = destination.split(':')[-1]
-                if debug:
-                    print(milliQanOfflineDataset)
-                db.milliQanOfflineDatasets.insert_one(milliQanOfflineDataset)
+                if (milliQanOfflineDataset is  None):
+                    print("Could not find file with id: {} ... adding to db".format(_id))
+                    milliQanOfflineDataset = {}
+                    milliQanOfflineDataset['_id'] = _id
+                    milliQanOfflineDataset['site'] = site
+                    milliQanOfflineDataset['location'] = destination.split(':')[-1]
+                    milliQanOfflineDataset['type'] = dataType
+                    milliQanOfflineDataset['file'] = fileNumber
+                    milliQanOfflineDataset['run'] = runNumber
+                    db.milliQanOfflineDatasets.insert_one(milliQanOfflineDataset)
+                else:
+                    milliQanOfflineDataset['_id'] = _id
+                    milliQanOfflineDataset['site'] = site
+                    milliQanOfflineDataset['location'] = destination.split(':')[-1]
+                    db.milliQanOfflineDatasets.insert_one(milliQanOfflineDataset)
 
     os.system("echo 'Transferred {0:.2f} MB in {1} file(s).' >> {2}".format(mbytesTransferred, nTransferred, logFile))
 
 def parse_args():
     parser=argparse.ArgumentParser()
     parser.add_argument('-i', '--input', help="Input directory of files to be transferred", type=str, default='/store/user/milliqan/trees/v34/')
-    parser.add_argument('-d', '--destination', help="Destination for files to be transferred to", type=str, default='milliqan@tau.physics.ucsb.edu:/net/cms26/cms26r0/milliqan/Run3Offline/v34/')
+    parser.add_argument('-d', '--destination', help="Destination for files to be transferred to", type=str, default='milliqan@tau.physics.ucsb.edu:/net/cms18/cms18r0/milliqan/Run3Offline/v34/')
     parser.add_argument('-f', '--force', help='Option to force all files to transfer even if they exist at destination', action='store_true')
     parser.add_argument('-l', '--logFile', help='Log file to save output', default='/home/milliqan/scratch0/milliqanTools/out_transferOffline.log')
     parser.add_argument('--debug', help='Option to enable debugging', action='store_true')

@@ -425,7 +425,7 @@ if __name__ == "__main__":
     cutflow = [mycuts.totalEventCounter, mycuts.fullEventCounter, 
                 boardMatchCut, 
                 pickupCut, 
-                #panelVeto, #only use with beam on data
+                panelVeto, #only use with beam on data
                 firstPulseCut,
                 nPECut,
                 centralTime,
@@ -472,6 +472,6 @@ if __name__ == "__main__":
     myschedule.cutFlowPlots()
 
     #save plots
-    myplotter.saveHistograms("timingCorrection{}.root".format('_beamOff'))
+    myplotter.saveHistograms("timingCorrection{}_panelVeto.root".format('_beamOff'))
 
     mycuts.getCutflowCounts()

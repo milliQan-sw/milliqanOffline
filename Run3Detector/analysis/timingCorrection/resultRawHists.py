@@ -418,9 +418,9 @@ if __name__ == "__main__":
         chanToPanelNames.append(cutName)
 
     h_channels = r.TH1F('h_channels', 'Channel', 80, 0, 80)
-    h_timeDiff = r.TH1F('h_timeDiff', 'Time Difference L3-L0', 100, -100, 100)
-    h_timeDiffNoCorr = r.TH1F('h_timeDiffNoCorr', 'Time Difference L3-L0', 100, -100, 100)
-    h_timeDiffOld = r.TH1F('h_timeDiffOld', 'Time Difference L3-L0', 100, -100, 100)
+    h_timeDiff = r.TH1F('h_timeDiff', 'Time Difference L3-L0', 100, -100, 200)
+    h_timeDiffNoCorr = r.TH1F('h_timeDiffNoCorr', 'Time Difference L3-L0', 100, -100, 200)
+    h_timeDiffOld = r.TH1F('h_timeDiffOld', 'Time Difference L3-L0', 100, -100, 200)
 
     cutflow = [mycuts.totalEventCounter, mycuts.fullEventCounter, 
                 boardMatchCut, 

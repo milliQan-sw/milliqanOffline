@@ -412,7 +412,7 @@ if __name__ == "__main__":
     nbins = 100
     minx = -50
     maxx = 50
-    for i in range(64):
+    for i in range(80):
         h_name = 'h_timeDiffFrontPanel{}'.format(i)
         h = r.TH1F(h_name, "Time Difference Between Front Panel and Channel {}".format(i), nbins, minx, maxx)
         channelToPanelHists.append(h)

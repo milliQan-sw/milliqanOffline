@@ -240,14 +240,14 @@ if __name__ == "__main__":
     lumis = loadJson('/share/scratch0/peng/CMSSW_12_4_11_patch3/src/milliqanOffline/Run3Detector/configuration/slabConfigs/mqLumis.json')
 
     #get list of files to look at
-    files = []
+    #files = []
 
-    beam = True
+    #beam = True
 
     #get the filelist and job number
     '''filelist = sys.argv[1]
     job = sys.argv[2]'''
-    job = 0
+    #job = 0
 
     #define a file list to run over
     #TODO select only beam on or beam off

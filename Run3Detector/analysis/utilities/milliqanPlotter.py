@@ -37,7 +37,9 @@ class milliqanPlot():
                 else:
                     output = ak.flatten(events[self.variables][events[self.cut]],axis=None)
             else:
-                output = ak.drop_none(events[self.variables])
+                #output = ak.drop_none(events[self.variables])
+                output = events[self.variables]
+                output = output[~ak.is_none(output, axis=1)]
                 output = ak.flatten(output,axis=None)
             myarray = array('d', output)
             #print("plotter:", myarray)

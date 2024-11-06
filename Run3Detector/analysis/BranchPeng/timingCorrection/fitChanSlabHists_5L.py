@@ -44,8 +44,8 @@ if __name__ == "__main__":
     runTimeOn, runTimeOff = getRunTime()
 
     # Open the timing correction files for beam on/off
-    f_beamOn = r.TFile.Open('/share/scratch0/peng/CMSSW_12_4_11_patch3/src/milliqanOffline/Run3Detector/analysis/timingCorrection/timingCorrection_beamOn_5L.root', 'READ')
-    f_beamOff = r.TFile.Open('/share/scratch0/peng/CMSSW_12_4_11_patch3/src/milliqanOffline/Run3Detector/analysis/timingCorrection/timingCorrection_beamOff_panelVeto_5L.root', 'READ')
+    f_beamOn = r.TFile.Open('/share/scratch0/peng/CMSSW_12_4_11_patch3/src/milliqanOffline/Run3Detector/analysis/timingCorrection/broad_timingCorrection_beamOn_5L.root', 'READ')
+    f_beamOff = r.TFile.Open('/share/scratch0/peng/CMSSW_12_4_11_patch3/src/milliqanOffline/Run3Detector/analysis/timingCorrection/broad_timingCorrection_beamOff_5L.root', 'READ')
 
     # Create TCanvases for each layer
     c_l1 = r.TCanvas("c_l1", "Layer 1", 1400, 1400)

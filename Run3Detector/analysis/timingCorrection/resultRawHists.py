@@ -349,9 +349,9 @@ if __name__ == "__main__":
     #create all plots for timing differences 64 paths, 3 timing differences each
     timingHistos = []
     cutNames = []
-    nbins = 100
-    minx = -50
-    maxx = 50
+    nbins = 200
+    minx = -100
+    maxx = 100
     for i in range(16):
         h_name1 = 'h_timeDiff{}_{}_layers{}{}'.format(i, 0, 1, 2)
         h_name2 = 'h_timeDiff{}_{}_layers{}{}'.format(i, 0, 1, 3)
@@ -407,9 +407,9 @@ if __name__ == "__main__":
 
     channelToPanelHists = []
     chanToPanelNames = []
-    nbins = 100
-    minx = -50
-    maxx = 50
+    nbins = 200
+    minx = -100
+    maxx = 100
     for i in range(80):
         h_name = 'h_timeDiffFrontPanel{}'.format(i)
         h = r.TH1F(h_name, "Time Difference Between Front Panel and Channel {}".format(i), nbins, minx, maxx)
@@ -425,7 +425,7 @@ if __name__ == "__main__":
     cutflow = [mycuts.totalEventCounter, mycuts.fullEventCounter, 
                 boardMatchCut, 
                 pickupCut, 
-                panelVeto, #only use with beam on data
+                panelVeto,
                 firstPulseCut,
                 nPECut,
                 centralTime,

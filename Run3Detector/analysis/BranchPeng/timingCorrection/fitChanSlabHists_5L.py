@@ -78,7 +78,7 @@ if __name__ == "__main__":
         [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-7, 2],
 
         [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30],
-        [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-7, 2]
+        [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30]
     ]
 
     boundsOff = [
@@ -100,12 +100,12 @@ if __name__ == "__main__":
         for bin in range(1, h_on.GetNbinsX() + 1):
             beamOn_value = h_on.GetBinContent(bin)
             beamOff_value = h_off.GetBinContent(bin)
-            adjusted_value = beamOn_value - beamOff_value # subtraction made here
+            adjusted_value = beamOn_value - beamOff_value # SUBTRACTION MADE HERE <-----------
             h_on.SetBinContent(bin, adjusted_value)
     
         # Create Gaussian functions for fitting
         f_on = r.TF1('f_on', 'gaus', boundsOn[i][0], boundsOn[i][1])
-        f_off = r.TF1('f_off', 'gaus', boundsOff[i][0], boundsOff[i][1])
+        #f_off = r.TF1('f_off', 'gaus', boundsOff[i][0], boundsOff[i][1])
 
         # Fit the adjusted beamOn histogram and beamOff histogram
         h_on.Fit(f_on, "0", "", boundsOn[i][0], boundsOn[i][1])
@@ -122,7 +122,7 @@ if __name__ == "__main__":
         h_on.Draw("hist")
         h_off.Draw("hist same")
         f_on.Draw("same")
-        f_off.Draw("same")
+        #f_off.Draw("same")
 
         text = r.TLatex()
         text.SetNDC()
@@ -141,7 +141,7 @@ if __name__ == "__main__":
         if i < len(mean_values) - 1:
             print(f"{mean:.15f}, ", end='')
         else:
-            print(f"{mean:.15f}", end='')  # No comma for the last value
+            print(f"{mean:.15f}", end='')
     print(']')
 
     # Write all canvases to the output file

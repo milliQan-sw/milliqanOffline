@@ -120,7 +120,7 @@ if __name__ == "__main__":
 
         # Draw histograms and fits on the canvas
         h_on.Draw("hist")
-        h_off.Draw("hist same")
+        #h_off.Draw("hist same")
         f_on.Draw("same")
         #f_off.Draw("same")
 

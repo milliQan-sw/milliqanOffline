@@ -130,7 +130,7 @@ if __name__ == "__main__":
         text.SetTextAlign(12)
         text.DrawLatex(0.6, 0.8, f"Mean: {f_on.GetParameter(1):.2f}")
         text.DrawLatex(0.6, 0.7, f"StdDev: {f_on.GetParameter(2):.2f}")
-        text.DrawLatex(0.6, 0.6, f"Chi2/NDOF: {f_on.GetChisquare()/f_on.GetNDF():.2f}")
+        #text.DrawLatex(0.6, 0.6, f"Chi2/NDOF: {f_on.GetChisquare()/f_on.GetNDF():.2f}")
 
         mean_value = f_on.GetParameter(1)
         mean_values.append(mean_value)

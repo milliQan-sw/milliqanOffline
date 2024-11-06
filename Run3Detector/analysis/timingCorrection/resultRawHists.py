@@ -279,21 +279,21 @@ if __name__ == "__main__":
         ]'''
     
 
-    '''
+    
     filelist = [
         '/mnt/hadoop/se/store/user/milliqan/skims/muonSkim/MilliQan_Run1400_v35_skim_beamOn_tight.root',
         '/mnt/hadoop/se/store/user/milliqan/skims/muonSkim/MilliQan_Run1500_v35_skim_beamOn_tight.root',
         '/mnt/hadoop/se/store/user/milliqan/skims/muonSkim/MilliQan_Run1600_v35_skim_beamOn_tight.root',
         '/mnt/hadoop/se/store/user/milliqan/skims/muonSkim/MilliQan_Run1700_v35_skim_beamOn_tight.root'
-    ]'''
-
+    ]
+    '''
     filelist = [
         '/mnt/hadoop/se/store/user/milliqan/skims/muonSkim/MilliQan_Run1300_v35_skim_beamOff_tight.root',
         '/mnt/hadoop/se/store/user/milliqan/skims/muonSkim/MilliQan_Run1400_v35_skim_beamOff_tight.root',
         '/mnt/hadoop/se/store/user/milliqan/skims/muonSkim/MilliQan_Run1500_v35_skim_beamOff_tight.root',
         '/mnt/hadoop/se/store/user/milliqan/skims/muonSkim/MilliQan_Run1600_v35_skim_beamOff_tight.root',
         '/mnt/hadoop/se/store/user/milliqan/skims/muonSkim/MilliQan_Run1700_v35_skim_beamOff_tight.root',
-    ]
+    ]'''
 
     print("Running on files {}".format(filelist))
 
@@ -472,6 +472,6 @@ if __name__ == "__main__":
     myschedule.cutFlowPlots()
 
     #save plots
-    myplotter.saveHistograms("timingCorrection{}_panelVeto_5L.root".format('_beamOff'))
+    myplotter.saveHistograms("timingCorrection{}_5L.root".format('_beamOn'))
 
     mycuts.getCutflowCounts()

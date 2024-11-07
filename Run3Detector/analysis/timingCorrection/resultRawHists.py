@@ -349,9 +349,9 @@ if __name__ == "__main__":
     #create all plots for timing differences 64 paths, 3 timing differences each
     timingHistos = []
     cutNames = []
-    nbins = 200
-    minx = -100
-    maxx = 100
+    nbins = 100
+    minx = -50
+    maxx = 50
     for i in range(16):
         h_name1 = 'h_timeDiff{}_{}_layers{}{}'.format(i, 0, 1, 2)
         h_name2 = 'h_timeDiff{}_{}_layers{}{}'.format(i, 0, 1, 3)
@@ -407,9 +407,9 @@ if __name__ == "__main__":
 
     channelToPanelHists = []
     chanToPanelNames = []
-    nbins = 200
-    minx = -100
-    maxx = 100
+    nbins = 100
+    minx = -50
+    maxx = 50
     for i in range(80):
         h_name = 'h_timeDiffFrontPanel{}'.format(i)
         h = r.TH1F(h_name, "Time Difference Between Front Panel and Channel {}".format(i), nbins, minx, maxx)
@@ -418,14 +418,14 @@ if __name__ == "__main__":
         chanToPanelNames.append(cutName)
 
     h_channels = r.TH1F('h_channels', 'Channel', 80, 0, 80)
-    h_timeDiff = r.TH1F('h_timeDiff', 'Time Difference L3-L0', 100, -100, 200)
-    h_timeDiffNoCorr = r.TH1F('h_timeDiffNoCorr', 'Time Difference L3-L0', 100, -100, 200)
-    h_timeDiffOld = r.TH1F('h_timeDiffOld', 'Time Difference L3-L0', 100, -100, 200)
+    h_timeDiff = r.TH1F('h_timeDiff', 'Time Difference L3-L0', 50, -50, 100)
+    h_timeDiffNoCorr = r.TH1F('h_timeDiffNoCorr', 'Time Difference L3-L0', 50, -50, 100)
+    h_timeDiffOld = r.TH1F('h_timeDiffOld', 'Time Difference L3-L0', 50, -50, 100)
 
     cutflow = [mycuts.totalEventCounter, mycuts.fullEventCounter, 
                 boardMatchCut, 
                 pickupCut, 
-                panelVeto,
+                panelVeto, # have panelVeto for both beamOn and beamOff
                 firstPulseCut,
                 nPECut,
                 centralTime,
@@ -472,6 +472,6 @@ if __name__ == "__main__":
     myschedule.cutFlowPlots()
 
     #save plots
-    myplotter.saveHistograms("broad_timingCorrection{}_5L.root".format('_beamOff'))
+    myplotter.saveHistograms("timingCorrection{}_5L.root".format('_beamOff'))
 
     mycuts.getCutflowCounts()

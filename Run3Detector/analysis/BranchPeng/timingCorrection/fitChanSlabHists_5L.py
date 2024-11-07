@@ -105,11 +105,11 @@ if __name__ == "__main__":
     
         # Create Gaussian functions for fitting
         f_on = r.TF1('f_on', 'gaus', boundsOn[i][0], boundsOn[i][1])
-        #f_off = r.TF1('f_off', 'gaus', boundsOff[i][0], boundsOff[i][1])
+        f_off = r.TF1('f_off', 'gaus', boundsOff[i][0], boundsOff[i][1])
 
         # Fit the adjusted beamOn histogram and beamOff histogram
         h_on.Fit(f_on, "0", "", boundsOn[i][0], boundsOn[i][1])
-        # h_off.Fit(f_off, "0", "", boundsOff[i][0], boundsOff[i][1]) don't fit beamOff line as there are too few
+        #h_off.Fit(f_off, "0", "", boundsOff[i][0], boundsOff[i][1]) Not fitting the cosmic muons as there are too few
 
         # Set line colors for visualization
         f_on.SetLineColor(4)
@@ -120,9 +120,9 @@ if __name__ == "__main__":
 
         # Draw histograms and fits on the canvas
         h_on.Draw("hist")
-        #h_off.Draw("hist same")
+        h_off.Draw("hist same")
         f_on.Draw("same")
-        #f_off.Draw("same")
+        f_off.Draw("same")
 
         text = r.TLatex()
         text.SetNDC()

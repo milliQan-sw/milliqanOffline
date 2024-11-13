@@ -9,20 +9,24 @@ from milliqanScheduler import milliQanScheduler
 from milliqanCuts import milliqanCuts
 from milliqanPlotter import milliqanPlotter
 
+r.gROOT.SetBatch(True) # Disable drawing of figures to screen
+
 data_directory = '~/Documents/Data/MilliQan/'
 
 sim_file_list = ['bar_cosmic_sim_processed.root']
+
 data_file_list = ['MilliQan_Run1900.110_v35.root',
-                  'MilliQan_Run1900.111_v35.root',
-                  'MilliQan_Run1900.112_v35.root',
-                  'MilliQan_Run1900.113_v35.root',
-                  'MilliQan_Run1900.114_v35.root',
-                  'MilliQan_Run1900.115_v35.root',
-                  'MilliQan_Run1900.116_v35.root',
-                  'MilliQan_Run1900.117_v35.root',
-                  'MilliQan_Run1900.118_v35.root',
-                  'MilliQan_Run1900.119_v35.root'
-                  ]
+                  # 'MilliQan_Run1900.111_v35.root',
+                  # 'MilliQan_Run1900.112_v35.root',
+                  # 'MilliQan_Run1900.113_v35.root',
+                  # 'MilliQan_Run1900.114_v35.root',
+                  # 'MilliQan_Run1900.115_v35.root',
+                  # 'MilliQan_Run1900.116_v35.root',
+                  # 'MilliQan_Run1900.117_v35.root',
+                  # 'MilliQan_Run1900.118_v35.root',
+                  # 'MilliQan_Run1900.119_v35.root'
+                   ]
+
 sim_file_list = [data_directory+filename+":t" for filename in sim_file_list]
 data_file_list = [data_directory+filename+":t" for filename in data_file_list]
 
@@ -37,8 +41,6 @@ branches = ['fileNumber', 'pickupFlag', 'runNumber',
             ]
 
 cuts = milliqanCuts() 
-simCuts = milliqanCuts()
-
 
 # Cuts made to hypothetically make data match sim considering
 # that sim data would not have pickup and would always have
@@ -48,16 +50,26 @@ pickupCut = cuts.getCut(cuts.pickupCut, 'pickupCut',
 boardsMatched = cuts.getCut(cuts.boardsMatched, 'boardsMatchedCut',
                             cut=True, branches=branches)
 
+simCuts = milliqanCuts()
+
+
+# Cuts made to hypothetically make data match sim considering
+# that sim data would not have pickup and would always have
+# boards matched
+# pickupCut = cuts.getCut(cuts.pickupCut, 'pickupCut',
+#                         cut=True, branches=branches) 
+# boardsMatched = cuts.getCut(cuts.boardsMatched, 'boardsMatchedCut',
+#                             cut=True, branches=branches)
+
 
 plotter = milliqanPlotter()
 sim_plotter = milliqanPlotter()
 
 
-# Define Histograms
 h_height_data = r.TH1F("h_height_data", "Height", 140, 0, 1400)
 h_height_sim = r.TH1F("h_height_sim", "Height", 140, 0, 1400)
-h_area_data =  r.TH1F("h_area_data", "Area", 140, 0, 3200000)
-h_area_sim =  r.TH1F("h_area_sim", "Area", 140, 0, 3200000)
+h_area_data =  r.TH1F("h_area_data", "Area", 140, 0, 400000)
+h_area_sim =  r.TH1F("h_area_sim", "Area", 140, 0, 400000)
 h_chan_data =  r.TH1F("h_chan_data", "Channel", 80, 0, 80)
 h_chan_sim =  r.TH1F("h_chan_sim", "Channel", 80, 0, 80)
 h_row_data =  r.TH1F("h_row_data", "Row", 5, 0, 5)
@@ -118,15 +130,31 @@ sim_cutflow = [sim_plotter.dict['h_height_sim'], sim_plotter.dict['h_area_sim'],
            sim_plotter.dict['h_npulses_sim'], sim_plotter.dict['h_time_sim'], sim_plotter.dict['h_duration_sim']]
 
 schedule_data = milliQanScheduler(cutflow, cuts, plotter)
-schedule_data.printSchedule()
-
 schedule_sim = milliQanScheduler(sim_cutflow, simCuts, sim_plotter)
 
-iterator = milliqanProcessor(sim_file_list, branches, schedule_data,
+iterator = milliqanProcessor(data_file_list, branches, schedule_data,
                              cuts, plotter, qualityLevel='override')
-
-iterator_sim = milliqanProcessor(data_file_list, branches, schedule_sim,
+iterator_sim = milliqanProcessor(sim_file_list, branches, schedule_sim,
                                  simCuts, sim_plotter, qualityLevel='override')
 
 iterator.run()
 iterator_sim.run()
+
+
+output_file = r.TFile.Open("comparison.root", "RECREATE")
+
+ # Plot histograms
+for data, sim in zip(list(plotter.dict.keys()),
+                    list(sim_plotter.dict.keys())):
+    print(data, sim)
+    variable = data.split("_")[1]
+    canvas = r.TCanvas(f"{variable}Canvas", f"{variable}Canvas", 600, 600)
+    canvas.cd()
+
+
+    
+    eval(f"{sim}.SetLineColor(r.kRed)")
+    eval(f"{data}.SetLineColor(r.kBlack)")
+    eval(f"{data}.Draw(\"HIST\")")
+    eval(f"{sim}.Draw(\"HIST SAME\")")
+    canvas.Write()

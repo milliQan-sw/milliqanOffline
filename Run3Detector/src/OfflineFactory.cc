@@ -829,7 +829,7 @@ void defineColors(vector<int>colors, vector<TColor*> palette, vector<float> reds
 */
 //Display making
 void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >& bounds,TString displayDirectory){
-
+    std::clog << "Inside displayEvent" << std::endl;
     TCanvas c("c1","",1400,800);
     gPad->SetRightMargin(0.45);
     gStyle->SetGridStyle(3);
@@ -843,15 +843,18 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
     float maxheight=0; float minheight=0;
     float timeRange[2];
     timeRange[1]=1024./sampleRate; timeRange[0]=0.;
+    std::clog << "Time ranges: " << timeRange[0] << ", " << timeRange[1] << std::endl;
     //Get the waves                                                                             
     vector<vector<pair<float,float>>> boundsShifted;
     vector<TH1D*> wavesShifted;
     vector<int> index;
-    float originalMaxHeights[80];
+    float originalMaxHeights[80]; // FIXME: This is hardcoded to be the number of channels in the bar detector (?)
+    clog << "Bounds size: " << bounds.size() << endl;
     for(uint ic=0;ic<bounds.size();ic++){
         int chan = chanArray->GetAt(ic);
         index.push_back(ic);
         vector<pair<float,float>> boundShifted = bounds[ic];
+        clog << "boundShifted.size(): " << boundShifted.size() << endl;
         TH1D * waveShifted = (TH1D*) waves[ic]->Clone(TString(waves[ic]->GetName())+" shifted");
         //FIX here: Add calibration for the timing
         /*
@@ -874,8 +877,13 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
         }
         */
         //FIX above if needed
-        
+
+        /*
+          Obtain maximum and minimum heights as well as maximum and minimum times to
+          shift the waveforms together on the same canvas
+         */ 
         if(boundShifted.size()>0 || waveShifted->GetMaximum()>drawThresh){
+            std::clog << "bounShifted.size()>0 || waveShifted->GetMaximum()>drawThresh" << std::endl;
             chanList.push_back(ic);
             //FIX here: Check for the run for beam state. By default set to on for now
             TString beamState = "on";
@@ -920,7 +928,8 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
     float rangeMinX = timeRange[0];
     float rangeMaxY = maxheight;
     float rangeMinY = minheight;
-    
+
+    // FIXME: This makes no sense if you just set the values to be equal
     if (rangeMaxY > -999) maxheight = rangeMaxY;
 
     if (rangeMinX < 0) timeRange[0]*=1.1;
@@ -1148,7 +1157,7 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
             pave->Draw();
         }
         
-        //cout<<"pave: i,ic,column,row,layer,type: Draw "<<i<<" "<<ic<<" "<<column<<" "<<row<<" "<<layer<<" "<<type<<" "<<colorIndex<<endl;
+        clog<<"pave: i,ic,column,row,layer,type: Draw "<<i<<" "<<ic<<" "<<column<<" "<<row<<" "<<layer<<" "<<type<<" "<<colorIndex<<endl;
         int draw_bounds = 0;
         for(int index_check=0; index_check<10;index_check++){ 
             if(ic==index[index_check]) draw_bounds++;}
@@ -1526,7 +1535,9 @@ void OfflineFactory::displaychannelEvent(int event, vector<vector<pair<float,flo
 }
 
 vector<vector<pair<float,float>>> OfflineFactory::readWaveDataPerEvent(int i){
+
     inTree->GetEntry(i);
+    clog << "Processing event " << i << endl;
     if (!isDRS) {
         //Read timing information
         if(initSecs<0){ //if timestamps for first event are uninitialized
@@ -1807,16 +1818,18 @@ vector< pair<float,float> > OfflineFactory::findPulses(int ic){
     //int i_begin = 0;
     int i_stop_searching = waves[ic]->GetNbinsX()-nConsecSamples[ic];
     int i_stop_final_pulse = waves[ic]->GetNbinsX();
-    std::clog << "start: " << i_begin << ", stop: " << i_stop_searching << std::endl;
-
+    //std::clog << "start: " << i_begin << ", stop: " << i_stop_searching << std::endl;
     for (int i=istart; i<i_stop_searching || (inpulse && i<i_stop_final_pulse); i++) {
         float v = waves[ic]->GetBinContent(i);
+        if (v > 0) std::clog << "Waveform voltage: " << v << endl;
+
         if (!inpulse) {
             if (v<lowThresh[ic]) {   
                 nover = 0;     // If v dips below the low threshold, store the value of the sample index as i_begin
                 i_begin = i;
             }
             else if (v>=highThresh[ic]){
+                clog << "Voltage over highThresh" << endl;
                 nover++;       // If v is above the threshold, start counting the number of sample indices
             }
             else{
@@ -1944,6 +1957,10 @@ vector< pair<float,float> > OfflineFactory::processChannel(int ic){
         outputTreeContents.v_timeFit_module_calibrated.push_back(timeFit+timingCalibrations[ic]+tdcCorrection[ic/16]);
         float area = waves[ic]->Integral("width");
         outputTreeContents.v_area.push_back(area);
+
+        std::clog << "Channel speArea: " << speAreas[ic] << std::endl;
+        std::clog << "Sample rate: " << sampleRate << std::endl;
+
         outputTreeContents.v_nPE.push_back((waves[ic]->Integral("width")/(speAreas[ic]))*(0.4/sampleRate));
         outputTreeContents.v_ipulse.push_back(ipulse);
         outputTreeContents.v_npulses.push_back(npulses);
@@ -1998,7 +2015,17 @@ void OfflineFactory::loadWavesMilliDAQ(){
         board = boardArray->GetAt(ic);
         chan = chanArray->GetAt(ic);
         clog << "board, chan" << board << "," << chan << endl;
+        // FIXME: Not grabbing waveforms for sim data correctly 
         waves[ic] = (TH1D*)evt->GetWaveform(board, chan, Form("digitizers[%i].waveform[%i]",board,ic));  
+        int nBins = waves[ic]->GetNbinsX();
+        clog << "Number of bins: " << nBins << endl;
+        for (int i = 1; i <= nBins; i++) {
+            double binContent = waves[ic]->GetBinContent(i);
+            double binCenter = waves[ic]->GetBinCenter(i);
+            if (binContent != 0) {
+            std::cout << "Bin " << i << " (Center: " << binCenter << "): " << binContent << std::endl;
+            }
+        }
         if (isSlab) waves[ic]->Scale(-1);
     }
 

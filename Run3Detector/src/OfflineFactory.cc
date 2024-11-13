@@ -1,11 +1,14 @@
 #include "./interface/OfflineFactory.h"
 
-OfflineFactory::OfflineFactory(TString inFileName, TString outFileName, TString appendToTag, bool isDRS, bool isSlab, int runNumber, int fileNumber) : 
+#define ENABLE_DEBUG
+
+OfflineFactory::OfflineFactory(TString inFileName, TString outFileName, TString appendToTag, bool isDRS, bool isSlab, bool isSim, int runNumber, int fileNumber) : 
     inFileName(inFileName),
     outFileName(outFileName),
     appendToTag(appendToTag),
     isDRS(isDRS),
     isSlab(isSlab),
+    isSim(isSim),
     runNumber(runNumber),
     fileNumber(fileNumber)
 {
@@ -46,8 +49,8 @@ OfflineFactory::OfflineFactory(TString inFileName, TString outFileName, TString 
 };
 
 // Wrapper function that allows for runs with no run or file number
-OfflineFactory::OfflineFactory(TString inFileName, TString outFileName, TString appendToTag, bool isDRS, bool isSlab) {
-    OfflineFactory(inFileName,outFileName,appendToTag,isDRS,isSlab,-1,-1);
+OfflineFactory::OfflineFactory(TString inFileName, TString outFileName, TString appendToTag, bool isDRS, bool isSlab, bool isSim) {
+  OfflineFactory(inFileName,outFileName,appendToTag,isDRS,isSlab,isSim,-1,-1);
 };
 void OfflineFactory::setFriendFile(TString friendFileNameIn){
     friendFileName = friendFileNameIn;
@@ -415,7 +418,7 @@ void OfflineFactory::setTotalLumi(){
         }
     }
     cout << "Total lumi in this file: " << totalLumi << endl;
-
+    
     TBranch* b_fileLumi = outTree->Branch("totalFileLumi", &totalLumi);
     for(int i=0; i<inTree->GetEntries(); i++){
         outTree->GetEntry(i);
@@ -512,16 +515,32 @@ void OfflineFactory::processDisplays( vector<int> & eventsToDisplay,TString disp
 void OfflineFactory::process(){
 
     // Testing json stuff
-    cout << "in process" << endl;
+  std::clog << "Inside process function" << std::endl;
     makeOutputTree();
-    cout << "made output tree" <<endl;
+
+#ifdef ENABLE_DEBUG
+    std::cerr << "makeOutputTree() completed \n";
+#endif
     inFile = TFile::Open(inFileName, "READ");
+
     readMetaData();
-    cout << "read meta data" << endl;
+
+#ifdef ENABLE_DEBUG
+    std::cerr << "readMetaData() completed \n";
+#endif
+
     readWaveData();
-    cout << "read wave data" << endl;
+
+#ifdef ENABLE_DEBUG
+    std::cerr << "readWaveData() completed \n";
+#endif
+
     writeOutputTree();
-    cout << "wrote output tree" << endl;
+
+#ifdef ENABLE_DEBUG
+    std::cerr << "writeOutputTree() completed \n";
+#endif
+    
 }
 void OfflineFactory::process(TString inFileName,TString outFileName)
 {
@@ -703,9 +722,9 @@ ulong OfflineFactory::getUnixTime(TString& timeIn){
 //Read meta data from configuration
 void OfflineFactory::readMetaData(){
     //May need to change for DRS input
-    TTree * metadata;
-    metadata = (TTree*) inFile->Get("Metadata");
-    if (!isDRS){
+    if (!isDRS && !isSim){
+        TTree * metadata;
+        metadata = (TTree*) inFile->Get("Metadata");
         metadata->SetBranchAddress("configuration", &cfg);
         metadata->SetBranchAddress("fileOpenTime", &fileOpenTime);
         metadata->SetBranchAddress("fileCloseTime", &fileCloseTime);
@@ -747,9 +766,11 @@ void OfflineFactory::readMetaData(){
             }*/
         }
     }
-    else{
+    else if (!isSim){
         //ADD SOMETHING TO DRS INPUT SUCH THAT THIS CAN BE EASILY READ!
         //output_trees_test/CMS31.root
+        TTree * metadata;
+        metadata = (TTree*) inFile->Get("Metadata");
         metadata->SetBranchAddress("samplingRate", &sampleRate);
         cout << "Overwriting sample rate from metadata: " << sampleRate <<" GHz" << endl; 
         metadata->SetBranchAddress("numChan", &numChan);
@@ -763,7 +784,16 @@ void OfflineFactory::readMetaData(){
             boardArray->AddAt(boardsDRS[ic],ic);
         }
     }
-}
+    else {
+      //FIXME Don't set the number of channels like this
+        numChan = 96 ;
+        chanArray = new TArrayI(numChan);
+        boardArray = new TArrayI(numChan);
+        for (int ic =0; ic < numChan; ic++){
+            chanArray->SetAt(ic % 16,ic);
+            boardArray->SetAt(ic/16,ic);
+    }
+    }}
 
 void OfflineFactory::makeOutputTree(){
     outFile = new TFile(outFileName,"recreate");
@@ -1496,8 +1526,14 @@ void OfflineFactory::displaychannelEvent(int event, vector<vector<pair<float,flo
 }
 
 vector<vector<pair<float,float>>> OfflineFactory::readWaveDataPerEvent(int i){
-    inTree->GetEntry(i);
-    if (!isDRS) {
+    std::clog << "Inside readWaveDataperEvent" << std::endl;
+    if (inTree){
+        inTree->ResetBranchAddresses();
+        inTree->GetEntry(i);
+    }
+
+    std::clog << "Retrieved entry in readWaveDataperEvent" << std::endl;
+    if (!isDRS && !isSim) {
         //Read timing information
         if(initSecs<0){ //if timestamps for first event are uninitialized
             if(evt->digitizers[0].DataPresent){ //If this event exists
@@ -1544,31 +1580,23 @@ vector<vector<pair<float,float>>> OfflineFactory::readWaveDataPerEvent(int i){
         }
         loadWavesMilliDAQ();
     }
-    else loadWavesDRS();
+    else if (!isSim) loadWavesDRS();
+    else {
+      std::clog << "Loading sim waves" << std::endl;
+      loadWavesSim();
+    }
     //Loop over channels
     vector<vector<pair<float,float> > > allPulseBounds;
     outputTreeContents.boardsMatched = true;
-    for(int idig=0; idig < nDigitizers; idig++){
-
-        //correct all pulses to the TDC time of digitizer 0
-        float thisCorrection = (float)5*((int64_t)evt->digitizers[idig].TDC[0] - (int64_t)evt->digitizers[0].TDC[0]);
-        tdcCorrection[idig] = thisCorrection; //5ns per TDC clock
-        if(evt->digitizers[idig].TDC[0] == 0) {
-            outputTreeContents.boardsMatched = false;
-        }
-        /*std::cout << "digi 0 " << evt->digitizers[0].TDC[0] << ", digi " << idig << " " << evt->digitizers[idig].TDC[0] << 
-            ", diff " << (int64_t)evt->digitizers[0].TDC[0] - (int64_t)evt->digitizers[idig].TDC[0] << ", correction " << thisCorrection << ", boards matched " << 
-            outputTreeContents.boardsMatched << std::endl;*/
-
-    }
-    //if boards are not matched don't overcorrect times (will throw out these events offline anyway)
-    if (outputTreeContents.boardsMatched == false) {
-        for(int i=0; i < sizeof(tdcCorrection)/sizeof(tdcCorrection[0]); i++){
-            tdcCorrection[i] = 0;
+    if (!isSim){
+        for(int idig=0; idig < nDigitizers; idig++){
+            if(evt->digitizers[idig].TDC[0] == 0) {
+                outputTreeContents.boardsMatched = false;
+                break;
+            }
         }
     }
 
-    totalPulseCount = 0;
     for(int ic=0;ic<numChan;ic++){
         //Pulse finding
         allPulseBounds.push_back(processChannel(ic));
@@ -1601,42 +1629,54 @@ void OfflineFactory::displayEvents(std::vector<int> & eventsToDisplay,TString di
 //Pulse finding and per channel processing
 void OfflineFactory::readWaveData(){
     validateInput();
+    std::clog  << "Ran validateInput()" << std::endl;
     inTree = (TTree*)inFile->Get("Events"); 
+    std::clog << "Read inTree" << std::endl;
     if (inTree->GetEntries() == 0){
         throw runtime_error("There are no entries in this tree... exiting");
     }
+    std::clog << "Debug 1" << std::endl;
     triggerFileMatched = false;
     if (friendFileName != "") {
 	  addFriendTree();
 	  triggerFileMatched = true;
     }
+    std::clog << "Debug 2" << std::endl;
     loadBranches();
+    std::clog << "Loaded Branches" << std::endl;
     // int maxEvents = 1;
     int maxEvents = inTree->GetEntries();
+
+    std::clog << "Max entries: " << maxEvents << std::endl;
+
     cout<<"Processing "<<maxEvents<<" events in this file"<<endl;
     cout<<"Starting event loop"<<endl;
     bool showBar = false;
 
-    for(int i=0;i<maxEvents;i++){
-
+    maxEvents = 10;
+    for(int i=1;i<maxEvents;i++){
+        
         //for(int i=825;i<826;i++){
-        //cout<<"------------- Event="<<i<<"  -----------------"<<endl;
+        cout<<"------------- Event="<<i<<"  -----------------"<<endl;
         resetOutBranches();
+        clog << "Reset branches" << endl;
         //Process each event
         vector<vector<pair<float,float> > > allPulseBounds;
-        outputTreeContents.event=i;
+        outputTreeContents.event=i; // -> eventID
+        std::clog << "Set event" << std::endl;
         allPulseBounds = readWaveDataPerEvent(i);
-        outputTreeContents.tClockCycles = tClockCycles;
-        outputTreeContents.tTime = tTime;
-        outputTreeContents.tStartTime = tStartTime;
-        outputTreeContents.tTrigger = tTrigger;
-        outputTreeContents.tTimeDiff = tTimeDiff;
-        outputTreeContents.tMatchingTimeCut = tMatchingTimeCut;
-        outputTreeContents.tEvtNum = tEvtNum;
-        outputTreeContents.tRunNum = tRunNum;
-        outputTreeContents.tTBEvent = tTBEvent;
 
-        findExtrema();
+        outputTreeContents.tClockCycles = tClockCycles; // -> Ignore
+        outputTreeContents.tTime = tTime; // -> pmtTime
+        outputTreeContents.tStartTime = tStartTime; //
+        outputTreeContents.tTrigger = tTrigger;  // -> Ignore
+        outputTreeContents.tTimeDiff = tTimeDiff;
+        outputTreeContents.tMatchingTimeCut = tMatchingTimeCut; 
+        outputTreeContents.tEvtNum = tEvtNum; // -> eventID? 
+        outputTreeContents.tRunNum = tRunNum; // -> runNumber
+        outputTreeContents.tTBEvent = tTBEvent; // -> Ignore for now
+
+        if (!isSim) getEventLumis();
 
         if (!isSlab){ //temporary while slab has no lumi/good runs
             std::cout << "Getting event lumis" << std::endl;
@@ -1666,9 +1706,15 @@ void OfflineFactory::readWaveData(){
         }
         
     }
+    std::clog << "Finished looping through events" << std::endl;
 
-    setTotalLumi();
-    std::cout << "sEt lumi" << std::endl;
+    // If not sim data calculate lumi by matching to LHC fills.
+    // There is not really a luminosity in sim, so skip
+    if(!isSim){
+      setTotalLumi();
+    } 
+
+    std::clog << "Set Total Lumi" << std::endl;
 
     //std::cout << std::endl;
     
@@ -1683,6 +1729,10 @@ void OfflineFactory::writeOutputTree(){
     if (inFile) inFile->Close();
 }
 void OfflineFactory::prepareWave(int ic){
+  TFile* outfile = TFile::Open("waveforms.root", "RECREATE");
+    for (auto wave : waves){
+        wave->Write();}
+    outfile->Close();
     TAxis * a = waves[ic]->GetXaxis();
     // a->Set( a->GetNbins(), a->GetXmin()/sampleRate, a->GetXmax()/sampleRate);
     // waves[ic]->ResetStats();
@@ -1750,27 +1800,33 @@ pair<float,float> OfflineFactory::measureSideband(int ic){
     if(n_sb == 0) n_sb = 1.;
     float mean = sum_sb/n_sb;
     float RMS =pow( sum2_sb/n_sb - pow(mean,2), 0.5);
-
     return make_pair(mean,RMS);
 
 }
 vector< pair<float,float> > OfflineFactory::findPulses(int ic){
-
+  //std::clog << "Inside findPulses" << std::endl;
     vector<pair<float,float> > bounds;
     float tstart = sideband_range[1]+1;
+    std::clog << "tstart: " << tstart << std::endl;
     int istart = waves[ic]->FindBin(tstart);
+    std::clog << "istart: " << istart << std::endl;
     // int istart = 1;
     bool inpulse = false;
     int nover = 0;
     int nunder = 0;
     int i_begin = istart;
     //int i_begin = 0;
-    int i_stop_searching = waves[ic]->GetNbinsX()-nConsecSamples[ic];
+    std::clog << "waves[ic] bins: " << waves[ic]->GetNbinsX() << std::endl;
+    int i_stop_searching = waves[ic]->GetNbinsX()-3;
     int i_stop_final_pulse = waves[ic]->GetNbinsX();
-    //std::cout << "start: " << i_begin << ", stop: " << i_stop_searching << std::endl;
+
+    std::clog << "start: " << i_begin << ", stop: " << i_stop_searching << std::endl;
 
     for (int i=istart; i<i_stop_searching || (inpulse && i<i_stop_final_pulse); i++) {
         float v = waves[ic]->GetBinContent(i);
+        if (v > 0)
+        std::clog << "Value of waveform: " << v << std::endl;
+
         if (!inpulse) {
             if (v<lowThresh[ic]) {   
                 nover = 0;     // If v dips below the low threshold, store the value of the sample index as i_begin
@@ -1807,7 +1863,9 @@ vector< pair<float,float> > OfflineFactory::findPulses(int ic){
 }
 //Pulse finding and per channel processing
 vector< pair<float,float> > OfflineFactory::processChannel(int ic){
+  std::clog << "Inside processChannel" << std::endl;
   prepareWave(ic); 
+  std::clog << "Processed wave" << std::endl;
     //Pulse finding
     vector<pair<float,float>> pulseBounds = findPulses(ic);
     int npulses = pulseBounds.size();
@@ -1820,13 +1878,14 @@ vector< pair<float,float> > OfflineFactory::processChannel(int ic){
         if (maxThreeConsec < tempMax) maxThreeConsec = tempMax;
 
     }
+    std::clog << "Defined some stuff " << std::endl;
     outputTreeContents.v_max.push_back(waves[ic]->GetMaximum());
     outputTreeContents.v_maxPulseTime.push_back(waves[ic]->GetBinLowEdge(waves[ic]->GetMaximumBin()));
     outputTreeContents.v_max_threeConsec.push_back(maxThreeConsec);
     //FIXME Need to add low pass filter option back
     outputTreeContents.v_max_afterFilter.push_back(waves[ic]->GetMaximum());
     outputTreeContents.v_min_afterFilter.push_back(waves[ic]->GetMinimum());
-    
+    std::clog << "Running over nPulses " << npulses << std::endl;
     for(int ipulse = 0; ipulse<npulses; ipulse++){
         waves[ic]->SetAxisRange(pulseBounds[ipulse].first,pulseBounds[ipulse].second);
         if (chanMap.size() > 0 and ic < chanMap.size()){
@@ -1934,6 +1993,8 @@ void OfflineFactory::loadBranches(){
     if (!isDRS) {
         inTree->SetBranchAddress("event", &evt);
         for(int ic=0;ic<numChan;ic++) waves.push_back(new TH1D());
+        if (isSim){
+          inTree->SetBranchAddress("waveform" , &waveform);}
     }
     else{
         for(int ic=0;ic<numChan;ic++) {
@@ -1973,6 +2034,50 @@ void OfflineFactory::loadWavesDRS(){
         }
     }
 }
+void OfflineFactory::loadWavesSim(){
+  /*
+    Load in waveform data while avoiding GlobalEvent variable and
+    mentions of digitizer
+   */
+
+    std::clog << "nDigitizers, nChannelsPerDigitizer, maxSamples" << nDigitizers<< ", " <<
+      nChannelsPerDigitizer <<", " <<  maxSamples << std::endl;
+
+    std::clog << "Reading in data from input file " << std::endl;
+    for (int ic=0; ic< numChan/2; ic++){
+        int chan = ic % 16;
+        int board = ic / 16;
+        std::cout << "Channel and Board numbers: " << chan << " " << board << std::endl;
+        // FIXME Crash here
+        std::cout << "Grabbing chanArray" << std::endl;
+        int chan1 =  chanArray->GetAt(ic);
+        std::cout << "Grabbing boardArray" << std::endl;
+        int board1 = boardArray->GetAt(ic);
+        std::clog << "Test1" << std::endl;
+
+        if(waves[ic]) delete waves[ic];
+        std::cout << "Test2"<< std::endl;
+        // This may cause memory issues, it may be better to offload this to
+        // a preprocessing step.
+        TH1D* tempWaveform =  new TH1D(Form("waveform_%i", ic), "Waveform",
+                                       maxSamples, 0,
+                                       maxSamples * 2.5);
+        std::cout << "Test3" << std::endl;
+        for (int i = 1; i <= 1024; ++i){
+          std::cout << "On Entry: " << i <<  std::endl;
+          float data = waveform[board][chan][i];
+          std::cout << "Got Data" << std::endl;
+
+          tempWaveform->Fill(i, data);
+          std::cout << "Filled with single data" << std::endl;
+        }
+        std::clog << "tempWaveform bins: " << tempWaveform->GetNbinsX();
+        std::cout << "Filled waveform" << std::endl;
+        waves[ic] = tempWaveform;
+    }
+    return;
+}
+
 void OfflineFactory::writeVersion(){
     //This is very hacky but it works
     cout<<"Git tag is "<<"longtagplaceholder"<<endl;

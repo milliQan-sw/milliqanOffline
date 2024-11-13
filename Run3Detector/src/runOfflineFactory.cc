@@ -26,7 +26,7 @@ int main(int argc, char **argv){
     //Read input and output files (necessary arguments)
     bool versionMode = cmdOptionExists(argv, argv + argc, "-v");
     if (versionMode){
-        OfflineFactory offlineFactory = OfflineFactory("","","",false,false,-1,-1);
+      OfflineFactory offlineFactory = OfflineFactory("","","",false,false,true,-1,-1);
         std::cout << offlineFactory.getVersion() << std::endl;
         return 0;
     }
@@ -38,7 +38,9 @@ int main(int argc, char **argv){
     bool isDRSdata = cmdOptionExists(argv, argv + argc, "--drs");
     if (isDRSdata) std::cout << "Assuming DRS input" << std::endl;
     bool isSlab = cmdOptionExists(argv, argv + argc, "--slab");
+    bool isSim = cmdOptionExists(argv, argv+argc, "--sim");
     if (isSlab) std::cout << "Running with slab configuration" << std::endl;
+    if (isSim) std:: cout << "Running over sim data" << std::endl;
     //char * DRS_num = getCmdOption(argv, argv + argc, "-DRS_num");
     //char * numChanDRS = getCmdOption(argv, argv + argc, "-nDRSchan");
     int runNumber = -1;
@@ -64,7 +66,7 @@ int main(int argc, char **argv){
     }
 
     std::cout << "Running in standard mode with:\nInput file: " << inputFilenameChar << "\nOutput file: " << outputFilenameChar << std::endl;
-    OfflineFactory offlineFactory = OfflineFactory(inputFilenameChar,outputFilenameChar,appendToTag,isDRSdata,isSlab,runNumber,fileNumber);
+    OfflineFactory offlineFactory = OfflineFactory(inputFilenameChar,outputFilenameChar,appendToTag,isDRSdata,isSlab,isSim, runNumber,fileNumber);
 
     //Read configuration files
     char * configChar = getCmdOption(argv, argv + argc, "-c");
@@ -82,21 +84,17 @@ int main(int argc, char **argv){
 	}
     std::cout << "Configuration: " << configChar << std::endl;
     }
-    
+
+    std::clog << "Setting friend file" << std::endl;
     offlineFactory.setFriendFile(mergedTriggerFile);
 
     std::string lumiFile;
-    std::string goodRunList;
-    if (isSlab) {
-        lumiFile = TString(offlineDir) + "/configuration/slabConfigs/mqLumisSlab.json";
-        goodRunList = TString(offlineDir) + "/configuration/slabConfigs/goodRunsListSlab.json";
-    }
-    else {
-        lumiFile = TString(offlineDir) + "/configuration/barConfigs/mqLumis.json";
-        goodRunList = TString(offlineDir) + "/configuration/barConfigs/goodRunsList.json";
-    }
-    offlineFactory.getLumis(lumiFile);
-    offlineFactory.checkGoodRunList(goodRunList);
+    std::clog << "Setting lumi file" << std::endl;
+    if (isSlab) lumiFile = TString(offlineDir) + "/configuration/slabConfigs/mqLumisSlab.json";
+    else lumiFile = TString(offlineDir) + "/configuration/barConfigs/mqLumis.json";
+
+    std::clog << "Running getLumis" << std::endl;
+    //offlineFactory.getLumis(lumiFile);
 
     if (displayMode) {
 	if (isDRSdata){

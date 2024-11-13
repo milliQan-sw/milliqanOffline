@@ -1,20 +1,19 @@
-#include "TCanvas.h"
+#include <TCanvas.h>
 #include "TTree.h"
 #include "TGaxis.h"
 #include "TStyle.h"
 #include "TFile.h"
+#include <TSystem.h>
 #include <RtypesCore.h>
 #include <iostream>
 #include <fstream>
 #include "TMath.h"
+#include "TF1.h"
+#include "TRandom3.h"
 #include "TChain.h"
-#include "/net/cms26/cms26r0/zheng/barsim/milliQanSim/include/mqROOTEvent.hh"
-#include "/net/cms26/cms26r0/zheng/barsim/milliQanSim/include/mqPMTRHit.hh"
+#include "mqROOTEvent.hh"
+#include "mqPMTRHit.hh"
 #include "TObject.h"
-//#include "/net/cms18/cms18r0/cms26r0/zheng/barsim/milliQanSim/include/mqROOTEvent.hh"
-//#include "/net/cms18/cms18r0/cms26r0/zheng/barsim/milliQanSim/include/mqPMTRHit.hh"
-//#include "milliQanSim/include/mqROOTEvent.hh"
-//#include "milliQanSim/include/mqPMTRHit.hh"
 #include "TGraph.h"
 #include "TVector.h"
 #include "TVectorD.h"
@@ -26,8 +25,7 @@
 #include "TMultiGraph.h"
 #include <vector>
 #include <map>
-//R__LOAD_LIBRARY(/homes/tianjiad/milliQanSim/build/libBenchCore.so)
-R__LOAD_LIBRARY(/net/cms26/cms26r0/zheng/barsim/milliQanSim/build/libMilliQanCore.so)
+R__LOAD_LIBRARY(/home/rsantos/scratch0/MilliQan/CMSSW_13_0_13/src/milliqanOffline/Run3Detector/analysis/simConversion/libMilliQanCore.so)
 using namespace std;
 
 struct DAQTimeStamp{
@@ -38,7 +36,7 @@ struct DAQTimeStamp{
 struct digitizers {
   UInt_t fUniqueID;
   UInt_t fBits;
-  DAQTimeStamp DAQTimeStamp;
+  //  DAQTimeStamp DAQTimeStamp;
   UShort_t TriggerCount;
   UShort_t TimeCount;
   UChar_t EventId;
@@ -87,7 +85,8 @@ int simToDataPMT(int simChannel) {
     }
 }
 
-void waveinject() {
+int main() {
+   gSystem->Load("libMilliQanCore.so");
    // Open the input and output ROOT files
    TChain rootEvents("Events");
    rootEvents.Add("MilliQan.root");
@@ -178,29 +177,30 @@ void waveinject() {
    // Close the files
    f->Close();
    outfile->Close();
+   return 0;
 }
 
 
-void setupMetadataBranch(Tree *events) {
+// void setupMetadataBranch(Tree *events) {
 
-  events->Branch("digitizers")
-  UInt_t fUniqueID;
-  UInt_t fBits;
-  UInt_t DAQEventNumber;
-  digitizers digitizer;
+//   events->Branch("digitizers")
+//   UInt_t fUniqueID;
+//   UInt_t fBits;
+//   UInt_t DAQEventNumber;
+//   digitizers digitizer;
 
-  fUniqueID = -1;
-  fBits = -1;
-  DAQEventNumber = -1;
-  digitizer.EventCounter = -1;
-  digitizer.EventId = -1;
-  digitizer.EventSize = 0;
-  digitizer.BoardId = 7;
-  digitizer.ChannelMask = 2;
-  digitizer.fUniqueID = fUniqueID;
-  digitizer.fBits = fBits;
+//   fUniqueID = -1;
+//   fBits = -1;
+//   DAQEventNumber = -1;
+//   digitizer.EventCounter = -1;
+//   digitizer.EventId = -1;
+//   digitizer.EventSize = 0;
+//   digitizer.BoardId = 7;
+//   digitizer.ChannelMask = 2;
+//   digitizer.fUniqueID = fUniqueID;
+//   digitizer.fBits = fBits;
   
   
 
-  return;
-}
+//   return;
+// }

@@ -174,8 +174,8 @@ struct offline_tree_{
 //Offline factory class used to produce offline tree output
 class OfflineFactory {
 public:
-    OfflineFactory(TString,TString,TString,bool,bool);
-    OfflineFactory(TString,TString,TString, bool, bool, int, int);
+    OfflineFactory(TString,TString,TString,bool,bool,bool);
+    OfflineFactory(TString,TString,TString, bool, bool,bool, int, int);
     // virtual ~OfflineFactory();
     void makeOutputTree();
     void loadJsonConfig(string);
@@ -214,6 +214,7 @@ private:
     void loadBranches();
     void loadWavesMilliDAQ();
     void loadWavesDRS();
+    void loadWavesSim();
     void validateInput();
     void writeVersion();
     ulong getUnixTime(TString&);
@@ -235,13 +236,14 @@ private:
     int fileNumber;
     bool isDRS;
     bool isSlab;
+    bool isSim;
     mdaq::GlobalEvent * evt = new mdaq::GlobalEvent();
     mdaq::DemonstratorConfiguration * cfg = new mdaq::DemonstratorConfiguration();
     TString* fileOpenTime;
     TString* fileCloseTime;
     vector<float> highThresh = {15.}; //TODO: do these need to be vectors? They are the same for all channels currently
     vector<float> lowThresh = {5.};
-    vector<int> nConsecSamples = {3};
+    vector<int> nConsecSamples = {1};
     vector<int> nConsecSamplesEnd = {1};
     vector< vector<int> > chanMap;
     vector<float> timingCalibrations;
@@ -306,7 +308,7 @@ private:
     int tEvtNum = 0;
     int tRunNum = 0;
     int tTBEvent = 0;
-    int totalPulseCount = 0;
+  float waveform[5][16][maxSamples] = {{{0}}};
 
     Long64_t firstTDC_time=10e15;
     Long64_t lastTDC_time=-1;

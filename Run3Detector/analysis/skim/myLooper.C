@@ -2,10 +2,10 @@
 #include <TH2.h>
 #include <TStyle.h>
 #include <TCanvas.h>
-#include <iostream>
 #include "TChain.h"
 #include "TFile.h"
 #include <fstream>
+#include <iomanip>
 
 void myLooper::Loop(TString outFile)
 {
@@ -19,7 +19,7 @@ void myLooper::Loop(TString outFile)
     TTree* tout = fChain->CloneTree(0);
 
     // Open a text file in append mode to log results
-    std::ofstream outputTextFile("skim_results.txt", std::ios::app);
+    ofstream outputTextFile("skim_results.txt", ios::app);
 
     // Minimum area threshold
     float minArea = 500000.;
@@ -39,12 +39,12 @@ void myLooper::Loop(TString outFile)
 
         // Provide progress updates to the user
         if (jentry % 1000 == 0) {
-            std::cout << "Processing entry " << jentry << "/" << nentries << std::endl;
+            cout << "Processing entry " << jentry << "/" << nentries << endl;
         }
 
         // Sanity check: Ensure `chan` and `area` vectors have the same size
         if (chan->size() != area->size()) {
-            std::cerr << "Mismatch in sizes of chan and area vectors at entry " << jentry << std::endl;
+            cerr << "Mismatch in sizes of chan and area vectors at entry " << jentry << endl;
             continue;
         }
 
@@ -80,11 +80,11 @@ void myLooper::Loop(TString outFile)
 
     // Calculate and log the fraction of events that passed the selection
     float frac = static_cast<float>(passed) / nentries;
-    outputTextFile << "Output file contains " << passed << " events" << std::endl;
-    outputTextFile << "Input file contains " << nentries << " events" << std::endl;
-    outputTextFile << std::fixed << std::setprecision(5)
-                   << "Fraction of passed events: " << frac << std::endl
-                   << std::endl;
+    outputTextFile << "Output file contains " << passed << " events" << endl;
+    outputTextFile << "Input file contains " << nentries << " events" << endl;
+    outputTextFile << fixed << setprecision(5)
+                   << "Fraction of passed events: " << frac << endl
+                   << endl;
 
     // Close the log file
     outputTextFile.close();

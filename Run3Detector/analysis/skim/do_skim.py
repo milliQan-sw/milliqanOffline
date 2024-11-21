@@ -3,6 +3,19 @@ import os
 import pandas as pd
 import shutil
 
+def checkBeam(mqLumis, run, file, branch='beam'):
+    #print("check beam run {} file {}".format(run, file))
+    beam = mqLumis[branch].loc[(mqLumis['run'] == run) & (mqLumis['file'] == file)]
+    if beam.size == 0: return None
+    beam = beam.values[0]
+    return beam
+
+def checkGoodRun(goodRuns, run, file, branch='goodRunTight'):
+    goodRun = goodRuns[branch].loc[(goodRuns['run'] == run) & (goodRuns['file'] == file)].values
+    if len(goodRun) == 1:
+        return goodRun[0]
+    return False
+
 # Copying configuration files
 print("Copying configuration files...")
 shutil.copy('/eos/experiment/milliqan/Configs/mqLumis.json', os.getcwd())
@@ -70,7 +83,7 @@ print(f"Total number of events in the chain: {nEntries}")
 
 if nEntries > 0:
     print("Loading macro and starting loop...")
-    r.gROOT.LoadMacro("myLooper.py")
+    r.gROOT.LoadMacro("myLooper.C")
     mylooper = r.myLooper(mychain)
     mylooper.Loop(outputName)
     print(f"Loop completed. Output saved to {outputName}.")

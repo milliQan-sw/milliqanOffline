@@ -3,19 +3,6 @@ import os
 import pandas as pd
 import shutil
 
-def checkBeam(mqLumis, run, file, branch='beam'):
-    #print("check beam run {} file {}".format(run, file))
-    beam = mqLumis[branch].loc[(mqLumis['run'] == run) & (mqLumis['file'] == file)]
-    if beam.size == 0: return None
-    beam = beam.values[0]
-    return beam
-
-def checkGoodRun(goodRuns, run, file, branch='goodRunTight'):
-    goodRun = goodRuns[branch].loc[(goodRuns['run'] == run) & (goodRuns['file'] == file)].values
-    if len(goodRun) == 1:
-        return goodRun[0]
-    return False
-
 # Copying configuration files
 print("Copying configuration files...")
 shutil.copy('/eos/experiment/milliqan/Configs/mqLumis.json', os.getcwd())
@@ -29,7 +16,7 @@ goodRuns = pd.read_json('goodRunsList.json', orient='split', compression='infer'
 ########################################################
 ################### Settings ##########################
 directory = '/store/user/milliqan/trees/v35/bar/1200/'
-outputName = 'MilliQan_Run1200_v35_skim_beamOff_tight.root'
+outputName = os.path.join(os.getcwd(), 'MilliQan_Run1200_v35_skim_beamOff_tight.root')  # Save to current directory
 beam = False
 goodRun = 'goodRunTight'
 #######################################################

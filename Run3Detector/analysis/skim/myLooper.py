@@ -22,7 +22,7 @@ def my_looper(input_files, out_file):
     # Open a text file in append mode to log results
     with open("skim_results.txt", "a") as output_text_file:
         # Minimum area threshold
-        min_area = 500
+        min_area = 500 # nPE > 60, 90
 
         # Get the number of entries in the chain
         nentries = fChain.GetEntries()

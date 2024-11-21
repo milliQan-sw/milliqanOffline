@@ -40,6 +40,7 @@ def my_looper(input_files, out_file):
             chan = np.array(fChain.chan)
             area = np.array(fChain.area)
             layer = np.array(fChain.layer)
+            row = np.array(fChain.row)
             type_ = np.array(fChain.type)
 
             # Sanity check: Ensure `chan` and `area` vectors have the same size
@@ -48,20 +49,22 @@ def my_looper(input_files, out_file):
                 continue
 
             # Analyze the event
-            n_sat = 0  # Number of saturated channels
-            n_hits_by_layer = [0, 0, 0, 0]  # Hit counts per layer
+            hits_by_layer_and_row = {}
 
             # Loop over all channels in the event
             for k in range(len(chan)):
                 if area[k] > min_area and type_[k] == 0:
-                    n_sat += 1
-                    n_hits_by_layer[layer[k]] += 1
+                    layer_id = layer[k]
+                    row_id = row[k]
+                    if layer_id not in hits_by_layer_and_row:
+                        hits_by_layer_and_row[layer_id] = set()
+                    hits_by_layer_and_row[layer_id].add(row_id)
 
-            # Count the number of layers with hits
-            n_layers_hit = sum(1 for hits in n_hits_by_layer if hits > 0)
+            # Check if any layer has hits in more than 3 rows
+            valid_event = any(len(rows) > 3 for rows in hits_by_layer_and_row.values())
 
-            # Save the event to the output tree if hits occurred in at least 3 layers
-            if n_layers_hit >= 3:
+            # Save the event to the output tree if the condition is met
+            if valid_event:
                 tout.Fill()
                 passed += 1
 

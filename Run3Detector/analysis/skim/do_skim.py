@@ -28,8 +28,8 @@ goodRuns = pd.read_json('goodRunsList.json', orient='split', compression='infer'
 
 ########################################################
 ################### Settings ##########################
-directory = '/store/user/milliqan/trees/v35/bar/1600/'
-outputName = os.path.join(os.getcwd(), 'MilliQan_Run1600_v35_skim_beamOff_tight.root')  # Save to current directory
+directory = '/store/user/milliqan/trees/v35/bar/1700/'
+outputName = os.path.join(os.getcwd(), 'MilliQan_Run1700_v35_skim_beamOff_tight.root')  # Save to current directory
 beam = False
 goodRun = 'goodRunTight'
 #######################################################

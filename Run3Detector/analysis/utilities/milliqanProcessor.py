@@ -10,8 +10,8 @@ import awkward as ak
 import numpy as np
 import array as arr
 import argparse
-from milliqanPlotter import *
-from processorConstants import *
+from . import milliqanPlotter 
+from . import processorConstants
 
 class milliqanProcessor():
 
@@ -32,14 +32,14 @@ class milliqanProcessor():
 
     #Pulls the quality level and verbosity from the processorConstants class based on the quality level input string
     def constantPuller(self):
-        if self.qualityLevelString not in processorConstants.qualityDict.keys():
+        if self.qualityLevelString not in processorConstants.processorConstants.qualityDict.keys():
             raise Exception("\n\nQuality level '{0}' not recognized. Please use one of the following: {1}\n".format(self.qualityLevelString, list(processorConstants.qualityDict.keys())))
-        if self.verbosityString not in processorConstants.verbosity.keys():
-            raise Exception("\n\nVerbosity level '{0}' not recognized. Please use one of the following: {1}\n".format(self.verbosityString, list(processorConstants.verbosity.keys())))
-        if processorConstants.verbosity[self.verbosityString] > 0:
+        if self.verbosityString not in processorConstants.processorConstants.verbosity.keys():
+            raise Exception("\n\nVerbosity level '{0}' not recognized. Please use one of the following: {1}\n".format(self.verbosityString, list(processorConstants.processorConstants.verbosity.keys())))
+        if processorConstants.processorConstants.verbosity[self.verbosityString] > 0:
             print("\nChosen quality level: \033[1;34m", self.qualityLevelString, "\033[0m")
             print("Chosen verbosity level: \033[1;34m", self.verbosityString, "\n\033[0m")
-        return processorConstants.qualityDict[self.qualityLevelString], processorConstants.verbosity[self.verbosityString]
+        return processorConstants.processorConstants.qualityDict[self.qualityLevelString], processorConstants.processorConstants.verbosity[self.verbosityString]
 
     #Get rid of the strings and make a dictionary so that it's easier to debug
     def fileChecker(self):

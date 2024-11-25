@@ -3,7 +3,7 @@ import ROOT as r
 
 def getRunTime():
     # Define the runs used in beam on/off data
-    beamOnRuns = [1400, 1800]
+    #beamOnRuns = [1400, 1800]
     beamOffRuns = [1300, 1800]
 
     # Open the lumi file
@@ -14,24 +14,25 @@ def getRunTime():
     lumis['stop'] = pd.to_datetime(lumis['stop'])
 
     # Get all beam on/off files in run ranges
-    beamOn = lumis[(lumis['run'] >= beamOnRuns[0]) & (lumis['run'] < beamOnRuns[1]) & (lumis['beamInFill']==True)]
+    #beamOn = lumis[(lumis['run'] >= beamOnRuns[0]) & (lumis['run'] < beamOnRuns[1]) & (lumis['beamInFill']==True)]
     beamOff = lumis[(lumis['run'] >= beamOffRuns[0]) & (lumis['run'] < beamOffRuns[1]) & (lumis['beamInFill']==False)]
 
     # Calculate total lumi in beam on dataset
-    totalLumi = beamOn['lumiEst'].sum()
+    #totalLumi = beamOn['lumiEst'].sum()
 
     # Calculate total run time in seconds
-    runTimeOn = (beamOn['stop'] - beamOn['start']).sum().total_seconds()
+    #runTimeOn = (beamOn['stop'] - beamOn['start']).sum().total_seconds()
     runTimeOff = (beamOff['stop'] - beamOff['start']).sum().total_seconds()
 
-    print("Beam on runs ran for {}s with lumi {}pb^-1".format(runTimeOn, totalLumi))
+    #print("Beam on runs ran for {}s with lumi {}pb^-1".format(runTimeOn, totalLumi))
     print("Beam off runs ran for {}s".format(runTimeOff))
 
-    scale = runTimeOff / runTimeOn
+    #scale = runTimeOff / runTimeOn
 
-    print("Scale to normalize beam data {}".format(scale))
+    #print("Scale to normalize beam data {}".format(scale))
 
-    return runTimeOn, runTimeOff
+    #return runTimeOn, runTimeOff
+    return runTimeOff
 
 if __name__ == "__main__":
     # Stop Python from displaying canvases
@@ -41,11 +42,12 @@ if __name__ == "__main__":
     fout = r.TFile.Open("timingCalibrationPlots.root", "RECREATE")
 
     # Get the total run time for beam on/off
-    runTimeOn, runTimeOff = getRunTime()
+    # runTimeOn, runTimeOff = getRunTime()
+    runTimeOff = getRunTime()
 
     # Open the timing correction files for beam on/off
     #f_beamOn = r.TFile.Open('/share/scratch0/peng/CMSSW_12_4_11_patch3/src/milliqanOffline/Run3Detector/analysis/timingCorrection/timingCorrection_beamOn.root', 'READ')
-    f_beamOff = r.TFile.Open('/share/scratch0/peng/CMSSW_12_4_11_patch3/src/milliqanOffline/Run3Detector/analysis/timingCorrection/timingCorrection_beamOff.root', 'READ')
+    f_beamOff = r.TFile.Open('/share/scratch0/peng/CMSSW_12_4_11_patch3/src/milliqanOffline/Run3Detector/analysis/cosSkim_timingCorrection/timingCorrection_beamOff.root', 'READ')
 
     # Create TCanvases for each layer
     c_l1 = r.TCanvas("c_l1", "Layer 1", 1400, 1400)
@@ -64,8 +66,8 @@ if __name__ == "__main__":
     timeCanvases = [c_l1, c_l2, c_l3, c_l4, c_l5]
 
     # Define fit bounds for each channel in beam on and off datasets
+    '''
     boundsOn = [
-        # Below is to calibrate bars
         [-25, -13], [-40, 0], [-40, 0], [-20, -12], [-35, -22], [-25, -19], [-32, -21], [-40, 0],
         [-40, 0], [-25, -13], [-40, 0], [-40, 0], [-40, 0], [-35, -23], [-40, 0], [-40, 0],
 
@@ -78,11 +80,10 @@ if __name__ == "__main__":
         [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30],
         [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-7, 2],
 
-        # Below is to calibrate side panels and slabs
         [-50, 50], [-50, 50], [-50, 50], [-50, 50], [-50, 50], [-50, 50], [-50, 50], [-50, 50],
         [-50, 50], [-50, 50], [-50, 50], [-50, 50], [-50, 50], [-50, 50], [-50, 50], [-50, 50]
     ]
-
+    '''
     boundsOff = [
         [-40, 0]] * 80
     

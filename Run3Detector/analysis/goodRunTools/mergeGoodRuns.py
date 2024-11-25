@@ -14,7 +14,7 @@ from checkMatching import fileChecker
 if __name__ == "__main__":
     
     #input directory will all good run lists
-    dataDir = '/data/users/mcarrigan/log/goodRunLists/currentVersion/'
+    dataDir = '/data/users/milliqan/log/goodRunLists/currentVersion/09_06_14/'
 
     goodRuns = pd.DataFrame()
     checks = pd.DataFrame()

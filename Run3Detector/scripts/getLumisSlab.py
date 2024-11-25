@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 import math
 import sys
 from omsapi import OMSAPI
-import shutil
 
 #using omsapi client https://gitlab.cern.ch/cmsoms/oms-api-client/-/tree/master
 
@@ -31,14 +30,14 @@ class mqLumiList():
     
     def __init__(self):
         self.lumi_csv = ''
-        self.rawPath = '/store/user/milliqan/run3/bar/'
-        self.outputFile = '/eos/experiment/milliqan/Configs/mqLumis.json'
+        self.rawPath = '/store/user/milliqan/run3/slab/'
+        self.outputFile = '/eos/experiment/milliqan/Configs/mqLumisSlab.json'
         self.rawLumis = '/eos/experiment/milliqan/Configs/rawLumis.json'
         self.mqLumis = pd.DataFrame(columns=['run', 'file', 'lumis', 'fill', 'beam', 'beamInFill', 'dir', 'filename', 'start', 'stop'])
         self.debug = False
         
     def looper(self):
-        rawDirectories = ['1000', '1100', '1200', '1300', '1400']
+        rawDirectories = ['600', '700']
         rawSubDirectories = ['0000', '0001', '0002', '0003', '0004', '0005', '0006', '0007', '0008', '0009']
 
         for i, d1 in enumerate(rawDirectories):
@@ -75,10 +74,7 @@ class mqLumiList():
                     'last_run_number': 'object',
                     'energy': 'object'}
 
-        copyName = '/'.join([os.getcwd(), self.rawLumis.split('/')[-1]])
-        print(copyName)
-        shutil.copy(self.rawLumis, copyName)
-        rawLumis = pd.read_json(copyName, orient = 'split', compression = 'infer', dtype=dtype_dict)
+        rawLumis = pd.read_json(self.rawLumis, orient = 'split', compression = 'infer', dtype=dtype_dict)
         lastRun = rawLumis[(rawLumis['end_time'].isna()) & (~rawLumis['start_stable_beam'].isna())].head(1)['fill_number']
         if len(lastRun) == 0:
             lastRun = rawLumis.tail(1)['fill_number']
@@ -118,6 +114,8 @@ class mqLumiList():
         q.attrs(cols)
 
         response = q.data()
+
+        print(response)
 
         dataframe = [x['attributes'] for x in response.json()['data']]
         dataframe = pd.DataFrame(dataframe)
@@ -164,7 +162,7 @@ class mqLumiList():
             self.setFileTimes()
             self.setMQLumis()
             if not self.debug: self.saveJson()
-            else: self.saveJson(name='mqLumisDebug.json')
+            else: self.saveJson(name='mqLumisDebugSlab.json')
 
     def getFilesToProcess(self, lastRun=None, lastFile=None):
 
@@ -199,9 +197,7 @@ class mqLumiList():
         return filesToProcess
 
     def getLastUpdate(self, reprocess=True):
-        copyName = '/'.join([os.getcwd(),self.outputFile.split('/')[-1]])
-        shutil.copy(self.outputFile, copyName)
-        prevLumis = pd.read_json(copyName, orient = 'split', compression = 'infer')
+        prevLumis = pd.read_json(self.outputFile, orient = 'split', compression = 'infer')
 
         lastProcess = prevLumis.tail(1)
         lastRun = lastProcess['run'].values[0]
@@ -480,13 +476,11 @@ class mqLumiList():
     def setMQLumis(self):
         self.mqLumis[['lumis', 'fill', 'beamType', 'beamEnergy', 'betaStar', 'beam', 'beamInFill', 'fillStart', 'fillEnd', 'startStableBeam', 'endStableBeam', 'lumiEst']] = self.mqLumis.apply(lambda x: self.findLumiStart(x.start, x.stop) if x.lumis is None else (x.lumis, x.fill, x.beamType, x.beamEnergy, x.betaStar, x.beam, x.beamInFill, x.fillStart, x.fillEnd, x.startStableBeam, x.endStableBeam, x.lumiEst), axis='columns', result_type='expand')
 
-    def saveJson(self, name='mqLumisUpdate.json'):
+    def saveJson(self, name='mqLumisUpdateSlab.json'):
         self.mqLumis.to_json(name, orient = 'split', compression = 'infer', index = 'true', date_format='iso')
 
     def updateJson(self):
-        copyName = '/'.join([os.getcwd(),self.outputFile.split('/')[-1]])
-        shutil.copy(self.outputFile, copyName)
-        existing = pd.read_json(copyName, orient = 'split', compression = 'infer')
+        existing = pd.read_json(self.outputFile, orient = 'split', compression = 'infer')
         existing['start'] = pd.to_datetime(existing['start'])
         existing = existing.sort_values(by='start')
         self.mqLumis['run'] = self.mqLumis['run'].astype(int)
@@ -495,17 +489,17 @@ class mqLumiList():
         self.mqLumis = self.mqLumis.drop_duplicates(subset=['run', 'file'], keep='last')
         self.mqLumis = self.mqLumis.sort_values(by='start')
         if self.debug:
-            self.saveJson(name='mqLumisDebug.json')
+            self.saveJson(name='mqLumisDebugSlab.json')
         else:
             self.saveJson()
         if not self.debug: 
-            os.system('rsync -rzh mqLumisUpdate.json {}'.format(self.outputFile))
-            os.system('rsync -rzh rawLumis.json {}'.format(self.rawLumis))
+            os.system('rsync -rzh mqLumisUpdateSlab.json {}'.format(self.outputFile))
+            os.system('rsync -rzh rawLumisSlab.json {}'.format(self.rawLumis))
 
 
 if __name__ == "__main__":
 
-    LOCK_FILE = "/tmp/getLumis.lock"
+    LOCK_FILE = "/tmp/getLumisSlab.lock"
 
     # Check if lock file exists
     if os.path.exists(LOCK_FILE):
@@ -517,10 +511,10 @@ if __name__ == "__main__":
         f.write("")
 
     try:
-        update=True
+        update=False
         debug=False
 
-        startingRun = 1780
+        startingRun = 600
         startingFile = 1
 
         mylumiList = mqLumiList()

@@ -38,14 +38,14 @@ if __name__ == "__main__":
     r.gROOT.SetBatch(1)
 
     # Define output file to write out ROOT plots
-    fout = r.TFile.Open("timingCalibrationPlots_5L.root", "RECREATE")
+    fout = r.TFile.Open("timingCalibrationPlots.root", "RECREATE")
 
     # Get the total run time for beam on/off
     runTimeOn, runTimeOff = getRunTime()
 
     # Open the timing correction files for beam on/off
-    f_beamOn = r.TFile.Open('/share/scratch0/peng/CMSSW_12_4_11_patch3/src/milliqanOffline/Run3Detector/analysis/timingCorrection/broad_timingCorrection_beamOn_5L.root', 'READ')
-    f_beamOff = r.TFile.Open('/share/scratch0/peng/CMSSW_12_4_11_patch3/src/milliqanOffline/Run3Detector/analysis/timingCorrection/broad_timingCorrection_beamOff_5L.root', 'READ')
+    f_beamOn = r.TFile.Open('/share/scratch0/peng/CMSSW_12_4_11_patch3/src/milliqanOffline/Run3Detector/analysis/timingCorrection/timingCorrection_beamOn.root', 'READ')
+    f_beamOff = r.TFile.Open('/share/scratch0/peng/CMSSW_12_4_11_patch3/src/milliqanOffline/Run3Detector/analysis/timingCorrection/timingCorrection_beamOff.root', 'READ')
 
     # Create TCanvases for each layer
     c_l1 = r.TCanvas("c_l1", "Layer 1", 1400, 1400)
@@ -65,6 +65,7 @@ if __name__ == "__main__":
 
     # Define fit bounds for each channel in beam on and off datasets
     boundsOn = [
+        # Below is to calibrate bars
         [-25, -13], [-40, 0], [-40, 0], [-20, -12], [-35, -22], [-25, -19], [-32, -21], [-40, 0],
         [-40, 0], [-25, -13], [-40, 0], [-40, 0], [-40, 0], [-35, -23], [-40, 0], [-40, 0],
 
@@ -77,6 +78,7 @@ if __name__ == "__main__":
         [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30],
         [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-10, 30], [-7, 2],
 
+        # Below is to calibrate side panels and slabs
         [-50, 50], [-50, 50], [-50, 50], [-50, 50], [-50, 50], [-50, 50], [-50, 50], [-50, 50],
         [-50, 50], [-50, 50], [-50, 50], [-50, 50], [-50, 50], [-50, 50], [-50, 50], [-50, 50]
     ]

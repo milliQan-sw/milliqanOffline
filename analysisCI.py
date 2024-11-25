@@ -53,7 +53,7 @@ if __name__ == "__main__":
     myschedule.printSchedule()
 
     #create the milliqan processor object
-    myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts, myplotter)
+    myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts, myplotter, qualityLevel='override')
 
     #run the milliqan processor
     myiterator.run()

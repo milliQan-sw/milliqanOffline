@@ -75,7 +75,7 @@ def parse_args():
 
 class fileChecker():
     
-    def __init__(self, rawDir='/store/user/milliqan/run3/bar/', offlineDir='/store/user/milliqan/trees/v34/', configDir=os.path.dirname(os.path.abspath(__file__))+'/../../configuration/barConfigs/'):
+    def __init__(self, rawDir='/store/user/milliqan/run3/bar/', offlineDir='/store/user/milliqan/trees/v35/bar/', configDir=os.path.dirname(os.path.abspath(__file__))+'/../../configuration/barConfigs/'):
         self.min_run = 1200
         self.max_run = 1300
         self.rawDir = rawDir
@@ -128,7 +128,7 @@ class fileChecker():
             if cfg.startRun > run: continue
             elif cfg.startRun <= run and cfg.endRun >= run:
                 return cfg.name
-            elif cfg.endRun == -1 and cfg.startRun < run:
+            elif cfg.endRun == -1 and cfg.startRun <= run:
                 return cfg.name
         return None
 
@@ -276,10 +276,11 @@ class fileChecker():
         rawFiles = self.runInfos[['run', 'file']].loc[~pd.notnull(self.runInfos['offlineFile'])].to_numpy()
         for pair in rawFiles:
             thisConfig = self.getTriggerConfig(pair[0])
+            print("Setting run config", thisConfig, pair)
             self.runInfos['runConfig'].loc[(self.runInfos['run'] == pair[0]) & (self.runInfos['file'] == pair[1])] = thisConfig
 
             subdir = int(math.floor(pair[0] / 100.0)) * 100
-            offlineFile = '{0}/MilliQan_Run{1}.{2}_v34.root'.format(subdir, pair[0], pair[1])
+            offlineFile = '{0}/MilliQan_Run{1}.{2}_v35.root'.format(subdir, pair[0], pair[1])
             if os.path.exists(self.offlineDir+'/'+offlineFile): 
                 self.runInfos['offlineFile'].loc[(self.runInfos['run'] == pair[0]) & (self.runInfos['file'] == pair[1])] = offlineFile
                 self.runInfos['offlineDir'].loc[(self.runInfos['run'] == pair[0]) & (self.runInfos['file'] == pair[1])] = self.offlineDir
@@ -560,7 +561,7 @@ if __name__ == "__main__":
     goodRunListName = ''
     jsonName = ''
 
-    update=True
+    update=False
 
     if not isinstance(args.dir, list): args.dir = [args.dir]
     if not isinstance(args.subdir, list): args.subdir = [args.subdir]

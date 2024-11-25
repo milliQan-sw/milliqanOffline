@@ -472,6 +472,6 @@ if __name__ == "__main__":
     myschedule.cutFlowPlots()
 
     #save plots
-    myplotter.saveHistograms("timingCorrection{}.root".format('_beamOff'))
+    myplotter.saveHistograms("cosSkim_timingCorrection{}.root".format('_beamOff'))
 
     mycuts.getCutflowCounts()

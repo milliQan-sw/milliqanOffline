@@ -425,7 +425,7 @@ if __name__ == "__main__":
     cutflow = [mycuts.totalEventCounter, mycuts.fullEventCounter, 
                 boardMatchCut, 
                 pickupCut, 
-                panelVeto, # have panelVeto for both beamOn and beamOff
+                #panelVeto,
                 firstPulseCut,
                 nPECut,
                 centralTime,

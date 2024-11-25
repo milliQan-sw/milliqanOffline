@@ -1821,7 +1821,7 @@ vector< pair<float,float> > OfflineFactory::findPulses(int ic){
     //std::clog << "start: " << i_begin << ", stop: " << i_stop_searching << std::endl;
     for (int i=istart; i<i_stop_searching || (inpulse && i<i_stop_final_pulse); i++) {
         float v = waves[ic]->GetBinContent(i);
-        if (v > 0) std::clog << "Waveform voltage: " << v << endl;
+        //if (v > 0) std::clog << "Waveform voltage: " << v << endl;
 
         if (!inpulse) {
             if (v<lowThresh[ic]) {   
@@ -2022,9 +2022,9 @@ void OfflineFactory::loadWavesMilliDAQ(){
         for (int i = 1; i <= nBins; i++) {
             double binContent = waves[ic]->GetBinContent(i);
             double binCenter = waves[ic]->GetBinCenter(i);
-            if (binContent != 0) {
+/*            if (binContent != 0) {
             std::cout << "Bin " << i << " (Center: " << binCenter << "): " << binContent << std::endl;
-            }
+            }*/
         }
         if (isSlab) waves[ic]->Scale(-1);
     }

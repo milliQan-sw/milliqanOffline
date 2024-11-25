@@ -44,7 +44,7 @@ if __name__ == "__main__":
     runTimeOn, runTimeOff = getRunTime()
 
     # Open the timing correction files for beam on/off
-    f_beamOn = r.TFile.Open('/share/scratch0/peng/CMSSW_12_4_11_patch3/src/milliqanOffline/Run3Detector/analysis/timingCorrection/timingCorrection_beamOn.root', 'READ')
+    #f_beamOn = r.TFile.Open('/share/scratch0/peng/CMSSW_12_4_11_patch3/src/milliqanOffline/Run3Detector/analysis/timingCorrection/timingCorrection_beamOn.root', 'READ')
     f_beamOff = r.TFile.Open('/share/scratch0/peng/CMSSW_12_4_11_patch3/src/milliqanOffline/Run3Detector/analysis/timingCorrection/timingCorrection_beamOff.root', 'READ')
 
     # Create TCanvases for each layer
@@ -91,50 +91,51 @@ if __name__ == "__main__":
     # Loop over all 80 channels
     for i in range(80):
         # Get the time difference histogram for beam on and beam off data
-        h_on = f_beamOn.Get(f'h_timeDiffFrontPanel{i}')
+        #h_on = f_beamOn.Get(f'h_timeDiffFrontPanel{i}')
         h_off = f_beamOff.Get(f'h_timeDiffFrontPanel{i}')
 
         # Scale each histogram by the total run time for normalization
-        h_on.Scale(1. / runTimeOn)
+        #h_on.Scale(1. / runTimeOn)
         h_off.Scale(1. / runTimeOff)
     
         # Subtract beamOff data from beamOn data directly
+        '''
         for bin in range(1, h_on.GetNbinsX() + 1):
             beamOn_value = h_on.GetBinContent(bin)
             beamOff_value = h_off.GetBinContent(bin)
             adjusted_value = beamOn_value - beamOff_value # SUBTRACTION MADE HERE <-----------
             h_on.SetBinContent(bin, adjusted_value)
-    
+        '''
         # Create Gaussian functions for fitting
-        f_on = r.TF1('f_on', 'gaus', boundsOn[i][0], boundsOn[i][1])
+        #f_on = r.TF1('f_on', 'gaus', boundsOn[i][0], boundsOn[i][1])
         f_off = r.TF1('f_off', 'gaus', boundsOff[i][0], boundsOff[i][1])
 
         # Fit the adjusted beamOn histogram and beamOff histogram
-        h_on.Fit(f_on, "0", "", boundsOn[i][0], boundsOn[i][1])
-        #h_off.Fit(f_off, "0", "", boundsOff[i][0], boundsOff[i][1]) Not fitting the cosmic muons as there are too few
+        #h_on.Fit(f_on, "0", "", boundsOn[i][0], boundsOn[i][1])
+        h_off.Fit(f_off, "0", "", boundsOff[i][0], boundsOff[i][1])
 
         # Set line colors for visualization
-        f_on.SetLineColor(4)
+        #f_on.SetLineColor(4)
 
         # Select the correct canvas and pad
         timeCanvases[i // 16].cd()
         timeCanvases[i // 16].cd(i % 16 + 1)
 
         # Draw histograms and fits on the canvas
-        h_on.Draw("hist")
+        #h_on.Draw("hist")
         h_off.Draw("hist same")
-        f_on.Draw("same")
+        #f_on.Draw("same")
         f_off.Draw("same")
 
         text = r.TLatex()
         text.SetNDC()
         text.SetTextSize(0.03)
         text.SetTextAlign(12)
-        text.DrawLatex(0.6, 0.8, f"Mean: {f_on.GetParameter(1):.2f}")
-        text.DrawLatex(0.6, 0.7, f"StdDev: {f_on.GetParameter(2):.2f}")
+        text.DrawLatex(0.6, 0.8, f"Mean: {f_off.GetParameter(1):.2f}")
+        text.DrawLatex(0.6, 0.7, f"StdDev: {f_off.GetParameter(2):.2f}")
         #text.DrawLatex(0.6, 0.6, f"Chi2/NDOF: {f_on.GetChisquare()/f_on.GetNDF():.2f}")
 
-        mean_value = f_on.GetParameter(1)
+        mean_value = f_off.GetParameter(1)
         mean_values.append(mean_value)
     
     # Print the mean values in the desired format after the loop

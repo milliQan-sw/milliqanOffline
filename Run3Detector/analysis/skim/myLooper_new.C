@@ -1,11 +1,12 @@
+#define myLooper_cxx
 #include "myLooper.h"
 #include <TH2.h>
 #include <TStyle.h>
 #include <TCanvas.h>
+#include <iostream>
 #include "TChain.h"
 #include "TFile.h"
 #include <fstream>
-#include <iomanip>
 #include <map>
 #include <set>
 
@@ -23,20 +24,21 @@ void myLooper::Loop(TString outFile) {
     std::ofstream outputTextFile("skim_results.txt", std::ios::app);
 
     // Minimum nPE threshold
-    float minNPE = 60; // should be 90
+    float minNPE = 60; // use 90 for real
 
     // Get the number of entries in the chain
     Long64_t nentries = fChain->GetEntriesFast();
     Long64_t passed = 0; // Counter for events passing the selection
 
     // Loop through each entry
-    Long64_t nbytes = 0;
+    Long64_t nbytes = 0, nb = 0;
     for (Long64_t jentry = 0; jentry < nentries; jentry++) {
         Long64_t ientry = LoadTree(jentry);
         if (ientry < 0) break;
 
         // Load the current entry
-        nbytes += fChain->GetEntry(jentry);
+        nb = fChain->GetEntry(jentry);
+        nbytes += nb;
 
         // Provide progress updates to the user
         if (jentry % 1000 == 0) {
@@ -84,12 +86,9 @@ void myLooper::Loop(TString outFile) {
 
     // Calculate and log the fraction of events that passed the selection
     float frac = static_cast<float>(passed) / nentries;
-    outputTextFile << "Output file contains " << passed << " events" << std::endl;
-    outputTextFile << "Input file contains " << nentries << " events" << std::endl;
-    outputTextFile << std::fixed << std::setprecision(5)
-                   << "Fraction of passed events: " << frac << std::endl
-                   << std::endl;
-
-    // Close the log file
+    outputTextFile << "Output file has    " << passed    << " events" << std::endl;
+    outputTextFile << "Input  file has    " << nentries  << " events" << std::endl;
+    outputTextFile << std::fixed << std::setprecision(5) << "Fraction of passed " << frac << std::endl;
+    outputTextFile << " " << std::endl;
     outputTextFile.close();
 }

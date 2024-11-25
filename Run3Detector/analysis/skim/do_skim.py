@@ -1,91 +1,81 @@
-import ROOT as r
-import os
-import pandas as pd
-import shutil
+import ROOT
+from ROOT import TFile, TTree, TChain
+import numpy as np
 
-def checkBeam(mqLumis, run, file, branch='beam'):
-    #print("check beam run {} file {}".format(run, file))
-    beam = mqLumis[branch].loc[(mqLumis['run'] == run) & (mqLumis['file'] == file)]
-    if beam.size == 0: return None
-    beam = beam.values[0]
-    return beam
+def my_looper(input_files, out_file):
+    # Create a TChain from the input files
+    fChain = TChain("t")  # Replace "t" with the actual tree name in your ROOT files
+    for file in input_files:
+        fChain.Add(file)
 
-def checkGoodRun(goodRuns, run, file, branch='goodRunTight'):
-    goodRun = goodRuns[branch].loc[(goodRuns['run'] == run) & (goodRuns['file'] == file)].values
-    if len(goodRun) == 1:
-        return goodRun[0]
-    return False
+    # Ensure the input chain is valid
+    if fChain.GetEntries() == 0:
+        print("No entries in the input chain.")
+        return
 
-# Copying configuration files
-print("Copying configuration files...")
-shutil.copy('/eos/experiment/milliqan/Configs/mqLumis.json', os.getcwd())
-shutil.copy('/eos/experiment/milliqan/Configs/goodRunsList.json', os.getcwd())
+    # Open the output ROOT file
+    foutput = TFile(out_file, "recreate")
 
-# Loading JSON files into DataFrames
-print("Loading JSON files...")
-mqLumis = pd.read_json('mqLumis.json', orient='split', compression='infer')
-goodRuns = pd.read_json('goodRunsList.json', orient='split', compression='infer')
+    # Create an output tree by cloning the input tree structure
+    tout = fChain.CloneTree(0)
 
-########################################################
-################### Settings ##########################
-directory = '/store/user/milliqan/trees/v35/bar/1300/'
-outputName = os.path.join(os.getcwd(), 'MilliQan_Run1300_v35_skim_beamOff_tight.root')  # Save to current directory
-beam = False
-goodRun = 'goodRunTight'
-#######################################################
+    # Open a text file in append mode to log results
+    with open("skim_results.txt", "a") as output_text_file:
+        # Minimum nPE threshold
+        min_nPE = 60  # Change this value as needed
 
-# Initializing TChain
-mychain = r.TChain('t')
-print("Initialized TChain.")
+        # Get the number of entries in the chain
+        nentries = fChain.GetEntries()
+        passed = 0  # Counter for events passing the selection
 
-for ifile, filename in enumerate(os.listdir(directory)):
-    # Uncomment the following line to limit the number of processed files for testing
-    # if ifile > 100: break
-    
-    if not filename.endswith('root'): 
-        continue
+        # Loop through each entry
+        for jentry in range(nentries):
+            if jentry % 1000 == 0:
+                print(f"Processing entry {jentry}/{nentries}")
 
-    print(f"Processing file: {filename}")
-    
-    fin = r.TFile.Open(directory + filename)
-    if fin.IsZombie():
-        print(f"File {filename} is a zombie. Skipping...")
-        fin.Close()
-        continue
-    fin.Close()
+            # Load the entry
+            fChain.GetEntry(jentry)
 
-    run = int(filename.split('Run')[1].split('.')[0])
-    file = int(filename.split('.')[1].split('_')[0])
+            # Retrieve the variables from the tree
+            chan = np.array(fChain.chan)
+            nPE = np.array(fChain.nPE)
+            layer = np.array(fChain.layer)
+            row = np.array(fChain.row)
+            type_ = np.array(fChain.type)
 
-    # Check if there is beam if desired
-    if beam is not None:
-        beamOn = checkBeam(mqLumis, run, file, branch='beamInFill')
-        if beamOn is None: 
-            print(f"Beam data not found for Run {run}, File {file}. Skipping...")
-            continue
-        if (beam and not beamOn) or (not beam and beamOn): 
-            print(f"Beam condition not met for Run {run}, File {file}. Skipping...")
-            continue
+            # Sanity check: Ensure `chan` and `nPE` vectors have the same size
+            if len(chan) != len(nPE):
+                print(f"Mismatch in sizes of chan and nPE vectors at entry {jentry}")
+                continue
 
-    # Check good runs list
-    if goodRun is not None:
-        isGoodRun = checkGoodRun(goodRuns, run, file, branch=goodRun)
-        if not isGoodRun: 
-            print(f"Run {run}, File {file} is not in the good runs list. Skipping...")
-            continue
+            # Analyze the event
+            hits_by_layer_and_row = {}
 
-    print(f"Adding file {filename} to the chain.")
-    mychain.Add(directory + filename)
+            # Loop over all channels in the event
+            for k in range(len(chan)):
+                if nPE[k] > min_nPE and type_[k] == 0:
+                    layer_id = layer[k]
+                    row_id = row[k]
+                    if layer_id not in hits_by_layer_and_row:
+                        hits_by_layer_and_row[layer_id] = set()
+                    hits_by_layer_and_row[layer_id].add(row_id)
 
-# Print the total number of entries
-nEntries = mychain.GetEntries()
-print(f"Total number of events in the chain: {nEntries}")
+            # Check if any layer has hits in more than 3 rows
+            valid_event = any(len(rows) > 3 for rows in hits_by_layer_and_row.values())
 
-if nEntries > 0:
-    print("Loading macro and starting loop...")
-    r.gROOT.LoadMacro("myLooper.py") #####################################################
-    mylooper = r.myLooper(mychain)
-    mylooper.Loop(outputName)
-    print(f"Loop completed. Output saved to {outputName}.")
-else:
-    print("No entries found in the chain. Exiting.")
+            # Save the event to the output tree if the condition is met
+            if valid_event:
+                tout.Fill()
+                passed += 1
+
+        # Write the output tree to the file
+        foutput.WriteTObject(tout)
+        foutput.Close()
+
+        # Calculate and log the fraction of events that passed the selection
+        frac = passed / nentries
+        output_text_file.write(f"Output file contains {passed} events\n")
+        output_text_file.write(f"Input file contains {nentries} events\n")
+        output_text_file.write(f"Fraction of passed events: {frac:.5f}\n\n")
+
+    print("Processing completed.")

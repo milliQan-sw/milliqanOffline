@@ -40,7 +40,7 @@ print("Initialized TChain.")
 
 for ifile, filename in enumerate(os.listdir(directory)):
     # Uncomment the following line to limit the number of processed files for testing
-    if ifile > 100: break
+    # if ifile > 100: break
     
     if not filename.endswith('root'): 
         continue

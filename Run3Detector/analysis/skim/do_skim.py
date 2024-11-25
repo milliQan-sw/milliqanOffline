@@ -28,8 +28,8 @@ goodRuns = pd.read_json('goodRunsList.json', orient='split', compression='infer'
 
 ########################################################
 ################### Settings ##########################
-directory = '/store/user/milliqan/trees/v35/bar/1300/'
-outputName = os.path.join(os.getcwd(), 'MilliQan_Run1300_v35_skim_beamOff_tight.root')  # Save to current directory
+directory = '/store/user/milliqan/trees/v35/bar/1400/'
+outputName = os.path.join(os.getcwd(), 'MilliQan_Run1400_v35_skim_beamOff_tight.root')  # Save to current directory
 beam = False
 goodRun = 'goodRunTight'
 #######################################################
@@ -82,7 +82,7 @@ print(f"Total number of events in the chain: {nEntries}")
 
 if nEntries > 0:
     print("Loading macro and starting loop...")
-    r.gROOT.LoadMacro("myLooper.py")
+    r.gROOT.LoadMacro("myLooper_new.C")
     mylooper = r.myLooper(mychain)
     mylooper.Loop(outputName)
     print(f"Loop completed. Output saved to {outputName}.")

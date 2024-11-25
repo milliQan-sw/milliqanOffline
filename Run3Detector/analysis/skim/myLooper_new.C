@@ -6,9 +6,10 @@
 #include "TFile.h"
 #include <fstream>
 #include <iomanip>
+#include <map>
+#include <set>
 
-void myLooper::Loop(TString outFile)
-{
+void myLooper::Loop(TString outFile) {
     // Ensure the input chain is valid
     if (fChain == 0) return;
 
@@ -19,10 +20,10 @@ void myLooper::Loop(TString outFile)
     TTree* tout = fChain->CloneTree(0);
 
     // Open a text file in append mode to log results
-    ofstream outputTextFile("skim_results.txt", ios::app);
+    std::ofstream outputTextFile("skim_results.txt", std::ios::app);
 
-    // Minimum area threshold
-    float minArea = 500000.;
+    // Minimum nPE threshold
+    float minNPE = 60; // should be 90
 
     // Get the number of entries in the chain
     Long64_t nentries = fChain->GetEntriesFast();
@@ -39,35 +40,38 @@ void myLooper::Loop(TString outFile)
 
         // Provide progress updates to the user
         if (jentry % 1000 == 0) {
-            cout << "Processing entry " << jentry << "/" << nentries << endl;
+            std::cout << "Processing entry " << jentry << "/" << nentries << std::endl;
         }
 
-        // Sanity check: Ensure `chan` and `area` vectors have the same size
-        if (chan->size() != area->size()) {
-            cerr << "Mismatch in sizes of chan and area vectors at entry " << jentry << endl;
+        // Sanity check: Ensure `chan` and `nPE` vectors have the same size
+        if (chan->size() != nPE->size()) {
+            std::cerr << "Mismatch in sizes of chan and nPE vectors at entry " << jentry << std::endl;
             continue;
         }
 
         // Analyze the event
-        int nSat = 0; // Number of saturated channels
-        int nHitsByLayer[4] = {0, 0, 0, 0}; // Hit counts per layer
+        std::map<int, std::set<int>> hitsByLayerAndRow; // Maps layer to set of rows with hits
 
         // Loop over all channels in the event
         for (size_t k = 0; k < chan->size(); k++) {
-            if (area->at(k) > minArea && type->at(k) == 0) {
-                nSat++;
-                nHitsByLayer[layer->at(k)]++;
+            if (nPE->at(k) > minNPE && type->at(k) == 0) { // Check nPE and type
+                int layerID = layer->at(k);
+                int rowID = row->at(k);
+                hitsByLayerAndRow[layerID].insert(rowID);
             }
         }
 
-        // Count the number of layers with hits
-        int nLayersHit = 0;
-        for (int k = 0; k < 4; k++) {
-            if (nHitsByLayer[k] > 0) nLayersHit++;
+        // Check if any layer has hits in more than 3 rows
+        bool validEvent = false;
+        for (const auto& layerHits : hitsByLayerAndRow) {
+            if (layerHits.second.size() > 3) { // More than 3 rows hit in this layer
+                validEvent = true;
+                break;
+            }
         }
 
-        // Save the event to the output tree if hits occurred in at least 3 layers
-        if (nLayersHit >= 3) {
+        // Save the event to the output tree if the condition is met
+        if (validEvent) {
             tout->Fill();
             passed++;
         }
@@ -80,11 +84,11 @@ void myLooper::Loop(TString outFile)
 
     // Calculate and log the fraction of events that passed the selection
     float frac = static_cast<float>(passed) / nentries;
-    outputTextFile << "Output file contains " << passed << " events" << endl;
-    outputTextFile << "Input file contains " << nentries << " events" << endl;
-    outputTextFile << fixed << setprecision(5)
-                   << "Fraction of passed events: " << frac << endl
-                   << endl;
+    outputTextFile << "Output file contains " << passed << " events" << std::endl;
+    outputTextFile << "Input file contains " << nentries << " events" << std::endl;
+    outputTextFile << std::fixed << std::setprecision(5)
+                   << "Fraction of passed events: " << frac << std::endl
+                   << std::endl;
 
     // Close the log file
     outputTextFile.close();

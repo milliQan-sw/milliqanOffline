@@ -21,8 +21,8 @@ def my_looper(input_files, out_file):
 
     # Open a text file in append mode to log results
     with open("skim_results.txt", "a") as output_text_file:
-        # Minimum area threshold
-        min_area = 500 # nPE > 60, 90
+        # Minimum nPE threshold
+        min_nPE = 60 # nPE > 60, 90
 
         # Get the number of entries in the chain
         nentries = fChain.GetEntries()
@@ -38,14 +38,14 @@ def my_looper(input_files, out_file):
 
             # Retrieve the variables from the tree
             chan = np.array(fChain.chan)
-            area = np.array(fChain.area)
+            nPE = np.array(fChain.nPE)
             layer = np.array(fChain.layer)
             row = np.array(fChain.row)
             type_ = np.array(fChain.type)
 
-            # Sanity check: Ensure `chan` and `area` vectors have the same size
-            if len(chan) != len(area):
-                print(f"Mismatch in sizes of chan and area vectors at entry {jentry}")
+            # Sanity check: Ensure `chan` and `nPE` vectors have the same size
+            if len(chan) != len(nPE):
+                print(f"Mismatch in sizes of chan and nPE vectors at entry {jentry}")
                 continue
 
             # Analyze the event
@@ -53,7 +53,7 @@ def my_looper(input_files, out_file):
 
             # Loop over all channels in the event
             for k in range(len(chan)):
-                if area[k] > min_area and type_[k] == 0:
+                if nPE[k] > min_nPE and type_[k] == 0:
                     layer_id = layer[k]
                     row_id = row[k]
                     if layer_id not in hits_by_layer_and_row:

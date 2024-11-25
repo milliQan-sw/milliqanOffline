@@ -26,7 +26,7 @@ void myLooper::Loop(TString outFile) {
     ofstream outputTextFile("skim_results.txt", ios::app);
 
     // Minimum nPE threshold
-    float minNPE = 90;
+    float minNPE = 90; // according to collin
 
     // Get the number of entries in the chain
     Long64_t nentries = fChain->GetEntriesFast();

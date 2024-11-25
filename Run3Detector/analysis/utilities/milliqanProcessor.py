@@ -15,7 +15,7 @@ from processorConstants import *
 
 class milliqanProcessor():
 
-    def __init__(self, filelist, branches, schedule=None, cuts=None, plotter=None, max_events=None, step_size=10000, qualityLevel="tight", verbosity='minimal'):
+    def __init__(self, filelist, branches, schedule=None, cuts=None, plotter=None, max_events=None, step_size=10000, qualityLevel="tight", verbosity='minimal', goodRunsList=None):
         self.script_dir = os.path.abspath(__file__).replace("milliqanProcessor.py", "")
         self.qualityLevelString = qualityLevel
         self.verbosityString = verbosity
@@ -29,6 +29,8 @@ class milliqanProcessor():
         self.mqSchedule = schedule
         self.max_events = max_events
         self.step_size = step_size
+        self.mqSchedule.cuts.branches = list(branches)
+        self.goodRunsList = goodRunsList
 
     #Pulls the quality level and verbosity from the processorConstants class based on the quality level input string
     def constantPuller(self):
@@ -47,10 +49,11 @@ class milliqanProcessor():
         if self.qualityLevel == -2:
             print("\n\033[1;31mQuality check is being overridden. All files will be processed.\033[0m")
             return
-            
-        #goodJson_array = ak.from_json(pathlib.Path("goodRuns.json"))
-        #goodJson_array = ak.from_json(pathlib.Path("../goodRunTools/goodRunsMerged.json"))
-        goodJson_array = ak.from_json(pathlib.Path(self.script_dir + "../wip/goodRunsList.json"))
+
+        if self.goodRunsList is not None:
+            goodJson_array = ak.from_json(pathlib.Path(self.goodRunsList))
+        else:
+            goodJson_array = ak.from_json(pathlib.Path(self.script_dir + "../../configuration/barConfigs/goodRunsList.json"))
         data = ak.Array(goodJson_array['data'])
         goodJson = ak.zip({
             'run': data[:, 0],
@@ -96,16 +99,11 @@ class milliqanProcessor():
     def setBranches(self, branches):
         self.schedule = branches
 
-    '''def setCuts(self, cuts):
-        self.cuts = cuts'''
-
     def makeBranches(self, events):
 
         self.mqSchedule.setEvents(events)
         for branch in self.mqSchedule.schedule:
-            #if branch == 'tTrigger':
-            #    print("found trigger")
-            #    continue
+
             if isinstance(branch, milliqanPlot):
                 if isinstance(branch.variables, list):
                     for i in branch.variables:
@@ -116,8 +114,7 @@ class milliqanProcessor():
                 else:
                     if branch.variables in events.fields:
                         branch.plot(events)
-                    #elif branch.variables in self.custom_out:
-                    #    branch.plot(self.custom_out)
+
                     else:
                         print("MilliQan Processor: Branch {0} does not exist in event array or custom output".format(branch.variables))
                         break
@@ -162,19 +159,11 @@ class milliqanProcessor():
 
             broadcastChan = 'npulses'
 
-            #print(events['tTrigger'][0])
-            #_, events['boardMatchCut'] = ak.broadcast_arrays(events['pickupFlag'], events['boardMatchCut'])
             _, events['fileNumber'] = ak.broadcast_arrays(events[broadcastChan], events['fileNumber'])
             _, events['runNumber'] = ak.broadcast_arrays(events[broadcastChan], events['runNumber'])
             _, events['tTrigger'] = ak.broadcast_arrays(events[broadcastChan], events['tTrigger'])
             _, events['event'] = ak.broadcast_arrays(events[broadcastChan], events['event'])
             _, events['boardsMatched'] = ak.broadcast_arrays(events[broadcastChan], events['boardsMatched'])
-
-            #_, events['fileNumber'] = ak.broadcast_arrays(events['pickupFlag'], events['fileNumber'])
-            #print(events['pickupFlag'][0])
-            #print(events['tTrigger'][0])
-
-
 
             if self.max_events and total_events >= self.max_events: break
 

@@ -1,11 +1,37 @@
 import pandas as pd
 import shutil
 import json
+import ROOT as r
 
 def getRunFile(filename):
     run = filename.split('Run')[1].split('.')[0]
     file = filename.split('.')[1].split('_')[0]
     return [int(run), int(file)]
+
+def getSkimLumis(filelist):
+
+    totalLumi = 0.0
+    totalTime = 0.0
+    for filename in filelist:
+        #try:
+        fin = r.TFile.Open(filename, 'READ')
+        if fin.IsZombie():
+            print(f"{filename} is a zombie skipping...")
+            continue
+        for key in fin.GetListOfKeys():
+            if key.GetName() =='luminosity':
+                this_lumi = key.GetTitle()
+                totalLumi += float(this_lumi)
+            if key.GetName() == 'runTime':
+                this_time = key.GetTitle()
+                totalTime += float(this_time)
+        #except:
+        #    print(f"Unable to get the lumi/time from file {filename}")
+        #    continue
+
+    print("Total luminosity {} and run time {}s".format(totalLumi, totalTime))
+    
+    return totalLumi, totalTime
 
 
 def getLumiofFileList(filelist):
@@ -41,3 +67,21 @@ def loadJson(jsonFile):
     data = json.load(fin)
     lumis = pd.DataFrame(data['data'], columns=data['columns'])
     return lumis
+
+#################################################################
+################ condor function definitions ####################
+
+def getFileList(filelist, job):
+
+    with open(filelist, 'r') as fin:
+        data = json.load(fin)
+
+    mylist = data[job]
+
+    return mylist
+
+def extract_tar_file(tar_file='milliqanProcessing.tar.gz'):
+    with tarfile.open(tar_file, "r:gz") as tar:
+        tar.extractall()
+
+##################################################################

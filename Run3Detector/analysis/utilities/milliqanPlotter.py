@@ -40,8 +40,7 @@ class milliqanPlot():
                 output = ak.drop_none(events[self.variables])
                 output = ak.flatten(output,axis=None)
             myarray = array('d', output)
-            #print("plotter:", myarray)
-            #1D histograms
+
             if len(myarray)>0:
                 self.histogram.FillN(len(myarray), myarray, np.ones(len(myarray)))
 
@@ -74,5 +73,3 @@ class milliqanPlotter():
 
         for hist in self.histograms:
             hist.histogram.Write()
-
-        #fout.Close()

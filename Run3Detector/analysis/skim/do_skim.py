@@ -2,6 +2,9 @@ import ROOT as r
 import os
 import pandas as pd
 import shutil
+import sys
+sys.path.append('../utilities')
+from utilities import *
 
 def checkBeam(mqLumis, run, file, branch='beam'):
     #print("check beam run {} file {}".format(run, file))
@@ -20,20 +23,23 @@ shutil.copy('/eos/experiment/milliqan/Configs/mqLumis.json', os.getcwd())
 shutil.copy('/eos/experiment/milliqan/Configs/goodRunsList.json', os.getcwd())
 
 mqLumis = pd.read_json('mqLumis.json', orient = 'split', compression = 'infer')
-goodRuns = pd.read_json('goodRunsList.json', orient = 'split', compression = 'infer')
+goodRuns = pd.read_json('goodRunsMerged.json', orient = 'split', compression = 'infer')
 
 ########################################################
 ################### Settings ##########################
-directory = '/store/user/milliqan/trees/v35/bar/1200/'
-outputName = 'MilliQan_Run1200_v35_skim_beamOff_tight.root'
+directory = '/store/user/milliqan/trees/v35/bar/1500/'
+outputName = 'MilliQan_Run1500_v35_signalSkim3Line_beamOff_tight.root'
 beam = False
 goodRun = 'goodRunTight'
 #######################################################
 
 mychain = r.TChain('t')
+filesProcessed = 0
+
+filelist = []
 
 for ifile, filename in enumerate(os.listdir(directory)):
-    #if ifile > 100: break
+    #if filesProcessed > 100: break
     if not filename.endswith('root'): continue
     fin = r.TFile.Open(directory+filename)
     if fin.IsZombie(): 
@@ -51,6 +57,7 @@ for ifile, filename in enumerate(os.listdir(directory)):
         if beamOn == None: continue
         if (beam and not beamOn) or (not beam and beamOn): continue
 
+    #print("file {} passes beam criteria".format(filename))
     #check good runs list
     if goodRun is not None:
         isGoodRun = checkGoodRun(goodRuns, run, file, branch=goodRun)
@@ -60,14 +67,20 @@ for ifile, filename in enumerate(os.listdir(directory)):
     print(filename)
 
     mychain.Add(directory+filename)
+    filesProcessed+=1
 
+    filelist.append(filename)
+
+lumi, runTime = getLumiofFileList(filelist)
 
 nEntries = mychain.GetEntries()
 print("There are {} events in the chain".format(nEntries))
 
 if nEntries > 0:
-    r.gROOT.LoadMacro("myLooper.C")
+    
+    #r.gROOT.LoadMacro("myLooper.C")
+    r.gROOT.LoadMacro("signalSkim.C")
 
     mylooper = r.myLooper(mychain)
 
-    mylooper.Loop(outputName)
+    mylooper.Loop(outputName, r.TString(str(lumi)), r.TString(str(runTime.total_seconds())))

@@ -10,6 +10,8 @@
 #include <map>
 #include <set>
 
+using namespace std;
+
 void myLooper::Loop(TString outFile) {
     // Ensure the input chain is valid
     if (fChain == 0) return;
@@ -21,10 +23,10 @@ void myLooper::Loop(TString outFile) {
     TTree* tout = fChain->CloneTree(0);
 
     // Open a text file in append mode to log results
-    std::ofstream outputTextFile("skim_results.txt", std::ios::app);
+    ofstream outputTextFile("skim_results.txt", ios::app);
 
     // Minimum nPE threshold
-    float minNPE = 60; // use 90 for real
+    float minNPE = 90;
 
     // Get the number of entries in the chain
     Long64_t nentries = fChain->GetEntriesFast();
@@ -42,17 +44,17 @@ void myLooper::Loop(TString outFile) {
 
         // Provide progress updates to the user
         if (jentry % 1000 == 0) {
-            std::cout << "Processing entry " << jentry << "/" << nentries << std::endl;
+            cout << "Processing entry " << jentry << "/" << nentries << endl;
         }
 
         // Sanity check: Ensure `chan` and `nPE` vectors have the same size
         if (chan->size() != nPE->size()) {
-            std::cerr << "Mismatch in sizes of chan and nPE vectors at entry " << jentry << std::endl;
+            cerr << "Mismatch in sizes of chan and nPE vectors at entry " << jentry << endl;
             continue;
         }
 
         // Analyze the event
-        std::map<int, std::set<int>> hitsByLayerAndRow; // Maps layer to set of rows with hits
+        map<int, set<int>> hitsByLayerAndRow; // Maps layer to set of rows with hits
 
         // Loop over all channels in the event
         for (size_t k = 0; k < chan->size(); k++) {
@@ -86,9 +88,9 @@ void myLooper::Loop(TString outFile) {
 
     // Calculate and log the fraction of events that passed the selection
     float frac = static_cast<float>(passed) / nentries;
-    outputTextFile << "Output file has    " << passed    << " events" << std::endl;
-    outputTextFile << "Input  file has    " << nentries  << " events" << std::endl;
-    outputTextFile << std::fixed << std::setprecision(5) << "Fraction of passed " << frac << std::endl;
-    outputTextFile << " " << std::endl;
+    outputTextFile << "Output file has    " << passed    << " events" << endl;
+    outputTextFile << "Input  file has    " << nentries  << " events" << endl;
+    outputTextFile << fixed << setprecision(5) << "Fraction of passed " << frac << endl;
+    outputTextFile << " " << endl;
     outputTextFile.close();
 }

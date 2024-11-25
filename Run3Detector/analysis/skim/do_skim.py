@@ -40,7 +40,7 @@ print("Initialized TChain.")
 
 for ifile, filename in enumerate(os.listdir(directory)):
     # Uncomment the following line to limit the number of processed files for testing
-    if ifile > 100: break
+    # if ifile > 100: break
     if not filename.endswith('root'): 
         continue
 
@@ -82,7 +82,7 @@ print(f"Total number of events in the chain: {nEntries}")
 
 if nEntries > 0:
     print("Loading macro and starting loop...")
-    r.gROOT.LoadMacro("myLooper_new.C")
+    r.gROOT.LoadMacro("myLooper_v2.C")
     mylooper = r.myLooper(mychain)
     mylooper.Loop(outputName)
     print(f"Loop completed. Output saved to {outputName}.")

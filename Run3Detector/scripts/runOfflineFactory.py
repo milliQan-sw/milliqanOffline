@@ -39,17 +39,23 @@ def parse_args():
     args = parser.parse_args()
     return args
 def validateOutput(outputFile,runNumber=-1,fileNumber=-1):
+    print("Inside validateOutput")
     foundBad = False
     try:
+        print("Attempting to read outputFile")
         f1 = r.TFile(outputFile,"READ")
+        print("Getting t branch")
         t = f1.Get("t")
+        print("Getting entries")
         nevts = t.GetEntries()
         print("Output file {} has {} events".format(outputFile, nevts))
         # print "[RSR] ntuple has %i events and expected %i" % (t.GetEntries(), expectednevts)
         # if int(expectednevts) > 0 and int(t.GetEntries()) != int(expectednevts):
         #     print "[RSR] nevents mismatch"
         #     foundBad = True
+        print("Right before getting tag")
         tagObj = f1.Get("tag")
+        print("After getting tag")
         if not tagObj:
             tagObj = f1.Get("tag_{}_{}".format(runNumber,fileNumber))
         tag = tagObj.GetTitle()

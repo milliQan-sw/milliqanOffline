@@ -135,12 +135,15 @@ class milliqanProcessor():
             print("MilliQan Processor: Error", error)
             return
 
+    def getTotalEvents(self):
+        return self.total_events
+
     def setCustomFunction(self, fcn):
         self.customFunction = fcn
-
+        
     def run(self):
 
-        total_events = 0
+        self.total_events = 0
         
         for events in uproot.iterate(
 
@@ -156,10 +159,10 @@ class milliqanProcessor():
 
             ):
 
-            print("MilliQan Processor: Processing event {}...".format(total_events))
+            print("MilliQan Processor: Processing event {}...".format(self.total_events))
 
-            total_events += len(events)
-
+            self.total_events += len(events)
+            print(events['pickupFlag'])
             #print(events['tTrigger'][0])
             #_, events['boardMatchCut'] = ak.broadcast_arrays(events['pickupFlag'], events['boardMatchCut'])
             _, events['fileNumber'] = ak.broadcast_arrays(events['pickupFlag'], events['fileNumber'])
@@ -174,7 +177,7 @@ class milliqanProcessor():
 
 
 
-            if self.max_events and total_events >= self.max_events: break
+            if self.max_events and self.total_events >= self.max_events: break
 
             events = self.makeBranches(events)
 
@@ -183,4 +186,4 @@ class milliqanProcessor():
             if hasattr(self, 'customFunction'):
                 self.custom_out = self.runCustomFunction(events)
     
-        print("Number of processed events", total_events)
+        print("Number of processed events", self.total_events)

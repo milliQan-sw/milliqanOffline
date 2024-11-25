@@ -4,7 +4,7 @@ import numpy as np
 
 def my_looper(input_files, out_file):
     # Create a TChain from the input files
-    fChain = TChain("tree")  # Replace "tree" with the actual tree name
+    fChain = TChain("t")  # Replace "t" with the actual tree name in your ROOT files
     for file in input_files:
         fChain.Add(file)
 
@@ -22,7 +22,7 @@ def my_looper(input_files, out_file):
     # Open a text file in append mode to log results
     with open("skim_results.txt", "a") as output_text_file:
         # Minimum nPE threshold
-        min_nPE = 60 # nPE > 60, 90
+        min_nPE = 60  # 60 or 90
 
         # Get the number of entries in the chain
         nentries = fChain.GetEntries()

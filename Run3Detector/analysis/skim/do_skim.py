@@ -4,7 +4,7 @@ import pandas as pd
 import shutil
 
 def checkBeam(mqLumis, run, file, branch='beam'):
-    #print("check beam run {} file {}".format(run, file))
+    print("check beam run {} file {}".format(run, file))
     beam = mqLumis[branch].loc[(mqLumis['run'] == run) & (mqLumis['file'] == file)]
     if beam.size == 0: return None
     beam = beam.values[0]
@@ -40,8 +40,7 @@ print("Initialized TChain.")
 
 for ifile, filename in enumerate(os.listdir(directory)):
     # Uncomment the following line to limit the number of processed files for testing
-    # if ifile > 100: break
-    
+    if ifile > 100: break
     if not filename.endswith('root'): 
         continue
 
@@ -83,7 +82,7 @@ print(f"Total number of events in the chain: {nEntries}")
 
 if nEntries > 0:
     print("Loading macro and starting loop...")
-    r.gROOT.LoadMacro("myLooper.py") #####################################################
+    r.gROOT.LoadMacro("myLooper.py")
     mylooper = r.myLooper(mychain)
     mylooper.Loop(outputName)
     print(f"Loop completed. Output saved to {outputName}.")

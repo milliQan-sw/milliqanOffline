@@ -27,8 +27,8 @@ goodRuns = pd.read_json('goodRunsList.json', orient = 'split', compression = 'in
 
 ########################################################
 ################### Settings ##########################
-directory = '/store/user/milliqan/trees/v35/bar/1500/'
-outputName = 'MilliQan_Run1500_v35_cosmic_beamOff_tight.root'
+directory = '/store/user/milliqan/trees/v35/bar/1300/'
+outputName = 'MilliQan_Run1300_v35_cosmic_beamOff_tight.root'
 beam = False
 goodRun = 'goodRunTight'
 skimType = 'cosmic'

@@ -8,9 +8,9 @@
 #include "MilliDAQ/interface/V1743Event.h"
 #include <iostream>
 
-int globalEventConv(int fileNumber) {
+int globalEventConv() {
     // Open the input file and retrieve the TTree
-    TString fileName = Form("/data/bar_cosmic_sim_%d.root",fileNumber);
+    TString fileName = "/data/MilliQan_waveinjectedSmall.root";
     TFile *inputFile = TFile::Open(fileName);
     TTree *inputTree = (TTree*)inputFile->Get("Events");
 
@@ -20,7 +20,7 @@ int globalEventConv(int fileNumber) {
     // Set branch address to read waveform data
     inputTree->SetBranchAddress("waveform", waveform);
 
-    TString outputFileName = Form("/data/bar_cosmic_sim_preprocessed_%d.root", fileNumber);
+    TString outputFileName = "/data/bar_cosmic_sim_preprocessed_fixed.root";
     // Create output file to save the GlobalEvent objects
     TFile *outputFile = new TFile(outputFileName, "RECREATE");
 
@@ -41,6 +41,7 @@ int globalEventConv(int fileNumber) {
 
     // Loop over all events in the input tree
     int nEntries = inputTree->GetEntries();
+
     for (int i = 0; i < nEntries; ++i) {
         inputTree->GetEntry(i);
 
@@ -56,17 +57,17 @@ int globalEventConv(int fileNumber) {
             digitizerEvent.nanosecondsPerSample = 2.5;
 
             for (unsigned int ch = 0; ch < 16; ++ch) {
-                TString histName = TString::Format("waveform_d%d_ch%d", d, ch);
+              //TString histName = TString::Format("waveform_d%d_ch%d", d, ch);
 
                 // Create a histogram for each waveform (1024 bins)
-                TH1D *hist = new TH1D(histName, histName, 1024, 0, 1024);
+              // TH1D *hist = new TH1D(histName, histName, 1024, 0, 1024);
 
                 // Copy waveform data into digitizerEvent and fill the histogram
                 for (unsigned int sample = 0; sample < 1024; ++sample) {
                     float sampleValue = waveform[d][ch][sample];
-                    hist->SetBinContent(sample + 1, sampleValue);
+                    //     hist->SetBinContent(sample + 1, sampleValue);
                     digitizerEvent.waveform[ch][sample] = sampleValue; // Set the waveform data
-                    if(sampleValue > 0) std::cout << sampleValue << std::endl;
+                    //if(sampleValue > 0) std::cout << sampleValue << std::endl;
                 }
 
                 // Optionally, you can avoid calling GetWaveform if not needed
@@ -83,6 +84,10 @@ int globalEventConv(int fileNumber) {
     // Write the output tree to the file
     outputTree->Write();
     metadata->Write();
+
+    inputFile->Close();
+    outputFile->Close();
+      
 
     std::cout << "Conversion completed successfully!" << std::endl;
 

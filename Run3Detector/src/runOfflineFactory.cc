@@ -38,7 +38,6 @@ int main(int argc, char **argv){
     bool isDRSdata = cmdOptionExists(argv, argv + argc, "--drs");
     if (isDRSdata) std::cout << "Assuming DRS input" << std::endl;
     bool isSlab = cmdOptionExists(argv, argv + argc, "--slab");
-    bool isSim = cmdOptionExists(argv, argv+argc, "--sim");
     if (isSlab) std::cout << "Running with slab configuration" << std::endl;
 
     bool isSim = cmdOptionExists(argv, argv + argc, "--sim");

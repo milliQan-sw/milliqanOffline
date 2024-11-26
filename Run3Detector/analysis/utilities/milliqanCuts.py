@@ -75,7 +75,10 @@ class milliqanCuts():
         #use fileNumber because it is never 0 (ex event) and it always exists
 
         threshold = 1
-        if name == 'totalEventCounter': threshold = 0
+        if name == 'totalEventCounter': 
+            threshold = 0
+            #self.cutflow = {}
+            #self.counter = 0
 
         if name in self.cutflow:
 
@@ -576,8 +579,9 @@ class milliqanCuts():
 
     #selection events that have hits in a straight path
     #option allowedMove will select events that only move one bar horizontally/vertically
+    #option limitPaths requires only one straight line path through detector
     @mqCut
-    def straightLineCut(self, cutName='straightLineCut', allowedMove=False, cut=False, branches=None):
+    def straightLineCut(self, cutName='straightLineCut', allowedMove=False, limitPaths=False, cut=False, branches=None):
         
         #allowed combinations of moving
         combos = []
@@ -656,6 +660,12 @@ class milliqanCuts():
                 else: straight_pulse = (straight_pulse) ^ ((straight_cuts[4*x+y]) & (self.events['column'] == x) & (self.events['row'] == y) & (self.events['type'] == 0))
 
         self.events['numStraightPaths'] = ak.sum(straight_pulse, axis=1) / 4
+
+        if limitPaths:
+            maskMultiple = self.events['numStraightPaths'] == 1
+            _, maskMultiple = ak.broadcast_arrays(straight_pulse, maskMultiple)
+            straight_pulse = straight_pulse[maskMultiple] #ak.mask(straight_pulse, maskMultiple)
+            
         self.events[cutName+'Pulse'] = straight_pulse
 
         #get self.events passing 1 bar movement
@@ -667,7 +677,8 @@ class milliqanCuts():
             self.events['moveOnePath'] = passing
 
         if cut:
-            self.cutBranches(branches, cutName+"Pulse")
+            self.cutBranches(branches, cutName+"Pulse")        
+    
     #select self.events that have 3 area saturating pulses in a line
     @mqCut
     def threeAreaSaturatedInLine(self, areaCut=50000, branches=None):

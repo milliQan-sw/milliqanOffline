@@ -32,7 +32,7 @@ outputName = 'MilliQan_Run1500_v35_cosmic_beamOff_tight.root'
 beam = False
 goodRun = 'goodRunTight'
 skimType = 'cosmic'
-debug=False
+debug=True
 #######################################################
 
 if len(sys.argv) > 5:

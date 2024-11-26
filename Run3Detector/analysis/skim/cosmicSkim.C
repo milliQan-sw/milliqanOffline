@@ -91,7 +91,7 @@ void myLooper::Loop( TString outFile, TString lumi, TString runTime)
     
       //if (panelHit) continue;
       
-      // Output tree if any path has 4 in a line hit
+      // Output tree if any path has 3 in a line hit
       bool straightLineEvent = false;
       for (int i=0; i<16; i++) {
             if (!frontPanelHit && i < 8) continue;

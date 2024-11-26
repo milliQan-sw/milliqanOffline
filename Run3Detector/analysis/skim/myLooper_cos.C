@@ -7,7 +7,6 @@
 #include "TChain.h"
 #include "TFile.h"
 #include <fstream>
-#include "TNamed.h"
 #include <map>
 #include <set>
 
@@ -27,7 +26,7 @@ void myLooper::Loop(TString outFile) {
     ofstream outputTextFile("skim_results.txt", ios::app);
 
     // Minimum nPE threshold
-    float minNPE = 90; 
+    float minNPE = 90;
 
     // Get the number of entries in the chain
     Long64_t nentries = fChain->GetEntriesFast();
@@ -54,12 +53,11 @@ void myLooper::Loop(TString outFile) {
             continue;
         }
 
-        // Create a map to track hits by layer and row
+        // Analyze the event
         map<int, set<int>> hitsByLayerAndRow; // Maps layer to set of rows with hits
 
-        // Process all channels in the event
+        // Loop over all channels in the event
         for (size_t k = 0; k < chan->size(); k++) {
-            // Apply the selection criteria for valid hits
             if (nPE->at(k) > minNPE && type->at(k) == 0) { // Check nPE and type
                 int layerID = layer->at(k);
                 int rowID = row->at(k);
@@ -76,7 +74,7 @@ void myLooper::Loop(TString outFile) {
             }
         }
 
-        // Save the event to the output tree if it meets the criteria
+        // Save the event to the output tree if the condition is met
         if (validEvent) {
             tout->Fill();
             passed++;

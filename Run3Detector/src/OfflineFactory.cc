@@ -498,7 +498,7 @@ void OfflineFactory::validateInput(){
 
     #ifdef DEBUG
     std::clog << "Verified highThresh" << std::endl;
-    #endif DEBUG
+    #endif 
 
     ////Calibrations
     if (timingCalibrations.size() > 0){
@@ -510,7 +510,7 @@ void OfflineFactory::validateInput(){
 
     #ifdef DEBUG
     std::clog << "Verified timingCalibrations" << std::endl;
-    #endif DEBUG
+    #endif 
 
     if (pedestals.size() > 0){
         if (pedestals.size() != numChan) throw length_error("pedestals should be length "+std::to_string(numChan));
@@ -522,7 +522,7 @@ void OfflineFactory::validateInput(){
 
     #ifdef DEBUG
     std::clog << "Verified pedestals" << std::endl;
-    #endif DEBUG
+    #endif 
 
     if (speAreas.size() > 0){
         if (speAreas.size() != numChan) throw length_error("speAreas should be length "+std::to_string(numChan));
@@ -533,7 +533,7 @@ void OfflineFactory::validateInput(){
 
     #ifdef DEBUG
     std::clog << "Verified speAreas" << std::endl;
-    #endif DEBUG
+    #endif
 }
 //Convenience function to produce offline tree output
 //Makedisplays and then not save the output tree //makeoutputtree is not called
@@ -561,7 +561,7 @@ void OfflineFactory::process(){
     // Testing json stuff
   #ifdef DEBUG
   std::clog << "Inside process function" << std::endl;
-  #endif DEBUG
+  #endif 
 
     makeOutputTree();
 

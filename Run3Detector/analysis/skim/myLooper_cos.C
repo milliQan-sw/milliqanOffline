@@ -7,17 +7,22 @@
 #include "TChain.h"
 #include "TFile.h"
 #include <fstream>
+#include "TNamed.h"
 #include <map>
 #include <set>
 
 using namespace std;
 
-void myLooper::Loop(TString outFile) {
+void myLooper::Loop(TString outFile, TString lumi, TString runTime) {
     // Ensure the input chain is valid
     if (fChain == 0) return;
 
     // Open the output ROOT file
     TFile* foutput = TFile::Open(outFile, "recreate");
+
+    // Metadata for the output ROOT file
+    TNamed t_lumi("luminosity", lumi.Data());
+    TNamed t_time("runTime", runTime.Data());
 
     // Create an output tree by cloning the input tree structure
     TTree* tout = fChain->CloneTree(0);
@@ -26,7 +31,7 @@ void myLooper::Loop(TString outFile) {
     ofstream outputTextFile("skim_results.txt", ios::app);
 
     // Minimum nPE threshold
-    float minNPE = 90; // according to collin
+    float minNPE = 90; 
 
     // Get the number of entries in the chain
     Long64_t nentries = fChain->GetEntriesFast();
@@ -53,11 +58,12 @@ void myLooper::Loop(TString outFile) {
             continue;
         }
 
-        // Analyze the event
+        // Create a map to track hits by layer and row
         map<int, set<int>> hitsByLayerAndRow; // Maps layer to set of rows with hits
 
-        // Loop over all channels in the event
+        // Process all channels in the event
         for (size_t k = 0; k < chan->size(); k++) {
+            // Apply the selection criteria for valid hits
             if (nPE->at(k) > minNPE && type->at(k) == 0) { // Check nPE and type
                 int layerID = layer->at(k);
                 int rowID = row->at(k);
@@ -74,15 +80,17 @@ void myLooper::Loop(TString outFile) {
             }
         }
 
-        // Save the event to the output tree if the condition is met
+        // Save the event to the output tree if it meets the criteria
         if (validEvent) {
             tout->Fill();
             passed++;
         }
     }
 
-    // Write the output tree to the file
+    // Write the output tree and metadata to the file
     foutput->WriteTObject(tout);
+    t_lumi.Write();
+    t_time.Write();
     delete tout;
     foutput->Close();
 

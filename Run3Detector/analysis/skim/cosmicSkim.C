@@ -27,7 +27,7 @@ void myLooper::Loop( TString outFile, TString lumi, TString runTime)
   //    fChain->GetEntry(jentry);       //read all branches
   // by  b_branchname->GetEntry(ientry); //read only this branch
 
-   if (fChain == 0) return;
+  if (fChain == 0) return;
    
   // The root output file
   TFile* foutput = TFile::Open(outFile, "recreate");

@@ -82,7 +82,7 @@ print(f"Total number of events in the chain: {nEntries}")
 
 if nEntries > 0:
     print("Loading macro and starting loop...")
-    r.gROOT.LoadMacro("myLooper_cos.C")
+    r.gROOT.LoadMacro("cosmicSkim.C")
     mylooper = r.myLooper(mychain)
     mylooper.Loop(outputName)
     print(f"Loop completed. Output saved to {outputName}.")

@@ -31,14 +31,14 @@ if __name__ == "__main__":
     outputFile = 'bgCutFlow_output.root'
     qualityLevel = 'Tight'
     maxEvents = None
-    stepSize = 1000
+    stepSize = 10000
 
     filelist = [     
         #"/home/mcarrigan/scratch0/milliQan/analysis/milliqanOffline/Run3Detector/analysis/skim/MilliQan_Run1800_v35_signalSkim_beamOff_tight.root",
         #"/home/mcarrigan/scratch0/milliQan/analysis/milliqanOffline/Run3Detector/analysis/skim/MilliQan_Run1700_v35_signalSkim_beamOff_tight.root",
         #"/home/mcarrigan/scratch0/milliQan/analysis/milliqanOffline/Run3Detector/analysis/skim/MilliQan_Run1600_v35_signalSkim_beamOff_tight.root",
         #"/home/mcarrigan/scratch0/milliQan/analysis/milliqanOffline/Run3Detector/analysis/skim/MilliQan_Run1500_v35_signalSkim_beamOff_tight.root",
-        "/home/mcarrigan/scratch0/milliQan/analysis/milliqanOffline/Run3Detector/analysis/skim/MilliQan_Run1500_v35_signalSkim3Line_beamOff_tight.root",
+        "/eos/experiment/milliqan/skims/signal/MilliQan_Run1500_v35_signalSkim_beamOff_tight.root",
         ]
 
     if skim:

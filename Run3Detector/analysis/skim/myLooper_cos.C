@@ -7,22 +7,17 @@
 #include "TChain.h"
 #include "TFile.h"
 #include <fstream>
-#include "TNamed.h"
 #include <map>
 #include <set>
 
 using namespace std;
 
-void myLooper::Loop(TString outFile, TString lumi, TString runTime) {
+void myLooper::Loop(TString outFile) {
     // Ensure the input chain is valid
     if (fChain == 0) return;
 
     // Open the output ROOT file
     TFile* foutput = TFile::Open(outFile, "recreate");
-
-    // Metadata for the output ROOT file
-    TNamed t_lumi("luminosity", lumi.Data());
-    TNamed t_time("runTime", runTime.Data());
 
     // Create an output tree by cloning the input tree structure
     TTree* tout = fChain->CloneTree(0);
@@ -31,7 +26,7 @@ void myLooper::Loop(TString outFile, TString lumi, TString runTime) {
     ofstream outputTextFile("skim_results.txt", ios::app);
 
     // Minimum nPE threshold
-    float minNPE = 90; 
+    float minNPE = 90; // according to collin
 
     // Get the number of entries in the chain
     Long64_t nentries = fChain->GetEntriesFast();
@@ -58,12 +53,11 @@ void myLooper::Loop(TString outFile, TString lumi, TString runTime) {
             continue;
         }
 
-        // Create a map to track hits by layer and row
+        // Analyze the event
         map<int, set<int>> hitsByLayerAndRow; // Maps layer to set of rows with hits
 
-        // Process all channels in the event
+        // Loop over all channels in the event
         for (size_t k = 0; k < chan->size(); k++) {
-            // Apply the selection criteria for valid hits
             if (nPE->at(k) > minNPE && type->at(k) == 0) { // Check nPE and type
                 int layerID = layer->at(k);
                 int rowID = row->at(k);
@@ -80,17 +74,15 @@ void myLooper::Loop(TString outFile, TString lumi, TString runTime) {
             }
         }
 
-        // Save the event to the output tree if it meets the criteria
+        // Save the event to the output tree if the condition is met
         if (validEvent) {
             tout->Fill();
             passed++;
         }
     }
 
-    // Write the output tree and metadata to the file
+    // Write the output tree to the file
     foutput->WriteTObject(tout);
-    t_lumi.Write();
-    t_time.Write();
     delete tout;
     foutput->Close();
 

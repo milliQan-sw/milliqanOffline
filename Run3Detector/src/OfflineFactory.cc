@@ -1,6 +1,6 @@
 #include "./interface/OfflineFactory.h"
 
-#define DEBUG 0
+//#define DEBUG 
 
 OfflineFactory::OfflineFactory(TString inFileName, TString outFileName, TString appendToTag, bool isDRS, bool isSlab, bool isSim, int runNumber, int fileNumber) : 
     inFileName(inFileName),
@@ -1816,9 +1816,9 @@ void OfflineFactory::readWaveData(){
 
     cout<<"Processing "<<maxEvents<<" events in this file"<<endl;
     cout<<"Starting event loop"<<endl;
-    bool showBar = false;
+    bool showBar = true;
 
-    maxEvents = 10;
+    //maxEvents = 10;
     for(int i=1;i<maxEvents;i++){
         
         //for(int i=825;i<826;i++){
@@ -2263,45 +2263,36 @@ void OfflineFactory::loadWavesSim(){
 
   #ifdef DEBUG
     std::clog << "nDigitizers, nChannelsPerDigitizer, maxSamples" << nDigitizers<< ", " <<
-      #endif
-      nChannelsPerDigitizer <<", " <<  maxSamples << std::endl;
-
-    #ifdef DEBUG
+    nChannelsPerDigitizer <<", " <<  maxSamples << std::endl;
     std::clog << "Reading in data from input file " << std::endl;
-    #endif
+  #endif
     for (int ic=0; ic< numChan/2; ic++){
         int chan = ic % 16;
         int board = ic / 16;
-        std::cout << "Channel and Board numbers: " << chan << " " << board << std::endl;
+        //std::cout << "Channel and Board numbers: " << chan << " " << board << std::endl;
         // FIXME Crash here
-        std::cout << "Grabbing chanArray" << std::endl;
+        //std::cout << "Grabbing chanArray" << std::endl;
         int chan1 =  chanArray->GetAt(ic);
-        std::cout << "Grabbing boardArray" << std::endl;
+        //std::cout << "Grabbing boardArray" << std::endl;
         int board1 = boardArray->GetAt(ic);
         #ifdef DEBUG
         std::clog << "Test1" << std::endl;
         #endif
 
         if(waves[ic]) delete waves[ic];
-        std::cout << "Test2"<< std::endl;
         // This may cause memory issues, it may be better to offload this to
         // a preprocessing step.
         TH1D* tempWaveform =  new TH1D(Form("waveform_%i", ic), "Waveform",
                                        maxSamples, 0,
                                        maxSamples * 2.5);
-        std::cout << "Test3" << std::endl;
         for (int i = 1; i <= 1024; ++i){
-          std::cout << "On Entry: " << i <<  std::endl;
           float data = waveform[board][chan][i];
-          std::cout << "Got Data" << std::endl;
 
           tempWaveform->Fill(i, data);
-          std::cout << "Filled with single data" << std::endl;
         }
         #ifdef DEBUG
         std::clog << "tempWaveform bins: " << tempWaveform->GetNbinsX();
         #endif
-        std::cout << "Filled waveform" << std::endl;
         waves[ic] = tempWaveform;
     }
     return;

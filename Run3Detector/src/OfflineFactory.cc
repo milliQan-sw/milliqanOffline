@@ -835,8 +835,8 @@ void OfflineFactory::readMetaData(){
     }
     // For sim data
     else{
-
-      cout << " TEST" << endl;
+      TTree * metadata;
+      metadata = (TTree*) inFile->Get("Metadata");
       float secondsPerSample;
       metadata->SetBranchAddress("secondsPerSample", &secondsPerSample);
       metadata->SetBranchAddress("numChan", &numChan);

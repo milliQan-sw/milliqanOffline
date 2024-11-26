@@ -32,6 +32,10 @@ class milliqanProcessor():
         self.mqSchedule.cuts.branches = list(branches)
         self.goodRunsList = goodRunsList
 
+    def reset(self):
+        self.mqSchedule.cuts.cutflow = {}
+        self.mqSchedule.cuts.counter = 0
+    
     #Pulls the quality level and verbosity from the processorConstants class based on the quality level input string
     def constantPuller(self):
         if self.qualityLevelString not in processorConstants.qualityDict.keys():
@@ -138,6 +142,8 @@ class milliqanProcessor():
     def run(self):
 
         total_events = 0
+
+        self.reset()
         
         for events in uproot.iterate(
 

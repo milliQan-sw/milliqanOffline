@@ -308,7 +308,8 @@ private:
     int tEvtNum = 0;
     int tRunNum = 0;
     int tTBEvent = 0;
-  float waveform[5][16][maxSamples] = {{{0}}};
+    float waveform[5][16][maxSamples] = {{{0}}};
+    int totalPulseCount = 0;
 
     Long64_t firstTDC_time=10e15;
     Long64_t lastTDC_time=-1;

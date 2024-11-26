@@ -36,7 +36,7 @@ if __name__ == "__main__":
     args = parse_args()
 
     if not args.directory:
-        inputFile = '/abyss/users/mcarrigan/milliqan/backgroundAnalysis_1600_noBeamInFill/mergedOutput.root'
+        inputFile = '/abyss/users/mcarrigan/milliqan/backgroundAnalysis_1600_noBeamInFill_med/mergedOutput.root'
     else:
         inputFile = args.directory
 

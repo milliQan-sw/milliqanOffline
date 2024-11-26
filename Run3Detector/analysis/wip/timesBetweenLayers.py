@@ -114,7 +114,7 @@ if __name__ == "__main__":
     #filelist = ['/store/user/milliqan/trees/v34/1300/MilliQan_Run1364.1_v34.root', '/store/user/milliqan/trees/v34/1300/MilliQan_Run1364.2_v34.root', '/store/user/milliqan/trees/v34/1300/MilliQan_Run1364.3_v34.root', '/store/user/milliqan/trees/v34/1300/MilliQan_Run1365.100_v34.root']
 
     #define the necessary branches to run over
-    branches = ['event', 'tTrigger', 'boardsMatched', 'pickupFlag', 'fileNumber', 'runNumber', 
+    branches = ['event', 'tTrigger', 'boardsMatched', 'pickupFlag', 'fileNumber', 'runNumber', 'npulses',
                 'time_module_calibrated', 'timeFit_module_calibrated', 'row', 'column', 'layer', 'height', 'area']
 
     #define the milliqan cuts object
@@ -176,7 +176,7 @@ if __name__ == "__main__":
     myschedule.printSchedule()
 
     #create the milliqan processor object
-    myiterator = milliqanProcessor(filelist, branches, myschedule, step_size=10000)
+    myiterator = milliqanProcessor(filelist, branches, myschedule, step_size=10000, qualityLevel='override')
 
     #run the milliqan processor
     myiterator.run()

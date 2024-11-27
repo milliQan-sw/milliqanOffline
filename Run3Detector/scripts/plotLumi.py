@@ -34,6 +34,7 @@ def plotLumis(lumis, x=0.4, y=0.7, var_x='stop', var_y='lumiSum', outDir=None, n
     plt.xlabel('Date', fontsize=16)
     plt.ylabel('Recorded Luminosity (fb^-1)', fontsize=16)
 
+    print(lumis.iloc[-1])
     totalLumi = round(lumis.iloc[-1][var_y], 2)
     textStr = 'Total Luminosity Recorded: {}'.format(totalLumi)
 
@@ -80,6 +81,7 @@ def plotMQRawTogether(lumis, raw, var_y1='lumiSum', var_y2='lumiSum', x=0.4, y=0
 
     totalLumi = round(lumis.iloc[-1][var_y1], 2)
     textStr = 'Total Luminosity Recorded: {}'.format(totalLumi)
+    print(textStr)
 
     if fill:
         plt.text(x, y-0.1, textStr+' $fb^{-1}$', fontsize=16, color='blue', ha='center', va='center', transform=plt.gca().transAxes)
@@ -169,7 +171,7 @@ def plotFileOpenTimes(lumis, outDir=None):
 
 if __name__ == "__main__":
 
-    pltDir = 'plots/'
+    pltDir = '/home/milliqan/scratch0/milliqanOffline/Run3Detector/scripts/plots/'
     goodRunDir = pltDir + 'goodRuns/'
     rawLumiDir = pltDir + 'rawLumis/'
     perRunDir = pltDir + 'perRun/'
@@ -180,7 +182,9 @@ if __name__ == "__main__":
     if not os.path.exists(perRunDir): os.mkdir(perRunDir)
     if not os.path.exists(totalLumiDir): os.mkdir(totalLumiDir)
 
+    print("Trying to get latest files")
     lumis = loadLumis() #mqLumis
+    print("Loaded lumis")
     goodRuns = loadGoodRuns() #good runs list
     rawLumis = loadRawLumis() #cms oms lumi data
 
@@ -261,23 +265,28 @@ if __name__ == "__main__":
     ###########################
 
     #plot all mq recorded lumi
+    print("Plotting the total lumis", lumis.size, lumis24.size, lumis23.size)
     plotLumis(lumis, outDir=totalLumiDir, name='totalLumis')
     plotLumis(lumis24, outDir=totalLumiDir, name='totalLumis2024')
     plotLumis(lumis23, outDir=totalLumiDir, name='totalLumis2023')
 
+    print("Plotting the lumis per file")
     plotLumis(lumis, var_y='lumiEst', outDir=perRunDir, name='LumisPerFile', fill=False)
     plotLumis(lumis24, var_y='lumiEst', outDir=perRunDir, name='LumisPerFile2024', fill=False)
     plotLumis(lumis23, var_y='lumiEst', outDir=perRunDir, name='LumisPerFile2023', fill=False)
 
+    print("Plotting the lumis per run")
     plotLumis(perRun, var_x='run', var_y='lumiEst', outDir=perRunDir, name='LumisPerRun', fill=False)
     plotLumis(perRun, var_x='run', var_y='lumiEst', outDir=perRunDir, name='LumisPerRun2024', fill=False)
     plotLumis(perRun, var_x='run', var_y='lumiEst', outDir=perRunDir, name='LumisPerRun2023', fill=False)
 
     #plot mq recorded lumi w/ runs marked as good
+    print("Plotting the good run lumis")
     plotLumis(selected_rows, x=0.5, outDir=totalLumiDir, name='goodRunLumis', title='MilliQan Good Runs Recorded Luminosity')
     plotLumis(selected_rows24, outDir=totalLumiDir, name='goodRunLumis2024', title='MilliQan Good Runs Recorded Luminosity 2024')
     plotLumis(selected_rows23, outDir=totalLumiDir, name='goodRunLumis2023', title='MilliQan Good Runs Recorded Luminosity 2023')
-        
+   
+    print("Plotting the good run lumis per file")     
     plotLumis(selected_rows, var_y='lumiEst', x=0.5, outDir=perRunDir, name='goodRunLumisPerFile', title='MilliQan Good Runs Recorded Luminosity', fill=False)
     plotLumis(selected_rows24, var_y='lumiEst', outDir=perRunDir, name='goodRunLumisPerFile2024', title='MilliQan Good Runs Recorded Luminosity 2024', fill=False)
     plotLumis(selected_rows23, var_y='lumiEst', outDir=perRunDir, name='goodRunLumisPerFile2023', title='MilliQan Good Runs Recorded Luminosity 2023', fill=False)

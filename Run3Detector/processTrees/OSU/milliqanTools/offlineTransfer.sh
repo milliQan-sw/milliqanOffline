@@ -20,4 +20,5 @@ cd -
 
 echo "Attempting to run transfer script"
 python3 /home/milliqan/scratch0/milliqanOffline/Run3Detector/scripts/transferOfflineFiles.py
+python3 /home/milliqan/scratch0/milliqanOffline/Run3Detector/scripts/transferOfflineFilesMod.py
 echo "Finished Transfer"

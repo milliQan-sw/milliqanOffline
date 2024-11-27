@@ -97,6 +97,7 @@ if __name__=="__main__":
     request_disk = 5000MB
     request_memory = 500MB
     request_cpus = 1
+    requirements = machine != "compute-0-0.local" && machine != "compute-0-2.local" && machine != "compute-0-4.local" &&  machine != "compute-0-30.local"
     executable              = matching_wrapper.py
     arguments               = $(PROCESS) {1} {2} {5}
     log                     = {3}log_$(PROCESS).log
@@ -104,7 +105,7 @@ if __name__=="__main__":
     error                   = {3}error_$(PROCESS).txt
     should_transfer_files   = Yes
     when_to_transfer_output = ON_EXIT
-    transfer_input_files = {2}, {4}, offline.sif, matching_wrapper.py
+    transfer_input_files = {2}, {4}, matching_wrapper.py
     getenv = true
     queue {0}
     """.format(len(runsToProcess),dataDir,filelist,logDir,milliDAQ,site)

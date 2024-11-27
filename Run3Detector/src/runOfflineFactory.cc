@@ -94,12 +94,15 @@ int main(int argc, char **argv){
         lumiFile = TString(offlineDir) + "/configuration/slabConfigs/mqLumisSlab.json";
         goodRunList = TString(offlineDir) + "/configuration/slabConfigs/goodRunsListSlab.json";
     }
-    else {
+    else if (!isSim) {
         lumiFile = TString(offlineDir) + "/configuration/barConfigs/mqLumis.json";
         goodRunList = TString(offlineDir) + "/configuration/barConfigs/goodRunsList.json";
     }
-    offlineFactory.getLumis(lumiFile);
-    offlineFactory.checkGoodRunList(goodRunList);
+
+    if (!isSim){
+        offlineFactory.getLumis(lumiFile);
+        offlineFactory.checkGoodRunList(goodRunList);
+    }
 
     if (displayMode) {
 	if (isDRSdata){

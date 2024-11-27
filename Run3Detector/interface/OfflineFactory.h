@@ -253,7 +253,7 @@ private:
     int dynamicPedestalTotalSamples = 400;
     int dynamicPedestalConsecutiveSamples = 16;
     float dynamicPedestalGranularity = 0.25;
-    float tdcCorrection[6]; //set to max number of boards
+    float tdcCorrection[6] = {0}; //set to max number of boards
 
     bool goodRunLoose;
     bool goodRunMedium;

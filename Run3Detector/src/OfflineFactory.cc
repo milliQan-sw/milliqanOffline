@@ -461,10 +461,8 @@ void OfflineFactory::validateInput(){
         if (highThresh.size() != numChan) throw length_error("highThresh should be length "+std::to_string(numChan) + "or 1");
     }
     else {
-      std::clog << "highTresh.size() <= 1" << std::endl;
         for (int ic = 0; ic < numChan-1; ic++) highThresh.push_back(highThresh.at(0));
         if(variableThresholds && !isSlab && !isSim){
-          std::clog << "variableThresholds==true && isSlab==false" << std::endl;
             for (int ic = 0; ic < numChan; ic++){
                 if (outputTreeContents.v_triggerThresholds[ic]*10e3 > 50) continue; //if pannel keep default
                 highThresh[ic] = outputTreeContents.v_triggerThresholds[ic]*10e3 - thresholdDecrease;
@@ -521,16 +519,11 @@ void OfflineFactory::processDisplays( vector<int> & eventsToDisplay,TString disp
 void OfflineFactory::process(){
 
     // Testing json stuff
-    cout << "in process" << endl;
     makeOutputTree();
-    cout << "made output tree" <<endl;
     inFile = TFile::Open(inFileName, "READ");
     readMetaData();
-    cout << "read meta data" << endl;
     readWaveData();
-    cout << "read wave data" << endl;
     writeOutputTree();
-    cout << "wrote output tree" << endl;
 }
 void OfflineFactory::process(TString inFileName,TString outFileName)
 {
@@ -715,7 +708,6 @@ void OfflineFactory::readMetaData(){
     TTree * metadata;
     metadata = (TTree*) inFile->Get("Metadata");
     if (!isDRS && !isSim){
-        cout << "Setting metadata branches" << endl;
         metadata->SetBranchAddress("configuration", &cfg);
         metadata->SetBranchAddress("fileOpenTime", &fileOpenTime);
         metadata->SetBranchAddress("fileCloseTime", &fileCloseTime);
@@ -777,7 +769,6 @@ void OfflineFactory::readMetaData(){
     // For sim data
     else{
 
-      cout << " TEST" << endl;
       float secondsPerSample;
       metadata->SetBranchAddress("secondsPerSample", &secondsPerSample);
       metadata->SetBranchAddress("numChan", &numChan);
@@ -785,8 +776,6 @@ void OfflineFactory::readMetaData(){
       chanArray = new TArrayI(numChan);
       boardArray = new TArrayI(numChan);
       sampleRate = 1.0/(secondsPerSample*1e+09);
-      clog << "Number of channels: " << numChan << endl;
-      clog << "Seconds per sample: " << secondsPerSample << endl;
       for (int ic=0; ic < numChan; ++ic){
         chanArray->SetAt(ic % 16, ic);
         boardArray->SetAt(ic/16,ic);
@@ -829,7 +818,6 @@ void defineColors(vector<int>colors, vector<TColor*> palette, vector<float> reds
 */
 //Display making
 void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >& bounds,TString displayDirectory){
-    std::clog << "Inside displayEvent" << std::endl;
     TCanvas c("c1","",1400,800);
     gPad->SetRightMargin(0.45);
     gStyle->SetGridStyle(3);
@@ -843,18 +831,15 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
     float maxheight=0; float minheight=0;
     float timeRange[2];
     timeRange[1]=1024./sampleRate; timeRange[0]=0.;
-    std::clog << "Time ranges: " << timeRange[0] << ", " << timeRange[1] << std::endl;
     //Get the waves                                                                             
     vector<vector<pair<float,float>>> boundsShifted;
     vector<TH1D*> wavesShifted;
     vector<int> index;
     float originalMaxHeights[80]; // FIXME: This is hardcoded to be the number of channels in the bar detector (?)
-    clog << "Bounds size: " << bounds.size() << endl;
     for(uint ic=0;ic<bounds.size();ic++){
         int chan = chanArray->GetAt(ic);
         index.push_back(ic);
         vector<pair<float,float>> boundShifted = bounds[ic];
-        clog << "boundShifted.size(): " << boundShifted.size() << endl;
         TH1D * waveShifted = (TH1D*) waves[ic]->Clone(TString(waves[ic]->GetName())+" shifted");
         //FIX here: Add calibration for the timing
         /*
@@ -883,7 +868,6 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
           shift the waveforms together on the same canvas
          */ 
         if(boundShifted.size()>0 || waveShifted->GetMaximum()>drawThresh){
-            std::clog << "bounShifted.size()>0 || waveShifted->GetMaximum()>drawThresh" << std::endl;
             chanList.push_back(ic);
             //FIX here: Check for the run for beam state. By default set to on for now
             TString beamState = "on";
@@ -1537,7 +1521,7 @@ void OfflineFactory::displaychannelEvent(int event, vector<vector<pair<float,flo
 vector<vector<pair<float,float>>> OfflineFactory::readWaveDataPerEvent(int i){
 
     inTree->GetEntry(i);
-    clog << "Processing event " << i << endl;
+    if ( i % 1000 == 0) clog << "Processing event " << i << endl;
     if (!isDRS) {
         //Read timing information
         if(initSecs<0){ //if timestamps for first event are uninitialized
@@ -1547,7 +1531,6 @@ vector<vector<pair<float,float>>> OfflineFactory::readWaveDataPerEvent(int i){
                 prevTDC=initTDC;
             }
         }
-        clog << "Read timing information" << endl;
         Long64_t thisTDC;
         if(evt->digitizers[0].DataPresent) thisTDC = evt->digitizers[0].TDC[0];
         else thisTDC=prevTDC;
@@ -1562,7 +1545,6 @@ vector<vector<pair<float,float>>> OfflineFactory::readWaveDataPerEvent(int i){
         // outputTreeContents.event_t_string = TTimeStamp(outputTreeContents.event_time_fromTDC).AsString("s");
         //update previous TDC holder for next event
         prevTDC = thisTDC;
-        clog << "About to loop through digitizer boards" << endl;
         if (!isSim){
             for (int ib =0; ib < numBoards; ib++){
 
@@ -1587,9 +1569,7 @@ vector<vector<pair<float,float>>> OfflineFactory::readWaveDataPerEvent(int i){
                 outputTreeContents.present.push_back(evt->digitizers[ib].DataPresent);
             }
         }
-        clog << "About to load waves from MilliDAQ" << endl;
         loadWavesMilliDAQ();
-        clog << "Loaded waves" << endl;
     }
     else loadWavesDRS();
     //Loop over channels
@@ -1626,6 +1606,7 @@ vector<vector<pair<float,float>>> OfflineFactory::readWaveDataPerEvent(int i){
     return allPulseBounds;
 }
     
+
 void OfflineFactory::displayEvents(std::vector<int> & eventsToDisplay,TString displayDirectory){
     validateInput();
     inTree = (TTree*)inFile->Get("Events"); 
@@ -1648,7 +1629,6 @@ void OfflineFactory::displayEvents(std::vector<int> & eventsToDisplay,TString di
 //Pulse finding and per channel processing
 void OfflineFactory::readWaveData(){
     validateInput();
-    std::clog << "Validated input data" << std::endl;
     inTree = (TTree*)inFile->Get("Events"); 
     if (inTree->GetEntries() == 0){
         throw runtime_error("There are no entries in this tree... exiting");
@@ -1659,11 +1639,9 @@ void OfflineFactory::readWaveData(){
 	  triggerFileMatched = true;
     }
     loadBranches();
-    std::clog << "Loaded branches" << std::endl;
     // int maxEvents = 1;
     int maxEvents = inTree->GetEntries();
     cout<<"Processing "<<maxEvents<<" events in this file"<<endl;
-    cout<<"Starting event loop"<<endl;
     bool showBar = false;
 
     for(int i=0;i<maxEvents;i++){
@@ -1671,12 +1649,10 @@ void OfflineFactory::readWaveData(){
         //for(int i=825;i<826;i++){
         //cout<<"------------- Event="<<i<<"  -----------------"<<endl;
         resetOutBranches();
-        clog << "Reset Branches" << endl;
         //Process each event
         vector<vector<pair<float,float> > > allPulseBounds;
         outputTreeContents.event=i;
         allPulseBounds = readWaveDataPerEvent(i);
-        clog << "Read wave data" << endl;
         outputTreeContents.tClockCycles = tClockCycles;
         outputTreeContents.tTime = tTime;
         outputTreeContents.tStartTime = tStartTime;
@@ -1686,7 +1662,6 @@ void OfflineFactory::readWaveData(){
         outputTreeContents.tEvtNum = tEvtNum;
         outputTreeContents.tRunNum = tRunNum;
         outputTreeContents.tTBEvent = tTBEvent;
-        clog << "Set outputTreeContents" << endl;
         findExtrema();
 
         if (!isSlab && !isSim){ //temporary while slab has no lumi/good runs
@@ -1806,7 +1781,6 @@ pair<float,float> OfflineFactory::measureSideband(int ic){
 
 }
 vector< pair<float,float> > OfflineFactory::findPulses(int ic){
-  clog << "Inside findPulses" << endl;
     vector<pair<float,float> > bounds;
     float tstart = sideband_range[1]+1;
     int istart = waves[ic]->FindBin(tstart);
@@ -1821,7 +1795,6 @@ vector< pair<float,float> > OfflineFactory::findPulses(int ic){
     //std::clog << "start: " << i_begin << ", stop: " << i_stop_searching << std::endl;
     for (int i=istart; i<i_stop_searching || (inpulse && i<i_stop_final_pulse); i++) {
         float v = waves[ic]->GetBinContent(i);
-        if (v > 0) std::clog << "Waveform voltage: " << v << endl;
 
         if (!inpulse) {
             if (v<lowThresh[ic]) {   
@@ -1829,7 +1802,6 @@ vector< pair<float,float> > OfflineFactory::findPulses(int ic){
                 i_begin = i;
             }
             else if (v>=highThresh[ic]){
-                clog << "Voltage over highThresh" << endl;
                 nover++;       // If v is above the threshold, start counting the number of sample indices
             }
             else{
@@ -1841,7 +1813,6 @@ vector< pair<float,float> > OfflineFactory::findPulses(int ic){
             }
         }
         else {  // Called if we have a pulse
-          clog << "Theres a pulse" << endl;
             if (v<highThresh[ic]) nunder++;   // If the pulse dips below the threshold, sum the number of sample indices for which this is true
             else if (v >= highThresh[ic]){
                 nunder = 0;           // If the pulse stays above threshold, set nunder back to zero
@@ -1849,7 +1820,6 @@ vector< pair<float,float> > OfflineFactory::findPulses(int ic){
             // If the nunder is above or equal to 12 (or we reach the end of the file) store the values of the pulse bounds
             if (nunder>=nConsecSamplesEnd[ic] || i==(i_stop_final_pulse-1)) { 
                 bounds.push_back({(float)waves[ic]->GetBinLowEdge(i_begin), (float)waves[ic]->GetBinLowEdge(i+1)-0.01});
-                clog << "waveform bounds" << (float)waves[ic]->GetBinLowEdge(i_begin) <<" "<<  (float)waves[ic]->GetBinLowEdge(i+1)-0.01 << endl;
                 // cout<<"i_begin, i: "<<i_begin<<" "<<i<<endl;       // i_begin is the 
                 inpulse = false;
                 nover = 0;
@@ -1958,8 +1928,6 @@ vector< pair<float,float> > OfflineFactory::processChannel(int ic){
         float area = waves[ic]->Integral("width");
         outputTreeContents.v_area.push_back(area);
 
-        std::clog << "Channel speArea: " << speAreas[ic] << std::endl;
-        std::clog << "Sample rate: " << sampleRate << std::endl;
 
         outputTreeContents.v_nPE.push_back((waves[ic]->Integral("width")/(speAreas[ic]))*(0.4/sampleRate));
         outputTreeContents.v_ipulse.push_back(ipulse);
@@ -2014,17 +1982,8 @@ void OfflineFactory::loadWavesMilliDAQ(){
         //board = ic<=15 ? 0 : 1;
         board = boardArray->GetAt(ic);
         chan = chanArray->GetAt(ic);
-        clog << "board, chan" << board << "," << chan << endl;
         // FIXME: Not grabbing waveforms for sim data correctly 
         waves[ic] = (TH1D*)evt->GetWaveform(board, chan, Form("digitizers[%i].waveform[%i]",board,ic));  
-        int nBins = waves[ic]->GetNbinsX();
-        clog << "Number of bins: " << nBins << endl;
-        for (int i = 1; i <= nBins; i++) {
-            double binContent = waves[ic]->GetBinContent(i);
-            double binCenter = waves[ic]->GetBinCenter(i);
-            if (binContent != 0) {
-            std::cout << "Bin " << i << " (Center: " << binCenter << "): " << binContent << std::endl;
-            }
         }
         if (isSlab) waves[ic]->Scale(-1);
     }

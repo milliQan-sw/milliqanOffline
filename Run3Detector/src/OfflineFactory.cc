@@ -1641,6 +1641,7 @@ void OfflineFactory::readWaveData(){
     loadBranches();
     // int maxEvents = 1;
     int maxEvents = inTree->GetEntries();
+    maxEvents = 1000;
     cout<<"Processing "<<maxEvents<<" events in this file"<<endl;
     bool showBar = false;
 
@@ -1984,11 +1985,12 @@ void OfflineFactory::loadWavesMilliDAQ(){
         chan = chanArray->GetAt(ic);
         // FIXME: Not grabbing waveforms for sim data correctly 
         waves[ic] = (TH1D*)evt->GetWaveform(board, chan, Form("digitizers[%i].waveform[%i]",board,ic));  
-        }
+
         if (isSlab) waves[ic]->Scale(-1);
     }
+}
 
-}    
+    
 // Need to add a separate loop here in the case we have DRS data
 
 void OfflineFactory::loadWavesDRS(){

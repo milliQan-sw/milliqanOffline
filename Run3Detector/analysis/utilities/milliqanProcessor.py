@@ -15,16 +15,19 @@ from processorConstants import *
 
 class milliqanProcessor():
 
-    def __init__(self, filelist, branches, schedule=None, cuts=None, plotter=None, max_events=None, step_size=10000, qualityLevel="tight", verbosity='minimal', goodRunsList=None):
+    def __init__(self, filelist, branches, schedule=None, cuts=None, plotter=None, max_events=None, step_size=10000, qualityLevel="tight", verbosity='minimal', goodRunsList=None, sim=False):
         self.script_dir = os.path.abspath(__file__).replace("milliqanProcessor.py", "")
         self.qualityLevelString = qualityLevel
         self.verbosityString = verbosity
-        self.qualityLevel, self.verbosity = self.constantPuller()
+        self.sim = sim
         
         #Checks the filelist against goodRuns.json
         self.filelist = filelist
-        self.fileChecker() 
         
+        if not self.sim:
+            self.fileChecker() 
+            self.qualityLevel, self.verbosity = self.constantPuller()
+
         self.branches = branches
         self.mqSchedule = schedule
         self.max_events = max_events

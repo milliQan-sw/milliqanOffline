@@ -28,8 +28,9 @@ if __name__ == "__main__":
 
     beam = False
     skim = True
+    sim = True
     outputFile = 'bgCutFlow_output.root'
-    qualityLevel = 'Tight'
+    qualityLevel = 'tight'
     maxEvents = None
     stepSize = 1000
 
@@ -38,11 +39,26 @@ if __name__ == "__main__":
         #"/home/mcarrigan/scratch0/milliQan/analysis/milliqanOffline/Run3Detector/analysis/skim/MilliQan_Run1700_v35_signalSkim_beamOff_tight.root",
         #"/home/mcarrigan/scratch0/milliQan/analysis/milliqanOffline/Run3Detector/analysis/skim/MilliQan_Run1600_v35_signalSkim_beamOff_tight.root",
         #"/home/mcarrigan/scratch0/milliQan/analysis/milliqanOffline/Run3Detector/analysis/skim/MilliQan_Run1500_v35_signalSkim_beamOff_tight.root",
-        "/home/mcarrigan/scratch0/milliQan/analysis/milliqanOffline/Run3Detector/analysis/skim/MilliQan_Run1500_v35_signalSkim3Line_beamOff_tight.root",
+        #"/home/mcarrigan/scratch0/milliQan/analysis/milliqanOffline/Run3Detector/analysis/skim/MilliQan_Run1500_v35_signalSkim3Line_beamOff_tight.root",
+        #"../skim/MilliQan_sim_c0p004.root_m0p1.root",
+        #"/eos/experiment/milliqan/sim/bar/signal/MilliQan_sim_c0p001.root_m1p3.root"
+        "/eos/experiment/milliqan/skims/signal/MilliQan_Run1500_v35_signal_beamOff_tight.root"
         ]
 
     if skim:
         qualityLevel = 'override'
+
+    if len(sys.argv) > 7:
+        beam = (sys.argv[1] == 'True')
+        skim = (sys.argv[2] == 'True')
+        sim = (sys.argv[3] == 'True')
+        outputFile = str(sys.argv[4])
+        qualityLevel = str(sys.argv[5])
+        filelist = sys.argv[6].split(',')
+        if sys.argv[7] == 'None':
+            maxEvents = None
+        else:
+            maxEvents = int(sys.argv[7])
 
     print("Running on files {}".format(filelist))
 
@@ -56,11 +72,13 @@ if __name__ == "__main__":
 
     if skim:
         lumi, runTime = getSkimLumis(filelist)
-    else:
+    elif not sim:
         lumi, runTime = getLumiofFileList(filelist)
+    else:
+        lumi, runTime = 0, 0 #TODO scale to data 
 
     #define the necessary branches to run over
-    branches = ['event', 'tTrigger', 'boardsMatched', 'pickupFlag', 'fileNumber', 'runNumber', 'type', 'ipulse', 'nPE', 'chan',
+    branches = ['event', 'tTrigger', 'boardsMatched', 'pickupFlag', 'pickupFlagTight', 'fileNumber', 'runNumber', 'type', 'ipulse', 'nPE', 'chan',
                 'time_module_calibrated', 'timeFit_module_calibrated', 'row', 'column', 'layer', 'height', 'area', 'npulses', 'sidebandRMS']
 
 
@@ -71,7 +89,7 @@ if __name__ == "__main__":
     centralTimeCut = getCutMod(mycuts.centralTime, mycuts, 'centralTimeCut', cut=True)
 
     #require pulses are not pickup
-    pickupCut = getCutMod(mycuts.pickupCut, mycuts, 'pickupCut', cut=True)
+    pickupCut = getCutMod(mycuts.pickupCut, mycuts, 'pickupCut', cut=True, tight=True)
 
     #require that all digitizer boards are matched
     boardMatchCut = getCutMod(mycuts.boardsMatched, mycuts, 'boardMatchCut', cut=True, branches=branches)
@@ -295,7 +313,7 @@ if __name__ == "__main__":
     myschedule.printSchedule()
 
     #create the milliqan processor object
-    myiterator = milliqanProcessor(filelist, branches, myschedule, step_size=stepSize, qualityLevel=qualityLevel, max_events=maxEvents, goodRunsList=os.getcwd()+'/goodRunsList.json')
+    myiterator = milliqanProcessor(filelist, branches, myschedule, step_size=stepSize, qualityLevel=qualityLevel, max_events=maxEvents, goodRunsList=os.getcwd()+'/goodRunsList.json', sim=sim)
 
     #run the milliqan processor
     myiterator.run()

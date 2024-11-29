@@ -4,7 +4,7 @@
 
 beam="False"
 goodRun="goodRunTight"
-skim="cosmic"
+skim="zeroBias"
 
 for run in {1300..1900..100}; do
     echo "Processing run $run, beam $beam, goodRun $goodRun, and skim $skim"

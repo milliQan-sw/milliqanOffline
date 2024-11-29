@@ -27,11 +27,11 @@ goodRuns = pd.read_json('goodRunsList.json', orient = 'split', compression = 'in
 
 ########################################################
 ################### Settings ##########################
-directory = '/store/user/milliqan/trees/v35/bar/1500/'
-outputName = 'MilliQan_Run1500_v35_cosmic_beamOff_tight.root'
+directory = '/store/user/milliqan/trees/v35/bar/1400/'
+outputName = 'MilliQan_Run1400_v35_zeroBias_beamOff_tight.root'
 beam = False
 goodRun = 'goodRunTight'
-skimType = 'cosmic'
+skimType = 'zeroBias'
 debug=False
 #######################################################
 
@@ -93,6 +93,11 @@ if nEntries > 0:
         r.gROOT.LoadMacro("cosmicSkim.C")
     elif skimType == 'signal':
         r.gROOT.LoadMacro("signalSkim.C")
+    elif skimType == 'zeroBias':
+        r.gROOT.LoadMacro("zeroBiasSkim.C")
+    else:
+        print("Please select from beam, cosmic, signal, and zeroBias skim types")
+        sys.exit(0)
 
     mylooper = r.myLooper(mychain)
 

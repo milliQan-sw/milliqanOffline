@@ -310,18 +310,6 @@ class milliqanCuts():
         self.events['layer2'] = self.events.layer == 2
         self.events['layer3'] = self.events.layer == 3
 
-    #event level mask selecting events with hits in 4 layers
-    @mqCut
-    def fourLayerCut(self, cutName='fourLayerCut', cut=False, branches=None):
-        allLayers =(ak.any(self.events.layer==0, axis=1) & 
-                    ak.any(self.events.layer==1, axis=1) & 
-                    ak.any(self.events.layer==2, axis=1) & 
-                    ak.any(self.events.layer==3, axis=1))
-        _, allLayers = ak.broadcast_arrays(self.events.npulses, allLayers)
-        self.events[cutName] = allLayers
-        if cut:
-            self.cutBranches(branches, cutName)
-
     #cut on one hit per layer, if multipleHits==False cuts on exactly one hit per layer
     @mqCut
     def oneHitPerLayerCut(self, cutName='oneHitPerLayerCut', cut=False, multipleHits=False, branches=None):

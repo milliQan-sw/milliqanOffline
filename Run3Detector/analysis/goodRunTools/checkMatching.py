@@ -455,18 +455,24 @@ class fileChecker():
         self.runInfos['offlineCTime'] = pd.to_datetime(self.runInfos['offlineCTime'])
 
         self.runInfos['TriggersMatched'] = self.runInfos['unmatchedEvents'].apply(lambda x: True if x < 10 else False)
-        self.runInfos['OfflineFilesTrigMatched'] = self.runInfos.apply(lambda x: True if (x['totalEvents'] > 0 and (x['offlineTrigMatched'] / x['totalEvents']) > 0.99) else False, axis=1)
-        self.runInfos['passBoardMatching'] = self.runInfos.apply(lambda x: True if (x['totalEvents'] > 0 and (x['unmatchedBoards'] / x['totalEvents']) < 0.01) else False, axis=1)
+        self.runInfos['OfflineFilesTrigMatched'] = self.runInfos.apply(lambda x: True if (x['totalEvents'] > 0 and (x['offlineTrigMatched'] / x['totalEvents']) > 0.95) else False, axis=1)
+        self.runInfos['passBoardMatching'] = self.runInfos.apply(lambda x: True if (x['totalEvents'] > 0 and (x['unmatchedBoards'] / x['totalEvents']) < 0.05) else False, axis=1)
         self.runInfos['passActiveChannels'] = self.runInfos.apply(lambda x: False if np.any(x['activeChannels'][self.configList[x['runConfig']].channels]==False) else True, axis=1)
         self.runInfos['inactiveChannels'] = self.runInfos.apply(lambda x: np.intersect1d(np.where(x['activeChannels']==False), self.configList[x['runConfig']].channels), axis=1)
         self.runInfos['lvdsSwapVeto'] = self.runInfos.apply(lambda x: True if ((x['daqCTime'] >= datetime(2023, 7, 6)) & (x['daqCTime'] <= datetime(2023, 11, 10))) else False, axis=1)
 
-        self.runInfos['goodRunLoose'] = (self.runInfos['TriggersMatched']) & \
+        '''self.runInfos['goodRunLoose'] = (self.runInfos['TriggersMatched']) & \
                                     (self.runInfos['passBoardMatching']) & \
                                     (self.runInfos['triggerConfigPassing']) & \
                                     (self.runInfos['OfflineFilesTrigMatched'])
         self.runInfos['goodRunMedium'] = (self.runInfos['goodRunLoose']) & (self.runInfos['inactiveChannels'].str.len() <= 2)
-        self.runInfos['goodRunTight'] = (self.runInfos['goodRunLoose']) & (self.runInfos['passActiveChannels']) & (~self.runInfos['lvdsSwapVeto'])
+        self.runInfos['goodRunTight'] = (self.runInfos['goodRunLoose']) & (self.runInfos['passActiveChannels']) & (~self.runInfos['lvdsSwapVeto'])'''
+
+        self.runInfos['goodRunLoose'] = (self.runInfos['passBoardMatching']) & \
+                                        (self.runInfos['triggerConfigPassing']) & \
+                                        (self.runInfos['inactiveChannels'].str.len() <= 2)
+        self.runInfos['goodRunMedium'] = (self.runInfos['goodRunLoose']) & (self.runInfos['passActiveChannels']) & (~self.runInfos['lvdsSwapVeto'])
+        self.runInfos['goodRunTight'] = (self.runInfos['goodRunMedium']) & (self.runInfos['TriggersMatched']) & (self.runInfos['OfflineFilesTrigMatched'])
 
         self.runInfos['goodSingleTrigger'] = (self.runInfos['TriggersMatched']) & \
                                     (self.runInfos['passBoardMatching']) & \

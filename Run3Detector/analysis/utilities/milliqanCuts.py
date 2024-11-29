@@ -190,13 +190,7 @@ class milliqanCuts():
         if tight: mycut = ~self.events.pickupFlagTight
         else: mycut = ~self.events.pickupFlag
         self.events[cutName] = mycut
-        '''if 'pickupFlag' in branches: 
-            branches.remove('pickupFlag')
-            branches.append('pickupFlag')
-        if 'pickupFlagTight' in branches:
-            branches.remove('pickupFlagTight')
-            branches.append('pickupFlagTight')
-        '''
+
         if cut and tight:
             for branch in branches:
                 self.events[branch] = self.events[branch][self.events[cutName]]
@@ -654,6 +648,10 @@ class milliqanCuts():
 
         self.events[cutName] = straight_path
 
+        remaining = ak.sum(self.events['fileNumber'], axis=1) >= 1
+        #remaining = self.events['fileNumber'][remaining]
+        self.events[cutName+'New'] = ak.mask(straight_path, remaining)
+
         for x in range(4):
             for y in range(4):
                 if(x == 0 and y == 0): straight_pulse = (straight_cuts[4*x+y]) & (self.events['column'] == x) & (self.events['row'] == y) & (self.events['type'] == 0)
@@ -845,12 +843,16 @@ class milliqanCuts():
         timeCut = ak.fill_none(timeCut, False)
 
         _, timeCutMod = ak.broadcast_arrays(maxTime, timeCut)
+        _, timeDiff = ak.broadcast_arrays(maxTime, timeDiff)
         self.events['minTimeAfter'] = minTime[timeCutMod] 
         self.events['maxTimeAfter'] = maxTime[timeCutMod]
 
         _, timeCut = ak.broadcast_arrays(self.events.npulses, timeCut)
-        
+        _, timeDiff = ak.broadcast_arrays(self.events.npulses, timeDiff)
+
         self.events[cutName] = timeCut
+        self.events[cutName+'Diff'] = timeDiff
+        
         if cut:
             self.cutBranches(branches, cutName)
 

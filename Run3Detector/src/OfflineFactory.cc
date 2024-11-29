@@ -443,7 +443,6 @@ void OfflineFactory::validateInput(){
         outputTreeContents.nConsecSamples_ = nConsecSamples;
 
     }
-    std::clog << "Verified nConsecSamples" << std::endl;
     if (nConsecSamplesEnd.size() > 1){
         if (nConsecSamplesEnd.size() != numChan) throw length_error("nConsecSamplesEnd should be length "+std::to_string(numChan) + "or 1");
     }
@@ -451,7 +450,6 @@ void OfflineFactory::validateInput(){
         for (int ic = 0; ic < numChan-1; ic++) nConsecSamplesEnd.push_back(nConsecSamplesEnd.at(0));
         outputTreeContents.nConsecSamplesEnd_ = nConsecSamplesEnd;
     }
-    std::clog << "Verified nConsecSamplesEnd" << std::endl;
     if (lowThresh.size() > 1){
         if (lowThresh.size() != numChan) throw length_error("lowThresh should be length "+std::to_string(numChan) + "or 1");
     }
@@ -459,7 +457,6 @@ void OfflineFactory::validateInput(){
         for (int ic = 0; ic < numChan-1; ic++) lowThresh.push_back(lowThresh.at(0));
         outputTreeContents.lowThreshold_ = lowThresh;
     }
-    std::clog << "Verified lowThresh" << std::endl;
     if (highThresh.size() > 1){
         if (highThresh.size() != numChan) throw length_error("highThresh should be length "+std::to_string(numChan) + "or 1");
     }
@@ -473,7 +470,6 @@ void OfflineFactory::validateInput(){
         }
         outputTreeContents.highThreshold_ = highThresh;
     }
-    std::clog << "Verified highThresh" << std::endl;
     ////Calibrations
     if (timingCalibrations.size() > 0){
         if (timingCalibrations.size() != numChan) throw length_error("timingCalibrations should be length "+std::to_string(numChan));
@@ -481,7 +477,6 @@ void OfflineFactory::validateInput(){
     else{ 
         for (int ic = 0; ic < numChan; ic++) timingCalibrations.push_back(0);
     }
-    std::clog << "Verified timingCalibrations" << std::endl;
     if (pedestals.size() > 0){
         if (pedestals.size() != numChan) throw length_error("pedestals should be length "+std::to_string(numChan));
         for (int ic = 0; ic < numChan; ic++) pedestals[ic] = 0;
@@ -489,14 +484,12 @@ void OfflineFactory::validateInput(){
     else{ 
         for (int ic = 0; ic < numChan; ic++) pedestals.push_back(0);
     }
-    std::clog << "Verified pedestals" << std::endl;
     if (speAreas.size() > 0){
         if (speAreas.size() != numChan) throw length_error("speAreas should be length "+std::to_string(numChan));
     }
     else{ 
         for (int ic = 0; ic < numChan; ic++) speAreas.push_back(1);
     }
-    std::clog << "Verified speAreas" << std::endl;
 }
 //Convenience function to produce offline tree output
 //Makedisplays and then not save the output tree //makeoutputtree is not called
@@ -1578,26 +1571,27 @@ vector<vector<pair<float,float>>> OfflineFactory::readWaveDataPerEvent(int i){
     //Loop over channels
     vector<vector<pair<float,float> > > allPulseBounds;
     outputTreeContents.boardsMatched = true;
-    for(int idig=0; idig < nDigitizers; idig++){
+    if(!isSim){
+        for(int idig=0; idig < nDigitizers; idig++){
 
-        //correct all pulses to the TDC time of digitizer 0
-        float thisCorrection = (float)5*((int64_t)evt->digitizers[idig].TDC[0] - (int64_t)evt->digitizers[0].TDC[0]);
-        tdcCorrection[idig] = thisCorrection; //5ns per TDC clock
-        if(evt->digitizers[idig].TDC[0] == 0) {
-            outputTreeContents.boardsMatched = false;
-        }
-        /*std::cout << "digi 0 " << evt->digitizers[0].TDC[0] << ", digi " << idig << " " << evt->digitizers[idig].TDC[0] << 
-            ", diff " << (int64_t)evt->digitizers[0].TDC[0] - (int64_t)evt->digitizers[idig].TDC[0] << ", correction " << thisCorrection << ", boards matched " << 
-            outputTreeContents.boardsMatched << std::endl;*/
+            //correct all pulses to the TDC time of digitizer 0
+            float thisCorrection = (float)5*((int64_t)evt->digitizers[idig].TDC[0] - (int64_t)evt->digitizers[0].TDC[0]);
+            tdcCorrection[idig] = thisCorrection; //5ns per TDC clock
+            if(evt->digitizers[idig].TDC[0] == 0) {
+                outputTreeContents.boardsMatched = false;
+            }
+            /*std::cout << "digi 0 " << evt->digitizers[0].TDC[0] << ", digi " << idig << " " << evt->digitizers[idig].TDC[0] << 
+                ", diff " << (int64_t)evt->digitizers[0].TDC[0] - (int64_t)evt->digitizers[idig].TDC[0] << ", correction " << thisCorrection << ", boards matched " << 
+                outputTreeContents.boardsMatched << std::endl;*/
 
-    }
-    //if boards are not matched don't overcorrect times (will throw out these events offline anyway)
-    if (outputTreeContents.boardsMatched == false) {
-        for(int i=0; i < sizeof(tdcCorrection)/sizeof(tdcCorrection[0]); i++){
-            tdcCorrection[i] = 0;
+        }
+        //if boards are not matched don't overcorrect times (will throw out these events offline anyway)
+        if (outputTreeContents.boardsMatched == false) {
+            for(int i=0; i < sizeof(tdcCorrection)/sizeof(tdcCorrection[0]); i++){
+                tdcCorrection[i] = 0;
+            }
         }
     }
-    clog << "Completed board matching" << endl;
     totalPulseCount = 0;
     for(int ic=0;ic<numChan;ic++){
         //Pulse finding
@@ -1605,7 +1599,6 @@ vector<vector<pair<float,float>>> OfflineFactory::readWaveDataPerEvent(int i){
     }   
 
     outputTreeContents.DAQEventNumber = evt->DAQEventNumber;
-    clog << "Finished setting up pulse bounds" << endl;
     return allPulseBounds;
 }
     
@@ -1644,7 +1637,6 @@ void OfflineFactory::readWaveData(){
     loadBranches();
     // int maxEvents = 1;
     int maxEvents = inTree->GetEntries();
-    maxEvents = 1000;
     cout<<"Processing "<<maxEvents<<" events in this file"<<endl;
     bool showBar = false;
 
@@ -1697,7 +1689,8 @@ void OfflineFactory::readWaveData(){
         
     }
 
-    setTotalLumi();    
+    setTotalLumi();
+    
 }
 
 void OfflineFactory::writeOutputTree(){

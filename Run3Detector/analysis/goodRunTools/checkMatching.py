@@ -276,6 +276,7 @@ class fileChecker():
         rawFiles = self.runInfos[['run', 'file']].loc[~pd.notnull(self.runInfos['offlineFile'])].to_numpy()
         for pair in rawFiles:
             thisConfig = self.getTriggerConfig(pair[0])
+            print("Setting run config", thisConfig, pair)
             self.runInfos['runConfig'].loc[(self.runInfos['run'] == pair[0]) & (self.runInfos['file'] == pair[1])] = thisConfig
 
             subdir = int(math.floor(pair[0] / 100.0)) * 100

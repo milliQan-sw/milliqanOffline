@@ -25,7 +25,7 @@ def writeCondorSub(exe, script, nJobs, filelist, outDir, includeDirs, requiremen
     +IsLocalJob = true
     Rank = TARGET.IsLocalSlot
     +IsSmallJob = true
-    requirements = machine != "compute-0-2" && machine != "compute-0-4" &&  machine != "compute-0-30"
+    requirements = machine != "compute-0-2.local" && machine != "compute-0-4.local" &&  machine != "compute-0-30.local"
     request_disk = {8}
     request_memory = {7}
     request_cpus = {6}
@@ -36,7 +36,7 @@ def writeCondorSub(exe, script, nJobs, filelist, outDir, includeDirs, requiremen
     error                   = {4}/error_$(PROCESS).err
     should_transfer_files   = Yes
     when_to_transfer_output = ON_EXIT
-    transfer_input_files = {1}, {2}, {3}, milliqanProcessing.tar.gz, mqLumis.json, goodRunsList.json
+    transfer_input_files = {4}/{1}, {4}/{2}, {4}/{3}, {4}/milliqanProcessing.tar.gz, {4}/mqLumis.json, {4}/goodRunsList.json
     transfer_output_files = ""
     getenv = false
     queue {0}
@@ -229,13 +229,15 @@ if __name__ == "__main__":
 
     r.gErrorIgnoreLevel = r.kBreak
 
-    nFilesPerJob = 75
-    script = 'backgroundAnalysisCondor.py'
+    nFilesPerJob = 50
+    #script = 'backgroundAnalysisCondor.py'
+    #script = 'offlineTimingCorrectionCondor.py'
+    script = 'backgroundCutFlowCondor.py'
     singularity_image = ''
     exe = 'condor_exe.sh'
     fileListName = 'filelist.json'
-    outputDir = '/abyss/users/mcarrigan/milliqan/backgroundAnalysis_1400_noBeamInFill'
-    requirements = ['1', '1500MB', '3000MB'] #CPU, Memory, Disk
+    outputDir = '/abyss/users/mcarrigan/milliqan/backgroundCutFlow_beamOff_v2'
+    requirements = ['4', '4000MB', '3000MB'] #CPU, Memory, Disk
     includeDirs = '/store/,/data/,/abyss/'
 
     if args.tarFile:
@@ -261,7 +263,7 @@ if __name__ == "__main__":
 
     createTarFile()
 
-    filesList = getFilesLocal(startRun=1400, stopRun=1500, beam=False, goodRun='goodRunTight', debug=False)
+    filesList = getFilesLocal(startRun=1200, stopRun=1800, beam=False, goodRun='goodRunTight', debug=False)
 
     nJobs = createRunList(filesList, name=fileListName, nFilesPerJob=nFilesPerJob)
 
@@ -272,6 +274,10 @@ if __name__ == "__main__":
     shutil.copy(exe, outputDir)
     shutil.copy('run.sub', outputDir)
     shutil.copy(fileListName, outputDir)
+    shutil.copy('milliqanProcessing.tar.gz', outputDir)
+    shutil.copy('mqLumis.json', outputDir)
+    shutil.copy('goodRunsList.json', outputDir)
+    shutil.copy(script, outputDir)
 
     if not args.dryRun:
         os.system('condor_submit run.sub')

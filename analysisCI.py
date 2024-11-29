@@ -23,16 +23,14 @@ if __name__ == "__main__":
     mycuts = milliqanCuts()
 
     #require pulses are not pickup
-    pickupCut = mycuts.getCut(mycuts.pickupCut, 'pickupCut', cut=True, branches=branches)
+    pickupCut = getCutMod(mycuts.pickupCut, mycuts, 'pickupCut', cut=True)
 
     #require that all digitizer boards are matched
-    boardMatchCut = mycuts.getCut(mycuts.boardsMatched, 'boardMatchCut', cut=True, branches=branches)
+    boardMatchCut = getCutMod(mycuts.boardsMatched, mycuts, 'boardMatchCut', cut=True)
 
     #Add four layer cut
-    fourLayerCut = mycuts.getCut(mycuts.fourLayerCut, 'fourLayerCut', cut=False)
+    fourLayerCut = getCutMod(mycuts.oneHitPerLayerCut, mycuts, 'oneHitPerLayer', cut=True, multipleHits=False)
 
-    #create our combined cut
-    eventCuts = mycuts.getCut(mycuts.combineCuts, 'eventCuts', ['fourLayerCut', 'straightLineCutPulse', 'firstChanPulse', 'barCut'])
 
     #define milliqan plotter
     myplotter = milliqanPlotter()
@@ -44,7 +42,7 @@ if __name__ == "__main__":
     myplotter.addHistograms(h_height, 'height')
 
     #defining the cutflow
-    cutflow = [boardMatchCut, pickupCut, mycuts.layerCut, mycuts.fourLayerCut, mycuts.straightLineCut, mycuts.firstChanPulse, mycuts.barCut, eventCuts, myplotter.dict['h_height']]
+    cutflow = [boardMatchCut, pickupCut, mycuts.layerCut, fourLayerCut, mycuts.straightLineCut, mycuts.barCut, myplotter.dict['h_height']]
 
     #create a schedule of the cuts
     myschedule = milliQanScheduler(cutflow, mycuts, myplotter)
@@ -53,7 +51,7 @@ if __name__ == "__main__":
     myschedule.printSchedule()
 
     #create the milliqan processor object
-    myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts, myplotter)
+    myiterator = milliqanProcessor(filelist, branches, myschedule, mycuts, myplotter, qualityLevel='override')
 
     #run the milliqan processor
     myiterator.run()

@@ -95,6 +95,10 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
             chanConfig = offlineDir + "/configuration/slabConfigs/" + getConfigs(runNumber, offlineDir+'/configuration/slabConfigs') + '.json'
             print("Using the chan config", chanConfig)
             configurations = [chanConfig, offlineDir+"/configuration/pulseFinding/pulseFindingSlab.json"]
+        if sim:
+            print("Using sim config file")
+            chanConfig = offlineDir + '/configuration/barConfigs/simConfig.json'
+            configurations = [chanConfig, offlineDir+"/configuration/pulseFinding/pulseFindingBar.json"]
         else:
             chanConfig = offlineDir + "/configuration/barConfigs/" + getConfigs(runNumber, offlineDir+'/configuration/barConfigs') + '.json'
             print("Using the chan config", chanConfig)
@@ -236,7 +240,7 @@ def getConfigs(runNum, offlineDir):
 
 def copyFromEOS(slab=False):
 
-    if not slab and not os.path.exists('configuration/barConfigs/goodRunsList.json'): 
+    if not slab and os.path.exists('configuration/barConfigs/goodRunsList.json'): 
         print("Warning (runOfflineFactory.py): goodRunsList.json is not available locally, trying to access from eos")
         try:
             os.system('cp /eos/experiment/milliqan/Configs/goodRunsList.json configuration/slabConfigs/')

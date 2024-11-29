@@ -4,14 +4,14 @@
 #include "TString.h"
 #include "TObject.h"
 #include "TTimeStamp.h"
-#include "MilliDAQ/interface/GlobalEvent.h"
-#include "MilliDAQ/interface/V1743Event.h"
+#include "../../../../../MilliDAQ/interface/GlobalEvent.h"
+#include "../../../../../MilliDAQ/interface/V1743Event.h"
 #include <iostream>
 
-int globalEventConv() {
+int globalEventConv(TString inputFileName, TString outputFileName) {
     // Open the input file and retrieve the TTree
-    TString fileName = "/data/MilliQan_waveinjectedSmall.root";
-    TFile *inputFile = TFile::Open(fileName);
+    //TString fileName = "/data/MilliQan_waveinjectedSmall.root";
+    TFile *inputFile = TFile::Open(inputFileName);
     TTree *inputTree = (TTree*)inputFile->Get("Events");
 
     // Define the waveform array to hold data from the tree
@@ -20,7 +20,7 @@ int globalEventConv() {
     // Set branch address to read waveform data
     inputTree->SetBranchAddress("waveform", waveform);
 
-    TString outputFileName = "/data/bar_cosmic_sim_preprocessed_fixed.root";
+    //TString outputFileName = "/data/bar_cosmic_sim_preprocessed_fixed.root";
     // Create output file to save the GlobalEvent objects
     TFile *outputFile = new TFile(outputFileName, "RECREATE");
 

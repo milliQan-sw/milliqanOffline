@@ -279,7 +279,6 @@ if __name__ == "__main__":
     shutil.copy('goodRunsList.json', outputDir)
     shutil.copy(script, outputDir)
 
-
     if not args.dryRun:
         os.system('condor_submit run.sub')
 

@@ -75,7 +75,7 @@ def parse_args():
 
 class fileChecker():
     
-    def __init__(self, rawDir='/store/user/milliqan/run3/bar/', offlineDir='/store/user/milliqan/trees/v34/', configDir=os.path.dirname(os.path.abspath(__file__))+'/../../configuration/barConfigs/'):
+    def __init__(self, rawDir='/store/user/milliqan/run3/bar/', offlineDir='/store/user/milliqan/trees/v35/bar/', configDir=os.path.dirname(os.path.abspath(__file__))+'/../../configuration/barConfigs/'):
         self.min_run = 1200
         self.max_run = 1300
         self.rawDir = rawDir
@@ -128,7 +128,7 @@ class fileChecker():
             if cfg.startRun > run: continue
             elif cfg.startRun <= run and cfg.endRun >= run:
                 return cfg.name
-            elif cfg.endRun == -1 and cfg.startRun < run:
+            elif cfg.endRun == -1 and cfg.startRun <= run:
                 return cfg.name
         return None
 
@@ -276,10 +276,11 @@ class fileChecker():
         rawFiles = self.runInfos[['run', 'file']].loc[~pd.notnull(self.runInfos['offlineFile'])].to_numpy()
         for pair in rawFiles:
             thisConfig = self.getTriggerConfig(pair[0])
+            print("Setting run config", thisConfig, pair)
             self.runInfos['runConfig'].loc[(self.runInfos['run'] == pair[0]) & (self.runInfos['file'] == pair[1])] = thisConfig
 
             subdir = int(math.floor(pair[0] / 100.0)) * 100
-            offlineFile = '{0}/MilliQan_Run{1}.{2}_v34.root'.format(subdir, pair[0], pair[1])
+            offlineFile = '{0}/MilliQan_Run{1}.{2}_v35.root'.format(subdir, pair[0], pair[1])
             if os.path.exists(self.offlineDir+'/'+offlineFile): 
                 self.runInfos['offlineFile'].loc[(self.runInfos['run'] == pair[0]) & (self.runInfos['file'] == pair[1])] = offlineFile
                 self.runInfos['offlineDir'].loc[(self.runInfos['run'] == pair[0]) & (self.runInfos['file'] == pair[1])] = self.offlineDir
@@ -454,18 +455,24 @@ class fileChecker():
         self.runInfos['offlineCTime'] = pd.to_datetime(self.runInfos['offlineCTime'])
 
         self.runInfos['TriggersMatched'] = self.runInfos['unmatchedEvents'].apply(lambda x: True if x < 10 else False)
-        self.runInfos['OfflineFilesTrigMatched'] = self.runInfos.apply(lambda x: True if (x['totalEvents'] > 0 and (x['offlineTrigMatched'] / x['totalEvents']) > 0.99) else False, axis=1)
-        self.runInfos['passBoardMatching'] = self.runInfos.apply(lambda x: True if (x['totalEvents'] > 0 and (x['unmatchedBoards'] / x['totalEvents']) < 0.01) else False, axis=1)
+        self.runInfos['OfflineFilesTrigMatched'] = self.runInfos.apply(lambda x: True if (x['totalEvents'] > 0 and (x['offlineTrigMatched'] / x['totalEvents']) > 0.95) else False, axis=1)
+        self.runInfos['passBoardMatching'] = self.runInfos.apply(lambda x: True if (x['totalEvents'] > 0 and (x['unmatchedBoards'] / x['totalEvents']) < 0.05) else False, axis=1)
         self.runInfos['passActiveChannels'] = self.runInfos.apply(lambda x: False if np.any(x['activeChannels'][self.configList[x['runConfig']].channels]==False) else True, axis=1)
         self.runInfos['inactiveChannels'] = self.runInfos.apply(lambda x: np.intersect1d(np.where(x['activeChannels']==False), self.configList[x['runConfig']].channels), axis=1)
         self.runInfos['lvdsSwapVeto'] = self.runInfos.apply(lambda x: True if ((x['daqCTime'] >= datetime(2023, 7, 6)) & (x['daqCTime'] <= datetime(2023, 11, 10))) else False, axis=1)
 
-        self.runInfos['goodRunLoose'] = (self.runInfos['TriggersMatched']) & \
+        '''self.runInfos['goodRunLoose'] = (self.runInfos['TriggersMatched']) & \
                                     (self.runInfos['passBoardMatching']) & \
                                     (self.runInfos['triggerConfigPassing']) & \
                                     (self.runInfos['OfflineFilesTrigMatched'])
         self.runInfos['goodRunMedium'] = (self.runInfos['goodRunLoose']) & (self.runInfos['inactiveChannels'].str.len() <= 2)
-        self.runInfos['goodRunTight'] = (self.runInfos['goodRunLoose']) & (self.runInfos['passActiveChannels']) & (~self.runInfos['lvdsSwapVeto'])
+        self.runInfos['goodRunTight'] = (self.runInfos['goodRunLoose']) & (self.runInfos['passActiveChannels']) & (~self.runInfos['lvdsSwapVeto'])'''
+
+        self.runInfos['goodRunLoose'] = (self.runInfos['passBoardMatching']) & \
+                                        (self.runInfos['triggerConfigPassing']) & \
+                                        (self.runInfos['inactiveChannels'].str.len() <= 2)
+        self.runInfos['goodRunMedium'] = (self.runInfos['goodRunLoose']) & (self.runInfos['passActiveChannels']) & (~self.runInfos['lvdsSwapVeto'])
+        self.runInfos['goodRunTight'] = (self.runInfos['goodRunMedium']) & (self.runInfos['TriggersMatched']) & (self.runInfos['OfflineFilesTrigMatched'])
 
         self.runInfos['goodSingleTrigger'] = (self.runInfos['TriggersMatched']) & \
                                     (self.runInfos['passBoardMatching']) & \
@@ -560,7 +567,7 @@ if __name__ == "__main__":
     goodRunListName = ''
     jsonName = ''
 
-    update=True
+    update=False
 
     if not isinstance(args.dir, list): args.dir = [args.dir]
     if not isinstance(args.subdir, list): args.subdir = [args.subdir]

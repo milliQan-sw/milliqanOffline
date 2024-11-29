@@ -74,7 +74,7 @@ def singleRun():
         outDir = args.outputDir
     else:
         outDir = '/store/user/milliqan/trees/v{}/{}/{}/'.format(args.version, ftype, args.runDir)
-    logDir = '/data/users/milliqan/log/trees/v{0}/logs_v{0}_{1}_{2}_{3}-{4}/'.format(args.version, ftype, args.runDir, args.subDir, now.strftime("%m-%d"))
+    logDir = '/data/users/milliqan/log/trees/v{0}/logs_v{0}_{1}_{2}_{3}_{4}_{5}/'.format(args.version, ftype, args.runDir, args.subDir, now.strftime("%m-%d"), args.single.replace('.', '-'))
 
     if(not os.path.isdir(outDir)): os.mkdir(outDir)
     if(not os.path.isdir(logDir)): os.mkdir(logDir)
@@ -91,10 +91,12 @@ def singleRun():
     submitLines = """
     Universe = vanilla
     +IsLocalJob = true
+    +IsSmallJob = true
     Rank = TARGET.IsLocalSlot
     request_disk = 2000MB
     request_memory = 500MB
     request_cpus = 1
+    requirements = machine != "compute-0-0.local" && machine != "compute-0-2.local" && machine != "compute-0-4.local" &&  machine != "compute-0-30.local"
     executable              = wrapper.sh
     arguments               = $(PROCESS) {1} {2} {3} {5} {7} {8}
     log                     = {6}log_$(PROCESS).log
@@ -216,6 +218,7 @@ def main(runNum, subRun, swVersion, reprocessAllFiles=False):
     request_disk = 2000MB
     request_memory = 500MB
     request_cpus = 1
+    requirements = machine != "compute-0-0.local" && machine != "compute-0-2.local" && machine != "compute-0-4.local" &&  machine != "compute-0-30.local"
     executable              = wrapper.sh
     arguments               = $(PROCESS) {1} {2} {3} {5} {7}
     log                     = {6}log_$(PROCESS).log
@@ -259,6 +262,7 @@ def reprocess(reprocessList):
     request_disk = 2000MB
     request_memory = 250MB
     request_cpus = 1
+    requirements = machine != "compute-0-0.local" && machine != "compute-0-2.local" && machine != "compute-0-4.local" &&  machine != "compute-0-30.local"
     executable              = wrapper.sh
     arguments               = $(PROCESS) {1} {2} {3} {5} {7}
     log                     = {6}log_$(PROCESS).log

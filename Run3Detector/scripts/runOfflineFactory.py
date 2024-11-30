@@ -63,7 +63,7 @@ def validateOutput(outputFile,runNumber=-1,fileNumber=-1):
         os.system("rm "+outputFile)
     return tag 
 def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publish,database,appendToTag,mergedTriggerFile,drs,display, slab, sim, runNumber=None,fileNumber=None):
-    if force_publish:
+    if force_publish and not publish:
         publish = True
     if runNumber == None:
         try:

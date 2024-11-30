@@ -35,14 +35,13 @@ if __name__ == "__main__":
     stepSize = 1000
 
     filelist = [     
-        #"/home/mcarrigan/scratch0/milliQan/analysis/milliqanOffline/Run3Detector/analysis/skim/MilliQan_Run1800_v35_signalSkim_beamOff_tight.root",
-        #"/home/mcarrigan/scratch0/milliQan/analysis/milliqanOffline/Run3Detector/analysis/skim/MilliQan_Run1700_v35_signalSkim_beamOff_tight.root",
-        #"/home/mcarrigan/scratch0/milliQan/analysis/milliqanOffline/Run3Detector/analysis/skim/MilliQan_Run1600_v35_signalSkim_beamOff_tight.root",
-        #"/home/mcarrigan/scratch0/milliQan/analysis/milliqanOffline/Run3Detector/analysis/skim/MilliQan_Run1500_v35_signalSkim_beamOff_tight.root",
-        #"/home/mcarrigan/scratch0/milliQan/analysis/milliqanOffline/Run3Detector/analysis/skim/MilliQan_Run1500_v35_signalSkim3Line_beamOff_tight.root",
-        #"../skim/MilliQan_sim_c0p004.root_m0p1.root",
-        #"/eos/experiment/milliqan/sim/bar/signal/MilliQan_sim_c0p001.root_m1p3.root"
-        "/eos/experiment/milliqan/skims/signal/MilliQan_Run1500_v35_signal_beamOff_tight.root"
+        "/eos/experiment/milliqan/skims/signal/MilliQan_Run1300_v35_signal_beamOff_tight.root",
+        "/eos/experiment/milliqan/skims/signal/MilliQan_Run1400_v35_signal_beamOff_tight.root",
+        "/eos/experiment/milliqan/skims/signal/MilliQan_Run1500_v35_signal_beamOff_tight.root",
+        "/eos/experiment/milliqan/skims/signal/MilliQan_Run1600_v35_signal_beamOff_tight.root",
+        "/eos/experiment/milliqan/skims/signal/MilliQan_Run1700_v35_signal_beamOff_tight.root",
+        "/eos/experiment/milliqan/skims/signal/MilliQan_Run1800_v35_signal_beamOff_tight.root",
+        "/eos/experiment/milliqan/skims/signal/MilliQan_Run1900_v35_signal_beamOff_tight.root",
         ]
 
     if skim:
@@ -101,7 +100,7 @@ if __name__ == "__main__":
     oneHitPerLayer = getCutMod(mycuts.oneHitPerLayerCut, mycuts, 'oneHitPerLayer', cut=True, multipleHits=False)
 
     #panel veto
-    panelVeto = getCutMod(mycuts.panelVeto, mycuts, 'panelVeto', cut=True, nPECut=1e4)
+    panelVeto = getCutMod(mycuts.panelVeto, mycuts, 'panelVeto', cut=True, nPECut=None)
 
     #first pulse max
     firstPulseMax = getCutMod(mycuts.firstPulseMax, mycuts, 'firstPulseMax', cut=True)
@@ -110,22 +109,23 @@ if __name__ == "__main__":
     vetoEarlyPulse = getCutMod(mycuts.vetoEarlyPulse, mycuts, 'vetoEarlyPulse', cut=True)
 
     #four in line cut
-    straightLineCut = getCutMod(mycuts.straightLineCut, mycuts, 'straightLineCut', cut=True)
+    straightLineCutMod = getCutMod(mycuts.straightLineCut, mycuts, 'straightLineCutMod', cut=True)
 
     #npe max-min < 10 cut
     nPEMaxMin = getCutMod(mycuts.nPEMaxMin, mycuts, 'nPEMaxMin', nPECut=20, cut=True)
 
     #time max-min < 15 cut
+    timeMaxMinNoCut = getCutMod(mycuts.timeMaxMin, mycuts, 'timeMaxMinPlot', timeCut=40)
     timeMaxMin = getCutMod(mycuts.timeMaxMin, mycuts, 'timeMaxMin', timeCut=40, cut=True)
 
     #veto events with large hit in front/back panels
     beamMuonPanelVeto = getCutMod(mycuts.beamMuonPanelVeto, mycuts, 'beamMuonPanelVeto', cut=True, nPECut=5e4)
 
     #require # bars in event  < cut
-    nBarsCut = getCutMod(mycuts.nBarsCut, mycuts, 'nBarsCut', nBarsCut=15, cut=True)
+    nBarsCut = getCutMod(mycuts.nBarsCut, mycuts, 'nBarsCut', nBarsCut=5, cut=True)
 
     #require < nBars within deltaT
-    nBarsDeltaTCut = getCutMod(mycuts.nBarsDeltaTCut, mycuts, 'nBarsDeltaTCut', nBarsCut=10, timeCut=100, cut=True)
+    nBarsDeltaTCut = getCutMod(mycuts.nBarsDeltaTCut, mycuts, 'nBarsDeltaTCut', nBarsCut=4, timeCut=100, cut=True)
 
     #sideband RMS cut
     sidebandRMSCut = getCutMod(mycuts.sidebandRMSCut, mycuts, 'sidebandRMSCut', cutVal=2, cut=True)
@@ -186,6 +186,8 @@ if __name__ == "__main__":
     h_minTimeAfter = r.TH1F('h_minTimeAfter', 'Min Pulse Time After Cut;Min Time;Events', 1200, 0, 2400)
     h_maxTimeAfter = r.TH1F('h_maxTimeAfter', 'Max Pulse Time After Cut;Min Time;Events', 1200, 0, 2400)
 
+    h_ABCD = r.TH2F('h_ABCD', 'Straight Line vs Time Window Cuts for ABCD;Straight Line Paths;Max-Min Time (ns)', 2, 0, 2, 50, 0, 50)
+
     #define milliqan plotter
     myplotter = milliqanPlotter()
     myplotter.dict.clear()
@@ -208,18 +210,18 @@ if __name__ == "__main__":
     myplotter.addHistograms(h_nLayersAfterOneHitPerLayer, 'nLayers', 'first')
     myplotter.addHistograms(h_nBarsBeforeCut, 'countNBars', 'first')
     myplotter.addHistograms(h_nBarsAfterCut, 'countNBars', 'first')
-    myplotter.addHistograms(h_nBarsInWindowBefore, 'nBarsInWindowBefore', 'first')
-    myplotter.addHistograms(h_nBarsInWindowAfter, 'nBarsInWindow', 'first')
+    #myplotter.addHistograms(h_nBarsInWindowBefore, 'nBarsInWindowBefore', 'first')
+    #myplotter.addHistograms(h_nBarsInWindowAfter, 'nBarsInWindow', 'first')
     myplotter.addHistograms(h_sidebandsBefore, 'sidebandsBeforeCut')
     myplotter.addHistograms(h_sidebandsAfter, 'sidebandsAfterCut')
     myplotter.addHistograms(h_panelNPEBefore, 'panelVetoNPEBefore')
     myplotter.addHistograms(h_panelNPEAfter, 'panelVetoNPEAfter')
     myplotter.addHistograms(h_panelHitsBefore, 'panelVetoHitsBefore', 'first')
     myplotter.addHistograms(h_panelHitsAfter, 'panelVetoHitsAfter', 'first')
-    myplotter.addHistograms(h_frontPanelNPEBefore, 'frontPanelNPEBefore')
-    myplotter.addHistograms(h_frontPanelNPEAfter, 'frontPanelNPEAfter')
-    myplotter.addHistograms(h_backPanelNPEBefore, 'backPanelNPEBefore')
-    myplotter.addHistograms(h_backPanelNPEAfter, 'backPanelNPEAfter')
+    #myplotter.addHistograms(h_frontPanelNPEBefore, 'frontPanelNPEBefore')
+    #myplotter.addHistograms(h_frontPanelNPEAfter, 'frontPanelNPEAfter')
+    #myplotter.addHistograms(h_backPanelNPEBefore, 'backPanelNPEBefore')
+    #myplotter.addHistograms(h_backPanelNPEAfter, 'backPanelNPEAfter')
     myplotter.addHistograms(h_straightChannelBefore, 'chan')
     myplotter.addHistograms(h_straightChannelAfter, 'chan')
     myplotter.addHistograms(h_straightHeightBefore, 'height')
@@ -237,6 +239,7 @@ if __name__ == "__main__":
     myplotter.addHistograms(h_maxTimeBefore, 'maxTimeBefore')
     myplotter.addHistograms(h_minTimeAfter, 'minTimeAfter')
     myplotter.addHistograms(h_maxTimeAfter, 'maxTimeAfter')
+    myplotter.addHistograms(h_ABCD, ['straightLineCut', 'timeMaxMinDiff'], 'straightLineCutNew')
 
     cutflow = [mycuts.totalEventCounter, mycuts.fullEventCounter, 
                 mycuts.timeDiff,
@@ -244,6 +247,8 @@ if __name__ == "__main__":
                 pickupCut, 
                 firstPulseCut,
                 centralTimeCut,
+                panelVeto,                
+
                 mycuts.nLayersCut,
                 mycuts.countNBars, 
 
@@ -257,13 +262,11 @@ if __name__ == "__main__":
                 nBarsCut,
                 myplotter.dict['h_nBarsAfterCut'],
 
-                panelVeto,                
-
-                beamMuonPanelVeto,
+                #beamMuonPanelVeto,
 
                 barsCut,
 
-                nBarsDeltaTCut,
+                #nBarsDeltaTCut,
 
                 sidebandRMSCut,
 
@@ -283,11 +286,16 @@ if __name__ == "__main__":
                 myplotter.dict['h_maxNPEAfter'],
                 myplotter.dict['h_minNPEAfter'],
 
+                #include versions of these selections w/o cutting to make ABCD plot
+                mycuts.straightLineCut, 
+                timeMaxMinNoCut,
+                myplotter.dict['h_ABCD'],
+               
                 myplotter.dict['h_straightTimeBefore'],
                 myplotter.dict['h_straightNPEBefore'],
                 myplotter.dict['h_straightHeightBefore'],
                 myplotter.dict['h_straightChannelBefore'],
-                straightLineCut,
+                straightLineCutMod,
                 myplotter.dict['h_straightTimeAfter'],
                 myplotter.dict['h_straightNPEAfter'],
                 myplotter.dict['h_straightHeightAfter'],

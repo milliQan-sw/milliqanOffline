@@ -28,10 +28,11 @@ if __name__ == "__main__":
 
     beam = False
     skim = True
+    sim = True
     outputFile = 'bgCutFlow_output.root'
-    qualityLevel = 'Tight'
+    qualityLevel = 'tight'
     maxEvents = None
-    stepSize = 10000
+    stepSize = 1000
 
     filelist = [     
         "/eos/experiment/milliqan/skims/signal/MilliQan_Run1300_v35_signal_beamOff_tight.root",
@@ -46,6 +47,18 @@ if __name__ == "__main__":
     if skim:
         qualityLevel = 'override'
 
+    if len(sys.argv) > 7:
+        beam = (sys.argv[1] == 'True')
+        skim = (sys.argv[2] == 'True')
+        sim = (sys.argv[3] == 'True')
+        outputFile = str(sys.argv[4])
+        qualityLevel = str(sys.argv[5])
+        filelist = sys.argv[6].split(',')
+        if sys.argv[7] == 'None':
+            maxEvents = None
+        else:
+            maxEvents = int(sys.argv[7])
+
     print("Running on files {}".format(filelist))
 
     goodRunsName = '/eos/experiment/milliqan/Configs/goodRunsList.json'
@@ -58,11 +71,13 @@ if __name__ == "__main__":
 
     if skim:
         lumi, runTime = getSkimLumis(filelist)
-    else:
+    elif not sim:
         lumi, runTime = getLumiofFileList(filelist)
+    else:
+        lumi, runTime = 0, 0 #TODO scale to data 
 
     #define the necessary branches to run over
-    branches = ['event', 'tTrigger', 'boardsMatched', 'pickupFlag', 'fileNumber', 'runNumber', 'type', 'ipulse', 'nPE', 'chan',
+    branches = ['event', 'tTrigger', 'boardsMatched', 'pickupFlag', 'pickupFlagTight', 'fileNumber', 'runNumber', 'type', 'ipulse', 'nPE', 'chan',
                 'time_module_calibrated', 'timeFit_module_calibrated', 'row', 'column', 'layer', 'height', 'area', 'npulses', 'sidebandRMS']
 
 
@@ -73,7 +88,7 @@ if __name__ == "__main__":
     centralTimeCut = getCutMod(mycuts.centralTime, mycuts, 'centralTimeCut', cut=True)
 
     #require pulses are not pickup
-    pickupCut = getCutMod(mycuts.pickupCut, mycuts, 'pickupCut', cut=True)
+    pickupCut = getCutMod(mycuts.pickupCut, mycuts, 'pickupCut', cut=True, tight=True)
 
     #require that all digitizer boards are matched
     boardMatchCut = getCutMod(mycuts.boardsMatched, mycuts, 'boardMatchCut', cut=True, branches=branches)
@@ -306,7 +321,7 @@ if __name__ == "__main__":
     myschedule.printSchedule()
 
     #create the milliqan processor object
-    myiterator = milliqanProcessor(filelist, branches, myschedule, step_size=stepSize, qualityLevel=qualityLevel, max_events=maxEvents, goodRunsList=os.getcwd()+'/goodRunsList.json')
+    myiterator = milliqanProcessor(filelist, branches, myschedule, step_size=stepSize, qualityLevel=qualityLevel, max_events=maxEvents, goodRunsList=os.getcwd()+'/goodRunsList.json', sim=sim)
 
     #run the milliqan processor
     myiterator.run()

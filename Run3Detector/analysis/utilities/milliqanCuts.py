@@ -53,7 +53,8 @@ def getCutMod(func, myclass, name=None, *dargs, **dkwargs):
                 dkwargs['branches'] = myclass.branches
 
         func(myclass, *dargs, **dkwargs)
-        myclass.cutflowCounter(modified_name)
+
+        myclass.cutflowCounter(modified_name, cut)
 
     wrapper.__name__ = modified_name
     return wrapper
@@ -67,6 +68,9 @@ class milliqanCuts():
         self.counter = 0
         self.branches = []
 
+    def to_binary(self, x):
+        return bin(int(x))[2:]
+
     #method to keep count of events/pulses passing all cuts
     def cutflowCounter(self, name, cut):
         # Increments events passing each stage of the cutflow
@@ -75,10 +79,7 @@ class milliqanCuts():
         #use fileNumber because it is never 0 (ex event) and it always exists
 
         threshold = 1
-        if name == 'totalEventCounter': 
-            threshold = 0
-            #self.cutflow = {}
-            #self.counter = 0
+        if name == 'totalEventCounter': threshold = 0
 
         if name in self.cutflow:
 
@@ -183,6 +184,20 @@ class milliqanCuts():
     def fullEventCounter(self, cutName=None, cut=False, branches=None):
         dummy = False
 
+    #creates branch with mask for first event
+    @mqCut
+    def firstEvent(self, branches=None):
+        events = ak.firsts(self.events['event'])
+        mask = np.zeros(len(events), dtype=bool)
+        mask[0] = True
+        mask = ak.Array(mask)
+        self.events['firsts'] = mask
+
+    #############################
+    ## Quality cuts selections
+    #############################
+
+    #selects events passing pickup cut
     @mqCut
     def pickupCut(self, cutName='pickupCut', cut=False, tight=False, branches=None):
         #need to define another cut so that the branch doesn't get cut first, alternatively can ensure it is last in the branches list
@@ -190,14 +205,10 @@ class milliqanCuts():
         else: mycut = ~self.events.pickupFlag
         self.events[cutName] = mycut
 
-        if cut and tight:
-            for branch in branches:
-                self.events[branch] = self.events[branch][~self.events.pickupFlag]
-        elif cut and not tight:
-            for branch in branches:
-                if branch == 'boardsMatched': continue
-                self.events[branch] = self.events[branch][~self.events.pickupFlag]
+        if cut:
+            self.cutBranches(branches, cutName)
 
+    # selects events with matching digitizizer board times
     @mqCut
     def boardsMatched(self, cutName='boardsMatched', cut=False, branches=None):
         _, self.events['boardsMatched'] = ak.broadcast_arrays(self.events.pickupFlag, self.events.boardsMatched)
@@ -309,11 +320,14 @@ class milliqanCuts():
                                       ak.any(self.events.layer==2, axis=1) & 
                                       ak.any(self.events.layer==3, axis=1))
         if cut: 
-            for branch in branches:
-                self.events[branch] = self.events[branch][self.events.fourLayerCut]
+            self.cutBranches(branches, cutName)
 
+    #cut on one hit per layer, if multipleHits==False cuts on exactly one hit per layer
     @mqCut
-    def oneHitPerLayerCut(self, cutName=None, cut=False, multipleHits=False):
+    def oneHitPerLayerCut(self, cutName='oneHitPerLayer', cut=False, multipleHits=False, branches=None):
+
+        barHits = self.events['layer'][self.events['type'] == 0]
+
         if multipleHits:
             nLayers = (
                 ak.values_astype(ak.any(barHits==0, axis=1), np.int32) + 
@@ -371,28 +385,60 @@ class milliqanCuts():
             uniqueBars = ak.Array([np.unique(x) for x in self.events.chan[barsCut]])
             nBars = ak.count(uniqueBars, axis=1)
         else:
-            self.events['oneHitPerLayerCut'] = (
-                                            (ak.count_nonzero((self.events.layer==0) & (self.events['type']==0), axis=1)==1) &
-                                            (ak.count_nonzero((self.events.layer==1) & (self.events['type']==0), axis=1)==1) &
-                                            (ak.count_nonzero((self.events.layer==2) & (self.events['type']==0), axis=1)==1) &
-                                            (ak.count_nonzero((self.events.layer==3) & (self.events['type']==0), axis=1)==1)
-                                            )
-        if cut: self.events = self.events[self.events.oneHitPerLayerCut]            
-        self.cutflowCounter()
-    #create mask for pulses passing height cut
-    def heightCut(self, cutName='heightCut', cut=1200, branches=None):
-        self.events[cutName] = self.events.height >= int(cut)
-        if branches:
-            for branch in branches:
-                self.events[branch] = self.events[branch][self.events[cutName]]
-                
-    #create mask for pulses passing area cuts
-    @mqCut
-    def areaCut(self, cutName='areaCut', areaCut=50000, cut=False, branches=None):
-        self.events[cutName] = self.events.area >= int(areaCut)
+            nBars = self.events['countNBars']
+
+        passCut = nBars <= nBarsCut
+        _, passCut = ak.broadcast_arrays(self.events.npulses, passCut)
+        self.events[cutName] = passCut
+
         if cut:
-            for branch in branches:
-                self.events[branch] = self.events[branch][self.events[cutName]]
+            self.cutBranches(branches, cutName)
+
+    #########################################
+    ## Cuts on Per Channel
+    #########################################
+
+    #creates branch with number of bars in event
+    @mqCut
+    def countNBars(self, cutName='countNBars'):
+        barsCut = (self.events['type']==0)
+        uniqueBars = ak.Array([np.unique(x) for x in self.events.chan[barsCut]])
+        nBars = ak.count(uniqueBars, axis=1)
+        _, nBars = ak.broadcast_arrays(self.events.npulses, nBars)
+        self.events[cutName] = nBars
+        if cutName not in self.branches:
+            self.branches.append(cutName)
+
+    #cuts on n bars with t window in an event
+    @mqCut
+    def nBarsDeltaTCut(self, cutName='nBarsDeltaTCut', nBarsCut=5, timeCut=100, cut=False, branches=None):
+
+        times = self.events['timeFit_module_calibrated'][self.events['type']==0]
+
+        combos = ak.combinations(times, nBarsCut)
+
+        combinations = list(itertools.combinations(range(nBarsCut), 2))  # Get all combinations of 2
+
+        passing = abs(combos["0"] - combos["1"]) < timeCut
+
+        nBarsInWindow = ak.count_nonzero(passing, axis=1)
+
+        for icut in combinations[1:]:
+            this_pass = abs(combos[str(icut[0])] - combos[str(icut[1])]) < timeCut
+            passing = passing & this_pass
+
+        _, nBarsInWindow = ak.broadcast_arrays(self.events.npulses, nBarsInWindow)
+        self.events['nBarsInWindowBefore'] = nBarsInWindow
+        self.events['nBarsInWindow'] = nBarsInWindow
+        if not 'nBarsInWindow' in self.branches:
+            self.branches.append('nBarsInWindow')
+
+        passCut = ak.any(passing, axis=1)  
+        _, passCut = ak.broadcast_arrays(self.events.npulses, passCut)
+        self.events[cutName] = ~passCut
+
+        if cut:
+            self.cutBranches(branches, cutName)
 
     #create mask/cut for pulses passing height cut
     @mqCut
@@ -599,23 +645,7 @@ class milliqanCuts():
             self.events['moveOnePath'] = passing
 
         if cut:
-            for branch in branches:
-                #print(branch)
-                self.events[branch] = self.events[branch][self.events[cutName+'Pulse']]
-
-    @mqCut
-    def getPulseTimeDiff(self):
-        times = self.events['timeFit_module_calibrated'][self.events['eventCuts']]
-        passing = self.events['eventCuts'][self.events['eventCuts']]
-        count = ak.count(times, keepdims=True, axis=1)
-        count = count == 4
-        count, times = ak.broadcast_arrays(count, times)
-        times = times[count]
-        diffs = ak.combinations(times, 2)
-        t1, t2 = ak.unzip(diffs)
-        t_out = abs(t1-t2)
-        t_out = ak.max(t_out, axis=1, keepdims=True)
-        self.events['timeDiff'] = t_out
+            self.cutBranches(branches, cutName+'Pulse')
 
     #select self.events that have 3 area saturating pulses in a line
     @mqCut
@@ -724,9 +754,6 @@ class milliqanCuts():
 
         if cut:
             self.cutBranches(branches, cutName)    
-
-    def to_binary(self, x):
-        return bin(int(x))[2:]
 
     #creates cut/mask on first pulse in channel for event
     @mqCut

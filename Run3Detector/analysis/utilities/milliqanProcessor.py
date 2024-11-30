@@ -26,7 +26,8 @@ class milliqanProcessor():
         
         if not self.sim:
             self.fileChecker() 
-            self.qualityLevel, self.verbosity = self.constantPuller()
+        
+        self.qualityLevel, self.verbosity = self.constantPuller()
 
         self.branches = branches
         self.mqSchedule = schedule

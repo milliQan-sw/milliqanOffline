@@ -24,10 +24,10 @@ class milliqanProcessor():
         #Checks the filelist against goodRuns.json
         self.filelist = filelist
         
+        self.qualityLevel, self.verbosity = self.constantPuller()
+
         if not self.sim:
             self.fileChecker() 
-        
-        self.qualityLevel, self.verbosity = self.constantPuller()
 
         self.branches = branches
         self.mqSchedule = schedule

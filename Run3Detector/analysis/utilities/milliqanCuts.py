@@ -634,6 +634,14 @@ class milliqanCuts():
                 if(x == 0 and y == 0): straight_pulse = (straight_cuts[4*x+y]) & (self.events.column == x) & (self.events.row == y)
                 else: straight_pulse = (straight_pulse) | ((straight_cuts[4*x+y]) & (self.events.column == x) & (self.events.row == y))
 
+
+        self.events['numStraightPaths'] = ak.sum(straight_pulse, axis=1) / 4
+
+        if limitPaths:
+            maskMultiple = self.events['numStraightPaths'] == 1
+            _, maskMultiple = ak.broadcast_arrays(straight_pulse, maskMultiple)
+            straight_pulse = straight_pulse[maskMultiple] #ak.mask(straight_pulse, maskMultiple)
+
         self.events[cutName+'Pulse'] = straight_pulse
 
         #get self.events passing 1 bar movement

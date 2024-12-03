@@ -51,6 +51,8 @@ def getCutMod(func, myclass, name=None, *dargs, **dkwargs):
             # Handle default value for branches dynamically
             if 'branches' not in dkwargs or dkwargs['branches'] is None:
                 dkwargs['branches'] = myclass.branches
+        
+        dkwargs['cutName'] = modified_name
 
         func(myclass, *dargs, **dkwargs)
 
@@ -211,7 +213,7 @@ class milliqanCuts():
     # selects events with matching digitizizer board times
     @mqCut
     def boardsMatched(self, cutName='boardsMatched', cut=False, branches=None):
-        _, self.events['boardsMatched'] = ak.broadcast_arrays(self.events.pickupFlag, self.events.boardsMatched)
+        _, self.events[cutName] = ak.broadcast_arrays(self.events.pickupFlag, self.events.boardsMatched)
         
         if cut:
             self.cutBranches(branches, cutName)
@@ -626,13 +628,20 @@ class milliqanCuts():
         self.events[cutName] = straight_path
 
         remaining = ak.sum(self.events['fileNumber'], axis=1) >= 1
-        #remaining = self.events['fileNumber'][remaining]
-        self.events[cutName+'New'] = ak.mask(straight_path, remaining)
+        self.events[cutName+'New'] = remaining
 
         for x in range(4):
             for y in range(4):
                 if(x == 0 and y == 0): straight_pulse = (straight_cuts[4*x+y]) & (self.events.column == x) & (self.events.row == y)
                 else: straight_pulse = (straight_pulse) | ((straight_cuts[4*x+y]) & (self.events.column == x) & (self.events.row == y))
+
+
+        self.events['numStraightPaths'] = ak.sum(straight_pulse, axis=1) / 4
+
+        if limitPaths:
+            maskMultiple = self.events['numStraightPaths'] == 1
+            _, maskMultiple = ak.broadcast_arrays(straight_pulse, maskMultiple)
+            straight_pulse = straight_pulse[maskMultiple] #ak.mask(straight_pulse, maskMultiple)
 
         self.events[cutName+'Pulse'] = straight_pulse
 

@@ -126,7 +126,7 @@ def MakePlot(filenumber,EventNumber,filelocation,NpeT=0.6):
     
     
     PTimeArr,NPEarr,arr=filling(typeArr[0],layerArr[0],rowArr[0],columnArr[0],npeArr[0],timeArr[0],NpeT)
-    #display the the max NPE and for each channel
+    #display the the  NPE and pulse time for the first hit at each channel
     LargestNPE = np.max(NPEarr) # find the largest hit among all of the channel. I need to use this value to change color of text to increase contrast.
 
     for row in range(5):

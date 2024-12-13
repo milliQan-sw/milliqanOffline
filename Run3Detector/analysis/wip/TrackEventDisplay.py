@@ -1,14 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-import sys
 import awkward as ak
-import ROOT as r
 import matplotlib.patches as patches
-import math
-from sklearn.linear_model import LinearRegression
 import matplotlib.colors as mcolors
-#from IPython.display import Image
 import uproot
 import re
 

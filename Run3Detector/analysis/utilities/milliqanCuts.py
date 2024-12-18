@@ -340,6 +340,19 @@ class milliqanCuts():
         self.events[cutName] = allLayers
         if cut:
             self.cutBranches(branches, cutName)
+    
+    #event level mask selecting  cosmic throught going events with hits at the top cosmic panel at all layers
+    @mqCut
+    def CosmicTG(self, cutName='CosmicTG', cut=False, branches=None , nPECutpan = 2):
+        cospanel = ak.any((self.events.row==4) & (self.events.nPE >= nPECutpan ), axis=1)
+        allLayers =(ak.any(self.events.layer==0, axis=1) & 
+                    ak.any(self.events.layer==1, axis=1) & 
+                    ak.any(self.events.layer==2, axis=1) & 
+                    ak.any(self.events.layer==3, axis=1))
+
+        self.events[cutName] = allLayers & cospanel
+        if cut:
+            self.cutBranches(branches, cutName)
 
     #cut on one hit per layer, if multipleHits==False cuts on exactly one hit per layer
     @mqCut
@@ -419,11 +432,12 @@ class milliqanCuts():
 
     #creates branch with number of bars in event
     @mqCut
-    def countNBars(self, cutName='countNBars'):
+    def countNBars(self, cutName='countNBars',pulseBase = True):
         barsCut = (self.events['type']==0)
         uniqueBars = ak.Array([np.unique(x) for x in self.events.chan[barsCut]])
         nBars = ak.count(uniqueBars, axis=1)
-        _, nBars = ak.broadcast_arrays(self.events.npulses, nBars)
+        if pulseBase:
+            _, nBars = ak.broadcast_arrays(self.events.npulses, nBars)
         self.events[cutName] = nBars
         if cutName not in self.branches:
             self.branches.append(cutName)
@@ -493,6 +507,17 @@ class milliqanCuts():
         self.events[cutName] = self.events['type'] == 0
         if cut:
             self.cutBranches(branches, cutName)
+
+    #find the largest pulse nPE at each layer for bar(used for cosmic sim validation)
+    @mqCut
+    def lnPE(self, cutName='lnPE', cut=False, branches=None):
+        l0MaxnPE = ak.max(self.events['nPE'][(self.events['type'] == 0) & (self.events['layer'] == 0)] , axis =1)
+        l1MaxnPE = ak.max(self.events['nPE'][(self.events['type'] == 0) & (self.events['layer'] == 1)] , axis =1)
+        l2MaxnPE = ak.max(self.events['nPE'][(self.events['type'] == 0) & (self.events['layer'] == 2)] , axis =1)
+        l3MaxnPE = ak.max(self.events['nPE'][(self.events['type'] == 0) & (self.events['layer'] == 3)] , axis =1)
+        self.events[cutName] = ak.concatenate(l0MaxnPE,l1MaxnPE,l2MaxnPE,l3MaxnPE, axis = 1)
+
+
 
     ####################################
     ## Panel Selections
@@ -854,6 +879,16 @@ class milliqanCuts():
         combos = ak.cartesian([times0, times3], axis=1)
 
         diff = combos['1'] - combos['0']
+
+        self.events[cutName] = diff
+
+    @mqCut
+    #method for simulation 
+    def SimtimeDiff(self, cutName='SimtimeDiff', branches=None):
+        times0 = self.events['timeFit_module_calibrated'][(self.events['layer']==0) & (self.events['type']==0)]
+        times3 = self.events['timeFit_module_calibrated'][(self.events['layer']==3) & (self.events['type']==0)]- (3*dT)
+
+        diff = ak.min(times3,axis = 1) - ak.min(times0,axis = 1)
 
         self.events[cutName] = diff
 

@@ -255,13 +255,13 @@ def copyFromEOS(slab=False):
             except:
                 print("Error (runOfflineFactory.py): unable to access the mqLumis file on eos or locally")
         
-        #make datetimes into uint64 to be read by c++
-        lumis = pd.read_json('configuration/barConfigs/mqLumis.json', orient = 'split', compression = 'infer')
-        convert_cols = ['start', 'stop', 'fillStart', 'fillEnd', 'startStableBeam', 'endStableBeam']
+    #make datetimes into uint64 to be read by c++
+    lumis = pd.read_json('configuration/barConfigs/mqLumis.json', orient = 'split', compression = 'infer')
+    convert_cols = ['start', 'stop', 'fillStart', 'fillEnd', 'startStableBeam', 'endStableBeam']
 
-        for col in convert_cols:
-            lumis[col] = convertTimes(lumis[col])
-        lumis.to_json('configuration/barConfigs/mqLumis.json', orient = 'split', compression = 'infer', index = 'true')
+    for col in convert_cols:
+        lumis[col] = convertTimes(lumis[col])
+    lumis.to_json('configuration/barConfigs/mqLumis.json', orient = 'split', compression = 'infer', index = 'true')
 
 def convertTimes(input):
     input = input.apply(datetime_to_uint64)

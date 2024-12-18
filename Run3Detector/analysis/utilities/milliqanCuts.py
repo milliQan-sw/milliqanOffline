@@ -884,7 +884,7 @@ class milliqanCuts():
 
     @mqCut
     #method for simulation 
-    def SimtimeDiff(self, cutName='SimtimeDiff', branches=None):
+    def timeDiff_simValid(self, cutName='timeDiff_simValid', branches=None):
         times0 = self.events['timeFit_module_calibrated'][(self.events['layer']==0) & (self.events['type']==0)]
         times3 = self.events['timeFit_module_calibrated'][(self.events['layer']==3) & (self.events['type']==0)]- (3*dT)
 

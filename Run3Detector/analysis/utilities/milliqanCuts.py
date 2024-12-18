@@ -886,8 +886,7 @@ class milliqanCuts():
     #method for simulation 
     def timeDiff_simValid(self, cutName='timeDiff_simValid', branches=None):
         times0 = self.events['timeFit_module_calibrated'][(self.events['layer']==0) & (self.events['type']==0)]
-        times3 = self.events['timeFit_module_calibrated'][(self.events['layer']==3) & (self.events['type']==0)]- (3*dT)
-
+        times3 = self.events['timeFit_module_calibrated'][(self.events['layer']==3) & (self.events['type']==0)]
         diff = ak.min(times3,axis = 1) - ak.min(times0,axis = 1)
 
         self.events[cutName] = diff

@@ -26,7 +26,7 @@ branches = ['fileNumber', 'pickupFlag', 'runNumber',
             'tTrigger', 'event', 'boardsMatched', 'height', 'area',
             'chan', 'row', 'column', 'layer', 'nPE', 'riseSamples',
             'fallSamples', 'npulses', 'timeFit_module_calibrated',
-            'duration']
+            'duration','type']
 
 
 simPickupCut = mycuts.getCut(mycuts.pickupCut, 'pickupCut',
@@ -36,6 +36,7 @@ simPickupCut = mycuts.getCut(mycuts.pickupCut, 'pickupCut',
 boardsMatched = mycuts.getCut(mycuts.boardsMatched, 'boardsMatchedCut',
                             cut=True, branches=branches)
 
+
 NuniqueBarSim = r.TH1F("NuniqueBarSim" , "NuniqueBar with bar counting TH nPE >= 1;number of unique bar;events",50,0,50)
 NPEDistSim = r.TH1F("NPEDistSim", "nPE; nPE ; bar", 500, 0, 1000)
 DtmaxSim = r.TH1F("DtmaxSim", "Dt max", 30, -30, 30)
@@ -43,22 +44,26 @@ DtmaxSim = r.TH1F("DtmaxSim", "Dt max", 30, -30, 30)
 #intEvent = mycuts.getCut(mycuts.combineCuts, 'intEvent', ["None_empty_event", "barCut"])
 
 
-countbarEvent = mycuts.getCut(mycuts.countNBars, cutName='countNBars',pulseBase = False)
+countbarEvent = mycuts.getCut(mycuts.countNBars, 'countNBars',pulseBase = False)
 simPlotter.addHistograms(NuniqueBarSim, 'countNBars', 'CosmicTG')
 simPlotter.addHistograms(NPEDistSim, 'lnPE', 'CosmicTG')
-simPlotter.addHistograms(DtmaxSim, 'lnPE', 'CosmicTG')
+simPlotter.addHistograms(DtmaxSim, 'timeDiff_simValid', 'CosmicTG')
 
 
 
-SimCutflow = [simPickupCut,mycuts.CosmicTG,simPlotter.dict['NuniqueBarSim'], simPlotter.dict['DtmaxSim']]
+SimCutflow = [simPickupCut,mycuts.CosmicTG,countbarEvent,mycuts.timeDiff_simValid,simPlotter.dict['NuniqueBarSim'], simPlotter.dict['DtmaxSim']]
 
 
 
 schedule_sim = milliQanScheduler(SimCutflow, mycuts, simPlotter)
 iterator_sim = milliqanProcessor(sim_file_list, branches, schedule_sim,
-                                 mycuts, simPlotter, qualityLevel='override')
+                                 mycuts, simPlotter, qualityLevel='override',step_size=110000)
 
 iterator_sim.run()
 
 output_file = r.TFile.Open("comparison.root", "RECREATE")
-mycuts.cutflowCounter("comparison")
+DtmaxSim.Write()
+NPEDistSim.Write()
+NuniqueBarSim.Write()
+output_file.Close()
+#mycuts.cutflowCounter("comparisonstSim"

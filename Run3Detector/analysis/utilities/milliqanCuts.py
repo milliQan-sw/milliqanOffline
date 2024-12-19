@@ -343,12 +343,19 @@ class milliqanCuts():
     
     #event level mask selecting  cosmic throught going events with hits at the top cosmic panel at all layers
     @mqCut
-    def CosmicTG(self, cutName='CosmicTG', cut=False, branches=None , nPECutPan = 2,nPECutBar = 2):
+    def CosmicTG(self, cutName='CosmicTG', cut=False, branches=None , Offline = False,nPECutPan = 2,nPECutBar = 2):
         cospanel = ak.any((self.events.row==4) & (self.events.nPE >= nPECutPan ), axis=1)
-        allLayers =(ak.any( (self.events.layer==0) & (self.events.nPE >= nPECutBar), axis=1) & 
-                    ak.any((self.events.layer==1) & (self.events.nPE >= nPECutBar), axis=1) & 
-                    ak.any((self.events.layer==2) & (self.events.nPE >= nPECutBar), axis=1) & 
-                    ak.any((self.events.layer==3) & (self.events.nPE >= nPECutBar), axis=1))
+        if Offline:
+            allLayers =(ak.any( (self.events.layer==0) & (self.events.nPE >= nPECutBar), axis=1) & 
+                        ak.any((self.events.layer==1) & (self.events.nPE >= nPECutBar), axis=1) & 
+                        ak.any((self.events.layer==2) & (self.events.nPE >= nPECutBar), axis=1) & 
+                        ak.any((self.events.layer==3) & (self.events.nPE >= nPECutBar), axis=1) &
+                        ak.any((self.events.beamInFill==False),axis=1))
+        else:
+            allLayers =(ak.any( (self.events.layer==0) & (self.events.nPE >= nPECutBar), axis=1) & 
+                        ak.any((self.events.layer==1) & (self.events.nPE >= nPECutBar), axis=1) & 
+                        ak.any((self.events.layer==2) & (self.events.nPE >= nPECutBar), axis=1) & 
+                        ak.any((self.events.layer==3) & (self.events.nPE >= nPECutBar), axis=1))
 
         self.events[cutName] = allLayers & cospanel
         if cut:

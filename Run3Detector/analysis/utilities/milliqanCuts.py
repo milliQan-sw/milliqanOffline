@@ -343,12 +343,12 @@ class milliqanCuts():
     
     #event level mask selecting  cosmic throught going events with hits at the top cosmic panel at all layers
     @mqCut
-    def CosmicTG(self, cutName='CosmicTG', cut=False, branches=None , nPECutpan = 2):
-        cospanel = ak.any((self.events.row==4) & (self.events.nPE >= nPECutpan ), axis=1)
-        allLayers =(ak.any(self.events.layer==0, axis=1) & 
-                    ak.any(self.events.layer==1, axis=1) & 
-                    ak.any(self.events.layer==2, axis=1) & 
-                    ak.any(self.events.layer==3, axis=1))
+    def CosmicTG(self, cutName='CosmicTG', cut=False, branches=None , nPECutPan = 2,nPECutBar = 2):
+        cospanel = ak.any((self.events.row==4) & (self.events.nPE >= nPECutPan ), axis=1)
+        allLayers =(ak.any( (self.events.layer==0) & (self.events.nPE >= nPECutBar), axis=1) & 
+                    ak.any((self.events.layer==1) & (self.events.nPE >= nPECutBar), axis=1) & 
+                    ak.any((self.events.layer==2) & (self.events.nPE >= nPECutBar), axis=1) & 
+                    ak.any((self.events.layer==3) & (self.events.nPE >= nPECutBar), axis=1))
 
         self.events[cutName] = allLayers & cospanel
         if cut:
@@ -432,8 +432,8 @@ class milliqanCuts():
 
     #creates branch with number of bars in event
     @mqCut
-    def countNBars(self, cutName='countNBars',pulseBase = True):
-        barsCut = (self.events['type']==0)
+    def countNBars(self, cutName='countNBars',pulseBase = True,nPECut = 0 ):
+        barsCut = ((self.events['type']==0) & (self.events['nPE'] >= nPECut))
         uniqueBars = ak.Array([np.unique(x) for x in self.events.chan[barsCut]])
         nBars = ak.count(uniqueBars, axis=1)
         if pulseBase:
@@ -511,12 +511,25 @@ class milliqanCuts():
     #find the largest pulse nPE at each layer for bar(used for cosmic sim validation)
     @mqCut
     def lnPE(self, cutName='lnPE', cut=False, branches=None):
-        l0MaxnPE = ak.max(self.events['nPE'][(self.events['type'] == 0) & (self.events['layer'] == 0)])
-        l1MaxnPE = ak.max(self.events['nPE'][(self.events['type'] == 0) & (self.events['layer'] == 1)])
-        l2MaxnPE = ak.max(self.events['nPE'][(self.events['type'] == 0) & (self.events['layer'] == 2)])
-        l3MaxnPE = ak.max(self.events['nPE'][(self.events['type'] == 0) & (self.events['layer'] == 3)])
-        self.events[cutName] = ak.concatenate([l0MaxnPE,l1MaxnPE,l2MaxnPE,l3MaxnPE],axis=1)
-        print(ak.to_list(self.events[cutName]))
+        l0MaxnPE = ak.max(self.events['nPE'][(self.events['type'] == 0) & (self.events['layer'] == 0)],axis =1)
+        l1MaxnPE = ak.max(self.events['nPE'][(self.events['type'] == 0) & (self.events['layer'] == 1)],axis =1)
+        l2MaxnPE = ak.max(self.events['nPE'][(self.events['type'] == 0) & (self.events['layer'] == 2)],axis =1)
+        l3MaxnPE = ak.max(self.events['nPE'][(self.events['type'] == 0) & (self.events['layer'] == 3)],axis =1)
+        #use fill_none to handle the issue cause by empty array when concatenate arrays.
+        l0MaxnPE=ak.fill_none(l0MaxnPE,-6000.0)
+        l1MaxnPE=ak.fill_none(l1MaxnPE,-6000.0)
+        l2MaxnPE=ak.fill_none(l2MaxnPE,-6000.0)
+        l3MaxnPE=ak.fill_none(l3MaxnPE,-6000.0)
+
+
+        # Ensure arrays are 2D by wrapping in an additional list
+        l0MaxnPE = ak.singletons(l0MaxnPE)  # Converts [a, b, c] -> [[a], [b], [c]]
+        l1MaxnPE = ak.singletons(l1MaxnPE)
+        l2MaxnPE = ak.singletons(l2MaxnPE)
+        l3MaxnPE = ak.singletons(l3MaxnPE)
+
+        self.events[cutName] = ak.concatenate((l0MaxnPE,l1MaxnPE,l2MaxnPE,l3MaxnPE), axis=1)
+
 
 
 

@@ -358,6 +358,7 @@ class milliqanCuts():
                         ak.any((self.events.layer==3) & (self.events.nPE >= nPECutBar), axis=1))
 
         self.events[cutName] = allLayers & cospanel
+        print(f"number of cosmic four layer hits event:{ak.count_nonzero(self.events[cutName])}")
         if cut:
             self.cutBranches(branches, cutName)
 

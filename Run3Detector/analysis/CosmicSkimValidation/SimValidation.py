@@ -65,8 +65,8 @@ iterator_sim.run()
 
 
 #------------offline file analysis part--------------------------
-Offline_file = ['MilliQan_Run1700_v35_signal_beamOff_tight.root'] #can be found at /eos/experiment/milliqan/skims/signal/MilliQan_Run1700_v35_signal_beamOff_tight.root
-
+#Offline_file = ['MilliQan_Run1700_v35_signal_beamOff_tight.root'] #can be found at /eos/experiment/milliqan/skims/signal/MilliQan_Run1700_v35_signal_beamOff_tight.root. NO cosmic TH event
+Offline_file = ['MilliQan_Run1700_v35_signal_beamOff_medium.root']#can be found at /eos/experiment/milliqan/skims/signal/MilliQan_Run1700_v35_signal_beamOff_tight.root. NO cosmic TH event
 Offline_file_list = [filename+":t" for filename in Offline_file]
 
 Offlinecuts =milliqanCuts()
@@ -76,7 +76,7 @@ Offlinebranches = ['fileNumber', 'pickupFlag', 'runNumber',
             'tTrigger', 'event', 'boardsMatched', 'height', 'area',
              'row', 'column', 'layer', 'nPE', 'riseSamples',
             'fallSamples', 'npulses', 'timeFit_module_calibrated',
-            'duration','type','ipulse','beamOn']
+            'duration','type','ipulse','chan']
 
 OffLinePickupCut = Offlinecuts.getCut(Offlinecuts.pickupCut, 'pickupCut',
                         cut=True, branches=Offlinebranches) 
@@ -84,7 +84,7 @@ OffLinePickupCut = Offlinecuts.getCut(Offlinecuts.pickupCut, 'pickupCut',
 OfflinefirstPulseCut= Offlinecuts.getCut(Offlinecuts.firstPulseCut,'firstPulse', cut=True, branches=branches)
 
 
-CosmicTGOL = Offlinecuts.getCut(Offlinecuts.CosmicTG,"CosmicTG",cut=False, branches=branches , Offline = True)
+CosmicTGOL = Offlinecuts.getCut(Offlinecuts.CosmicTG,"CosmicTG",cut=False, branches=branches , Offline = False)
 NuniqueBarOffline = r.TH1F("NuniqueBarOffline" , "NuniqueBar with bar counting TH nPE >= 1;number of unique bar;events",50,0,50)
 NPEDistOffline = r.TH1F("NPEDistOffline", "nPE; nPE ; events", 500, 0, 1000)
 DtmaxOffline = r.TH1F("DtmaxOffline", "Dt max; ns; events  ", 30, -30, 30)
@@ -95,8 +95,8 @@ OfflinePlotter.addHistograms(NPEDistOffline, 'lnPE', 'CosmicTG')
 OfflinePlotter.addHistograms(DtmaxOffline, 'timeDiff_simValid', 'CosmicTG')
 
 
-#OfflineCutflow = [OffLinePickupCut,OfflinefirstPulseCut,CosmicTGOL,countbarEventOL,Offlinecuts.lnPE,Offlinecuts.timeDiff_simValid,OfflinePlotter.dict['NuniqueBarOffline'],OfflinePlotter.dict['NPEDistOffline'] ,OfflinePlotter.dict['DtmaxOffline']] 
-OfflineCutflow = [OffLinePickupCut] 
+OfflineCutflow = [OfflinefirstPulseCut,Offlinecuts.CosmicTG,countbarEventOL,Offlinecuts.lnPE,Offlinecuts.timeDiff_simValid,OfflinePlotter.dict['NuniqueBarOffline'],OfflinePlotter.dict['NPEDistOffline'] ,OfflinePlotter.dict['DtmaxOffline']] 
+
 
 schedule_offline = milliQanScheduler(OfflineCutflow, Offlinecuts, OfflinePlotter)
 iterator_OL = milliqanProcessor(Offline_file_list, Offlinebranches, schedule_offline,

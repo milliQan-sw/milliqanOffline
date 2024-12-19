@@ -35,7 +35,7 @@ simPickupCut = mycuts.getCut(mycuts.pickupCut, 'pickupCut',
 
 boardsMatched = mycuts.getCut(mycuts.boardsMatched, 'boardsMatchedCut',
                             cut=True, branches=branches)
-
+#CosmicTG = mycuts.getCut(mycuts.CosmicTG,"CosmicTG",cut=True, branches=branches)
 
 NuniqueBarSim = r.TH1F("NuniqueBarSim" , "NuniqueBar with bar counting TH nPE >= 1;number of unique bar;events",50,0,50)
 NPEDistSim = r.TH1F("NPEDistSim", "nPE; nPE ; bar", 500, 0, 1000)
@@ -51,7 +51,7 @@ simPlotter.addHistograms(DtmaxSim, 'timeDiff_simValid', 'CosmicTG')
 
 
 
-SimCutflow = [simPickupCut,mycuts.CosmicTG,countbarEvent,mycuts.timeDiff_simValid,simPlotter.dict['NuniqueBarSim'], simPlotter.dict['DtmaxSim']]
+SimCutflow = [simPickupCut,mycuts.CosmicTG,countbarEvent,mycuts.lnPE,mycuts.timeDiff_simValid,simPlotter.dict['NuniqueBarSim'], simPlotter.dict['DtmaxSim']]
 
 
 

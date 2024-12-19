@@ -511,11 +511,12 @@ class milliqanCuts():
     #find the largest pulse nPE at each layer for bar(used for cosmic sim validation)
     @mqCut
     def lnPE(self, cutName='lnPE', cut=False, branches=None):
-        l0MaxnPE = ak.max(self.events['nPE'][(self.events['type'] == 0) & (self.events['layer'] == 0)] , axis =1)
-        l1MaxnPE = ak.max(self.events['nPE'][(self.events['type'] == 0) & (self.events['layer'] == 1)] , axis =1)
-        l2MaxnPE = ak.max(self.events['nPE'][(self.events['type'] == 0) & (self.events['layer'] == 2)] , axis =1)
-        l3MaxnPE = ak.max(self.events['nPE'][(self.events['type'] == 0) & (self.events['layer'] == 3)] , axis =1)
-        self.events[cutName] = ak.concatenate(l0MaxnPE,l1MaxnPE,l2MaxnPE,l3MaxnPE, axis = 1)
+        l0MaxnPE = ak.max(self.events['nPE'][(self.events['type'] == 0) & (self.events['layer'] == 0)])
+        l1MaxnPE = ak.max(self.events['nPE'][(self.events['type'] == 0) & (self.events['layer'] == 1)])
+        l2MaxnPE = ak.max(self.events['nPE'][(self.events['type'] == 0) & (self.events['layer'] == 2)])
+        l3MaxnPE = ak.max(self.events['nPE'][(self.events['type'] == 0) & (self.events['layer'] == 3)])
+        self.events[cutName] = ak.concatenate([l0MaxnPE,l1MaxnPE,l2MaxnPE,l3MaxnPE],axis=1)
+        print(ak.to_list(self.events[cutName]))
 
 
 

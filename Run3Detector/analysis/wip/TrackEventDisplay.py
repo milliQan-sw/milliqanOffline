@@ -210,5 +210,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     #filelocation = f"/eos/experiment/milliqan/trees/v35/{(args.run)[:2]}00/MilliQan_Run{args.run}.{args.file_num}_v35.root" #EOS space
-    filelocation = f"/Users/haoliangzheng/CERN_ana/EventDisplay/MilliQan_Run{args.run}.{args.file_num}_v34.root"
+    #filelocation = f"/Users/haoliangzheng/CERN_ana/EventDisplay/MilliQan_Run{args.run}.{args.file_num}_v34.root" #local test
+    filelocation = f"/mnt/hadoop/se/store/user/milliqan/trees/v35/bar/{(args.run)[:2]}00/MilliQan_Run{args.run}.{args.file_num}_v35.root" #OSU T3 
     MakePlot(filenumber,args.event,filelocation,NpeT=0.6)

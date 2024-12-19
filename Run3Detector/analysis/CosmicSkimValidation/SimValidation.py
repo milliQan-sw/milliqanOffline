@@ -22,19 +22,18 @@ sim_file_list = ['cosmicMuonRun3MilliQan_waveinjected_v3_processed.root']
 
 sim_file_list = [filename+":t" for filename in sim_file_list]
 
-branches = ['fileNumber', 'pickupFlag', 'runNumber',
+branches = [ 'fileNumber', 'pickupFlag', 'runNumber',
             'tTrigger', 'event', 'boardsMatched', 'height', 'area',
             'chan', 'row', 'column', 'layer', 'nPE', 'riseSamples',
             'fallSamples', 'npulses', 'timeFit_module_calibrated',
-            'duration','type']
+            'duration','type','ipulse']
 
 
 simPickupCut = mycuts.getCut(mycuts.pickupCut, 'pickupCut',
                         cut=True, branches=branches) 
 
 
-boardsMatched = mycuts.getCut(mycuts.boardsMatched, 'boardsMatchedCut',
-                            cut=True, branches=branches)
+firstPulseCut= mycuts.getCut(mycuts.firstPulseCut,'firstPulse', cut=True, branches=branches)
 
 
 NuniqueBarSim = r.TH1F("NuniqueBarSim" , "NuniqueBar with bar counting TH nPE >= 1;number of unique bar;events",50,0,50)
@@ -49,7 +48,7 @@ simPlotter.addHistograms(DtmaxSim, 'timeDiff_simValid', 'CosmicTG')
 
 
 
-SimCutflow = [simPickupCut,mycuts.CosmicTG,countbarEvent,mycuts.lnPE,mycuts.timeDiff_simValid,simPlotter.dict['NuniqueBarSim'],simPlotter.dict['NPEDistSim'] ,simPlotter.dict['DtmaxSim']]
+SimCutflow = [simPickupCut,firstPulseCut,mycuts.CosmicTG,countbarEvent,mycuts.lnPE,mycuts.timeDiff_simValid,simPlotter.dict['NuniqueBarSim'],simPlotter.dict['NPEDistSim'] ,simPlotter.dict['DtmaxSim']]
 
 
 

@@ -898,10 +898,15 @@ class milliqanCuts():
 
     @mqCut
     #method for simulation 
-    def timeDiff_simValid(self, cutName='timeDiff_simValid', branches=None):
-        times0 = self.events['timeFit_module_calibrated'][(self.events['layer']==0) & (self.events['type']==0)]
-        times3 = self.events['timeFit_module_calibrated'][(self.events['layer']==3) & (self.events['type']==0)]
-        diff = ak.min(times3,axis = 1) - ak.min(times0,axis = 1)
+    def timeDiff_simValid(self, cutName='timeDiff_simValid', branches=None,nPECut = 2):
+        times0 = self.events['timeFit_module_calibrated'][(self.events['layer']==0) & (self.events['type']==0) & (self.events['nPE']>=nPECut)]
+        times3 = self.events['timeFit_module_calibrated'][(self.events['layer']==3) & (self.events['type']==0) & (self.events['nPE']>=nPECut)]
+        l3min=ak.min(times3,axis = 1)
+        l0min=ak.min(times0,axis = 1)
+        l3min=ak.fill_none(l3min,-6000.0)
+        l0min=ak.fill_none(l0min,-7000.0)
+
+        diff = l3min - l0min
 
         self.events[cutName] = diff
 

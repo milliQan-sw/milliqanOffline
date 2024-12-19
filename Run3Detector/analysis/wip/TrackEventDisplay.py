@@ -5,6 +5,8 @@ import matplotlib.patches as patches
 import matplotlib.colors as mcolors
 import uproot
 import re
+import argparse
+import os
 
 
 def filling(typeArr,layerArr,rowArr,columnArr,npeArr,timeArr,NpeT,oFFline=False):
@@ -106,7 +108,14 @@ def filling(typeArr,layerArr,rowArr,columnArr,npeArr,timeArr,NpeT,oFFline=False)
 
 def MakePlot(filenumber,EventNumber,filelocation,NpeT=0.6):
     
+    if os.path.isfile(filelocation): pass
+    else:
+        print("can't find the file")
+        print(f"current file location:{filelocation}")
+        print(f"please change file location in TrackEventDisplay.py")
+        return
     
+    EventNumber = int(EventNumber)
     uptree = uproot.open(f"{filelocation}:t")#consider the case for merge file
     branches = uptree.arrays(["type","layer","row","column","nPE","event","area","timeFit_module_calibrated","chan","ipulse","fileNumber"])
     if filenumber != None: #if I use specific file instead of merge file then there is no need to select the fileNumber
@@ -180,12 +189,26 @@ def MakePlot(filenumber,EventNumber,filelocation,NpeT=0.6):
 
 if __name__ == "__main__":
 
+    #you can also run the script without command-line arguments.
     filenumber = None # specify the file numer if you are using the merged file.
     # file at eos space test
     #EventNumber = 972
     #filelocation = "/eos/experiment/milliqan/trees/v35/1100/MilliQan_Run1176.83_v35.root"
 
     #local file test
-    EventNumber = 972
-    filelocation = "/Users/haoliangzheng/CERN_ana/EventDisplay/MilliQan_Run1176.133_v34.root"
-    MakePlot(filenumber,EventNumber,filelocation,NpeT=0.6)
+    #EventNumber = 972
+    #filelocation = "/Users/haoliangzheng/CERN_ana/EventDisplay/MilliQan_Run1176.133_v34.root"
+    #MakePlot(filenumber,EventNumber,filelocation,NpeT=0.6)
+
+    parser = argparse.ArgumentParser(description="event display for the first pulse at each channel")
+
+    # Add arguments
+    parser.add_argument('--event', help='event number')
+    parser.add_argument('--file_num', help='file number', required=True)
+    parser.add_argument('--run', help='run number')
+
+    args = parser.parse_args()
+
+    #filelocation = f"/eos/experiment/milliqan/trees/v35/{(args.run)[:2]}00/MilliQan_Run{args.run}.{args.file_num}_v35.root" #EOS space
+    filelocation = f"/Users/haoliangzheng/CERN_ana/EventDisplay/MilliQan_Run{args.run}.{args.file_num}_v34.root"
+    MakePlot(filenumber,args.event,filelocation,NpeT=0.6)

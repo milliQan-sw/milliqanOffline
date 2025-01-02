@@ -1,4 +1,7 @@
 #include "./interface/OfflineFactory.h"
+#include <stdlib.h>
+#include <stdio.h>
+
 
 OfflineFactory::OfflineFactory(TString inFileName, TString outFileName, TString appendToTag, bool isDRS, bool isSlab, int runNumber, int fileNumber) : 
     inFileName(inFileName),
@@ -1150,6 +1153,21 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
     c.SaveAs(displayName);
     displayName=TString(Form(displayDirectory+"Run%i_File%i_Event%i_Version_",runNumber,fileNumber,event))+TString("shorttagplaceholder_")+appendToTag+".png"; 
     c.SaveAs(displayName);
+
+    char command[200];
+
+    // Construct the command string dynamically
+    sprintf(command, "python3 TrackEventDisplay.py --event %d --file_num %d --run %d", event, fileNumber, runNumber);
+    
+    int result = system(command);
+
+    // Check if the command executed successfully
+    if (result == 0) {
+        printf("Python script executed successfully.\n");
+    } else {
+        printf("Failed to execute Python script. Error code: %d\n", result);
+    }
+
 
     for(uint i=0;i<chanList.size();i++){
         delete wavesShifted[i];

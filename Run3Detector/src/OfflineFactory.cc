@@ -1157,7 +1157,7 @@ void OfflineFactory::displayEvent(int event, vector<vector<pair<float,float> > >
     char command[200];
 
     // Construct the command string dynamically
-    sprintf(command, "python3 ../wip/TrackEventDisplay.py --event %d --file_num %d --run %d", event, fileNumber, runNumber);
+    sprintf(command, "python3 analysis/wip/TrackEventDisplay.py --event %d --file_num %d --run %d", event, fileNumber, runNumber);
     
     int result = system(command);
 

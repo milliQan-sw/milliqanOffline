@@ -182,7 +182,7 @@ def MakePlot(filenumber,EventNumber,filelocation,NpeT=0.6):
     plt.colorbar(label= f'NPE of first pulse. Display TH {NpeT}NPE')
     #plt.show() #uncomment this if you want to draw the graph in interactively
     match = re.search(r"Run(\d+)\.(\d+)", filelocation)
-    plt.savefig(f"run{match.group(1)}file{match.group(2)}Event{EventNumber}.png", dpi=300, bbox_inches="tight")
+    plt.savefig(f"displays/Run{match.group(1)}/run{match.group(1)}file{match.group(2)}Event{EventNumber}_Track.png", dpi=300, bbox_inches="tight")
 
 
 
@@ -211,5 +211,5 @@ if __name__ == "__main__":
 
     #filelocation = f"/eos/experiment/milliqan/trees/v35/{(args.run)[:2]}00/MilliQan_Run{args.run}.{args.file_num}_v35.root" #EOS space
     #filelocation = f"/Users/haoliangzheng/CERN_ana/EventDisplay/MilliQan_Run{args.run}.{args.file_num}_v34.root" #local test
-    filelocation = f"/mnt/hadoop/se/store/user/milliqan/trees/v35/bar/{(args.run)[:2]}00/MilliQan_Run{args.run}.{args.file_num}_v35.root" #OSU T3 
+    filelocation = f"/store/user/milliqan/trees/v35/bar/{(args.run)[:2]}00/MilliQan_Run{args.run}.{args.file_num}_v35.root" #OSU T3 
     MakePlot(filenumber,args.event,filelocation,NpeT=0.6)

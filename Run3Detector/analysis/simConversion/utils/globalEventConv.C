@@ -14,6 +14,8 @@ int globalEventConv(TString inputFileName, TString outputFileName) {
     TFile *inputFile = TFile::Open(inputFileName);
     TTree *inputTree = (TTree*)inputFile->Get("Events");
 
+    std::cout << "Trying to process " << inputFileName << ", into " << outputFileName << std::endl;
+
     // Define the waveform array to hold data from the tree
     float waveform[5][16][1024];
 

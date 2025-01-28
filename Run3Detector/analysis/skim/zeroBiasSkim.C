@@ -45,6 +45,7 @@ void myLooper::Loop( TString outFile, TString lumi, TString runTime)
       }
 
       if(tTrigger != 4096) continue;
+      if(abs(tTimeDiff) > 250) continue;
 
 	tout->Fill();
 	passed = passed + 1;

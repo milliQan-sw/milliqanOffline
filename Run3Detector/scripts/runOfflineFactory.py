@@ -35,6 +35,7 @@ def parse_args():
     parser.add_argument("--drs",help="DRS input",action="store_true",default=False)
     parser.add_argument("--display",help="Display events",type=int,nargs="+")
     parser.add_argument("--slab", help="Forces slab detector configuration", action="store_true", default=False)
+    parser.add_argument("--sim", help="Forces sim configuration", action="store_true", default=False)
     args = parser.parse_args()
     return args
 def validateOutput(outputFile,runNumber=-1,fileNumber=-1):
@@ -61,7 +62,7 @@ def validateOutput(outputFile,runNumber=-1,fileNumber=-1):
         print ("removing output file because it does not deserve to live (result will not be published)")
         os.system("rm "+outputFile)
     return tag 
-def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publish,database,appendToTag,mergedTriggerFile,drs,display, slab,runNumber=None,fileNumber=None):
+def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publish,database,appendToTag,mergedTriggerFile,drs,display, slab, sim, runNumber=None,fileNumber=None):
     if force_publish and not publish:
         publish = True
     if runNumber == None:
@@ -86,14 +87,18 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
     #copy files from eos
     copyFromEOS()
 
+    offlineDir = os.getenv("OFFLINEDIR")
     if not configurations:
-        offlineDir = os.getenv("OFFLINEDIR")
         if drs:
             configurations = [offlineDir+"/configuration/pulseFinding/pulseFindingDRS.json"]
         if slab:
             chanConfig = offlineDir + "/configuration/slabConfigs/" + getConfigs(runNumber, offlineDir+'/configuration/slabConfigs') + '.json'
             print("Using the chan config", chanConfig)
             configurations = [chanConfig, offlineDir+"/configuration/pulseFinding/pulseFindingSlab.json"]
+        if sim:
+            print("Using sim config file")
+            chanConfig = offlineDir + '/configuration/barConfigs/simConfig.json'
+            configurations = [chanConfig, offlineDir+"/configuration/pulseFinding/pulseFindingBar.json"]
         else:
             chanConfig = offlineDir + "/configuration/barConfigs/" + getConfigs(runNumber, offlineDir+'/configuration/barConfigs') + '.json'
             print("Using the chan config", chanConfig)
@@ -121,6 +126,8 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
         argList.append("--display "+",".join([str(x) for x in display]))
     if slab:
         argList.append("--slab")
+    if sim:
+        argList.append("--sim")
     args = " ".join(argList)
 
     # from subprocess import Popen, PIPE, CalledProcessError
@@ -233,7 +240,7 @@ def getConfigs(runNum, offlineDir):
 
 def copyFromEOS(slab=False):
 
-    if not slab and not os.path.exists('configuration/barConfigs/goodRunsList.json'): 
+    if not slab and os.path.exists('configuration/barConfigs/goodRunsList.json'): 
         print("Warning (runOfflineFactory.py): goodRunsList.json is not available locally, trying to access from eos")
         try:
             os.system('cp /eos/experiment/milliqan/Configs/goodRunsList.json configuration/slabConfigs/')

@@ -174,8 +174,8 @@ struct offline_tree_{
 //Offline factory class used to produce offline tree output
 class OfflineFactory {
 public:
-    OfflineFactory(TString,TString,TString,bool,bool);
-    OfflineFactory(TString,TString,TString, bool, bool, int, int);
+  OfflineFactory(TString,TString,TString,bool,bool,bool);
+  OfflineFactory(TString,TString,TString, bool, bool, bool, int, int);
     // virtual ~OfflineFactory();
     void makeOutputTree();
     void loadJsonConfig(string);
@@ -235,6 +235,7 @@ private:
     int fileNumber;
     bool isDRS;
     bool isSlab;
+    bool isSim;
     mdaq::GlobalEvent * evt = new mdaq::GlobalEvent();
     mdaq::DemonstratorConfiguration * cfg = new mdaq::DemonstratorConfiguration();
     TString* fileOpenTime;
@@ -252,7 +253,7 @@ private:
     int dynamicPedestalTotalSamples = 400;
     int dynamicPedestalConsecutiveSamples = 16;
     float dynamicPedestalGranularity = 0.25;
-    float tdcCorrection[6]; //set to max number of boards
+    float tdcCorrection[6] = {0}; //set to max number of boards
 
     bool goodRunLoose;
     bool goodRunMedium;

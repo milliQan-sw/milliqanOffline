@@ -303,7 +303,7 @@ void coincidenceCounts(TFile *fout, int run, float prescale, std::vector<channel
     ULong_t daqFileClose;
 
     // General directory to get files
-    TString s_directory = "/store/user/milliqan/triggerEfficiency/";
+    TString s_directory = "/store/user/milliqan/triggerEfficiency/v2/";
     //TString s_directory = "/store/user/milliqan/trees/v35/bar/";
 
     //TString subDir = TString::Format("%i", (run / 100) * 100);
@@ -361,6 +361,8 @@ void coincidenceCounts(TFile *fout, int run, float prescale, std::vector<channel
 
             int this_pulse = v_ipulse->at(ipulse);
             //if(this_pulse != 0) continue;
+
+            if(v_height->at(ipulse) < 8) continue;
 
             float this_time = v_time->at(ipulse);
             if(this_time < 1000 || this_time > 1500) continue;
@@ -690,6 +692,8 @@ std::vector<globalHist> calculateRates(TFile* fout){
 
             x_val = h_tripleHeight->GetBinLowEdge(ibin);
 
+            if(x_val < 10) continue;
+
             g_rateHeight2->SetPoint(ibin, x_val, countDoubleHeight/timeDouble);
             g_rateHeight3->SetPoint(ibin, x_val, countTripleHeight/timeTriple);
 
@@ -957,7 +961,7 @@ std::vector<globalHist> calculateRates(TFile* fout){
 
 }
 
-void calculateTriggerEfficienciesCombined_v2(){
+void calculateTriggerEfficiencies(){
 
     //gStyle->SetOptStat(0);
     gROOT->SetBatch(1);

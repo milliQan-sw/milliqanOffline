@@ -28,21 +28,36 @@ if __name__ == "__main__":
 
     beam = False
     skim = True
-    outputFile = 'bgCutFlow_output.root'
-    qualityLevel = 'Tight'
+    sim = True
+    outputFile = 'bgCutFlow_Full.root'
+    qualityLevel = 'tight'
     maxEvents = None
-    stepSize = 10000
+    stepSize = 1000
 
     filelist = [     
-        #"/home/mcarrigan/scratch0/milliQan/analysis/milliqanOffline/Run3Detector/analysis/skim/MilliQan_Run1800_v35_signalSkim_beamOff_tight.root",
-        #"/home/mcarrigan/scratch0/milliQan/analysis/milliqanOffline/Run3Detector/analysis/skim/MilliQan_Run1700_v35_signalSkim_beamOff_tight.root",
-        #"/home/mcarrigan/scratch0/milliQan/analysis/milliqanOffline/Run3Detector/analysis/skim/MilliQan_Run1600_v35_signalSkim_beamOff_tight.root",
-        #"/home/mcarrigan/scratch0/milliQan/analysis/milliqanOffline/Run3Detector/analysis/skim/MilliQan_Run1500_v35_signalSkim_beamOff_tight.root",
-        "/eos/experiment/milliqan/skims/signal/MilliQan_Run1500_v35_signalSkim_beamOff_tight.root",
+        "/eos/experiment/milliqan/skims/signal/MilliQan_Run1300_v35_signal_beamOff_tight.root",
+        "/eos/experiment/milliqan/skims/signal/MilliQan_Run1400_v35_signal_beamOff_tight.root",
+        "/eos/experiment/milliqan/skims/signal/MilliQan_Run1500_v35_signal_beamOff_tight.root",
+        "/eos/experiment/milliqan/skims/signal/MilliQan_Run1600_v35_signal_beamOff_tight.root",
+        "/eos/experiment/milliqan/skims/signal/MilliQan_Run1700_v35_signal_beamOff_tight.root",
+        "/eos/experiment/milliqan/skims/signal/MilliQan_Run1800_v35_signal_beamOff_tight.root",
+        "/eos/experiment/milliqan/skims/signal/MilliQan_Run1900_v35_signal_beamOff_tight.root",
         ]
 
     if skim:
         qualityLevel = 'override'
+
+    if len(sys.argv) > 7:
+        beam = (sys.argv[1] == 'True')
+        skim = (sys.argv[2] == 'True')
+        sim = (sys.argv[3] == 'True')
+        outputFile = str(sys.argv[4])
+        qualityLevel = str(sys.argv[5])
+        filelist = sys.argv[6].split(',')
+        if sys.argv[7] == 'None':
+            maxEvents = None
+        else:
+            maxEvents = int(sys.argv[7])
 
     print("Running on files {}".format(filelist))
 
@@ -56,11 +71,13 @@ if __name__ == "__main__":
 
     if skim:
         lumi, runTime = getSkimLumis(filelist)
-    else:
+    elif not sim:
         lumi, runTime = getLumiofFileList(filelist)
+    else:
+        lumi, runTime = 0, 0 #TODO scale to data 
 
     #define the necessary branches to run over
-    branches = ['event', 'tTrigger', 'boardsMatched', 'pickupFlag', 'fileNumber', 'runNumber', 'type', 'ipulse', 'nPE', 'chan',
+    branches = ['event', 'tTrigger', 'boardsMatched', 'pickupFlag', 'pickupFlagTight', 'fileNumber', 'runNumber', 'type', 'ipulse', 'nPE', 'chan',
                 'time_module_calibrated', 'timeFit_module_calibrated', 'row', 'column', 'layer', 'height', 'area', 'npulses', 'sidebandRMS']
 
 
@@ -71,7 +88,7 @@ if __name__ == "__main__":
     centralTimeCut = getCutMod(mycuts.centralTime, mycuts, 'centralTimeCut', cut=True)
 
     #require pulses are not pickup
-    pickupCut = getCutMod(mycuts.pickupCut, mycuts, 'pickupCut', cut=True)
+    pickupCut = getCutMod(mycuts.pickupCut, mycuts, 'pickupCut', cut=True, tight=True)
 
     #require that all digitizer boards are matched
     boardMatchCut = getCutMod(mycuts.boardsMatched, mycuts, 'boardMatchCut', cut=True, branches=branches)
@@ -83,7 +100,7 @@ if __name__ == "__main__":
     oneHitPerLayer = getCutMod(mycuts.oneHitPerLayerCut, mycuts, 'oneHitPerLayer', cut=True, multipleHits=False)
 
     #panel veto
-    panelVeto = getCutMod(mycuts.panelVeto, mycuts, 'panelVeto', cut=True, nPECut=1e4)
+    panelVeto = getCutMod(mycuts.panelVeto, mycuts, 'panelVeto', cut=True, nPECut=None)
 
     #first pulse max
     firstPulseMax = getCutMod(mycuts.firstPulseMax, mycuts, 'firstPulseMax', cut=True)
@@ -92,22 +109,23 @@ if __name__ == "__main__":
     vetoEarlyPulse = getCutMod(mycuts.vetoEarlyPulse, mycuts, 'vetoEarlyPulse', cut=True)
 
     #four in line cut
-    straightLineCut = getCutMod(mycuts.straightLineCut, mycuts, 'straightLineCut', cut=True)
+    straightLineCutMod = getCutMod(mycuts.straightLineCut, mycuts, 'straightLineCutMod', cut=True)
 
     #npe max-min < 10 cut
     nPEMaxMin = getCutMod(mycuts.nPEMaxMin, mycuts, 'nPEMaxMin', nPECut=20, cut=True)
 
     #time max-min < 15 cut
+    timeMaxMinNoCut = getCutMod(mycuts.timeMaxMin, mycuts, 'timeMaxMinPlot', timeCut=40)
     timeMaxMin = getCutMod(mycuts.timeMaxMin, mycuts, 'timeMaxMin', timeCut=40, cut=True)
 
     #veto events with large hit in front/back panels
     beamMuonPanelVeto = getCutMod(mycuts.beamMuonPanelVeto, mycuts, 'beamMuonPanelVeto', cut=True, nPECut=5e4)
 
     #require # bars in event  < cut
-    nBarsCut = getCutMod(mycuts.nBarsCut, mycuts, 'nBarsCut', nBarsCut=15, cut=True)
+    nBarsCut = getCutMod(mycuts.nBarsCut, mycuts, 'nBarsCut', nBarsCut=5, cut=True)
 
     #require < nBars within deltaT
-    nBarsDeltaTCut = getCutMod(mycuts.nBarsDeltaTCut, mycuts, 'nBarsDeltaTCut', nBarsCut=10, timeCut=100, cut=True)
+    nBarsDeltaTCut = getCutMod(mycuts.nBarsDeltaTCut, mycuts, 'nBarsDeltaTCut', nBarsCut=4, timeCut=100, cut=True)
 
     #sideband RMS cut
     sidebandRMSCut = getCutMod(mycuts.sidebandRMSCut, mycuts, 'sidebandRMSCut', cutVal=2, cut=True)
@@ -163,10 +181,16 @@ if __name__ == "__main__":
     h_minNPEBefore = r.TH1F('h_minNPEBefore', 'Min NPE in Event Before Cut;Min NPE;Events', 100, 0, 100)
     h_maxNPEAfter = r.TH1F('h_maxNPEAfter', 'Max NPE in Event After Cut;Max NPE;Events', 100, 0, 100)
     h_minNPEAfter = r.TH1F('h_minNPEAfter', 'Min NPE in Event After Cut;Min NPE;Events', 100, 0, 100)
+    h_nPEBefore = r.TH2F('h_nPEBefore', 'NPE in Event Before Cut;Min NPE;Max NPE', 100, 0, 100, 100, 0, 100)
+    h_nPEAfter = r.TH2F('h_nPEAfter', 'NPE in Event After Cut;Min NPE;Max NPE', 100, 0, 100, 100, 0, 100)
     h_minTimeBefore = r.TH1F('h_minTimeBefore', 'Min Pulse Time Before Cut;Min Time;Events', 1200, 0, 2400)
     h_maxTimeBefore = r.TH1F('h_maxTimeBefore', 'Max Pulse Time Before Cut;Min Time;Events', 1200, 0, 2400)
     h_minTimeAfter = r.TH1F('h_minTimeAfter', 'Min Pulse Time After Cut;Min Time;Events', 1200, 0, 2400)
     h_maxTimeAfter = r.TH1F('h_maxTimeAfter', 'Max Pulse Time After Cut;Min Time;Events', 1200, 0, 2400)
+    h_timeBefore = r.TH2F('h_timeBefore', 'Pulse Times Before Cut;Min Time;Max Time', 1200, 0, 2400, 1200, 0, 2400)
+    h_timeAfter = r.TH2F('h_timeAfter', 'Pulse Times After Cut;Min Time;Max Time', 1200, 0, 2400, 1200, 0, 2400)
+    h_timeDiff = r.TH1F('h_timeDiff', 'Time Difference (Max-Min);Time Diff (ns);Events', 500, 0, 500)
+    h_ABCD = r.TH2F('h_ABCD', 'Straight Line vs Time Window Cuts for ABCD;Straight Line Paths;Max-Min Time (ns)', 2, 0, 2, 300, 0, 300)
 
     #define milliqan plotter
     myplotter = milliqanPlotter()
@@ -190,8 +214,8 @@ if __name__ == "__main__":
     myplotter.addHistograms(h_nLayersAfterOneHitPerLayer, 'nLayers', 'first')
     myplotter.addHistograms(h_nBarsBeforeCut, 'countNBars', 'first')
     myplotter.addHistograms(h_nBarsAfterCut, 'countNBars', 'first')
-    myplotter.addHistograms(h_nBarsInWindowBefore, 'nBarsInWindowBefore', 'first')
-    myplotter.addHistograms(h_nBarsInWindowAfter, 'nBarsInWindow', 'first')
+    #myplotter.addHistograms(h_nBarsInWindowBefore, 'nBarsInWindowBefore', 'first')
+    #myplotter.addHistograms(h_nBarsInWindowAfter, 'nBarsInWindow', 'first')
     myplotter.addHistograms(h_sidebandsBefore, 'sidebandsBeforeCut')
     myplotter.addHistograms(h_sidebandsAfter, 'sidebandsAfterCut')
     myplotter.addHistograms(h_panelNPEBefore, 'panelVetoNPEBefore')
@@ -215,10 +239,17 @@ if __name__ == "__main__":
     myplotter.addHistograms(h_minNPEBefore, 'minNPEBefore')
     myplotter.addHistograms(h_maxNPEAfter, 'maxNPEAfter')
     myplotter.addHistograms(h_minNPEAfter, 'minNPEAfter')
+    myplotter.addHistograms(h_nPEBefore, ['minNPEBefore', 'maxNPEBefore'])
+    myplotter.addHistograms(h_nPEAfter, ['minNPEAfter', 'maxNPEAfter'])
     myplotter.addHistograms(h_minTimeBefore, 'minTimeBefore')
     myplotter.addHistograms(h_maxTimeBefore, 'maxTimeBefore')
     myplotter.addHistograms(h_minTimeAfter, 'minTimeAfter')
     myplotter.addHistograms(h_maxTimeAfter, 'maxTimeAfter')
+    myplotter.addHistograms(h_timeBefore, ['minTimeBefore', 'maxTimeBefore'])
+    myplotter.addHistograms(h_timeAfter, ['minTimeAfter', 'maxTimeAfter'])
+    myplotter.addHistograms(h_timeDiff, 'timeMaxMinDiff')
+
+    myplotter.addHistograms(h_ABCD, ['straightLineCut', 'timeMaxMinPlotDiff'], 'straightLineCutNew')
 
     cutflow = [mycuts.totalEventCounter, mycuts.fullEventCounter, 
                 mycuts.timeDiff,
@@ -226,6 +257,8 @@ if __name__ == "__main__":
                 pickupCut, 
                 firstPulseCut,
                 centralTimeCut,
+                panelVeto,                
+
                 mycuts.nLayersCut,
                 mycuts.countNBars, 
 
@@ -239,13 +272,11 @@ if __name__ == "__main__":
                 nBarsCut,
                 myplotter.dict['h_nBarsAfterCut'],
 
-                panelVeto,                
-
                 beamMuonPanelVeto,
 
                 barsCut,
 
-                nBarsDeltaTCut,
+                #nBarsDeltaTCut,
 
                 sidebandRMSCut,
 
@@ -265,11 +296,16 @@ if __name__ == "__main__":
                 myplotter.dict['h_maxNPEAfter'],
                 myplotter.dict['h_minNPEAfter'],
 
+                #include versions of these selections w/o cutting to make ABCD plot
+                mycuts.straightLineCut, 
+                timeMaxMinNoCut,
+                myplotter.dict['h_ABCD'],
+               
                 myplotter.dict['h_straightTimeBefore'],
                 myplotter.dict['h_straightNPEBefore'],
                 myplotter.dict['h_straightHeightBefore'],
                 myplotter.dict['h_straightChannelBefore'],
-                straightLineCut,
+                straightLineCutMod,
                 myplotter.dict['h_straightTimeAfter'],
                 myplotter.dict['h_straightNPEAfter'],
                 myplotter.dict['h_straightHeightAfter'],
@@ -295,7 +331,7 @@ if __name__ == "__main__":
     myschedule.printSchedule()
 
     #create the milliqan processor object
-    myiterator = milliqanProcessor(filelist, branches, myschedule, step_size=stepSize, qualityLevel=qualityLevel, max_events=maxEvents, goodRunsList=os.getcwd()+'/goodRunsList.json')
+    myiterator = milliqanProcessor(filelist, branches, myschedule, step_size=stepSize, qualityLevel=qualityLevel, max_events=maxEvents, goodRunsList=os.getcwd()+'/goodRunsList.json', sim=sim)
 
     #run the milliqan processor
     myiterator.run()

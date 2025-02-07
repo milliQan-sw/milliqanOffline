@@ -22,7 +22,7 @@ class milliqanPlot():
                 output = [ak.drop_none(events[x]) for x in self.variables]
                 output = [ak.flatten(y,axis=None) for y in output]
             #2D histograms
-            if len(output) == 2 and len(output[0])>0:
+            if len(output) == 2 and len(output[0])>0 and len(output[1])>0:
                 myarray0 = array('d', output[0])
                 myarray1 = array('d', output[1])
                 self.histogram.FillN(len(myarray0), myarray0, myarray1, np.ones(len(myarray0)))
@@ -40,7 +40,6 @@ class milliqanPlot():
                 output = ak.drop_none(events[self.variables])
                 output = ak.flatten(output,axis=None)
             myarray = array('d', output)
-
             if len(myarray)>0:
                 self.histogram.FillN(len(myarray), myarray, np.ones(len(myarray)))
 

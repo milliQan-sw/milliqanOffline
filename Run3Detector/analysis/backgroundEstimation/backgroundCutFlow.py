@@ -28,20 +28,20 @@ if __name__ == "__main__":
 
     beam = False
     skim = True
-    sim = True
-    outputFile = 'bgCutFlow_Full.root'
-    qualityLevel = 'tight'
+    outputFile = 'bgCutFlow_output.root'
+    qualityLevel = 'Tight'
     maxEvents = None
-    stepSize = 1000
+    stepSize = 10000
 
     filelist = [     
-        "/eos/experiment/milliqan/skims/signal/MilliQan_Run1300_v35_signal_beamOff_tight.root",
-        "/eos/experiment/milliqan/skims/signal/MilliQan_Run1400_v35_signal_beamOff_tight.root",
-        "/eos/experiment/milliqan/skims/signal/MilliQan_Run1500_v35_signal_beamOff_tight.root",
-        "/eos/experiment/milliqan/skims/signal/MilliQan_Run1600_v35_signal_beamOff_tight.root",
-        "/eos/experiment/milliqan/skims/signal/MilliQan_Run1700_v35_signal_beamOff_tight.root",
-        "/eos/experiment/milliqan/skims/signal/MilliQan_Run1800_v35_signal_beamOff_tight.root",
-        "/eos/experiment/milliqan/skims/signal/MilliQan_Run1900_v35_signal_beamOff_tight.root",
+        #"/eos/experiment/milliqan/skims/signal/MilliQan_Run1300_v35_signal_beamOff_tight.root",
+        #"/eos/experiment/milliqan/skims/signal/MilliQan_Run1400_v35_signal_beamOff_tight.root",
+        #"/eos/experiment/milliqan/skims/signal/MilliQan_Run1500_v35_signal_beamOff_tight.root",
+        #"/eos/experiment/milliqan/skims/signal/MilliQan_Run1600_v35_signal_beamOff_tight.root",
+        #"/eos/experiment/milliqan/skims/signal/MilliQan_Run1700_v35_signal_beamOff_tight.root",
+        #"/eos/experiment/milliqan/skims/signal/MilliQan_Run1800_v35_signal_beamOff_tight.root",
+        #"/eos/experiment/milliqan/skims/signal/MilliQan_Run1900_v35_signal_beamOff_tight.root",
+        "../skim/MilliQan_Run1400_v35_signal_beamOff_medium.root",
         ]
 
     if skim:
@@ -259,64 +259,64 @@ if __name__ == "__main__":
                 centralTimeCut,
                 panelVeto,                
 
-                mycuts.nLayersCut,
-                mycuts.countNBars, 
+                #mycuts.nLayersCut,
+                #mycuts.countNBars, 
 
-                myplotter.dict['h_nLayersBeforeAllLayers'],
+                #myplotter.dict['h_nLayersBeforeAllLayers'],
                 hitInAllLayers,
-                myplotter.dict['h_nLayersAfterAllLayers'],
-                myplotter.dict['h_nHitsPerLayerBefore'],
-                myplotter.dict['h_nHitsPerLayerAfter'],
+                #myplotter.dict['h_nLayersAfterAllLayers'],
+                #myplotter.dict['h_nHitsPerLayerBefore'],
+                #myplotter.dict['h_nHitsPerLayerAfter'],
 
-                myplotter.dict['h_nBarsBeforeCut'],
+                #myplotter.dict['h_nBarsBeforeCut'],
                 nBarsCut,
-                myplotter.dict['h_nBarsAfterCut'],
+                #myplotter.dict['h_nBarsAfterCut'],
 
                 beamMuonPanelVeto,
 
-                barsCut,
+                #barsCut,
 
                 #nBarsDeltaTCut,
 
-                sidebandRMSCut,
+                #sidebandRMSCut,
 
-                myplotter.dict['h_nBars'],
+                #myplotter.dict['h_nBars'],
 
                 #myplotter.dict['h_nLayersBeforeOneHitPerLayer'],
                 #oneHitPerLayer,
                 #myplotter.dict['h_nLayersAfterOneHitPerLayer'],
 
-                firstPulseMax,
+                #firstPulseMax,
 
-                vetoEarlyPulse,
+                #vetoEarlyPulse,
                 
-                nPEMaxMin,
-                myplotter.dict['h_maxNPEBefore'],
-                myplotter.dict['h_minNPEBefore'],
-                myplotter.dict['h_maxNPEAfter'],
-                myplotter.dict['h_minNPEAfter'],
+                #nPEMaxMin,
+                #myplotter.dict['h_maxNPEBefore'],
+                #myplotter.dict['h_minNPEBefore'],
+                #myplotter.dict['h_maxNPEAfter'],
+                #myplotter.dict['h_minNPEAfter'],
 
                 #include versions of these selections w/o cutting to make ABCD plot
-                mycuts.straightLineCut, 
-                timeMaxMinNoCut,
-                myplotter.dict['h_ABCD'],
+                #mycuts.straightLineCut, 
+                #timeMaxMinNoCut,
+                #myplotter.dict['h_ABCD'],
                
-                myplotter.dict['h_straightTimeBefore'],
-                myplotter.dict['h_straightNPEBefore'],
-                myplotter.dict['h_straightHeightBefore'],
-                myplotter.dict['h_straightChannelBefore'],
-                straightLineCutMod,
-                myplotter.dict['h_straightTimeAfter'],
-                myplotter.dict['h_straightNPEAfter'],
-                myplotter.dict['h_straightHeightAfter'],
-                myplotter.dict['h_straightChannelAfter'],
-                myplotter.dict['h_straightNumPaths'],
+                #myplotter.dict['h_straightTimeBefore'],
+                #myplotter.dict['h_straightNPEBefore'],
+                #myplotter.dict['h_straightHeightBefore'],
+                #myplotter.dict['h_straightChannelBefore'],
+                #straightLineCutMod,
+                #myplotter.dict['h_straightTimeAfter'],
+                #myplotter.dict['h_straightNPEAfter'],
+                #myplotter.dict['h_straightHeightAfter'],
+                #myplotter.dict['h_straightChannelAfter'],
+                #myplotter.dict['h_straightNumPaths'],
                 
-                timeMaxMin,
-                myplotter.dict['h_minTimeBefore'],
-                myplotter.dict['h_maxTimeBefore'],
-                myplotter.dict['h_minTimeAfter'],
-                myplotter.dict['h_maxTimeAfter'],
+                #timeMaxMin,
+                #myplotter.dict['h_minTimeBefore'],
+                #myplotter.dict['h_maxTimeBefore'],
+                #myplotter.dict['h_minTimeAfter'],
+                #myplotter.dict['h_maxTimeAfter'],
 
             ]
 

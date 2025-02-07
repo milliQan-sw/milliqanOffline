@@ -159,6 +159,8 @@ struct offline_tree_{
     vector<float> v_min_afterFilter;
     vector<int> v_iMaxPulseLayer;
     vector<float> v_maxPulseTime;
+    vector<float> v_prePulseMean;
+    vector<float> v_prePulseRMS;
 
     ulong tClockCycles;
     float tTime;
@@ -211,6 +213,7 @@ private:
     pair<float,float> measureSideband(int);
     vector<pair<float,float>> findPulses(int);
     vector<pair<float,float>> processChannel(int);
+    const pair<float, float> getPrePulseVar(TH1D*, float);
     void loadBranches();
     void loadWavesMilliDAQ();
     void loadWavesDRS();
@@ -254,6 +257,7 @@ private:
     int dynamicPedestalConsecutiveSamples = 16;
     float dynamicPedestalGranularity = 0.25;
     float tdcCorrection[6] = {0}; //set to max number of boards
+    int prePulseRange = 30; //number of samples to use when calculating prepulse mean/RMS
 
     bool goodRunLoose;
     bool goodRunMedium;

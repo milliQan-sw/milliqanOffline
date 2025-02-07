@@ -111,7 +111,6 @@ class milliqanProcessor():
 
         self.mqSchedule.setEvents(events)
         for branch in self.mqSchedule.schedule:
-
             if isinstance(branch, milliqanPlot):
                 if isinstance(branch.variables, list):
                     for i in branch.variables:

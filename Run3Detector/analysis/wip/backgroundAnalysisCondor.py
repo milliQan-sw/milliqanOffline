@@ -218,7 +218,7 @@ if __name__ == "__main__":
     beam = False
 
 #get the filelist and job number
-filelist = sys.argv[1]
+filelist = '/'.join([sys.argv[3], sys.argv[1]])
 job = sys.argv[2]
 
 #define a file list to run over
@@ -644,6 +644,8 @@ myiterator = milliqanProcessor(filelist, branches, myschedule, step_size=10000)
 
 #run the milliqan processor
 myiterator.run()
+
+myschedule.cutFlowPlots()
 
 #save plots
 myplotter.saveHistograms("bgAnalysis_{}.root".format(job))

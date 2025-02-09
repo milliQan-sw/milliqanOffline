@@ -44,7 +44,7 @@ void myLooper::Loop( TString outFile, TString lumi, TString runTime)
   std::ofstream outputTextFile("skim_results.txt", std::ios::app);
 
   // The minimum area requirement
-  float minArea = 500000.;
+  float minArea = 100000.;
 
    Long64_t nentries = fChain->GetEntriesFast();
    Long64_t passed = 0;

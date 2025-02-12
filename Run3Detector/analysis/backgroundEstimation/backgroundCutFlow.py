@@ -28,12 +28,24 @@ if __name__ == "__main__":
 
     beam = False
     skim = True
-    outputFile = 'bgCutFlow_output.root'
-    qualityLevel = 'Tight'
+    sim = True
+    outputFile = 'bgCutFlow_SR2_noCut.root'
+    qualityLevel = 'tight'
     maxEvents = None
-    stepSize = 10000
+    stepSize = 20000
+    makeCut = True
 
     filelist = [     
+        "/eos/experiment/milliqan/skims/signal/panel50kAllowed/MilliQan_Run1000_v35_signal_beamOff_medium.root",
+        "/eos/experiment/milliqan/skims/signal/panel50kAllowed/MilliQan_Run1100_v35_signal_beamOff_medium.root",
+        "/eos/experiment/milliqan/skims/signal/panel50kAllowed/MilliQan_Run1300_v35_signal_beamOff_medium.root",
+        "/eos/experiment/milliqan/skims/signal/panel50kAllowed/MilliQan_Run1400_v35_signal_beamOff_medium.root",
+        "/eos/experiment/milliqan/skims/signal/panel50kAllowed/MilliQan_Run1500_v35_signal_beamOff_medium.root",
+        "/eos/experiment/milliqan/skims/signal/panel50kAllowed/MilliQan_Run1600_v35_signal_beamOff_medium.root",
+        "/eos/experiment/milliqan/skims/signal/panel50kAllowed/MilliQan_Run1700_v35_signal_beamOff_medium.root",
+        "/eos/experiment/milliqan/skims/signal/panel50kAllowed/MilliQan_Run1800_v35_signal_beamOff_medium.root",
+        "/eos/experiment/milliqan/skims/signal/panel50kAllowed/MilliQan_Run1900_v35_signal_beamOff_medium.root",
+
         #"/eos/experiment/milliqan/skims/signal/MilliQan_Run1300_v35_signal_beamOff_tight.root",
         #"/eos/experiment/milliqan/skims/signal/MilliQan_Run1400_v35_signal_beamOff_tight.root",
         #"/eos/experiment/milliqan/skims/signal/MilliQan_Run1500_v35_signal_beamOff_tight.root",
@@ -41,7 +53,6 @@ if __name__ == "__main__":
         #"/eos/experiment/milliqan/skims/signal/MilliQan_Run1700_v35_signal_beamOff_tight.root",
         #"/eos/experiment/milliqan/skims/signal/MilliQan_Run1800_v35_signal_beamOff_tight.root",
         #"/eos/experiment/milliqan/skims/signal/MilliQan_Run1900_v35_signal_beamOff_tight.root",
-        "../skim/MilliQan_Run1400_v35_signal_beamOff_medium.root",
         ]
 
     if skim:
@@ -85,57 +96,64 @@ if __name__ == "__main__":
     mycuts = milliqanCuts()
 
     #require pulses are in trigger window
-    centralTimeCut = getCutMod(mycuts.centralTime, mycuts, 'centralTimeCut', cut=True)
+    centralTimeCut = getCutMod(mycuts.centralTime, mycuts, 'centralTimeCut', cut=makeCut)
 
     #require pulses are not pickup
-    pickupCut = getCutMod(mycuts.pickupCut, mycuts, 'pickupCut', cut=True, tight=True)
+    pickupCut = getCutMod(mycuts.pickupCut, mycuts, 'pickupCut', cut=makeCut, tight=True)
 
     #require that all digitizer boards are matched
-    boardMatchCut = getCutMod(mycuts.boardsMatched, mycuts, 'boardMatchCut', cut=True, branches=branches)
+    boardMatchCut = getCutMod(mycuts.boardsMatched, mycuts, 'boardMatchCut', cut=makeCut, branches=branches)
 
     #greater than or equal to one hit per layer
-    hitInAllLayers = getCutMod(mycuts.oneHitPerLayerCut, mycuts, 'hitInAllLayers', cut=True, multipleHits=True)
+    hitInAllLayers = getCutMod(mycuts.oneHitPerLayerCut, mycuts, 'hitInAllLayers', cut=makeCut, multipleHits=True)
 
     #exactly one hit per layer
-    oneHitPerLayer = getCutMod(mycuts.oneHitPerLayerCut, mycuts, 'oneHitPerLayer', cut=True, multipleHits=False)
+    oneHitPerLayer = getCutMod(mycuts.oneHitPerLayerCut, mycuts, 'oneHitPerLayer', cut=makeCut, multipleHits=False)
 
     #panel veto
-    panelVeto = getCutMod(mycuts.panelVeto, mycuts, 'panelVeto', cut=True, nPECut=None)
+    panelVeto = getCutMod(mycuts.panelVeto, mycuts, 'panelVeto', cut=makeCut, nPECut=None)
+    #panelVeto = getCutMod(mycuts.panelVetoMod, mycuts, 'panelVeto', cut=makeCut, nPECut=None, areaCut=100e3, panelsAllowed=1)
 
     #first pulse max
-    firstPulseMax = getCutMod(mycuts.firstPulseMax, mycuts, 'firstPulseMax', cut=True)
+    firstPulseMax = getCutMod(mycuts.firstPulseMax, mycuts, 'firstPulseMax', cut=makeCut)
 
     #veto events with an early pulse
-    vetoEarlyPulse = getCutMod(mycuts.vetoEarlyPulse, mycuts, 'vetoEarlyPulse', cut=True)
+    vetoEarlyPulse = getCutMod(mycuts.vetoEarlyPulse, mycuts, 'vetoEarlyPulse', cut=makeCut)
 
     #four in line cut
-    straightLineCutMod = getCutMod(mycuts.straightLineCut, mycuts, 'straightLineCutMod', cut=True)
+    straightLineCutMod = getCutMod(mycuts.straightLineCut, mycuts, 'straightLineCutMod', cut=makeCut)
 
     #npe max-min < 10 cut
-    nPEMaxMin = getCutMod(mycuts.nPEMaxMin, mycuts, 'nPEMaxMin', nPECut=20, cut=True)
+    nPEMaxMin = getCutMod(mycuts.nPEMaxMin, mycuts, 'nPEMaxMin', nPECut=20, cut=makeCut)
+    #nPEMaxMin = getCutMod(mycuts.nPEStdDev, mycuts, 'nPEStdDev', std=5, cut=makeCut)
+
+    nPEMaxCut = getCutMod(mycuts.nPEMaxCut, mycuts, 'nPEMaxCut', nPECut=20, cut=makeCut)
 
     #time max-min < 15 cut
-    timeMaxMinNoCut = getCutMod(mycuts.timeMaxMin, mycuts, 'timeMaxMinPlot', timeCut=40)
-    timeMaxMin = getCutMod(mycuts.timeMaxMin, mycuts, 'timeMaxMin', timeCut=40, cut=True)
+    timeMaxMinNoCut = getCutMod(mycuts.timeMaxMin, mycuts, 'timeMaxMinPlot', timeCut=20)
+    timeMaxMin = getCutMod(mycuts.timeMaxMin, mycuts, 'timeMaxMin', timeCut=20, cut=makeCut, straight=False)
 
     #veto events with large hit in front/back panels
-    beamMuonPanelVeto = getCutMod(mycuts.beamMuonPanelVeto, mycuts, 'beamMuonPanelVeto', cut=True, nPECut=5e4)
+    beamMuonPanelVeto = getCutMod(mycuts.beamMuonPanelVeto, mycuts, 'beamMuonPanelVeto', cut=makeCut, nPECut=0)
 
     #require # bars in event  < cut
-    nBarsCut = getCutMod(mycuts.nBarsCut, mycuts, 'nBarsCut', nBarsCut=5, cut=True)
+    nBarsCut = getCutMod(mycuts.nBarsCut, mycuts, 'nBarsCut', nBarsCut=4, cut=makeCut)
 
     #require < nBars within deltaT
-    nBarsDeltaTCut = getCutMod(mycuts.nBarsDeltaTCut, mycuts, 'nBarsDeltaTCut', nBarsCut=4, timeCut=100, cut=True)
+    nBarsDeltaTCut = getCutMod(mycuts.nBarsDeltaTCut, mycuts, 'nBarsDeltaTCut', nBarsCut=4, timeCut=100, cut=makeCut)
 
     #sideband RMS cut
-    sidebandRMSCut = getCutMod(mycuts.sidebandRMSCut, mycuts, 'sidebandRMSCut', cutVal=2, cut=True)
+    sidebandRMSCut = getCutMod(mycuts.sidebandRMSCut, mycuts, 'sidebandRMSCut', cutVal=2, cut=makeCut)
 
     #use first pulse in a channel only
-    firstPulseCut = getCutMod(mycuts.firstPulseCut, mycuts, 'firstPulseCut', cut=True)
+    firstPulseCut = getCutMod(mycuts.firstPulseCut, mycuts, 'firstPulseCut', cut=makeCut)
 
     #cut out all pulses except bars
-    barsCut = getCutMod(mycuts.barCut, mycuts, 'barCut', cut=True)
+    barsCut = getCutMod(mycuts.barCut, mycuts, 'barCut', cut=makeCut)
 
+    #require a hit in front and/or back panel
+    frontBackPanelRequired = getCutMod(mycuts.requireFrontBackPanel, mycuts, 'frontBackPanelRequired', cut=makeCut)
+    
     #define histograms
     h_timeDiff1 = r.TH1F('h_timeDiff1', "Layer 3 and 0 Time Difference", 100, -50, 50)
     h_timeDiff2 = r.TH1F('h_timeDiff2', "Layer 3 and 0 Time Difference", 100, -50, 50)
@@ -161,7 +179,9 @@ if __name__ == "__main__":
     h_sidebandsBefore = r.TH1F('h_sidebandsBefore', 'Sideband RMS Before Cut;Sideband RMS;Events', 50, 0, 10)
     h_sidebandsAfter = r.TH1F('h_sidebandsAfter', 'Sideband RMS After Cut;Sideband RMS;Events', 50, 0, 10)
     h_panelNPEBefore = r.TH1F('h_panelNPEBefore', 'nPE in Panels Before Cut;nPE;Panel Hits', 100, 0, 1e5)
+    h_panelAreaBefore = r.TH1F('h_panelAreaBefore', 'Area in Panels Before Cut;Area;Panel Hits', 200, 0, 200e3)
     h_panelNPEAfter = r.TH1F('h_panelNPEAfter', 'nPE in Panels After Cut;nPE;Panel Hits', 100, 0, 1e5)
+    h_panelAreaAfter = r.TH1F('h_panelAreaAfter', 'Area in Panels After Cut;Area;Panel Hits', 200, 0, 200e3)
     h_panelHitsBefore = r.TH1F('h_panelHitsBefore', 'Number of Panel Hits Before Cut;# Panels;Events', 10, 0, 10)
     h_panelHitsAfter = r.TH1F('h_panelHitsAfter', 'Number of Panel Hits After Cut;# Panels;Events', 10, 0, 10)
     h_frontPanelNPEBefore = r.TH1F('h_frontPanelNPEBefore', 'nPE of Front Panel Before Cut;nPE;# Pulses', 300, 0, 3e5)
@@ -172,8 +192,8 @@ if __name__ == "__main__":
     h_straightTimeAfter = r.TH1F('h_straightTimeAfter', 'Pulse Times After Straight Line Cut;Time;# Pulses', 240, 0, 2400)
     h_straightNPEBefore = r.TH1F('h_straightNPEBefore', 'nPE of Pulses Before Straight Line Cut;nPE;# Pulses', 100, 0, 100)
     h_straightNPEAfter = r.TH1F('h_straightNPEAfter', 'nPE of Pulses After Straight Line Cut;nPE; # Pulses', 100, 0, 100)
-    h_straightHeightBefore = r.TH1F('h_straightHeightBefore', 'Height of Pulses Before Straight Line Cut;Height;# Pulses', 1400, 0, 1400)
-    h_straightHeightAfter = r.TH1F('h_straightHeightAfter', 'Height of Pulses After Straight Line Cut;Height;# Pulses', 1400, 0, 1400)
+    h_straightHeightBefore = r.TH1F('h_straightHeightBefore', 'Height of Pulses Before Straight Line Cut;Height;# Pulses', 200, 0, 1400)
+    h_straightHeightAfter = r.TH1F('h_straightHeightAfter', 'Height of Pulses After Straight Line Cut;Height;# Pulses', 200, 0, 1400)
     h_straightChannelBefore = r.TH1F('h_straightChannelBefore', 'Channels Before Straight Line Cut;Channel;# Pulses', 80, 0, 80)
     h_straightChannelAfter = r.TH1F('h_straightChannelAfter', 'Channels After Straight Line Cut;Channel; # Pulses', 80, 0, 80)
     h_straightNumPaths = r.TH1F('h_straightNumPaths', "Number of Straight Line Paths in Event;Num Paths;Events", 16, 0, 16)
@@ -185,26 +205,21 @@ if __name__ == "__main__":
     h_nPEAfter = r.TH2F('h_nPEAfter', 'NPE in Event After Cut;Min NPE;Max NPE', 100, 0, 100, 100, 0, 100)
     h_minTimeBefore = r.TH1F('h_minTimeBefore', 'Min Pulse Time Before Cut;Min Time;Events', 1200, 0, 2400)
     h_maxTimeBefore = r.TH1F('h_maxTimeBefore', 'Max Pulse Time Before Cut;Min Time;Events', 1200, 0, 2400)
-    h_minTimeAfter = r.TH1F('h_minTimeAfter', 'Min Pulse Time After Cut;Min Time;Events', 1200, 0, 2400)
-    h_maxTimeAfter = r.TH1F('h_maxTimeAfter', 'Max Pulse Time After Cut;Min Time;Events', 1200, 0, 2400)
-    h_timeBefore = r.TH2F('h_timeBefore', 'Pulse Times Before Cut;Min Time;Max Time', 1200, 0, 2400, 1200, 0, 2400)
-    h_timeAfter = r.TH2F('h_timeAfter', 'Pulse Times After Cut;Min Time;Max Time', 1200, 0, 2400, 1200, 0, 2400)
+    h_minTimeAfter = r.TH1F('h_minTimeAfter', 'Min Pulse Time After Cut;Min Time;Events', 600, 0, 2400)
+    h_maxTimeAfter = r.TH1F('h_maxTimeAfter', 'Max Pulse Time After Cut;Min Time;Events', 600, 0, 2400)
+    h_timeBefore = r.TH2F('h_timeBefore', 'Pulse Times Before Cut;Min Time;Max Time', 600, 0, 2400, 600, 0, 2400)
+    h_timeAfter = r.TH2F('h_timeAfter', 'Pulse Times After Cut;Min Time;Max Time', 600, 0, 2400, 600, 0, 2400)
     h_timeDiff = r.TH1F('h_timeDiff', 'Time Difference (Max-Min);Time Diff (ns);Events', 500, 0, 500)
     h_ABCD = r.TH2F('h_ABCD', 'Straight Line vs Time Window Cuts for ABCD;Straight Line Paths;Max-Min Time (ns)', 2, 0, 2, 300, 0, 300)
+    h_TimeDiffStraight = r.TH1F('h_TimeDiffStraight', 'Max-Min Time Difference Straight Paths', 600, 0, 2400)
+    h_TimeDiffNotStraight = r.TH1F('h_TimeDiffNotStraight', 'Max-Min Time Difference Non Straight Paths', 600, 0, 2400)
+    h_nPEStdDev = r.TH1F('h_nPEStdDev', 'Std Devs Between Max/Min nPE', 100, 0, 50)
+    h_nPERatio = r.TH1F('h_nPERatio', 'Ratio of Max/Min nPE', 100, 0, 50)
 
     #define milliqan plotter
     myplotter = milliqanPlotter()
     myplotter.dict.clear()
 
-    myplotter.addHistograms(h_timeDiff1, 'timeDiff')
-    myplotter.addHistograms(h_timeDiff2, 'timeDiff')
-    myplotter.addHistograms(h_timeDiff3, 'timeDiff')
-    myplotter.addHistograms(h_timeDiff4, 'timeDiff')
-    myplotter.addHistograms(h_timeDiff5, 'timeDiff')
-    myplotter.addHistograms(h_timeDiff6, 'timeDiff')
-    myplotter.addHistograms(h_timeDiff7, 'timeDiff')
-    myplotter.addHistograms(h_timeDiff8, 'timeDiff')
-    myplotter.addHistograms(h_timeDiff9, 'timeDiff')
     myplotter.addHistograms(h_nBars, 'countNBars', 'first')
     myplotter.addHistograms(h_nLayersBeforeAllLayers, 'nLayers', 'first')
     myplotter.addHistograms(h_nLayersAfterAllLayers, 'nLayers', 'first')
@@ -219,7 +234,9 @@ if __name__ == "__main__":
     myplotter.addHistograms(h_sidebandsBefore, 'sidebandsBeforeCut')
     myplotter.addHistograms(h_sidebandsAfter, 'sidebandsAfterCut')
     myplotter.addHistograms(h_panelNPEBefore, 'panelVetoNPEBefore')
+    myplotter.addHistograms(h_panelAreaBefore, 'panelVetoAreaBefore')
     myplotter.addHistograms(h_panelNPEAfter, 'panelVetoNPEAfter')
+    myplotter.addHistograms(h_panelAreaAfter, 'panelVetoAreaAfter')
     myplotter.addHistograms(h_panelHitsBefore, 'panelVetoHitsBefore', 'first')
     myplotter.addHistograms(h_panelHitsAfter, 'panelVetoHitsAfter', 'first')
     myplotter.addHistograms(h_frontPanelNPEBefore, 'frontPanelNPEBefore')
@@ -241,6 +258,7 @@ if __name__ == "__main__":
     myplotter.addHistograms(h_minNPEAfter, 'minNPEAfter')
     myplotter.addHistograms(h_nPEBefore, ['minNPEBefore', 'maxNPEBefore'])
     myplotter.addHistograms(h_nPEAfter, ['minNPEAfter', 'maxNPEAfter'])
+    myplotter.addHistograms(h_nPERatio, 'nPERatio')
     myplotter.addHistograms(h_minTimeBefore, 'minTimeBefore')
     myplotter.addHistograms(h_maxTimeBefore, 'maxTimeBefore')
     myplotter.addHistograms(h_minTimeAfter, 'minTimeAfter')
@@ -248,8 +266,9 @@ if __name__ == "__main__":
     myplotter.addHistograms(h_timeBefore, ['minTimeBefore', 'maxTimeBefore'])
     myplotter.addHistograms(h_timeAfter, ['minTimeAfter', 'maxTimeAfter'])
     myplotter.addHistograms(h_timeDiff, 'timeMaxMinDiff')
-
     myplotter.addHistograms(h_ABCD, ['straightLineCut', 'timeMaxMinPlotDiff'], 'straightLineCutNew')
+    myplotter.addHistograms(h_TimeDiffStraight, 'timeMaxMinPlotDiff', 'straightLineCutNew')
+    myplotter.addHistograms(h_TimeDiffNotStraight, 'timeMaxMinPlotDiff', 'straightLineCutNew', invert=True)
 
     cutflow = [mycuts.totalEventCounter, mycuts.fullEventCounter, 
                 mycuts.timeDiff,
@@ -272,9 +291,13 @@ if __name__ == "__main__":
                 nBarsCut,
                 #myplotter.dict['h_nBarsAfterCut'],
 
-                beamMuonPanelVeto,
+               frontBackPanelRequired, #SR2 only
+               
+                #beamMuonPanelVeto, #SR1 only
 
                 #barsCut,
+
+                #nPEMaxCut, #SR1 only
 
                 #nBarsDeltaTCut,
 
@@ -290,33 +313,39 @@ if __name__ == "__main__":
 
                 #vetoEarlyPulse,
                 
-                #nPEMaxMin,
-                #myplotter.dict['h_maxNPEBefore'],
-                #myplotter.dict['h_minNPEBefore'],
-                #myplotter.dict['h_maxNPEAfter'],
-                #myplotter.dict['h_minNPEAfter'],
+                nPEMaxMin,
+                myplotter.dict['h_maxNPEBefore'],
+                myplotter.dict['h_minNPEBefore'],
+                myplotter.dict['h_maxNPEAfter'],
+                myplotter.dict['h_minNPEAfter'],
+                #myplotter.dict['h_nPEStdDev'],
+                myplotter.dict['h_nPERatio'],
 
                 #include versions of these selections w/o cutting to make ABCD plot
-                #mycuts.straightLineCut, 
-                #timeMaxMinNoCut,
-                #myplotter.dict['h_ABCD'],
-               
-                #myplotter.dict['h_straightTimeBefore'],
-                #myplotter.dict['h_straightNPEBefore'],
-                #myplotter.dict['h_straightHeightBefore'],
-                #myplotter.dict['h_straightChannelBefore'],
-                #straightLineCutMod,
-                #myplotter.dict['h_straightTimeAfter'],
-                #myplotter.dict['h_straightNPEAfter'],
-                #myplotter.dict['h_straightHeightAfter'],
-                #myplotter.dict['h_straightChannelAfter'],
-                #myplotter.dict['h_straightNumPaths'],
+                mycuts.straightLineCut, 
+                timeMaxMinNoCut,
+                myplotter.dict['h_ABCD'],
+                myplotter.dict['h_TimeDiffStraight'],
+                myplotter.dict['h_TimeDiffNotStraight'],
+
+                myplotter.dict['h_straightTimeBefore'],
+                myplotter.dict['h_straightNPEBefore'],
+                myplotter.dict['h_straightHeightBefore'],
+                myplotter.dict['h_straightChannelBefore'],
+                straightLineCutMod,
+                myplotter.dict['h_straightTimeAfter'],
+                myplotter.dict['h_straightNPEAfter'],
+                myplotter.dict['h_straightHeightAfter'],
+                myplotter.dict['h_straightChannelAfter'],
+                myplotter.dict['h_straightNumPaths'],
                 
-                #timeMaxMin,
-                #myplotter.dict['h_minTimeBefore'],
-                #myplotter.dict['h_maxTimeBefore'],
-                #myplotter.dict['h_minTimeAfter'],
-                #myplotter.dict['h_maxTimeAfter'],
+                timeMaxMin,
+                myplotter.dict['h_minTimeBefore'],
+                myplotter.dict['h_maxTimeBefore'],
+                myplotter.dict['h_minTimeAfter'],
+                myplotter.dict['h_maxTimeAfter'],
+
+                #mycuts.printEvents,
 
             ]
 

@@ -69,29 +69,79 @@ class milliQanScheduler():
         totalEvents = self.cuts.cutflow['totalEventCounter']['events']
         totalPulses = self.cuts.cutflow['totalEventCounter']['pulses']
 
+        allLayersIndex = -1
+        for index, (key, value) in enumerate(self.cuts.cutflow.items()):
+            if key == "hitInAllLayers":
+                allLayersIndex = index-1
+                break
+
         self.eventCutFlow = TH1F("eventCutFlow", 'Cut Flow for Event Counts', numCuts, 0, numCuts)
         self.pulseCutFlow = TH1F("pulseCutFlow", 'Cut Flow for Pulse Counts', numCuts, 0, numCuts)
+        self.eventSelectionEff = TH1F("eventSelectionEff", 'Selection Efficiency for Events', numCuts, 0, numCuts)
+        self.pulseSelectionEff = TH1F("pulseSelectionEff", 'Selection Efficiency for Pulses', numCuts, 0, numCuts)
         self.eventCutEfficiencies = TH1F("eventCutEfficiencies", 'Efficiencies for Cuts on Events', numCuts, 0, numCuts)
         self.pulseCutEfficiencies = TH1F("pulseCutEfficiencies", 'Efficiencies for Cuts on Pulses', numCuts, 0, numCuts)
 
+        if allLayersIndex >= 0:
+            self.eventCutEffAllLayers = TH1F("eventCutEffAllLayers", 'Efficiencies for Cuts on Events', numCuts-allLayersIndex, 0, numCuts-allLayersIndex)
+            self.pulseCutEffAllLayers = TH1F("pulseCutEffAllLayers", 'Efficiencies for Cuts on Pulses', numCuts-allLayersIndex, 0, numCuts-allLayersIndex)
+
         ibin = 0
+        prevEvents = -1
+        prevPulses = -1
+        allLayersEvents = -1
+        allLayersPulses = -1
         for i, (key, value) in enumerate(self.cuts.cutflow.items()):
             if not value['cut'] and 'EventCounter' not in key: continue
+            evtEff, pulseEff = 1.0, 1.0
+            if prevEvents > 0:
+                evtEff = value['events'] / prevEvents
+            if prevPulses > 0:
+                pulseEff = value['pulses'] / prevPulses
+            if prevEvents == 0:
+                evtEff = 0.0
+            if prevPulses == 0:
+                pulseEff = 0.0
+
+            if i==allLayersIndex+1:
+               allLayersEvents = value['events']
+               allLayersPulses = value['pulses']
+
             self.eventCutFlow.Fill(ibin, value['events'])
             self.pulseCutFlow.Fill(ibin, value['pulses'])
             self.eventCutEfficiencies.Fill(ibin, value['events'] / totalEvents)
             self.pulseCutEfficiencies.Fill(ibin, value['pulses'] / totalPulses)
+            self.eventSelectionEff.Fill(ibin, evtEff)
+            self.pulseSelectionEff.Fill(ibin, pulseEff)
 
             self.eventCutFlow.GetXaxis().SetBinLabel(ibin+1, key)
             self.pulseCutFlow.GetXaxis().SetBinLabel(ibin+1, key)
             self.eventCutEfficiencies.GetXaxis().SetBinLabel(ibin+1, key)
             self.pulseCutEfficiencies.GetXaxis().SetBinLabel(ibin+1, key)
+            self.eventSelectionEff.GetXaxis().SetBinLabel(ibin+1, key)
+            self.pulseSelectionEff.GetXaxis().SetBinLabel(ibin+1, key)
+
+            if allLayersIndex >= 0 and i > allLayersIndex:
+                self.eventCutEffAllLayers.Fill(ibin-allLayersIndex, value['events'] / allLayersEvents)
+                self.pulseCutEffAllLayers.Fill(ibin-allLayersIndex, value['pulses'] / allLayersPulses)
+                self.eventCutEffAllLayers.GetXaxis().SetBinLabel(ibin-allLayersIndex+1, key)
+                self.pulseCutEffAllLayers.GetXaxis().SetBinLabel(ibin-allLayersIndex+1, key)
+
+            prevEvents = value['events']
+            prevPulses = value['pulses']
             ibin+=1
+
 
         self.plotter.histograms.append(milliqanPlot(self.eventCutFlow, None))
         self.plotter.histograms.append(milliqanPlot(self.pulseCutFlow, None))
         self.plotter.histograms.append(milliqanPlot(self.eventCutEfficiencies, None))
         self.plotter.histograms.append(milliqanPlot(self.pulseCutEfficiencies, None))
+        self.plotter.histograms.append(milliqanPlot(self.eventSelectionEff, None))
+        self.plotter.histograms.append(milliqanPlot(self.pulseSelectionEff, None))
+        if allLayersIndex>=0:
+            self.plotter.histograms.append(milliqanPlot(self.eventCutEffAllLayers, None))
+            self.plotter.histograms.append(milliqanPlot(self.pulseCutEffAllLayers, None))
+
 
 
 

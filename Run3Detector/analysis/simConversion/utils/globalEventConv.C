@@ -18,9 +18,11 @@ int globalEventConv(TString inputFileName, TString outputFileName) {
 
     // Define the waveform array to hold data from the tree
     float waveform[5][16][1024];
+    Double_t eventWeight =-1;
 
     // Set branch address to read waveform data
     inputTree->SetBranchAddress("waveform", waveform);
+    inputTree->SetBranchAddress("eventWeight", &eventWeight);
 
     //TString outputFileName = "/data/bar_cosmic_sim_preprocessed_fixed.root";
     // Create output file to save the GlobalEvent objects
@@ -40,6 +42,7 @@ int globalEventConv(TString inputFileName, TString outputFileName) {
     // Create GlobalEvent object to store processed data
     mdaq::GlobalEvent *globalEvent = new mdaq::GlobalEvent();
     outputTree->Branch("event", &globalEvent);
+    outputTree->Branch("eventWeight", &eventWeight);
 
     // Loop over all events in the input tree
     int nEntries = inputTree->GetEntries();

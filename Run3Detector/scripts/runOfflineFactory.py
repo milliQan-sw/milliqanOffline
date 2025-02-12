@@ -85,7 +85,8 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
         exit()
     
     #copy files from eos
-    copyFromEOS()
+    if not sim:
+        copyFromEOS()
 
     offlineDir = os.getenv("OFFLINEDIR")
     if not configurations:

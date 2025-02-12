@@ -28,6 +28,7 @@ def singleRun(mainDir, subDir, logDir):
     Universe = vanilla
     +IsLocalJob = true
     +IsSmallJob = true
+    requirements = machine != "compute-0-0.local" && machine != "compute-0-21.local"
     Rank = TARGET.IsLocalSlot
     request_disk = 5000MB
     request_memory = 125MB

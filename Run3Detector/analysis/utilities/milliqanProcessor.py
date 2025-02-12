@@ -15,16 +15,20 @@ from processorConstants import *
 
 class milliqanProcessor():
 
-    def __init__(self, filelist, branches, schedule=None, cuts=None, plotter=None, max_events=None, step_size=10000, qualityLevel="tight", verbosity='minimal', goodRunsList=None):
+    def __init__(self, filelist, branches, schedule=None, cuts=None, plotter=None, max_events=None, step_size=10000, qualityLevel="tight", verbosity='minimal', goodRunsList=None, sim=False):
         self.script_dir = os.path.abspath(__file__).replace("milliqanProcessor.py", "")
         self.qualityLevelString = qualityLevel
         self.verbosityString = verbosity
-        self.qualityLevel, self.verbosity = self.constantPuller()
+        self.sim = sim
         
         #Checks the filelist against goodRuns.json
         self.filelist = filelist
-        self.fileChecker() 
         
+        self.qualityLevel, self.verbosity = self.constantPuller()
+
+        if not self.sim:
+            self.fileChecker() 
+
         self.branches = branches
         self.mqSchedule = schedule
         self.max_events = max_events
@@ -120,7 +124,7 @@ class milliqanProcessor():
 
                     else:
                         print("MilliQan Processor: Branch {0} does not exist in event array or custom output".format(branch.variables))
-                        break
+                        continue
             else:
                 branch()
         return events
@@ -169,6 +173,7 @@ class milliqanProcessor():
             _, events['tTrigger'] = ak.broadcast_arrays(events[broadcastChan], events['tTrigger'])
             _, events['event'] = ak.broadcast_arrays(events[broadcastChan], events['event'])
             _, events['boardsMatched'] = ak.broadcast_arrays(events[broadcastChan], events['boardsMatched'])
+            events['fullSelection'] = ak.full_like(events[broadcastChan], True) #2/4
 
             if self.max_events and total_events >= self.max_events: break
 

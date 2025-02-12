@@ -4,14 +4,23 @@
 #include "TString.h"
 #include "TObject.h"
 #include "TTimeStamp.h"
-#include "../../../../../MilliDAQ/interface/GlobalEvent.h"
-#include "../../../../../MilliDAQ/interface/V1743Event.h"
+#include "MilliDAQ/interface/GlobalEvent.h"
+#include "MilliDAQ/interface/V1743Event.h"
 #include <iostream>
 
-int globalEventConv(TString inputFileName, TString outputFileName) {
-    // Open the input file and retrieve the TTree
-    //TString fileName = "/data/MilliQan_waveinjectedSmall.root";
-    TFile *inputFile = TFile::Open(inputFileName);
+R__ADD_LIBRARY_PATH(/home/rsantos/scratch0/MilliQan/CMSSW_13_0_13/src/MilliDAQ) // if needed
+R__LOAD_LIBRARY(libMilliDAQ.so)
+
+int globalEventConv() {
+    bool isSlab = false;
+    // open the input file and retrieve the ttree
+    gSystem->Load("/home/rsantos/scratch0/MilliQan/CMSSW_13_0_13/src/MilliDAQ/libMilliDAQ.so");
+    TString fileName = "/data/MilliQan_cosmicSimSample_waveinjected_v4.root";
+    TFile *inputFile = TFile::Open(fileName);
+    if (!inputFile){
+        std::clog << "Input file does not exist!" << std::endl;
+        return 1;
+    }
     TTree *inputTree = (TTree*)inputFile->Get("Events");
 
     std::cout << "Trying to process " << inputFileName << ", into " << outputFileName << std::endl;
@@ -24,7 +33,7 @@ int globalEventConv(TString inputFileName, TString outputFileName) {
     inputTree->SetBranchAddress("waveform", waveform);
     inputTree->SetBranchAddress("eventWeight", &eventWeight);
 
-    //TString outputFileName = "/data/bar_cosmic_sim_preprocessed_fixed.root";
+    TString outputFileName = "/data/bar_cosmic_sim_preprocessed_v4.root";
     // Create output file to save the GlobalEvent objects
     TFile *outputFile = new TFile(outputFileName, "RECREATE");
 
@@ -37,7 +46,14 @@ int globalEventConv(TString inputFileName, TString outputFileName) {
     metadata->Branch("secondsPerSample", &secondsPerSample);
     metadata->Branch("numChan", &numChan);
     secondsPerSample = 2.5e-09;
-    numChan = 80;
+
+    if (!isSlab){
+        numChan = 80;
+    }
+    else {
+      numChan = 96;
+    }
+
     metadata->Fill();
     // Create GlobalEvent object to store processed data
     mdaq::GlobalEvent *globalEvent = new mdaq::GlobalEvent();
@@ -48,6 +64,7 @@ int globalEventConv(TString inputFileName, TString outputFileName) {
     int nEntries = inputTree->GetEntries();
 
     for (int i = 0; i < nEntries; ++i) {
+      if ( nEntries % 1000 == 0 ){std::clog << "Processing event " << i << std::endl;}
         inputTree->GetEntry(i);
 
         // Reset the globalEvent for each new event

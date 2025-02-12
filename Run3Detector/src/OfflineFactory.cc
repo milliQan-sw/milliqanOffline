@@ -485,6 +485,26 @@ void OfflineFactory::validateInput(){
         for (int ic = 0; ic < numChan; ic++) speAreas.push_back(1);
     }
 }
+
+//Get pulse mean and RMS for 30 samples before pulse
+const pair<float, float> OfflineFactory::getPrePulseVar(TH1D* wave, float time){
+    int startbin = wave->FindBin(time-prePulseRange);
+    int endbin = wave->FindBin(time);
+    int n_sb = 0;
+    float sum_sb=0.;
+    float sum2_sb=0.;
+    for(int ibin=startbin; ibin <= endbin; ibin++){
+        sum_sb = sum_sb + wave->GetBinContent(ibin);
+        sum2_sb = sum2_sb + pow(wave->GetBinContent(ibin),2);
+        n_sb++;
+    }
+    if(n_sb == 0) n_sb = 1.;
+    float mean = sum_sb/n_sb;
+    float RMS =pow( sum2_sb/n_sb - pow(mean,2), 0.5);
+
+    return pair<float, float>(mean, RMS);
+}
+
 //Convenience function to produce offline tree output
 //Makedisplays and then not save the output tree //makeoutputtree is not called
 void OfflineFactory::processDisplays(vector<int> & eventsToDisplay,TString displayDirectory){
@@ -601,6 +621,8 @@ void OfflineFactory::prepareOutBranches(){
     outTree->Branch("max",&outputTreeContents.v_max);
     outTree->Branch("iMaxPulseLayer",&outputTreeContents.v_iMaxPulseLayer);
     outTree->Branch("maxPulseTime",&outputTreeContents.v_maxPulseTime);
+    outTree->Branch("prePulseMean", &outputTreeContents.v_prePulseMean);
+    outTree->Branch("prePulseRMS", &outputTreeContents.v_prePulseRMS);
 
     outTree->Branch("present",&outputTreeContents.present);
     outTree->Branch("event_trigger_time_tag",&outputTreeContents.event_trigger_time_tag);
@@ -675,6 +697,8 @@ void OfflineFactory::resetOutBranches(){
     outputTreeContents.v_groupTDC_g5.clear();
     outputTreeContents.v_groupTDC_g6.clear();
     outputTreeContents.v_groupTDC_g7.clear();
+    outputTreeContents.v_prePulseMean.clear();
+    outputTreeContents.v_prePulseRMS.clear();
 }
 
 ulong OfflineFactory::getUnixTime(TString& timeIn){
@@ -1829,6 +1853,9 @@ vector< pair<float,float> > OfflineFactory::processChannel(int ic){
     outputTreeContents.v_min_afterFilter.push_back(waves[ic]->GetMinimum());
     
     for(int ipulse = 0; ipulse<npulses; ipulse++){
+        std::pair<float, float> prePulse = getPrePulseVar(waves[ic], pulseBounds[ipulse].first);
+        outputTreeContents.v_prePulseMean.push_back(prePulse.first);
+        outputTreeContents.v_prePulseRMS.push_back(prePulse.second);
         waves[ic]->SetAxisRange(pulseBounds[ipulse].first,pulseBounds[ipulse].second);
         if (chanMap.size() > 0 and ic < chanMap.size()){
             outputTreeContents.v_column.push_back(chanMap[ic][0]);

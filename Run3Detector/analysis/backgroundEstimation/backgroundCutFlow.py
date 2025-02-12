@@ -29,7 +29,7 @@ if __name__ == "__main__":
     beam = False
     skim = True
     sim = True
-    outputFile = 'bgCutFlow_output.root'
+    outputFile = 'bgCutFlow_Full.root'
     qualityLevel = 'tight'
     maxEvents = None
     stepSize = 1000
@@ -181,12 +181,16 @@ if __name__ == "__main__":
     h_minNPEBefore = r.TH1F('h_minNPEBefore', 'Min NPE in Event Before Cut;Min NPE;Events', 100, 0, 100)
     h_maxNPEAfter = r.TH1F('h_maxNPEAfter', 'Max NPE in Event After Cut;Max NPE;Events', 100, 0, 100)
     h_minNPEAfter = r.TH1F('h_minNPEAfter', 'Min NPE in Event After Cut;Min NPE;Events', 100, 0, 100)
+    h_nPEBefore = r.TH2F('h_nPEBefore', 'NPE in Event Before Cut;Min NPE;Max NPE', 100, 0, 100, 100, 0, 100)
+    h_nPEAfter = r.TH2F('h_nPEAfter', 'NPE in Event After Cut;Min NPE;Max NPE', 100, 0, 100, 100, 0, 100)
     h_minTimeBefore = r.TH1F('h_minTimeBefore', 'Min Pulse Time Before Cut;Min Time;Events', 1200, 0, 2400)
     h_maxTimeBefore = r.TH1F('h_maxTimeBefore', 'Max Pulse Time Before Cut;Min Time;Events', 1200, 0, 2400)
     h_minTimeAfter = r.TH1F('h_minTimeAfter', 'Min Pulse Time After Cut;Min Time;Events', 1200, 0, 2400)
     h_maxTimeAfter = r.TH1F('h_maxTimeAfter', 'Max Pulse Time After Cut;Min Time;Events', 1200, 0, 2400)
-
-    h_ABCD = r.TH2F('h_ABCD', 'Straight Line vs Time Window Cuts for ABCD;Straight Line Paths;Max-Min Time (ns)', 2, 0, 2, 50, 0, 50)
+    h_timeBefore = r.TH2F('h_timeBefore', 'Pulse Times Before Cut;Min Time;Max Time', 1200, 0, 2400, 1200, 0, 2400)
+    h_timeAfter = r.TH2F('h_timeAfter', 'Pulse Times After Cut;Min Time;Max Time', 1200, 0, 2400, 1200, 0, 2400)
+    h_timeDiff = r.TH1F('h_timeDiff', 'Time Difference (Max-Min);Time Diff (ns);Events', 500, 0, 500)
+    h_ABCD = r.TH2F('h_ABCD', 'Straight Line vs Time Window Cuts for ABCD;Straight Line Paths;Max-Min Time (ns)', 2, 0, 2, 300, 0, 300)
 
     #define milliqan plotter
     myplotter = milliqanPlotter()
@@ -218,10 +222,10 @@ if __name__ == "__main__":
     myplotter.addHistograms(h_panelNPEAfter, 'panelVetoNPEAfter')
     myplotter.addHistograms(h_panelHitsBefore, 'panelVetoHitsBefore', 'first')
     myplotter.addHistograms(h_panelHitsAfter, 'panelVetoHitsAfter', 'first')
-    #myplotter.addHistograms(h_frontPanelNPEBefore, 'frontPanelNPEBefore')
-    #myplotter.addHistograms(h_frontPanelNPEAfter, 'frontPanelNPEAfter')
-    #myplotter.addHistograms(h_backPanelNPEBefore, 'backPanelNPEBefore')
-    #myplotter.addHistograms(h_backPanelNPEAfter, 'backPanelNPEAfter')
+    myplotter.addHistograms(h_frontPanelNPEBefore, 'frontPanelNPEBefore')
+    myplotter.addHistograms(h_frontPanelNPEAfter, 'frontPanelNPEAfter')
+    myplotter.addHistograms(h_backPanelNPEBefore, 'backPanelNPEBefore')
+    myplotter.addHistograms(h_backPanelNPEAfter, 'backPanelNPEAfter')
     myplotter.addHistograms(h_straightChannelBefore, 'chan')
     myplotter.addHistograms(h_straightChannelAfter, 'chan')
     myplotter.addHistograms(h_straightHeightBefore, 'height')
@@ -235,11 +239,17 @@ if __name__ == "__main__":
     myplotter.addHistograms(h_minNPEBefore, 'minNPEBefore')
     myplotter.addHistograms(h_maxNPEAfter, 'maxNPEAfter')
     myplotter.addHistograms(h_minNPEAfter, 'minNPEAfter')
+    myplotter.addHistograms(h_nPEBefore, ['minNPEBefore', 'maxNPEBefore'])
+    myplotter.addHistograms(h_nPEAfter, ['minNPEAfter', 'maxNPEAfter'])
     myplotter.addHistograms(h_minTimeBefore, 'minTimeBefore')
     myplotter.addHistograms(h_maxTimeBefore, 'maxTimeBefore')
     myplotter.addHistograms(h_minTimeAfter, 'minTimeAfter')
     myplotter.addHistograms(h_maxTimeAfter, 'maxTimeAfter')
-    myplotter.addHistograms(h_ABCD, ['straightLineCut', 'timeMaxMinDiff'], 'straightLineCutNew')
+    myplotter.addHistograms(h_timeBefore, ['minTimeBefore', 'maxTimeBefore'])
+    myplotter.addHistograms(h_timeAfter, ['minTimeAfter', 'maxTimeAfter'])
+    myplotter.addHistograms(h_timeDiff, 'timeMaxMinDiff')
+
+    myplotter.addHistograms(h_ABCD, ['straightLineCut', 'timeMaxMinPlotDiff'], 'straightLineCutNew')
 
     cutflow = [mycuts.totalEventCounter, mycuts.fullEventCounter, 
                 mycuts.timeDiff,
@@ -262,7 +272,7 @@ if __name__ == "__main__":
                 nBarsCut,
                 myplotter.dict['h_nBarsAfterCut'],
 
-                #beamMuonPanelVeto,
+                beamMuonPanelVeto,
 
                 barsCut,
 

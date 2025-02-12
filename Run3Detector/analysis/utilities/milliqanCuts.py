@@ -371,12 +371,12 @@ class milliqanCuts():
         barHits = self.events['layer'][self.events['type'] == 0]
         nLayers = ak.values_astype(ak.any(barHits==0, axis=1), np.int32) + ak.values_astype(ak.any(barHits==1, axis=1), np.int32) + ak.values_astype(ak.any(barHits==2, axis=1), np.int32) + ak.values_astype(ak.any(barHits==3, axis=1), np.int32)
         _, nLayers = ak.broadcast_arrays(self.events.npulses, nLayers)
-        self.events[cutName] = nLayers
+        self.events[cutName] = (nLayers == nLayerCut)
         if cutName not in self.branches:
             self.branches.append(cutName)
 
         if cut:
-            self.cutBranches(branches, cutName+'Cut')
+            self.cutBranches(branches, cutName)
 
     #creates mask/cut vetoing any event with > nBarsCut bars hit
     @mqCut
@@ -463,6 +463,12 @@ class milliqanCuts():
         if cut:
             self.cutBranches(branches, cutName)   
 
+    @mqCut
+    def nPEMaxCut(self, cutName='nPEMaxCut', nPECut=20, cut=False, branches=None):
+        self.events[cutName] = self.events.nPE < int(nPECut)
+        if cut:
+            self.cutBranches(branches, cutName)
+
     #creates mask/cut selecting bars only (no panels)
     @mqCut
     def barCut(self, cutName='barCut', cut=False, branches=None):
@@ -519,6 +525,47 @@ class milliqanCuts():
 
         if cut:
             self.cutBranches(branches, cutName)
+
+    #test allowing one panel to be hit
+    @mqCut
+    def panelVetoMod(self, cutName='panelVeto', areaCut=None, nPECut=None, cut=False, panelsAllowed=0, branches=None):
+
+        panelNumVeto = ak.sum(self.events['type'] == 2, axis=1) > panelsAllowed
+        if nPECut is not None:
+            panelHitVeto = ak.any((self.events['type'] == 2) & (self.events['nPE'] > nPECut), axis=1)
+            panelVeto = panelHitVeto | panelNumVeto
+        elif areaCut is not None:
+            panelHitVeto = ak.any((self.events['type'] == 2) & (self.events['area'] > areaCut), axis=1)
+            panelVeto = panelHitVeto | panelNumVeto
+        else:
+            panelVeto = panelNumVeto
+
+        panelVeto = ~panelVeto
+        nPEBeforeCut = self.events['nPE'][self.events['type']==2]
+        areaBeforeCut = self.events['area'][self.events['type']==2]
+
+        goodEvent = (ak.count(self.events['nPE'], axis=1) > 0)
+        _, goodEvent = ak.broadcast_arrays(self.events.nPE, goodEvent)
+        hitsBeforeCut = ak.where(goodEvent, ak.count(nPEBeforeCut, axis=1, keepdims=True), -1)
+
+        self.events[cutName+'NPEBefore'] = nPEBeforeCut
+        self.events[cutName+'HitsBefore'] = hitsBeforeCut
+        self.events[cutName+'AreaBefore'] = areaBeforeCut
+        
+        _, cutAfter = ak.broadcast_arrays(nPEBeforeCut, panelVeto)
+        _, panelVeto = ak.broadcast_arrays(self.events.npulses, panelVeto)
+
+        nPEAfterCut = nPEBeforeCut[cutAfter]
+        areaAfterCut = areaBeforeCut[cutAfter]
+        hitsAfterCut = ak.where(goodEvent&panelVeto, ak.count(nPEBeforeCut, axis=1, keepdims=True), -1)
+        self.events[cutName+'NPEAfter']  = nPEAfterCut
+        self.events[cutName+'HitsAfter'] = hitsAfterCut
+        self.events[cutName+'AreaAfter'] = areaAfterCut
+
+        self.events[cutName] = panelVeto
+
+        if cut:
+            self.cutBranches(branches, cutName)
     
     #creates mask/cut vetoing any event with front/back panel hit w/ nPE > nPECut
     @mqCut
@@ -545,6 +592,19 @@ class milliqanCuts():
 
         if cut:
             self.cutBranches(branches, cutName)
+
+    #requirement to have at least one front/back panel hit in an event
+    @mqCut
+    def requireFrontBackPanel(self, cutName='frontBackPanelRequired', cut=False, branches=None):
+
+        panelCut = ak.any(self.events['type'] == 1, axis=1)
+        _, panelCut = ak.broadcast_arrays(self.events['npulses'], panelCut)
+
+        self.events['frontBackPanelRequired'] = panelCut
+
+        if cut:
+            self.cutBranches(branches, cutName)
+
 
     ######################################
     ## Geometric Selections
@@ -632,8 +692,9 @@ class milliqanCuts():
 
         for x in range(4):
             for y in range(4):
-                if(x == 0 and y == 0): straight_pulse = (straight_cuts[4*x+y]) & (self.events.column == x) & (self.events.row == y)
-                else: straight_pulse = (straight_pulse) | ((straight_cuts[4*x+y]) & (self.events.column == x) & (self.events.row == y))
+                _, this_straightCut = ak.broadcast_arrays(self.events['npulses'], straight_cuts[4*x+y])
+                if(x == 0 and y == 0): straight_pulse = (this_straightCut) & (self.events['column'] == x) & (self.events['row'] == y)
+                else: straight_pulse = (straight_pulse) | ((this_straightCut) & (self.events['column'] == x) & (self.events['row'] == y))
 
 
         self.events['numStraightPaths'] = ak.sum(straight_pulse, axis=1) / 4
@@ -644,6 +705,7 @@ class milliqanCuts():
             straight_pulse = straight_pulse[maskMultiple] #ak.mask(straight_pulse, maskMultiple)
 
         self.events[cutName+'Pulse'] = straight_pulse
+        #print("straight pulses", straight_pulse[ak.where(ak.any(straight_pulse, axis=1))])
 
         #get self.events passing 1 bar movement
         if allowedMove:
@@ -682,8 +744,8 @@ class milliqanCuts():
 
     #creates cut/mask on 3 pulses in a line
     @mqCut
-    def threeInLine(self, cutName='threeInLine', cut=False, branches=None):
-        npeCut = 2
+    def threeInLine(self, cutName='threeInLine', cut=False, pulseCut=True, branches=None):
+        npeCut = 0
 
         for path in range(16):
 
@@ -730,7 +792,14 @@ class milliqanCuts():
             else:
                 allPaths = allPaths | allPulses
 
-        self.events['threeHitPath_allPulses'] = allPaths
+        if pulseCut:
+            self.events['threeHitPath_allPulses'] = allPaths
+        else:
+            _, mask = ak.broadcast_arrays(self.events['npulses'], ak.any(allPaths, axis=1))
+            self.events['threeHitPath_allPulses'] = mask
+
+        if cut:
+            self.cutBranches(branches, 'threeHitPath_allPulses')
 
     ##################################
     ## Pulse Timing Cuts
@@ -806,9 +875,19 @@ class milliqanCuts():
 
     #creates mask/cut vetoing any event with min/max pulse time difference < timeCut
     @mqCut
-    def timeMaxMin(self, cutName='timeMaxMin', timeCut=20, cut=False, branches=None):
-        maxTime = ak.max(self.events['timeFit_module_calibrated'][self.events['type']==0], axis=1, keepdims=True)
-        minTime = ak.min(self.events['timeFit_module_calibrated'][self.events['type']==0], axis=1, keepdims=True)
+    def timeMaxMin(self, cutName='timeMaxMin', timeCut=40, straight=True, cut=False, branches=None):
+
+        timesMask = (self.events['type']==0)
+
+        times = self.events['timeFit_module_calibrated']
+        if straight:
+            timesMask = self.events['straightLineCutPulse']
+            times = ak.where(ak.any(self.events['straightLineCutPulse'], axis=1), 
+                             self.events['timeFit_module_calibrated'][self.events['straightLineCutPulse']], 
+                             self.events['timeFit_module_calibrated'])
+        
+        maxTime = ak.max(times, axis=1, keepdims=True)
+        minTime = ak.min(times, axis=1, keepdims=True)
 
         self.events['minTimeBefore'] = minTime
         self.events['maxTimeBefore'] = maxTime
@@ -819,21 +898,18 @@ class milliqanCuts():
         timeCut = ak.fill_none(timeCut, False)
 
         _, timeCutMod = ak.broadcast_arrays(maxTime, timeCut)
-        _, timeDiff = ak.broadcast_arrays(maxTime, timeDiff)
         self.events['minTimeAfter'] = minTime[timeCutMod] 
         self.events['maxTimeAfter'] = maxTime[timeCutMod]
 
         _, timeCut = ak.broadcast_arrays(self.events.npulses, timeCut)
-        _, timeDiff = ak.broadcast_arrays(self.events.npulses, timeDiff)
 
         self.events[cutName] = timeCut
         self.events[cutName+'Diff'] = timeDiff
-        
+
         if cut:
             self.cutBranches(branches, cutName)
 
     #calculates time difference between bar hits in layers 0/3
-
     @mqCut
     def timeDiff(self, cutName='timeDiff', branches=None):
 
@@ -874,6 +950,16 @@ class milliqanCuts():
         if cut:
             self.cutBranches(branches, cutName)
 
+
+    #prints out the run/file/event number of passing pulses
+    @mqCut
+    def printEvents(self):
+        runs = ak.drop_none(ak.firsts(self.events['runNumber']))
+        files = ak.drop_none(ak.firsts(self.events['fileNumber']))
+        events = ak.drop_none(ak.firsts(self.events['event']))
+        for i, (run, file, event) in enumerate(zip(runs, files, events)):
+            print(f'{i}: run: {run}, file: {file}, event: {event}')        
+    
 
 
 

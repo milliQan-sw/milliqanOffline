@@ -43,8 +43,10 @@ void myLooper::Loop( TString outFile, TString lumi, TString runTime)
       if (chan->size() != area->size()) {
 	    std::cout << "Different sizes" << endl;
       }
+      if(runNumber == 1464) continue; //remove once good runs list is fixed
 
       if(tTrigger != 4096) continue;
+      if(abs(tTimeDiff) > 250) continue;
 
 	tout->Fill();
 	passed = passed + 1;

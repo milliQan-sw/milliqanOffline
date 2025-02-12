@@ -125,7 +125,7 @@ class milliqanProcessor():
 
                     else:
                         print("MilliQan Processor: Branch {0} does not exist in event array or custom output".format(branch.variables))
-                        break
+                        continue
             else:
                 branch()
         return events
@@ -174,6 +174,7 @@ class milliqanProcessor():
             _, events['tTrigger'] = ak.broadcast_arrays(events[broadcastChan], events['tTrigger'])
             _, events['event'] = ak.broadcast_arrays(events[broadcastChan], events['event'])
             _, events['boardsMatched'] = ak.broadcast_arrays(events[broadcastChan], events['boardsMatched'])
+            events['fullSelection'] = ak.full_like(events[broadcastChan], True) #2/4
 
             if self.max_events and total_events >= self.max_events: break
 

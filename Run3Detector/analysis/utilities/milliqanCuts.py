@@ -86,6 +86,8 @@ class milliqanCuts():
         if name in self.cutflow:
 
             remaining = ak.sum(self.events['fileNumber'], axis=1) >= threshold
+            #remaining = ak.sum(self.events['fileNumber'][self.events['fullSelection']], axis=1) >= threshold #2/4
+
             remaining = self.events['fileNumber'][remaining]
             self.cutflow[name]['events'] += len(remaining)
             self.cutflow[name]['pulses'] += len(ak.flatten(self.events['fileNumber']))
@@ -144,6 +146,8 @@ class milliqanCuts():
     def cutBranches(self, branches, cutName):
 
         perChanBranches = ['sidebandRMS']
+
+        #self.events['fullSelection'] = self.events['fullSelection'] & self.events[cutName] #2/4
 
         for branch in branches:
             if branch in perChanBranches:
@@ -567,6 +571,47 @@ class milliqanCuts():
         if cut:
             self.cutBranches(branches, cutName)
     
+    #test allowing one panel to be hit
+    @mqCut
+    def panelVetoMod(self, cutName='panelVeto', areaCut=None, nPECut=None, cut=False, panelsAllowed=0, branches=None):
+
+        panelNumVeto = ak.sum(self.events['type'] == 2, axis=1) > panelsAllowed
+        if nPECut is not None:
+            panelHitVeto = ak.any((self.events['type'] == 2) & (self.events['nPE'] > nPECut), axis=1)
+            panelVeto = panelHitVeto | panelNumVeto
+        elif areaCut is not None:
+            panelHitVeto = ak.any((self.events['type'] == 2) & (self.events['area'] > areaCut), axis=1)
+            panelVeto = panelHitVeto | panelNumVeto
+        else:
+            panelVeto = panelNumVeto
+
+        panelVeto = ~panelVeto
+        nPEBeforeCut = self.events['nPE'][self.events['type']==2]
+        areaBeforeCut = self.events['area'][self.events['type']==2]
+
+        goodEvent = (ak.count(self.events['nPE'], axis=1) > 0)
+        _, goodEvent = ak.broadcast_arrays(self.events.nPE, goodEvent)
+        hitsBeforeCut = ak.where(goodEvent, ak.count(nPEBeforeCut, axis=1, keepdims=True), -1)
+
+        self.events[cutName+'NPEBefore'] = nPEBeforeCut
+        self.events[cutName+'HitsBefore'] = hitsBeforeCut
+        self.events[cutName+'AreaBefore'] = areaBeforeCut
+        
+        _, cutAfter = ak.broadcast_arrays(nPEBeforeCut, panelVeto)
+        _, panelVeto = ak.broadcast_arrays(self.events.npulses, panelVeto)
+
+        nPEAfterCut = nPEBeforeCut[cutAfter]
+        areaAfterCut = areaBeforeCut[cutAfter]
+        hitsAfterCut = ak.where(goodEvent&panelVeto, ak.count(nPEBeforeCut, axis=1, keepdims=True), -1)
+        self.events[cutName+'NPEAfter']  = nPEAfterCut
+        self.events[cutName+'HitsAfter'] = hitsAfterCut
+        self.events[cutName+'AreaAfter'] = areaAfterCut
+
+        self.events[cutName] = panelVeto
+
+        if cut:
+            self.cutBranches(branches, cutName)
+    
     #creates mask/cut vetoing any event with front/back panel hit w/ nPE > nPECut
     @mqCut
     def beamMuonPanelVeto(self, cutName='beamMuonPanelVeto', cut=False, nPECut=100, branches=None):
@@ -605,7 +650,6 @@ class milliqanCuts():
         if cut:
             self.cutBranches(branches, cutName)
 
-
     ######################################
     ## Geometric Selections
     #######################################
@@ -619,9 +663,6 @@ class milliqanCuts():
         #allowed combinations of moving
         combos = []
         straight_cuts = []
-
-        #bool to decide if 1 bar movement should be found
-        allowedMove = False
 
         for i, x in enumerate(range(4)):
             for j, y in enumerate(range(4)):
@@ -639,7 +680,6 @@ class milliqanCuts():
 
                 if allowedMove:
 
-                    print("Allowing move")
                     rowCut_p1 = self.events.row == y+1
                     rowCut_m1 = self.events.row == y-1
                     colCut_p1 = self.events.column == x+1
@@ -663,21 +703,23 @@ class milliqanCuts():
                         p3_c1_r0 = (rowCut[self.events.layer==3]) & (colCut_p1[self.events.layer==3])
 
                     if(x > 0):
-                        combos.append(ak.any(r_tmp0, axis=1) & ak.any(r_tmp1, axis=1) & ak.any(r_tmp2, axis=1) & ak.any(m3_c1_r0, axis=1)) #layer3 col decrease
-                        combos.append( ak.any(r_tmp0, axis=1) & ak.any(r_tmp1, axis=1) & ak.any(m2_c1_r0, axis=1) & ak.any(m3_c1_r0, axis=1)) #layer2 col decrease
-                        combos.append( ak.any(r_tmp0, axis=1) & ak.any(m1_c1_r0, axis=1) & ak.any(m2_c1_r0, axis=1) & ak.any(m3_c1_r0, axis=1)) #layer1 col decrease
+                        straight_cuts.append(ak.any(r_tmp0, axis=1) & ak.any(r_tmp1, axis=1) & ak.any(r_tmp2, axis=1) & ak.any(m3_c1_r0, axis=1)) #layer3 col decrease
+                        straight_cuts.append( ak.any(r_tmp0, axis=1) & ak.any(r_tmp1, axis=1) & ak.any(m2_c1_r0, axis=1) & ak.any(m3_c1_r0, axis=1)) #layer2 col decrease
+                        straight_cuts.append( ak.any(r_tmp0, axis=1) & ak.any(m1_c1_r0, axis=1) & ak.any(m2_c1_r0, axis=1) & ak.any(m3_c1_r0, axis=1)) #layer1 col decrease
                     if(y > 0):
-                        combos.append(ak.any(r_tmp0, axis=1) & ak.any(r_tmp1, axis=1) & ak.any(r_tmp2, axis=1) & ak.any(m3_c0_r1, axis=1)) #layer3 row decrease
-                        combos.append( ak.any(r_tmp0, axis=1) & ak.any(r_tmp1, axis=1) & ak.any(m2_c0_r1, axis=1) & ak.any(m3_c0_r1, axis=1)) #layer2 row decrease
-                        combos.append( ak.any(r_tmp0, axis=1) & ak.any(m1_c0_r1, axis=1) & ak.any(m2_c0_r1, axis=1) & ak.any(m3_c0_r1, axis=1)) #layer1 row decrease
+                        straight_cuts.append(ak.any(r_tmp0, axis=1) & ak.any(r_tmp1, axis=1) & ak.any(r_tmp2, axis=1) & ak.any(m3_c0_r1, axis=1)) #layer3 row decrease
+                        straight_cuts.append( ak.any(r_tmp0, axis=1) & ak.any(r_tmp1, axis=1) & ak.any(m2_c0_r1, axis=1) & ak.any(m3_c0_r1, axis=1)) #layer2 row decrease
+                        straight_cuts.append( ak.any(r_tmp0, axis=1) & ak.any(m1_c0_r1, axis=1) & ak.any(m2_c0_r1, axis=1) & ak.any(m3_c0_r1, axis=1)) #layer1 row decrease
                     if(x < 4):
-                        combos.append(ak.any(r_tmp0, axis=1) & ak.any(r_tmp1, axis=1) & ak.any(r_tmp2, axis=1) & ak.any(p3_c1_r0, axis=1)) #layer3 col increase
-                        combos.append( ak.any(r_tmp0, axis=1) & ak.any(r_tmp1, axis=1) & ak.any(p2_c1_r0, axis=1) & ak.any(p3_c1_r0, axis=1)) #layer2 col increase
-                        combos.append( ak.any(r_tmp0, axis=1) & ak.any(p1_c1_r0, axis=1) & ak.any(p2_c1_r0, axis=1) & ak.any(p3_c1_r0, axis=1)) #layer1 col increase
+                        straight_cuts.append(ak.any(r_tmp0, axis=1) & ak.any(r_tmp1, axis=1) & ak.any(r_tmp2, axis=1) & ak.any(p3_c1_r0, axis=1)) #layer3 col increase
+                        straight_cuts.append( ak.any(r_tmp0, axis=1) & ak.any(r_tmp1, axis=1) & ak.any(p2_c1_r0, axis=1) & ak.any(p3_c1_r0, axis=1)) #layer2 col increase
+                        straight_cuts.append( ak.any(r_tmp0, axis=1) & ak.any(p1_c1_r0, axis=1) & ak.any(p2_c1_r0, axis=1) & ak.any(p3_c1_r0, axis=1)) #layer1 col increase
                     if(y < 4):
-                        combos.append(ak.any(r_tmp0, axis=1) & ak.any(r_tmp1, axis=1) & ak.any(r_tmp2, axis=1) & ak.any(p3_c0_r1, axis=1)) #layer3 row increase
-                        combos.append( ak.any(r_tmp0, axis=1) & ak.any(r_tmp1, axis=1) & ak.any(p2_c0_r1, axis=1) & ak.any(p3_c0_r1, axis=1)) #layer2 row increase
-                        combos.append( ak.any(r_tmp0, axis=1) & ak.any(p1_c0_r1, axis=1) & ak.any(p2_c0_r1, axis=1) & ak.any(p3_c0_r1, axis=1)) #layer1 row increase
+                        straight_cuts.append(ak.any(r_tmp0, axis=1) & ak.any(r_tmp1, axis=1) & ak.any(r_tmp2, axis=1) & ak.any(p3_c0_r1, axis=1)) #layer3 row increase
+                        straight_cuts.append( ak.any(r_tmp0, axis=1) & ak.any(r_tmp1, axis=1) & ak.any(p2_c0_r1, axis=1) & ak.any(p3_c0_r1, axis=1)) #layer2 row increase
+                        straight_cuts.append( ak.any(r_tmp0, axis=1) & ak.any(p1_c0_r1, axis=1) & ak.any(p2_c0_r1, axis=1) & ak.any(p3_c0_r1, axis=1)) #layer1 row increase
+
+                    #straight_cuts.extend(combos)
 
                 straight_cuts.append(row_pass)
         
@@ -685,6 +727,7 @@ class milliqanCuts():
             if ipath == 0: straight_path = path
             else: straight_path = straight_path | path
 
+        
         self.events[cutName] = straight_path
 
         remaining = ak.sum(self.events['fileNumber'], axis=1) >= 1
@@ -707,7 +750,7 @@ class milliqanCuts():
         self.events[cutName+'Pulse'] = straight_pulse
         #print("straight pulses", straight_pulse[ak.where(ak.any(straight_pulse, axis=1))])
 
-        #get self.events passing 1 bar movement
+        #get self.events passing 1 bar allowedMove
         if allowedMove:
             for ipath, path in enumerate(combos):
                 if ipath == 0: passing = path
@@ -715,8 +758,75 @@ class milliqanCuts():
 
             self.events['moveOnePath'] = passing
 
+
         if cut:
             self.cutBranches(branches, cutName+'Pulse')
+
+    #modified version of straight line cut to allow any straight line path
+    #allowed move=True will allow any straight line path through the detector
+    @mqCut
+    def straightLineCutMod(self, cutName='straightLineCutMod', allowedMove=False, cut=False, branches=None):
+        
+        combos = ak.argcombinations(self.events['row'], 4)
+
+        for i in range(4):
+            this_layer = (self.events['layer'][combos['0']] == i) | \
+                        (self.events['layer'][combos['1']] == i) | \
+                        (self.events['layer'][combos['2']] == i) | \
+                        (self.events['layer'][combos['3']] == i) 
+            if i == 0:
+                layer_req = this_layer
+            else:
+                layer_req = layer_req & this_layer
+
+        
+        row01 = abs(self.events['row'][combos['0']] - self.events['row'][combos['1']]) <= allowedMove
+        row02 = abs(self.events['row'][combos['0']] - self.events['row'][combos['2']]) <= allowedMove
+        row03 = abs(self.events['row'][combos['0']] - self.events['row'][combos['3']]) <= allowedMove
+        row12 = abs(self.events['row'][combos['1']] - self.events['row'][combos['2']]) <= allowedMove
+        row13 = abs(self.events['row'][combos['1']] - self.events['row'][combos['3']]) <= allowedMove
+        row23 = abs(self.events['row'][combos['2']] - self.events['row'][combos['3']]) <= allowedMove
+
+        row_req = (ak.values_astype(row01, np.int32) + \
+                ak.values_astype(row02, np.int32) + \
+                ak.values_astype(row03, np.int32) + \
+                ak.values_astype(row12, np.int32) + \
+                ak.values_astype(row13, np.int32) + \
+                ak.values_astype(row23, np.int32)) >= 4
+
+        col01 = abs(self.events['column'][combos['0']] - self.events['column'][combos['1']]) <= allowedMove
+        col02 = abs(self.events['column'][combos['0']] - self.events['column'][combos['2']]) <= allowedMove
+        col03 = abs(self.events['column'][combos['0']] - self.events['column'][combos['3']]) <= allowedMove
+        col12 = abs(self.events['column'][combos['1']] - self.events['column'][combos['2']]) <= allowedMove
+        col13 = abs(self.events['column'][combos['1']] - self.events['column'][combos['3']]) <= allowedMove
+        col23 = abs(self.events['column'][combos['2']] - self.events['column'][combos['3']]) <= allowedMove
+
+        col_req = (ak.values_astype(col01, np.int32) + \
+                   ak.values_astype(col02, np.int32) + \
+                   ak.values_astype(col03, np.int32) + \
+                   ak.values_astype(col12, np.int32) + \
+                   ak.values_astype(col13, np.int32) + \
+                   ak.values_astype(col23, np.int32)) >= 4
+
+        straightTest = layer_req & col_req & row_req
+
+        straightTestAny = ak.any(straightTest, axis=1)
+
+        _, straightTestAny = ak.broadcast_arrays(self.events['npulses'], straightTestAny)
+
+        passingCombos = combos[straightTest]
+        
+        newCombos = ak.concatenate([passingCombos['0'], passingCombos['1'], passingCombos['2'], passingCombos['3']], axis=1)
+
+        newMask = self.events['layer'] == 100 #create false array intentionally
+
+        indices = ak.Array([np.arange(len(x)) for x in newMask])
+        newMask = ak.Array([np.isin(x, newCombos[i]) for i, x in enumerate(indices)])
+
+        self.events[cutName+'Pulse'] = newMask
+
+        if cut:
+            self.cutBranches(branches, cutName+'Pulse')        
 
     #select self.events that have 3 area saturating pulses in a line
     @mqCut
@@ -943,6 +1053,37 @@ class milliqanCuts():
         _, nPECutMod = ak.broadcast_arrays(maxNPE, nPECut)
         self.events['maxNPEAfter'] = maxNPE[nPECutMod] 
         self.events['minNPEAfter'] = minNPE[nPECutMod]
+        self.events['nPERatio'] = nPERatio
+
+        _, nPECut = ak.broadcast_arrays(self.events.npulses, nPECut)
+
+        self.events[cutName] = nPECut
+        if cut:
+            self.cutBranches(branches, cutName)
+
+
+    #cuts on std dev between max/min nPE pulses
+    @mqCut
+    def nPEStdDev(self, cutName='nPEStdDev', cut=False, std=5, branches=None):
+
+        maxNPE = ak.max(self.events['nPE'][self.events['type']==0], axis=1, keepdims=True)
+        minNPE = ak.min(self.events['nPE'][self.events['type']==0], axis=1, keepdims=True)
+        
+        self.events['maxNPEBefore'] = maxNPE
+        self.events['minNPEBefore'] = minNPE
+
+        nPEStdDev = np.sqrt(minNPE)
+        nPEDiff = maxNPE - minNPE
+        nPEMaxMinStd = nPEDiff / nPEStdDev
+
+        nPECut = nPEMaxMinStd <= std
+
+        nPECut = ak.fill_none(nPECut, False)
+
+        _, nPECutMod = ak.broadcast_arrays(maxNPE, nPECut)
+        self.events['maxNPEAfter'] = maxNPE[nPECutMod] 
+        self.events['minNPEAfter'] = minNPE[nPECutMod]
+        self.events['nPEStd'] = nPEMaxMinStd
 
         _, nPECut = ak.broadcast_arrays(self.events.npulses, nPECut)
 
@@ -957,8 +1098,10 @@ class milliqanCuts():
         runs = ak.drop_none(ak.firsts(self.events['runNumber']))
         files = ak.drop_none(ak.firsts(self.events['fileNumber']))
         events = ak.drop_none(ak.firsts(self.events['event']))
+        chans = ak.drop_none(ak.flatten(self.events['chan']))
         for i, (run, file, event) in enumerate(zip(runs, files, events)):
-            print(f'{i}: run: {run}, file: {file}, event: {event}')        
+            print(f'{i}: run: {run}, file: {file}, event: {event}, channels: {chans}')        
+
     
 
 

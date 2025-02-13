@@ -48,7 +48,6 @@ def cosmicMuonCut(self, cutName='cosmicMuonCut', nBarsRequired = 2, areaCut=10e3
     if cut:
         self.cutBranches(branches, cutName)
 
-
 @mqCut
 def frontBackPanelInfo(self, cutName='frontBackPanelInfo', cut=False, branches=None):
 
@@ -77,7 +76,7 @@ if __name__ == "__main__":
     beam = False
     skim = True
     sim = True
-    outputFile = 'bgCutPanelAnalysis.root'
+    outputFile = 'bgCutPanelAnalysis_debugging.root'
     qualityLevel = 'tight'
     maxEvents = None
     stepSize = 20000
@@ -129,11 +128,13 @@ if __name__ == "__main__":
 
     goodRunsName = '/eos/experiment/milliqan/Configs/goodRunsList.json'
     lumisName = '/eos/experiment/milliqan/Configs/mqLumis.json'
-    shutil.copy(goodRunsName, 'goodRunsList.json')
-    shutil.copy(lumisName, 'mqLumis.json')
+    #shutil.copy(goodRunsName, 'goodRunsList.json')
+    #shutil.copy(lumisName, 'mqLumis.json')
+    #os.system('cp /eos/experiment/milliqan/Configs/mqLumis.json .')
+    #os.system('cp /eos/experiment/milliqan/Configs/goodRunsList.json .')
 
-    goodRuns = loadJson('goodRunsList.json')
-    lumis = loadJson('mqLumis.json')
+    #goodRuns = loadJson('goodRunsList.json')
+    #lumis = loadJson('mqLumis.json')
 
     if skim:
         lumi, runTime = getSkimLumis(filelist)
@@ -152,7 +153,6 @@ if __name__ == "__main__":
 
     setattr(milliqanCuts, "frontBackPanelInfo", frontBackPanelInfo)
     setattr(milliqanCuts, "comsicMuonCut", cosmicMuonCut)
-
 
     #require pulses are in trigger window
     centralTimeCut = getCutMod(mycuts.centralTime, mycuts, 'centralTimeCut', cut=makeCut)
@@ -180,7 +180,7 @@ if __name__ == "__main__":
     vetoEarlyPulse = getCutMod(mycuts.vetoEarlyPulse, mycuts, 'vetoEarlyPulse', cut=makeCut)
 
     #four in line cut
-    straightLineCutMod = getCutMod(mycuts.straightLineCut, mycuts, 'straightLineCutMod', cut=makeCut)
+    straightLineCutMod = getCutMod(mycuts.straightLineCut, mycuts, 'straightLineCutMod', cut=makeCut, cutPulse=False, outerBars=False, innerBars=True)
 
     #npe max-min < 10 cut
     nPEMaxMin = getCutMod(mycuts.nPEMaxMin, mycuts, 'nPEMaxMin', nPECut=20, cut=makeCut)
@@ -197,6 +197,7 @@ if __name__ == "__main__":
 
     #require # bars in event  < cut
     nBarsCut = getCutMod(mycuts.nBarsCut, mycuts, 'nBarsCut', nBarsCut=4, cut=makeCut)
+    nBarsCutInvert = getCutMod(mycuts.nBarsCutInvert, mycuts, 'nBarsCutInvert', nBarsCut=4, cut=makeCut)
 
     #require < nBars within deltaT
     nBarsDeltaTCut = getCutMod(mycuts.nBarsDeltaTCut, mycuts, 'nBarsDeltaTCut', nBarsCut=4, timeCut=100, cut=makeCut)
@@ -214,20 +215,24 @@ if __name__ == "__main__":
     frontBackPanelRequired = getCutMod(mycuts.requireFrontBackPanel, mycuts, 'frontBackPanelRequired', cut=makeCut)
 
     cosmicMuonCut = getCutMod(cosmicMuonCut, mycuts, 'cosmicMuonCut', cut=makeCut)
+
+    centralQuad = getCutMod(mycuts.centralQuad, mycuts, 'centralQuad', cut=makeCut)
     
     h_frontPanelHits = r.TH1F('h_frontPanelHits', 'Number of Front Panel Hits;# Panels;Events', 10, 0, 10)
     h_backPanelHits = r.TH1F('h_backPanelHits', 'Number of Back Panel Hits;# Panels;Events', 10, 0, 10)
-    h_frontPanelNPE = r.TH1F('h_frontPanelNPE', 'nPE of Front Panel;nPE;# Pulses', 3000, 0, 6e6)
+    h_frontPanelNPE = r.TH1F('h_frontPanelNPE', 'nPE of Front Panel;nPE;# Pulses', 250, 0, 1000)
     h_frontPanelArea = r.TH1F('h_frontPanelArea', 'Area of Front;Area;# Pulses', 900, 0, 9e5)
-    h_backPanelNPE = r.TH1F('h_backPanelNPE', 'nPE of Back Panel;nPE;# Pulses', 3000, 0, 6e6)
+    h_backPanelNPE = r.TH1F('h_backPanelNPE', 'nPE of Back Panel;nPE;# Pulses', 250, 0, 1000)
     h_backPanelArea = r.TH1F('h_backPanelArea', 'Area of Back Panel;Area;# Pulses', 900, 0, 9e5)
     h_frontPanelHeight = r.TH1F('h_frontPanelHeight', 'Height of Front Panel;Height;# Pulses', 130, 0, 1300)
     h_backPanelHeight = r.TH1F('h_backPanelHeight', 'Height of Back Panel;Height;# Pulses', 130, 0, 1300)
     h_frontPanelAreaVsHeight = r.TH2F('h_frontPanelAreaVsHeight', 'Area vs Height Front Panel;Area;Height', 900, 0, 9e5, 130, 0, 1300)
     h_backPanelAreaVsHeight = r.TH2F('h_backPanelAreaVsHeight', 'Area vs Height Back Panel;Area;Height', 900, 0, 9e5, 130, 0, 1300)
-
+    h_frontPanelNPEVsHeight = r.TH2F('h_frontPanelNPEVsHeight', 'NPE vs Height Front Panel;NPE [pVs];Height', 250, 0, 1000, 130, 0, 1300)
+    h_backPanelNPEVsHeight = r.TH2F('h_backPanelNPEVsHeight', 'NPE vs Height Back Panel;NPE [pVs];Height', 250, 0, 1000, 130, 0, 1300)
     h_frontPanelDurationVsHeight = r.TH2F('h_frontPanelDurationVsHeight', 'Duration vs Height Front Panel', 200, 0, 600, 130, 0, 1300)
     h_backPanelDurationVsHeight = r.TH2F('h_backPanelDurationVsHeight', 'Duration vs Height Back Panel', 200, 0, 600, 130, 0, 1300)
+    h_frontVsBackNPE = r.TH2F('h_frontVsBackNPE', 'NPE in Front/Back Panels;nPE Front;nPE Back', 250, 0, 1000, 250, 0, 1000)
 
     #define milliqan plotter
     myplotter = milliqanPlotter()
@@ -244,18 +249,25 @@ if __name__ == "__main__":
     myplotter.addHistograms(h_backPanelHeight, 'backHeight')
     myplotter.addHistograms(h_frontPanelAreaVsHeight, ['frontArea', 'frontHeight'])
     myplotter.addHistograms(h_backPanelAreaVsHeight, ['backArea', 'backHeight'])
+    myplotter.addHistograms(h_frontPanelNPEVsHeight, ['frontNPE', 'frontHeight'])
+    myplotter.addHistograms(h_backPanelNPEVsHeight, ['backNPE', 'backHeight'])
     myplotter.addHistograms(h_frontPanelDurationVsHeight, ['frontDuration', 'frontHeight'])
     myplotter.addHistograms(h_backPanelDurationVsHeight, ['backDuration', 'backHeight'])
+    myplotter.addHistograms(h_frontVsBackNPE, ['frontNPE', 'backNPE'])
 
 
     
     cutflow = [mycuts.totalEventCounter, 
                 mycuts.fullEventCounter, 
+                mycuts.applyEnergyScaling,
                 boardMatchCut, 
                 pickupCut, 
+                #panelVeto,
                 firstPulseCut,
                 centralTimeCut,
-                cosmicMuonCut,
+                nBarsCutInvert,
+                straightLineCutMod,
+                timeMaxMin,
                 mycuts.frontBackPanelInfo,
             ]
 

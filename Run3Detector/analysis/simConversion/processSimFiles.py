@@ -48,6 +48,11 @@ if __name__ == "__main__":
 
     script_dir = os.path.dirname(os.path.realpath(__file__))
 
+    os.chdir('milliqanOffline/Run3Detector/')
+    os.system('source setup.sh')
+    os.chdir('../../')
+
+
     pulse_output = '/'.join([os.getcwd(), outputFile.split('.root')[0] + '_pulseInjected.root'])
     print("Processing pulse injection {} -> {}".format(inputFile, pulse_output))
 
@@ -68,6 +73,11 @@ if __name__ == "__main__":
     os.system(cmd)
 
     if outputDir != os.getcwd():
-        shutil.move(pulse_output, args.outputDir+'/pulseInjected/')
-        shutil.move(tmp_output, args.outputDir+'/globalEvent/')
+        print(f"Moving {outputFile} to {args.outputDir+'/trees/'}")
         shutil.move(outputFile, args.outputDir+'/trees/')
+        os.chdir('../../')
+        print(f"Moving {pulse_output} to {args.outputDir+'/pulseInjected/'}")
+        shutil.move(pulse_output, args.outputDir+'/pulseInjected/')
+        print(f"Moving {tmp_output} to {args.outputDir+'/globalEvent/'}")
+        shutil.move(tmp_output, args.outputDir+'/globalEvent/')
+

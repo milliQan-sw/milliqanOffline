@@ -658,8 +658,8 @@ class milliqanCuts():
         self.events['backPanelNPEBefore'] = self.events['nPE'][(self.events['layer'] == 4) & panelCut]
         self.events['frontPanelNPEAfter'] = self.events['nPE'][(self.events['layer'] == -1) & panelCut & finalCut]
         self.events['backPanelNPEAfter'] = self.events['nPE'][(self.events['layer'] == 4) & panelCut & finalCut]
-
-
+        self.events['maxPanelNPE'] = ak.max(self.events['nPE'][panelCut], axis=1)
+        
         if cut:
             self.cutBranches(branches, cutName)
 

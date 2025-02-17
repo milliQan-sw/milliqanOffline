@@ -19,12 +19,6 @@ def checkGoodRun(goodRuns, run, file, branch='goodRunTight'):
         return goodRun[0]
     return False
 
-shutil.copy('/eos/experiment/milliqan/Configs/mqLumis.json', os.getcwd())
-shutil.copy('/eos/experiment/milliqan/Configs/goodRunsList.json', os.getcwd())
-
-mqLumis = pd.read_json('mqLumis.json', orient = 'split', compression = 'infer')
-goodRuns = pd.read_json('goodRunsList.json', orient = 'split', compression = 'infer')
-
 ########################################################
 ################### Settings ##########################
 directory = '/store/user/milliqan/trees/v35/slab/1000/'

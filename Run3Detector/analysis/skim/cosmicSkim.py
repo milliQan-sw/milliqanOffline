@@ -52,68 +52,51 @@ def Loop(fChain, outFile, lumi, runTime):
         if fChain.chan.size() != fChain.area.size():
             print("Different sizes in 'chan' and 'area' for entry", jentry)
 
-        # Create a 16x4 array (list of lists) to track hit paths
-        straightPathsHit = [[False for _ in range(4)] for _ in range(16)]
-
-        # Flags for front and back panel hits
-        frontPanelHit = False
-        backPanelHit = False
+        # The following block was originally used to collect information for the straight-line cut.
+        # Since we are deactivating that cut, you can remove or comment out the block if it's no longer needed.
+        # For now, we'll leave it commented out.
+        #
+        # # Create a 16x4 array (list of lists) to track hit paths
+        # straightPathsHit = [[False for _ in range(4)] for _ in range(16)]
+        #
+        # # Flags for front and back panel hits
+        # frontPanelHit = False
+        # backPanelHit = False
 
         # Loop over the elements in the event (assuming vector branches)
         nElements = fChain.chan.size()
         for k in range(nElements):
-            # Check the type branch
-            if fChain.type.at(k) == 2:
-                if fChain.layer.at(k) == 0:
-                    frontPanelHit = True
-                if fChain.layer.at(k) == 2:
-                    backPanelHit = True
+            # Check the type branch for panel hits (if needed for other cuts)
+            # This block remains in case panel information is required elsewhere.
+            # if fChain.type.at(k) == 2:
+            #     if fChain.layer.at(k) == 0:
+            #         frontPanelHit = True
+            #     if fChain.layer.at(k) == 2:
+            #         backPanelHit = True
 
             # Apply a series of cuts
             if fChain.pickupFlagTight.at(k):
                 continue
-            if fChain.type.at(k) != 0:
+            if fChain.boardsMatched.at(k):
+                continue
+            if fChain.type.at(k) != 1:
                 continue
             if fChain.ipulse.at(k) != 0:
                 continue
             time_val = fChain.timeFit_module_calibrated.at(k)
             if time_val < 900 or time_val > 1500:
                 continue
-            if fChain.height.at(k) < 15:
-                continue
             if fChain.area.at(k) < minArea:
                 continue
 
-            # Determine index based on layer and column
-            index = fChain.layer.at(k) * 4 + fChain.column.at(k)
-            row = fChain.row.at(k)
-            # Mark that the straight path (at given index and row) has been hit
-            straightPathsHit[index][row] = True
+            # Originally, you marked hits for the straight-line cut here:
+            # index = fChain.layer.at(k) * 4 + fChain.column.at(k)
+            # row = fChain.row.at(k)
+            # straightPathsHit[index][row] = True
 
-        # Check if the event qualifies by having at least 3 hits in any allowed path
-        straightLineEvent = False
-        for i in range(16):
-            # Only check the corresponding panel if it was hit
-            if i < 8 and not frontPanelHit:
-                continue
-            if i >= 8 and not backPanelHit:
-                continue
-
-            # Count the number of hit rows in this straight path
-            straightPathCount = 0
-            for j in range(4):
-                if straightPathsHit[i][j]:
-                    straightPathCount += 1
-                if straightPathCount >= 3:
-                    straightLineEvent = True
-                    break
-            if straightLineEvent:
-                break
-
-        # If the event passes the straight-line criteria, fill the output tree
-        if straightLineEvent:
-            tout.Fill()
-            passed += 1
+        # Since the straight-line cut is deactivated, we simply fill every event.
+        tout.Fill()
+        passed += 1
 
     # Write the output tree and additional objects to the ROOT file
     foutput.WriteTObject(tout)

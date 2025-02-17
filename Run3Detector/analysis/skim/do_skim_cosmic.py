@@ -90,7 +90,7 @@ if nEntries > 0:
     if skimType == 'beam':
         r.gROOT.LoadMacro("beamMuonSkim.C")
     elif skimType == 'cosmic':
-        r.gROOT.LoadMacro("cosmicSkim.C")
+        r.gROOT.LoadMacro("cosmicSkimSlab.C")
     elif skimType == 'signal':
         r.gROOT.LoadMacro("signalSkim.C")
 

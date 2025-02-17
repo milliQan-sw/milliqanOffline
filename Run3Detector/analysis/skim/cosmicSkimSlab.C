@@ -67,11 +67,6 @@ void myLooper::Loop(TString outFile, TString lumi, TString runTime)
       
       // Loop over all elements (hits) in the event
       for (unsigned long k = 0; k < chan->size(); k++) {
-            // Panel info (unchanged)
-            if (type->at(k) == 2) {
-                  if (layer->at(k) == 0) frontPanelHit = true;
-                  if (layer->at(k) == 2) backPanelHit = true;
-            }
             // Apply cuts
             if (pickupFlagTight->at(k)) continue; 
             if (boardsMatched->at(k)) continue;

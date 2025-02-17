@@ -48,58 +48,75 @@ void myLooper::Loop(TString outFile, TString lumi, TString runTime)
       nbytes += nb;
       
       // Provide feedback every 1000 events
-      if ( (jentry % 1000) == 0 ) {
+      if ((jentry % 1000) == 0)
          std::cout << "Processing " << jentry << "/" << nentries << std::endl;
-      }
       
-      // Sanity Check: assume 'chan' and 'area' are vectors.
+      // Sanity check (assuming 'chan' and 'area' are vectors)
       if (chan->size() != area->size()){
          std::cout << "Different sizes in 'chan' and 'area' for entry " << jentry << std::endl;
       }
       
-      // Instead of the previous 16-path (4x4) structure, create a new 2D array
-      // for the new detector: 3 columns x 4 layers.
-      std::vector<std::vector<bool>> columnLayerHit(3, std::vector<bool>(4, false));
+      // Initialize a 3D array to record slab hits.
+      // Dimensions: 4 layers x 4 rows x 3 columns.
+      std::vector<std::vector<std::vector<bool>>> slabHit(
+         4, std::vector<std::vector<bool>>(4, std::vector<bool>(3, false))
+      );
       
-      // (Optional) Flags for panel hits; kept in case they are used elsewhere.
-      bool frontPanelHit = false;
-      bool backPanelHit = false;
-      
-      // Loop over all elements (hits) in the event
-      for (unsigned long k = 0; k < chan->size(); k++) {
-            // Apply cuts
-            if (pickupFlagTight->at(k)) continue; 
-            if (boardsMatched->at(k)) continue;
-            if (ipulse->at(k) != 0) continue;
-            if (timeFit_module_calibrated->at(k) < 900 || timeFit_module_calibrated->at(k) > 1500) continue;
-            if (area->at(k) < minArea) continue;
-            
-            // For the new geometry, record a hit by column and layer.
-            // (Assuming: column->at(k) in {0,1,2} and layer->at(k) in {0,1,2,3})
-            int col = column->at(k);
-            int lay = layer->at(k);
-            if(col < 3 && lay < 4) {
-               columnLayerHit[col][lay] = true;
-            }
+      // Loop over hits in the event
+      for (unsigned long k = 0; k < chan->size(); k++){
+         // Apply the standard cuts
+         if (pickupFlagTight->at(k)) continue;
+         if (boardsMatched->at(k)) continue;
+         if (ipulse->at(k) != 0) continue;
+         if (timeFit_module_calibrated->at(k) < 900 ||
+             timeFit_module_calibrated->at(k) > 1500) continue;
+         if (area->at(k) < minArea) continue;
+         
+         // Get the offline channel number for this hit
+         int ch = chan->at(k);
+         
+         // Determine the layer from the channel number.
+         // Channels 0-23: Layer 0, 24-47: Layer 1, 48-71: Layer 2, 72-95: Layer 3.
+         int layer = ch / 24;  // 0-indexed layers
+         if (layer < 0 || layer > 3) continue; // safety check
+         
+         // Determine the channel number within the layer.
+         int ch_in_layer = ch % 24;
+         
+         // Determine the column:
+         // ch_in_layer in [0,7] -> column 2, [8,15] -> column 1, [16,23] -> column 0.
+         int col;
+         if (ch_in_layer < 8)      col = 2;
+         else if (ch_in_layer < 16) col = 1;
+         else                      col = 0;
+         
+         // Determine the row:
+         // For each column block of 8 channels, row = 3 - ((ch_in_layer % 8) / 2)
+         int row = 3 - ((ch_in_layer % 8) / 2);
+         
+         // Mark this slab as hit in the given layer.
+         slabHit[layer][row][col] = true;
       }
       
-      // Check if any column (across layers) has at least 3 layers with a hit.
+      // Now, for each slab position (row, col), count how many layers are hit.
       bool straightLineEvent = false;
-      for (int col = 0; col < 3; col++) {
+      for (int r = 0; r < 4 && !straightLineEvent; r++){
+         for (int c = 0; c < 3 && !straightLineEvent; c++){
             int layersHit = 0;
-            for (int lay = 0; lay < 4; lay++){
-                  if(columnLayerHit[col][lay])
-                        layersHit++;
+            for (int l = 0; l < 4; l++){
+               if (slabHit[l][r][c])
+                  layersHit++;
             }
-            if(layersHit >= 3){
-                  straightLineEvent = true;
-                  break;
-            }
+            // Require the slab to be hit in at least 3 layers.
+            if (layersHit >= 3)
+               straightLineEvent = true;
+         }
       }
       
+      // Fill the event only if the straight-line cut is satisfied.
       if (straightLineEvent) {
-	      tout->Fill();
-	      passed++;
+         tout->Fill();
+         passed++;
       }
    }
    

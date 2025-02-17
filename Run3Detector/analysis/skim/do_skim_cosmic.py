@@ -22,7 +22,7 @@ def checkGoodRun(goodRuns, run, file, branch='goodRunTight'):
 shutil.copy('/eos/experiment/milliqan/Configs/mqLumis.json', os.getcwd())
 shutil.copy('/eos/experiment/milliqan/Configs/goodRunsList.json', os.getcwd())
 
-mqLumis = pd.read_json('mqLumis.json', orient = 'split', compression = 'infer')
+mqLumis = pd.read_json('/eos/experiment/milliqan/Configs/mqLumis.json', orient='split')
 goodRuns = pd.read_json('goodRunsList.json', orient = 'split', compression = 'infer')
 
 ########################################################

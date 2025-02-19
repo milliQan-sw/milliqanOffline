@@ -25,8 +25,11 @@ if __name__ == "__main__":
 
     debug = False
     force = True
-    dataDir = '/abyss/users/mcarrigan/milliqan/pulseInjectedSignal/'
+    dataDir = '/data/user/mcarrigan/milliqan/signalSim/'
     outputDir = os.getcwd()
+
+    #processingDir = "/../../../../"
+    processingDir = '/'
 
     args = parse_args()
     if args.outputDir:
@@ -47,6 +50,7 @@ if __name__ == "__main__":
         sys.exit(0)
 
     script_dir = os.path.dirname(os.path.realpath(__file__))
+    print(script_dir+processingDir+'/milliQanSim/inputData/waveinject_v2.C')
 
     os.chdir('milliqanOffline/Run3Detector/')
     os.system('source setup.sh')
@@ -56,11 +60,11 @@ if __name__ == "__main__":
     pulse_output = '/'.join([os.getcwd(), outputFile.split('.root')[0] + '_pulseInjected.root'])
     print("Processing pulse injection {} -> {}".format(inputFile, pulse_output))
 
-    r.gROOT.LoadMacro(script_dir+'/milliQanSim/inputData/waveinject_v2.C')
-    r.waveinject_v2(inputFile, pulse_output, script_dir+'/milliQanSim/inputData/modified_waveform.root')
+    r.gROOT.LoadMacro(script_dir+processingDir+'milliQanSim/inputData/waveinject_v2.C')
+    r.waveinject_v2(inputFile, pulse_output, script_dir+processingDir+'milliQanSim/inputData/modified_waveform.root')
 
-    r.gSystem.Load(script_dir+'/MilliDAQ/libMilliDAQ.so')
-    r.gROOT.LoadMacro(script_dir+'/milliqanOffline/Run3Detector/analysis/simConversion/utils/globalEventConv.C')
+    r.gSystem.Load(script_dir+processingDir+'MilliDAQ/libMilliDAQ.so')
+    r.gROOT.LoadMacro(script_dir+processingDir+'milliqanOffline/Run3Detector/analysis/simConversion/utils/globalEventConv.C')
 
     tmp_output = '/'.join([os.getcwd(), outputFile.split('.root')[0] + '_globalEvent.root'])
     print("Processing Global event {} -> {}".format(pulse_output, tmp_output))

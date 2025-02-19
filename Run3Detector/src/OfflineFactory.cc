@@ -785,7 +785,8 @@ void OfflineFactory::readMetaData(){
     }
     // For sim data
     else{
-
+      outputTreeContents.runNumber = runNumber;
+      outputTreeContents.fileNumber = fileNumber;
       float secondsPerSample;
       metadata->SetBranchAddress("secondsPerSample", &secondsPerSample);
       metadata->SetBranchAddress("numChan", &numChan);

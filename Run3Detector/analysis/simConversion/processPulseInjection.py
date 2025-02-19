@@ -33,8 +33,8 @@ def createCondorFile(numFiles, dataDir, filelist, outputDir, milliqanOffline, lo
     Universe = vanilla
     +IsLocalJob = true
     Rank = TARGET.IsLocalSlot
-    request_disk = 2000MB
-    request_memory = 500MB
+    request_disk = 10000MB
+    request_memory = 5000MB
     request_cpus = 1
     requirements = machine != "compute-0-0.local" && machine != "compute-0-2.local" && machine != "compute-0-4.local" &&  machine != "compute-0-30.local"
     executable              = pulseInjectionWrapper.sh
@@ -89,6 +89,8 @@ def main():
         os.mkdir(args.outputDir+'/globalEvent')
     if not os.path.exists(args.outputDir+'/trees'):
         os.mkdir(args.outputDir+'/trees')
+
+    os.system(f'chmod -R a+rwx {args.outputDir}')
 
     numFiles = createFileList(args.dataDir, jsonFile=filelist)
     createCondorFile(numFiles, args.dataDir, filelist, args.outputDir, milliqanOffline, logDir)

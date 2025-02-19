@@ -63,6 +63,17 @@ class milliQanScheduler():
     def insert(self, process, pos):
         self.schedule.insert(process, pos)
 
+    def plotEventWeight(self):
+        
+        weight = ak.sum(ak.firsts(self.events['eventWeight']))
+
+        self.eventWeights = TH1F('h_eventWeights', 'Event Weight', 1, 0, 1)
+
+        self.eventWeights.Fill(0, weight)
+        
+        self.plotter.histograms.append(milliqanPlot(self.eventWeights, None))
+
+
     def cutFlowPlots(self):
         #make cutflow plots
         numCuts = count = sum(1 for key, sub_dict in self.cuts.cutflow.items() if sub_dict.get('cut', True) or 'EventCounter' in key)
@@ -122,8 +133,9 @@ class milliQanScheduler():
             self.pulseSelectionEff.GetXaxis().SetBinLabel(ibin+1, key)
 
             if allLayersIndex >= 0 and i > allLayersIndex:
-                self.eventCutEffAllLayers.Fill(ibin-allLayersIndex, value['events'] / allLayersEvents)
-                self.pulseCutEffAllLayers.Fill(ibin-allLayersIndex, value['pulses'] / allLayersPulses)
+                if allLayersEvents>0:
+                    self.eventCutEffAllLayers.Fill(ibin-allLayersIndex, value['events'] / allLayersEvents)
+                    self.pulseCutEffAllLayers.Fill(ibin-allLayersIndex, value['pulses'] / allLayersPulses)
                 self.eventCutEffAllLayers.GetXaxis().SetBinLabel(ibin-allLayersIndex+1, key)
                 self.pulseCutEffAllLayers.GetXaxis().SetBinLabel(ibin-allLayersIndex+1, key)
 

@@ -342,8 +342,8 @@ if __name__ == "__main__":
                 areaCut,
                 barsCut,
                 #panelVeto,
-                #straightLineCut,
-                straightLineCutMod,
+                straightLineCut,
+                #straightLineCutMod,
                 timeMaxMin,
                 mycuts.frontBackPanelInfo,
             ]

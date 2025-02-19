@@ -23,9 +23,9 @@ def writeCondorSub(exe, script, nJobs, filelist, outDir, includeDirs, requiremen
     submitLines = """
     Universe = vanilla
     +IsLocalJob = true
+    run_as_owner = true
     Rank = TARGET.IsLocalSlot
     +IsSmallJob = true
-    requirements = machine != "compute-0-2.local" && machine != "compute-0-4.local" &&  machine != "compute-0-30.local"
     request_disk = {8}
     request_memory = {7}
     request_cpus = {6}
@@ -38,7 +38,7 @@ def writeCondorSub(exe, script, nJobs, filelist, outDir, includeDirs, requiremen
     when_to_transfer_output = ON_EXIT
     transfer_input_files = {4}/{1}, {4}/{2}, {4}/{3}, {4}/milliqanProcessing.tar.gz, {4}/mqLumis.json, {4}/goodRunsList.json
     transfer_output_files = ""
-    getenv = false
+    getenv = true
     queue {0}
     """.format(nJobs,exe,script,filelist,outDir,includeDirs,requirements[0],requirements[1],requirements[2])
 
@@ -48,6 +48,7 @@ def writeCondorSub(exe, script, nJobs, filelist, outDir, includeDirs, requiremen
 def createTarFile():
     with tarfile.open('milliqanProcessing.tar.gz', 'w:gz') as tar:
         tar.add('../utilities/', arcname='.')
+        tar.add('../../configuration/', arcname='.')
 
 def getRunFile(filename):
     run = int(filename.split('Run')[1].split('.')[0])
@@ -132,8 +133,17 @@ def checkBeam(mqLumis, run, file, branch='beam'):
     return beam
 
 def copyConfigs():
-    shutil.copy('/eos/experiment/milliqan/Configs/mqLumis.json', os.getcwd())
-    shutil.copy('/eos/experiment/milliqan/Configs/goodRunsList.json', os.getcwd())
+    try:
+        shutil.copy('/eos/experiment/milliqan/Configs/mqLumis.json', os.getcwd())
+        shutil.copy('/eos/experiment/milliqan/Configs/goodRunsList.json', os.getcwd())
+    except:
+        try:
+            script_dir = os.path.dirname(os.path.realpath(__file__))
+            shutil.copy(script_dir+'/../../configuration/barConfigs/mqLumis.json', os.getcwd())
+            shutil.copy(script_dir+'/../../configuration/barConfigs/goodRunsList.json', os.getcwd())
+        except:
+            print("Could not find the lumi/good runs files on eos or locally")
+            sys.exit(1)
 
 def createRunList(files, name='filelist.json', nFilesPerJob=100):
     
@@ -257,9 +267,9 @@ if __name__ == "__main__":
     singularity_image = ''
     exe = 'condor_exe.sh'
     fileListName = 'filelist.json'
-    outputDir = '/abyss/users/mcarrigan/milliqan/backgroundCutFlow_signalSim_SR1_v2'
+    outputDir = '/data/user/mcarrigan/milliqan/backgroundCutFlow_signalSimTest/'
     requirements = ['4', '4000MB', '3000MB'] #CPU, Memory, Disk
-    includeDirs = '/store/,/data/,/abyss/'
+    includeDirs = '/data/'
 
     if args.tarFile:
         createTarFile()
@@ -285,7 +295,7 @@ if __name__ == "__main__":
     createTarFile()
 
     if sim:
-        filesList = getSimFilesLocal(dataDir='/abyss/users/mcarrigan/milliqan/pulseInjectedSimV2/trees/', debug=False)
+        filesList = getSimFilesLocal(dataDir='/data/user/mcarrigan/milliqan/pulseInjectedSim/trees/', debug=False)
     else:
         filesList = getFilesLocal()
 

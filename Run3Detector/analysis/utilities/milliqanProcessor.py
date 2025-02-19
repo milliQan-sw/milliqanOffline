@@ -173,6 +173,8 @@ class milliqanProcessor():
             _, events['tTrigger'] = ak.broadcast_arrays(events[broadcastChan], events['tTrigger'])
             _, events['event'] = ak.broadcast_arrays(events[broadcastChan], events['event'])
             _, events['boardsMatched'] = ak.broadcast_arrays(events[broadcastChan], events['boardsMatched'])
+            if self.sim:
+                _, events['eventWeight'] = ak.broadcast_arrays(events[broadcastChan], events['eventWeight'])
             events['fullSelection'] = ak.full_like(events[broadcastChan], True)
 
             #this is a new branch we are creating and it needs to be cut with all other branches

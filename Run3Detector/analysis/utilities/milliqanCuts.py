@@ -71,6 +71,7 @@ class milliqanCuts():
         self.cutflow = {}
         self.counter = 0
         self.branches = []
+        self.configDir = '../../configuration/'
 
     def to_binary(self, x):
         return bin(int(x))[2:]
@@ -81,15 +82,11 @@ class milliqanCuts():
         # Creates each stage during the first pass
 
         #use fileNumber because it is never 0 (ex event) and it always exists
-
         threshold = 1
         if name == 'totalEventCounter': threshold = 0
 
         if name in self.cutflow:
-
             remaining = ak.sum(self.events['fileNumber'], axis=1) >= threshold
-            #remaining = ak.sum(self.events['fileNumber'][self.events['fullSelection']], axis=1) >= threshold #2/4
-
             remaining = self.events['fileNumber'][remaining]
             self.cutflow[name]['events'] += len(remaining)
             self.cutflow[name]['pulses'] += len(ak.flatten(self.events['fileNumber']))
@@ -1087,15 +1084,20 @@ class milliqanCuts():
     
     #creates mask/cut vetoing any event where the min/max nPE ratio < nPECut
     @mqCut
-    def nPEMaxMin(self, cutName='nPEMaxMin', cut=False, nPECut = 10, branches=None):
-        maxNPE = ak.max(self.events['nPE'][self.events['type']==0], axis=1, keepdims=True)
-        minNPE = ak.min(self.events['nPE'][self.events['type']==0], axis=1, keepdims=True)
+    def nPEMaxMin(self, cutName='nPEMaxMin', cut=False, nPERatioCut = 10, straight=False, branches=None):
+        
+        if straight:
+            maxNPE = ak.max(self.events['nPE'][self.events['straightLineMaxMinPulse']], axis=1, keepdims=True)
+            minNPE = ak.min(self.events['nPE'][self.events['straightLineMaxMinPulse']], axis=1, keepdims=True)            
+        else:
+            maxNPE = ak.max(self.events['nPE'][self.events['type']==0], axis=1, keepdims=True)
+            minNPE = ak.min(self.events['nPE'][self.events['type']==0], axis=1, keepdims=True)
 
         self.events['maxNPEBefore'] = maxNPE
         self.events['minNPEBefore'] = minNPE
 
         nPERatio = maxNPE/minNPE
-        nPECut = nPERatio < nPECut
+        nPECut = nPERatio < nPERatioCut
 
         nPECut = ak.fill_none(nPECut, False)
 
@@ -1148,23 +1150,26 @@ class milliqanCuts():
         files = ak.drop_none(ak.firsts(self.events['fileNumber']))
         events = ak.drop_none(ak.firsts(self.events['event']))
         chans = ak.drop_none(ak.flatten(self.events['chan']))
-        for i, (run, file, event) in enumerate(zip(runs, files, events)):
-            print(f'{i}: run: {run}, file: {file}, event: {event}, channels: {chans}')        
+        time = ak.drop_none(ak.flatten(self.events['timeFit_module_calibrated']))
+        nPE = ak.drop_none(ak.flatten(self.events['nPE']))
 
-    
+        for i, (run, file, event) in enumerate(zip(runs, files, events)):
+            print(f'{i}: run: {run}, file: {file}, event: {event}, channels: {chans}, time: {ak.to_list(time)}, nPE: {ak.to_list(nPE)}')        
+
+
     @mqCut
     def applyNPEScaling(self, cutName='nPEScaling'):
     
         extra_configs = ['configRun1173_1295.json', 'configRun1115_1172.json', 'configRun1097_1114.json', 'configRun1059_1096.json', 'configRun987_1058.json']
     
-        with open(os.path.dirname(__file__)+'/../../configuration/barConfigs/configRun1296_present.json', 'r') as f_cal:
+        with open(os.path.dirname(__file__)+f'{self.configDir}/barConfigs/configRun1296_present.json', 'r') as f_cal:
             calibrations = json.load(f_cal)['speAreas']
             _, calibrations = ak.broadcast_arrays(self.events['sidebandRMS'], ak.Array([calibrations]))
 
         chan_calibrations = calibrations[self.events['chan']]
 
         for config in extra_configs:
-            with open(os.path.dirname(__file__)+f'/../../configuration/barConfigs/{config}', 'r') as f_cal:
+            with open(os.path.dirname(__file__)+f'{self.configDir}/barConfigs/{config}', 'r') as f_cal:
                 extra_cal = json.load(f_cal)['speAreas']
                 _, extra_cal = ak.broadcast_arrays(self.events['sidebandRMS'], ak.Array([extra_cal]))   
 
@@ -1187,14 +1192,14 @@ class milliqanCuts():
 
         extra_configs = ['configRun1173_1295.json', 'configRun1115_1172.json', 'configRun1097_1114.json', 'configRun1059_1096.json', 'configRun987_1058.json']
     
-        with open(os.path.dirname(__file__)+'/../../configuration/barConfigs/configRun1296_present.json', 'r') as f_cal:
+        with open(os.path.dirname(__file__)+f'{self.configDir}/barConfigs/configRun1296_present.json', 'r') as f_cal:
             calibrations = json.load(f_cal)['sourceNPE']
             _, calibrations = ak.broadcast_arrays(self.events['sidebandRMS'], ak.Array([calibrations]))
 
         chan_calibrations = calibrations[self.events['chan']]
 
         for config in extra_configs:
-            with open(os.path.dirname(__file__)+f'/../../configuration/barConfigs/{config}', 'r') as f_cal:
+            with open(os.path.dirname(__file__)+f'{self.configDir}/barConfigs/{config}', 'r') as f_cal:
                 extra_cal = json.load(f_cal)['sourceNPE']
                 _, extra_cal = ak.broadcast_arrays(self.events['sidebandRMS'], ak.Array([extra_cal]))   
 

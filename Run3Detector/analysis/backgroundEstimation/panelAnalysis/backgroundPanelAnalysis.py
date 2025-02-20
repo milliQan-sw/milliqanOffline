@@ -255,7 +255,6 @@ if __name__ == "__main__":
     myplotter.addHistograms(h_backPanelDurationVsHeight, ['backDuration', 'backHeight'])
     myplotter.addHistograms(h_frontVsBackNPE, ['frontNPE', 'backNPE'])
 
-
     
     cutflow = [mycuts.totalEventCounter, 
                 mycuts.fullEventCounter, 

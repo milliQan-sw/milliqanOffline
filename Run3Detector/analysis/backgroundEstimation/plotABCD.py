@@ -6,8 +6,69 @@ import numpy as np
 from matplotlib import colors
 import sys
 import math
+import argparse
+from array import array
 
-def calculateABCD(h_ABCD, maxTime=40):
+def parse_args():
+    parser=argparse.ArgumentParser()
+    parser.add_argument("-i", "--inputFile", help="Input root file containing ABCD plot", type=str, required=True)
+    parser.add_argument("-u", "--unblind", help="Option to unblind the results and show signal region", action='store_true')
+    parser.add_argument("--SR", help="Give signal region of interest to get background estimates (current options SR1 and SR2)", type=int)
+    parser.add_argument('-o', '--outputFile', help='Output file to save plots if unblinded', type=str, default=None)
+    args = parser.parse_args()
+    return args
+
+def getPoissonErr(val, sigma=1):
+    if val > 0:
+        return np.sqrt(val), np.sqrt(val)
+    else:
+        beta = r.Math.erf(sigma / np.sqrt(2.0))
+        alpha = (1 - beta)
+        if val == 0:
+            val = 1e-10
+        lower = r.Math.gamma_quantile(alpha / 2., val , 1.0)
+        upper = r.Math.gamma_quantile_c(alpha / 2., val + 1, 1.0)
+    return lower, upper
+
+def modifyPlot(h_ABCD):
+    # Create edges for X and Y axes
+    edgesX = []
+    edgesY = []
+    
+    nbinsX = h_ABCD.GetNbinsX()
+    nbinsY = h_ABCD.GetNbinsY()
+    
+    # Extract bin edges (1-indexed in ROOT)
+    for b in range(1, nbinsX + 1):
+        edgesX.append(h_ABCD.GetXaxis().GetBinLowEdge(b))
+    edgesX.append(h_ABCD.GetXaxis().GetBinUpEdge(nbinsX))
+    
+    for b in range(1, nbinsY + 1):
+        edgesY.append(h_ABCD.GetYaxis().GetBinLowEdge(b))
+    edgesY.append(h_ABCD.GetYaxis().GetBinUpEdge(nbinsY))
+    
+    # Shift the first edge to 0.1 (to hide true zero)
+    edgesX[0] = 1
+    
+    # Convert to array
+    edgesX = array('d', edgesX)
+    edgesY = array('d', edgesY)
+    
+    # Create a new TH2F with modified binning
+    h_ABCDMod = r.TH2F('h_ABCDMod', 'Max Panel NPE vs N Bars Hit;Max Panel NPE;N Bars Hit',
+                        len(edgesX) - 1, edgesX,
+                        len(edgesY) - 1, edgesY)
+    
+    # Copy bin content (including underflow/overflow bins)
+    for xbin in range(0, nbinsX + 2):  # Include underflow (0) and overflow (nbinsX+1)
+        for ybin in range(0, nbinsY + 2):
+            content = h_ABCD.GetBinContent(xbin, ybin)
+            h_ABCDMod.SetBinContent(xbin, ybin, content)
+
+    return h_ABCDMod
+
+
+def calculateABCD(h_ABCD, maxTime=20, unblind=False, fout=None):
     
     yval = h_ABCD.GetYaxis().FindFixBin(maxTime)
     xval = h_ABCD.GetXaxis().FindFixBin(1)
@@ -17,25 +78,193 @@ def calculateABCD(h_ABCD, maxTime=40):
     
     y_low = 0
     y_high = h_ABCD.GetNbinsY()
-    
-    A = h_ABCD.Integral(xval, x_high+1, y_low, yval)
-    B = h_ABCD.Integral(x_low, xval, y_low, yval)
-    C = h_ABCD.Integral(x_low, xval, yval, y_high+1)
+
+    A = -1
+    err_A = -1
+    if unblind:
+        A = h_ABCD.Integral(xval, x_high+1, y_low, yval-1)
+        err_A = np.sqrt(A)
+
+    B = h_ABCD.Integral(x_low, xval-1, y_low, yval-1)
+    C = h_ABCD.Integral(x_low, xval-1, yval, y_high+1)
     D = h_ABCD.Integral(xval, x_high+1, yval, y_high+1)
     
-    err_A = np.sqrt(A)
-    err_B = np.sqrt(B)
-    err_C = np.sqrt(C)
-    err_D = np.sqrt(D)
+    err_B = getPoissonErr(B)
+    err_C = getPoissonErr(C)
+    err_D = getPoissonErr(D)
 
-    estA = round(B*D/C,2)
+    if B == 0:
+        estErrALow = D/C*err_B[0]
+        estErrAHigh = D/C*err_B[1]
+    elif C == 0:
+        estErrALow = np.inf
+        estErrAHigh = np.inf
+        print("Error calculating uncertainty")
+    elif D == 0:
+        estErrALow = B/C*err_D[0]
+        estErrAHigh = B/C*err_D[1]
+    else:
+        estErrALow = (B*D)/C*np.sqrt((err_B[0]/B)**2 + (err_D[0]/D)**2 + (err_C[0]/C)**2)
+        estErrAHigh = (B*D)/C*np.sqrt((err_B[1]/B)**2 + (err_D[1]/D)**2 + (err_C[1]/C)**2)
+
+    estErrA = [estErrALow, estErrAHigh]
+    estA = round(B*D/C, 2)
+
+    if unblind and fout is not None:
+        c1 = r.TCanvas("c1", "c1", 800, 600)
+        c1.SetLogy(1)
+
+        h_ABCD.Draw()
+
+        lx = r.TLine(x_low, h_ABCD.GetYaxis().GetBinLowEdge(yval+1), h_ABCD.GetXaxis().GetBinLowEdge(x_high+1), h_ABCD.GetYaxis().GetBinLowEdge(yval))
+        ly = r.TLine(h_ABCD.GetXaxis().GetBinLowEdge(xval), y_low, h_ABCD.GetXaxis().GetBinLowEdge(xval), h_ABCD.GetYaxis().GetBinLowEdge(y_high+1))
+        lx.SetLineColor(r.kRed)
+        ly.SetLineColor(r.kRed)
+        lx.SetLineStyle(7)
+        ly.SetLineStyle(7)
+        
+        lx.Draw("same")
+        ly.Draw("same")
+
+        t_a = r.TLatex()
+        t_b = r.TLatex()
+        t_c = r.TLatex()
+        t_d = r.TLatex()
+        t_a.SetTextColor(r.kRed)
+        t_b.SetTextColor(r.kRed)
+        t_c.SetTextColor(r.kRed)
+        t_d.SetTextColor(r.kRed)
+        t_a.DrawLatex(1.4, 2, f"A={A}")
+        t_b.DrawLatex(0.2, 2, f"B={B}")
+        t_c.DrawLatex(0.2, 60, f"C={C}")
+        t_d.DrawLatex(1.4, 60, f"D={D}")
+
+        sysErrA = f'#pm{round(estErrA[0], 2)}'
+        if estErrA[0] != estErrA[1]:
+            sysErrA = f'-{round(estErrA[0], 2)} +{round(estErrA[1], 2)}'
+            
+        statErrALow, statErrAHigh = getPoissonErr(estA)
+        statErrA = f'#pm{round(statErrALow, 2)}'
+        if statErrALow != statErrAHigh:
+            statErrA = f'-{round(statErrALow, 2)} +{round(statErrAHigh, 2)}'
+
+        output = 'A = #frac{BD}{C} = #frac{' + str(B) + '#times' + str(D) + '}{'+ str(C) + '} = ' + str(estA) + ' ' + str(statErrA) + ' ' + str(sysErrA)
+        
+        t_results = r.TLatex()
+        t_results.SetTextSize(0.03)
+        t_results.SetTextColor(r.kRed)
+        t_results.DrawLatex(1., 10, output)
+
+        f = r.TFile.Open(fout, 'Update')
+        f.cd()
+        c1.Write('ABCD_SR1')
+        h_ABCD.Write("h_ABCD")
+        f.Close()
+
+    return A, estA, estErrA
+
+def calculateABCDSR2(h_ABCD, nBars=4, panelNPE=50, unblind=False, fout=None):
     
-    estErrA = (B*D)/C*np.sqrt(1/B + 1/D + 1/C)
-    estErrA = round(estErrA, 2)
+    yval = h_ABCD.GetYaxis().FindFixBin(nBars)
+    xval = h_ABCD.GetXaxis().FindFixBin(panelNPE)
+    
+    x_low = 0
+    x_high = h_ABCD.GetNbinsX()
+    
+    y_low = 0
+    y_high = h_ABCD.GetNbinsY()
+
+    A = -1
+    err_A = -1
+
+    if unblind:
+        A = h_ABCD.Integral(x_low, xval-1, y_low, yval)
+        err_A = np.sqrt(A)
+
+    B = h_ABCD.Integral(xval, x_high+1, y_low, yval)
+    C = h_ABCD.Integral(xval, x_high+1, yval+1, y_high+1)
+    D = h_ABCD.Integral(x_low, xval-1, yval+1, y_high+1)
+
+    
+    err_B = getPoissonErr(B)
+    err_C = getPoissonErr(C)
+    err_D = getPoissonErr(D)
+
+    if B == 0:
+        estErrALow = D/C*err_B[0]
+        estErrAHigh = D/C*err_B[1]
+    elif C == 0:
+        estErrALow = np.inf
+        estErrAHigh = np.inf
+        print("Error calculating uncertainty")
+    elif D == 0:
+        estErrALow = B/C*err_D[0]
+        estErrAHigh = B/C*err_D[1]
+    else:
+        estErrALow = (B*D)/C*np.sqrt((err_B[0]/B)**2 + (err_D[0]/D)**2 + (err_C[0]/C)**2)
+        estErrAHigh = (B*D)/C*np.sqrt((err_B[1]/B)**2 + (err_D[1]/D)**2 + (err_C[1]/C)**2)
+
+    estErrA = [estErrALow, estErrAHigh]
+    estA = round(B*D/C, 2)
+
+    #make plots if unblinding
+    if unblind and fout is not None:
+
+        c1 = r.TCanvas("c1", "c1", 800, 600)
+        c1.SetLogx(1)
+
+        h_ABCDMod = modifyPlot(h_ABCD)
+        h_ABCDMod.Draw()
+        
+        lx = r.TLine(x_low, h_ABCDMod.GetYaxis().GetBinLowEdge(yval+1), h_ABCDMod.GetXaxis().GetBinLowEdge(x_high+1), h_ABCDMod.GetYaxis().GetBinLowEdge(yval+1))
+        ly = r.TLine(h_ABCDMod.GetXaxis().GetBinLowEdge(xval), y_low, h_ABCDMod.GetXaxis().GetBinLowEdge(xval), h_ABCDMod.GetYaxis().GetBinLowEdge(y_high+1))
+        lx.SetLineColor(r.kRed)
+        ly.SetLineColor(r.kRed)
+        lx.SetLineStyle(7)
+        ly.SetLineStyle(7)
+
+        lx.Draw("same")
+        ly.Draw("same")
+
+        t_a = r.TLatex()
+        t_b = r.TLatex()
+        t_c = r.TLatex()
+        t_d = r.TLatex()
+        t_a.SetTextColor(r.kRed)
+        t_b.SetTextColor(r.kRed)
+        t_c.SetTextColor(r.kRed)
+        t_d.SetTextColor(r.kRed)
+        t_a.DrawLatex(10, 2, f"A={A}")
+        t_b.DrawLatex(100, 2, f"B={B}")
+        t_c.DrawLatex(100, 14, f"C={C}")
+        t_d.DrawLatex(10, 14, f"D={D}")
+
+        sysErrA = f'#pm{round(estErrA[0], 2)}'
+        if estErrA[0] != estErrA[1]:
+            sysErrA = f'-{round(estErrA[0], 2)} +{round(estErrA[1], 2)}'
+            
+        statErrALow, statErrAHigh = getPoissonErr(estA)
+        statErrA = f'#pm{round(statErrALow, 2)}'
+        if statErrALow != statErrAHigh:
+            statErrA = f'-{round(statErrALow, 2)} +{round(statErrAHigh, 2)}'
+
+        output = 'A = #frac{BD}{C} = #frac{' + str(B) + '#times' + str(D) + '}{'+ str(C) + '} = ' + str(estA) + ' ' + str(statErrA) + ' ' + str(sysErrA)
+
+        t_results = r.TLatex()
+        t_results.SetTextSize(0.03)
+        t_results.SetTextColor(r.kRed)
+        t_results.DrawLatex(2., 10, output)
+
+        f = r.TFile.Open(fout, 'Update')
+        f.cd()
+        c1.Write('ABCD_SR2')
+        h_ABCDMod.Write("h_ABCD2")
+        f.Close()
 
     return A, estA, estErrA
 
 
+#used for closure tests to compare measurements from different ABCD cuts
 def plotAllABCD(dataDir=os.getcwd(), outputFile='abcdPlots.root'):
     g_ABCD = r.TGraphErrors()
     g_ABCD.SetTitle("ABCD Measured vs Estimated;Measured;Estimated")
@@ -100,4 +329,58 @@ def plotAllABCD(dataDir=os.getcwd(), outputFile='abcdPlots.root'):
 
 if __name__ == "__main__":
 
-    plotAllABCD()
+    r.gStyle.SetOptStat(0)
+    
+    #plotAllABCD()
+
+    args = parse_args()
+
+    if args.inputFile:
+
+        fin = r.TFile.Open(args.inputFile, 'READ')
+
+        h_ABCD = fin.Get('h_ABCD')
+        A, estA, estErrA = calculateABCD(h_ABCD, unblind=args.unblind, fout=args.outputFile)
+        
+        sysErrA = f'+-{round(estErrA[0], 2)}'
+        if estErrA[0] != estErrA[1]:
+            sysErrA = f'-{round(estErrA[0], 2)} +{round(estErrA[1], 2)}'
+            
+        statErrALow, statErrAHigh = getPoissonErr(estA)
+        statErrA = f'+-{round(statErrALow, 2)}'
+        if statErrALow != statErrAHigh:
+            statErrA = f'-{round(statErrALow, 2)} +{round(statErrAHigh, 2)}'
+            
+        print("---------------------------------------------------------------------------------------------")
+        print(f"Estimated events in SR1: {estA} {statErrA} (stat) {sysErrA} (sys)")
+        if args.unblind:
+            print(f"Measured: {A} events in SR1")
+        print("---------------------------------------------------------------------------------------------")
+
+        if args.SR==2:
+
+            h_ABCD = fin.Get('h_ABCD2')
+            A, estA, estErrA = calculateABCDSR2(h_ABCD, unblind=args.unblind, fout=args.outputFile)
+
+            sysErrA = f'+-{round(estErrA[0], 2)}'
+            if estErrA[0] != estErrA[1]:
+                sysErrA = f'-{round(estErrA[0], 2)} +{round(estErrA[1], 2)}'
+                
+            statErrALow, statErrAHigh = getPoissonErr(estA)
+            statErrA = f'+-{round(statErrALow, 2)}'
+            if statErrALow != statErrAHigh:
+                statErrA = f'-{round(statErrALow, 2)} +{round(statErrAHigh, 2)}'
+            print("---------------------------------------------------------------------------------------------")
+            print(f"Estimated events in SR2: {estA} {statErrA} (stat) {sysErrA} (sys)")
+            if args.unblind:
+                print(f"Measured: {A} events in SR2")
+            print("---------------------------------------------------------------------------------------------")
+
+
+
+
+
+
+
+
+    

@@ -439,13 +439,7 @@ if __name__ == "__main__":
 
                 frontBackPanelRequired, #SR2 only
                
-                barsCut,
-
                 sidebandRMSCut,
-
-                #myplotter.dict['h_nLayersBeforeOneHitPerLayer'],
-                #oneHitPerLayer,
-                #myplotter.dict['h_nLayersAfterOneHitPerLayer'],
 
                 firstPulseMax,
 

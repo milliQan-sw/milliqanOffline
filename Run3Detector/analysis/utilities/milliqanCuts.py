@@ -72,6 +72,7 @@ class milliqanCuts():
         self.counter = 0
         self.branches = []
         self.configDir = '../../configuration/'
+        self.debug = False
 
     def to_binary(self, x):
         return bin(int(x))[2:]
@@ -99,7 +100,9 @@ class milliqanCuts():
         self.counter+=1
 
     #print out all of the cutflows
-    def getCutflowCounts(self):
+    #if blind is set to the name of a cutflow cut nothing from that cut on will print
+    def getCutflowCounts(self, blind=None):
+        nonSkip = ['totalEventCounter', 'fullEventCounter']
         # Prints the value after each batch of events
         print("----------------------------------Cutflow Table----------------------------------------------------------------------------------")
         print ("{:<25} {:<20} {:<25} {:<20} {:<25} {:<30}".format('Cut', 'N Passing Events', 'Cum Event Eff % (Prev)', 'N Passing Pulses', 'Cum Pulse Eff % (Prev)', 'Cut Applied'))
@@ -109,7 +112,15 @@ class milliqanCuts():
         totalEvents = -1
         totalPulses = -1
         for ival, (key, value) in enumerate(self.cutflow.items()):
-            #print(i, len(self.cutflow))
+
+            if blind is not None and key == blind:
+                break
+            
+            realCut = 'True' if value['cut'] else 'False'
+
+            if not self.debug and not value['cut'] and key not in nonSkip: 
+                continue
+
             evtEff, pulseEff = 1.0, 1.0
             cumEvtEff, cumPulseEff = 1.0, 1.0
             if prevEvents > 0:
@@ -133,7 +144,6 @@ class milliqanCuts():
             allEvt = f"{cumEvtEff} ({evtEff})"
             allPulse = f"{cumPulseEff} ({pulseEff})"
 
-            realCut = 'True' if value['cut'] else 'False'
             print("{:<25} {:<20} {:<25} {:<20} {:<25} {:<30}".format(key, value['events'], allEvt, value['pulses'], allPulse, realCut))
             prevEvents = value['events']
             prevPulses = value['pulses']
@@ -754,6 +764,7 @@ class milliqanCuts():
             if ipath == 0: straight_path = path
             else: straight_path = straight_path | path
 
+        self.events[cutName+'Plot'] = straight_path
 
         _, straight_path = ak.broadcast_arrays(self.events['npulses'], straight_path)
         self.events[cutName] = straight_path
@@ -1150,12 +1161,9 @@ class milliqanCuts():
         files = ak.drop_none(ak.firsts(self.events['fileNumber']))
         events = ak.drop_none(ak.firsts(self.events['event']))
         chans = ak.drop_none(ak.flatten(self.events['chan']))
-        time = ak.drop_none(ak.flatten(self.events['timeFit_module_calibrated']))
         nPE = ak.drop_none(ak.flatten(self.events['nPE']))
-
         for i, (run, file, event) in enumerate(zip(runs, files, events)):
-            print(f'{i}: run: {run}, file: {file}, event: {event}, channels: {chans}, time: {ak.to_list(time)}, nPE: {ak.to_list(nPE)}')        
-
+            print(f'{i}: run: {run}, file: {file}, event: {event}, channels: {chans}, nPE: {nPE}')        
 
     @mqCut
     def applyNPEScaling(self, cutName='nPEScaling'):

@@ -289,13 +289,14 @@ if __name__ == "__main__":
 
     if not os.path.exists(outputDir):
         os.mkdir(outputDir)
+        os.system(f'chmod -R a+rwx {outputDir}')
 
     copyConfigs()
 
     createTarFile()
 
     if sim:
-        filesList = getSimFilesLocal(dataDir='/data/user/mcarrigan/milliqan/pulseInjectedSim/trees/', debug=False)
+        filesList = getSimFilesLocal(dataDir='/data/user/mcarrigan/milliqan/pulseInjectedSim_v3/trees/', debug=False)
     else:
         filesList = getFilesLocal()
 

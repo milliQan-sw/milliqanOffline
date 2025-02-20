@@ -107,7 +107,7 @@ if __name__ == "__main__":
         mass = filelist[0].split('/')[-1].split('_')[1]
         charge = filelist[0].split('/')[-1].split('_')[-1].split('.')[0]
 
-    SR=2
+    SR=1
     outputFile = f'bgCutFlow_signalSim_{mass}_{charge}_{job}.root'
     beam = False
     skim = True
@@ -167,18 +167,18 @@ if __name__ == "__main__":
     straightLineCutMod = getCutMod(mycuts.straightLineCut, mycuts, 'straightLineCutMod', cut=True)
 
     #npe max-min < 10 cut
-    nPEMaxMin = getCutMod(mycuts.nPEMaxMin, mycuts, 'nPEMaxMin', nPERatioCut=20, cut=True, straight=True)
+    nPEMaxMin = getCutMod(mycuts.nPEMaxMin, mycuts, 'nPEMaxMin', nPERatioCut=20, cut=True, straight=False)
 
     nPEMaxCut = getCutMod(mycuts.nPEMaxCut, mycuts, 'nPEMaxCut', nPECut=20, cut=True)
     energyMaxCut2p5 = getCutMod(mycuts.energyMaxCut, mycuts, 'energyMaxCut2p5', energyCut=2.5, cut=True)
 
     #time max-min < 15 cut
     timeMaxMinNoCut = getCutMod(mycuts.timeMaxMin, mycuts, 'timeMaxMinPlot', timeCut=20)
-    timeMaxMin = getCutMod(mycuts.timeMaxMin, mycuts, 'timeMaxMin', timeCut=20, cut=True, straight=False)
+    timeMaxMin = getCutMod(mycuts.timeMaxMin, mycuts, 'timeMaxMin', timeCut=20, cut=True, straight=True)
 
     #veto events with nPE>50 in SR2
     beamMuonPanelVeto50 = getCutMod(mycuts.beamMuonPanelVeto, mycuts, 'beamMuonPanelVeto50', cut=True, nPECut=50)
-    beamMuonPanelVeto50NoCut = getCutMod(mycuts.beamMuonPanelVeto, mycuts, 'beamMuonPanelVeto50NoCut', cut=True, nPECut=0)
+    beamMuonPanelVeto50NoCut = getCutMod(mycuts.beamMuonPanelVeto, mycuts, 'beamMuonPanelVeto50NoCut', cut=False, nPECut=50)
     
     #veto events with large hit in front/back panels, SR1
     beamMuonPanelVeto = getCutMod(mycuts.beamMuonPanelVeto, mycuts, 'beamMuonPanelVeto', cut=True, nPECut=0)
@@ -201,8 +201,7 @@ if __name__ == "__main__":
     #require a hit in front and/or back panel
     frontBackPanelRequired = getCutMod(mycuts.requireFrontBackPanel, mycuts, 'frontBackPanelRequired', cut=True)
 
-
-
+    nPEScaling = getCutMod(mycuts.applyNPEScaling, mycuts, 'nPEScaling', sim=True)
 
     #define histograms
     h_timeDiff1 = r.TH1F('h_timeDiff1', "Layer 3 and 0 Time Difference", 100, -50, 50)
@@ -341,8 +340,7 @@ if __name__ == "__main__":
     if SR==1:
         cutflow = [mycuts.totalEventCounter, 
                 mycuts.fullEventCounter,
-                mycuts.applyNPEScaling,
-                mycuts.applyEnergyScaling,
+                nPEScaling,
                 mycuts.timeDiff,
                 boardMatchCut, 
                 pickupCut, 
@@ -369,8 +367,8 @@ if __name__ == "__main__":
 
                 barsCut,
 
-                #nPEMaxCut,
-                energyMaxCut2p5, #SR1 only
+                nPEMaxCut,
+                #energyMaxCut2p5, #SR1 only
 
                 sidebandRMSCut,
 
@@ -420,8 +418,7 @@ if __name__ == "__main__":
     else:
         cutflow = [mycuts.totalEventCounter, 
                 mycuts.fullEventCounter,
-                #mycuts.applyNPEScaling,
-                mycuts.applyEnergyScaling,
+                nPEScaling,
                 mycuts.timeDiff,
                 boardMatchCut, 
                 pickupCut, 
@@ -445,7 +442,6 @@ if __name__ == "__main__":
 
                 vetoEarlyPulse,
                 
-                straightLineMaxMin,                
                 nPEMaxMin,
                 myplotter.dict['h_maxNPEBefore'],
                 myplotter.dict['h_minNPEBefore'],

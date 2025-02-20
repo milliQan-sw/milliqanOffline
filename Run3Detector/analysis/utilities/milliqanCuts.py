@@ -1166,29 +1166,34 @@ class milliqanCuts():
             print(f'{i}: run: {run}, file: {file}, event: {event}, channels: {chans}, nPE: {nPE}')        
 
     @mqCut
-    def applyNPEScaling(self, cutName='nPEScaling'):
-    
-        extra_configs = ['configRun1173_1295.json', 'configRun1115_1172.json', 'configRun1097_1114.json', 'configRun1059_1096.json', 'configRun987_1058.json']
-    
-        with open(os.path.dirname(__file__)+f'{self.configDir}/barConfigs/configRun1296_present.json', 'r') as f_cal:
-            calibrations = json.load(f_cal)['speAreas']
-            _, calibrations = ak.broadcast_arrays(self.events['sidebandRMS'], ak.Array([calibrations]))
+    def applyNPEScaling(self, cutName='nPEScaling', sim=False):
 
-        chan_calibrations = calibrations[self.events['chan']]
+        if sim:
+            #chan_calibrations = ak.full_like(self.events['area'], 4395.33) #older version
+            chan_calibrations = ak.full_like(self.events['area'], 3336.77)
 
-        for config in extra_configs:
-            with open(os.path.dirname(__file__)+f'{self.configDir}/barConfigs/{config}', 'r') as f_cal:
-                extra_cal = json.load(f_cal)['speAreas']
-                _, extra_cal = ak.broadcast_arrays(self.events['sidebandRMS'], ak.Array([extra_cal]))   
+        else:
+            extra_configs = ['configRun1173_1295.json', 'configRun1115_1172.json', 'configRun1097_1114.json', 'configRun1059_1096.json', 'configRun987_1058.json']
+        
+            with open(os.path.dirname(__file__)+f'{self.configDir}/barConfigs/configRun1296_present.json', 'r') as f_cal:
+                calibrations = json.load(f_cal)['speAreas']
+                _, calibrations = ak.broadcast_arrays(self.events['sidebandRMS'], ak.Array([calibrations]))
 
-                runs = config.split('_')
-                run_low = int(runs[0].replace('configRun', ''))
-                run_high = int(runs[1].split('.')[0])
+            chan_calibrations = calibrations[self.events['chan']]
 
-                extra_chanCalibrations = extra_cal[self.events['chan']]
-                
-                mask = (self.events['runNumber'] <= run_high) & (self.events['runNumber'] >= run_low)
-                chan_calibrations = ak.where(mask, True, chan_calibrations)
+            for config in extra_configs:
+                with open(os.path.dirname(__file__)+f'{self.configDir}/barConfigs/{config}', 'r') as f_cal:
+                    extra_cal = json.load(f_cal)['speAreas']
+                    _, extra_cal = ak.broadcast_arrays(self.events['sidebandRMS'], ak.Array([extra_cal]))   
+
+                    runs = config.split('_')
+                    run_low = int(runs[0].replace('configRun', ''))
+                    run_high = int(runs[1].split('.')[0])
+
+                    extra_chanCalibrations = extra_cal[self.events['chan']]
+                    
+                    mask = (self.events['runNumber'] <= run_high) & (self.events['runNumber'] >= run_low)
+                    chan_calibrations = ak.where(mask, True, chan_calibrations)
 
         areas = self.events['area']
         npe = areas / chan_calibrations

@@ -172,6 +172,10 @@ struct offline_tree_{
     int tRunNum;
     int tTBEvent;
     //Trigger tree members
+
+    //for sim files
+    Double_t eventWeight;
+
 };
 //Offline factory class used to produce offline tree output
 class OfflineFactory {
@@ -322,6 +326,9 @@ private:
     //settings to turn on variable pulse finding height based on online threshold
     bool variableThresholds = true;
     int thresholdDecrease = 5;
+
+    //variables for sim only
+    Double_t eventWeight;
     
 };
 #endif

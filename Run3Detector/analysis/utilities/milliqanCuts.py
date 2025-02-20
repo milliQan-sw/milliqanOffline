@@ -5,6 +5,8 @@ import numpy as np
 import functools
 import inspect
 import itertools
+import os
+import json
 
 # defining a decorator  
 def mqCut(func):   
@@ -69,6 +71,8 @@ class milliqanCuts():
         self.cutflow = {}
         self.counter = 0
         self.branches = []
+        self.configDir = '../../configuration/'
+        self.debug = False
 
     def to_binary(self, x):
         return bin(int(x))[2:]
@@ -79,15 +83,11 @@ class milliqanCuts():
         # Creates each stage during the first pass
 
         #use fileNumber because it is never 0 (ex event) and it always exists
-
         threshold = 1
         if name == 'totalEventCounter': threshold = 0
 
         if name in self.cutflow:
-
             remaining = ak.sum(self.events['fileNumber'], axis=1) >= threshold
-            #remaining = ak.sum(self.events['fileNumber'][self.events['fullSelection']], axis=1) >= threshold #2/4
-
             remaining = self.events['fileNumber'][remaining]
             self.cutflow[name]['events'] += len(remaining)
             self.cutflow[name]['pulses'] += len(ak.flatten(self.events['fileNumber']))
@@ -100,7 +100,9 @@ class milliqanCuts():
         self.counter+=1
 
     #print out all of the cutflows
-    def getCutflowCounts(self):
+    #if blind is set to the name of a cutflow cut nothing from that cut on will print
+    def getCutflowCounts(self, blind=None):
+        nonSkip = ['totalEventCounter', 'fullEventCounter']
         # Prints the value after each batch of events
         print("----------------------------------Cutflow Table----------------------------------------------------------------------------------")
         print ("{:<25} {:<20} {:<25} {:<20} {:<25} {:<30}".format('Cut', 'N Passing Events', 'Cum Event Eff % (Prev)', 'N Passing Pulses', 'Cum Pulse Eff % (Prev)', 'Cut Applied'))
@@ -110,7 +112,15 @@ class milliqanCuts():
         totalEvents = -1
         totalPulses = -1
         for ival, (key, value) in enumerate(self.cutflow.items()):
-            #print(i, len(self.cutflow))
+
+            if blind is not None and key == blind:
+                break
+            
+            realCut = 'True' if value['cut'] else 'False'
+
+            if not self.debug and not value['cut'] and key not in nonSkip: 
+                continue
+
             evtEff, pulseEff = 1.0, 1.0
             cumEvtEff, cumPulseEff = 1.0, 1.0
             if prevEvents > 0:
@@ -134,7 +144,6 @@ class milliqanCuts():
             allEvt = f"{cumEvtEff} ({evtEff})"
             allPulse = f"{cumPulseEff} ({pulseEff})"
 
-            realCut = 'True' if value['cut'] else 'False'
             print("{:<25} {:<20} {:<25} {:<20} {:<25} {:<30}".format(key, value['events'], allEvt, value['pulses'], allPulse, realCut))
             prevEvents = value['events']
             prevPulses = value['pulses']
@@ -400,6 +409,23 @@ class milliqanCuts():
         if cut:
             self.cutBranches(branches, cutName)
 
+    #inversion of nBarsCut, requires more than n bars hit
+    @mqCut 
+    def nBarsCutInvert(self, cutName='nBarsCutInvert', nBarsCut=6, cut=False, branches=None):
+        if 'countNBars' not in self.branches:
+            barsCut = (self.events['type']==0)
+            uniqueBars = ak.Array([np.unique(x) for x in self.events.chan[barsCut]])
+            nBars = ak.count(uniqueBars, axis=1)
+        else:
+            nBars = self.events['countNBars']
+
+        passCut = nBars > nBarsCut
+        _, passCut = ak.broadcast_arrays(self.events.npulses, passCut)
+        self.events[cutName] = passCut
+
+        if cut:
+            self.cutBranches(branches, cutName)
+
     #########################################
     ## Cuts on Per Channel
     #########################################
@@ -470,6 +496,12 @@ class milliqanCuts():
     @mqCut
     def nPEMaxCut(self, cutName='nPEMaxCut', nPECut=20, cut=False, branches=None):
         self.events[cutName] = self.events.nPE < int(nPECut)
+        if cut:
+            self.cutBranches(branches, cutName)
+
+    @mqCut
+    def energyMaxCut(self, cutName='energyMaxCut', energyCut=2.5, cut=False, branches=None):
+        self.events[cutName] = self.events['energyCal'] < energyCut
         if cut:
             self.cutBranches(branches, cutName)
 
@@ -633,8 +665,8 @@ class milliqanCuts():
         self.events['backPanelNPEBefore'] = self.events['nPE'][(self.events['layer'] == 4) & panelCut]
         self.events['frontPanelNPEAfter'] = self.events['nPE'][(self.events['layer'] == -1) & panelCut & finalCut]
         self.events['backPanelNPEAfter'] = self.events['nPE'][(self.events['layer'] == 4) & panelCut & finalCut]
-
-
+        self.events['maxPanelNPE'] = ak.max(self.events['nPE'][panelCut], axis=1)
+        
         if cut:
             self.cutBranches(branches, cutName)
 
@@ -658,7 +690,7 @@ class milliqanCuts():
     #option allowedMove will select events that only move one bar horizontally/vertically
     #option limitPaths requires only one straight line path through detector
     @mqCut
-    def straightLineCut(self, cutName='straightLineCut', allowedMove=False, limitPaths=False, cut=False, branches=None):
+    def straightLineCut(self, cutName='straightLineCut', allowedMove=False, limitPaths=False, innerBars=False, outerBars=False, cut=False, cutPulse=False, branches=None):
         
         #allowed combinations of moving
         combos = []
@@ -666,7 +698,12 @@ class milliqanCuts():
 
         for i, x in enumerate(range(4)):
             for j, y in enumerate(range(4)):
-
+                if innerBars and (i==0 or i==3 or j==0 or j==3): 
+                    straight_cuts.append(ak.any(self.events['type']==100, axis=1)) #fill with false values
+                    continue
+                if outerBars and (i==1 or i==2 or j==1 or j==2): 
+                    straight_cuts.append(ak.any(self.events['type']==100, axis=1)) #fill with false values
+                    continue
                 rowCut = (self.events['row'] == y) & (self.events['type']==0)
                 colCut = (self.events['column'] == x) & (self.events['type']==0)
 
@@ -727,7 +764,9 @@ class milliqanCuts():
             if ipath == 0: straight_path = path
             else: straight_path = straight_path | path
 
-        
+        self.events[cutName+'Plot'] = straight_path
+
+        _, straight_path = ak.broadcast_arrays(self.events['npulses'], straight_path)
         self.events[cutName] = straight_path
 
         remaining = ak.sum(self.events['fileNumber'], axis=1) >= 1
@@ -760,6 +799,8 @@ class milliqanCuts():
 
 
         if cut:
+            self.cutBranches(branches, cutName)
+        elif cutPulse:
             self.cutBranches(branches, cutName+'Pulse')
 
     #modified version of straight line cut to allow any straight line path
@@ -911,6 +952,22 @@ class milliqanCuts():
         if cut:
             self.cutBranches(branches, 'threeHitPath_allPulses')
 
+
+    #this cut selects out the central 4 bars in each layer only
+    @mqCut
+    def centralQuad(self, cutName='centralQuad', cut=False, branches=None):
+
+        cutRow = (self.events['row'] == 1) | (self.events['row'] == 2)
+        cutCol = (self.events['column'] == 1) | (self.events['column'] == 2)
+        cutCombined = cutRow & cutCol
+
+        cutCentral = ak.where(self.events['type']==0, cutCombined, True)
+
+        self.events[cutName] = cutCentral
+
+        if cut:
+            self.cutBranches(branches, cutName)
+
     ##################################
     ## Pulse Timing Cuts
     ##################################
@@ -1038,15 +1095,20 @@ class milliqanCuts():
     
     #creates mask/cut vetoing any event where the min/max nPE ratio < nPECut
     @mqCut
-    def nPEMaxMin(self, cutName='nPEMaxMin', cut=False, nPECut = 10, branches=None):
-        maxNPE = ak.max(self.events['nPE'][self.events['type']==0], axis=1, keepdims=True)
-        minNPE = ak.min(self.events['nPE'][self.events['type']==0], axis=1, keepdims=True)
+    def nPEMaxMin(self, cutName='nPEMaxMin', cut=False, nPERatioCut = 10, straight=False, branches=None):
+        
+        if straight:
+            maxNPE = ak.max(self.events['nPE'][self.events['straightLineMaxMinPulse']], axis=1, keepdims=True)
+            minNPE = ak.min(self.events['nPE'][self.events['straightLineMaxMinPulse']], axis=1, keepdims=True)            
+        else:
+            maxNPE = ak.max(self.events['nPE'][self.events['type']==0], axis=1, keepdims=True)
+            minNPE = ak.min(self.events['nPE'][self.events['type']==0], axis=1, keepdims=True)
 
         self.events['maxNPEBefore'] = maxNPE
         self.events['minNPEBefore'] = minNPE
 
         nPERatio = maxNPE/minNPE
-        nPECut = nPERatio < nPECut
+        nPECut = nPERatio < nPERatioCut
 
         nPECut = ak.fill_none(nPECut, False)
 
@@ -1099,12 +1161,72 @@ class milliqanCuts():
         files = ak.drop_none(ak.firsts(self.events['fileNumber']))
         events = ak.drop_none(ak.firsts(self.events['event']))
         chans = ak.drop_none(ak.flatten(self.events['chan']))
+        nPE = ak.drop_none(ak.flatten(self.events['nPE']))
         for i, (run, file, event) in enumerate(zip(runs, files, events)):
-            print(f'{i}: run: {run}, file: {file}, event: {event}, channels: {chans}')        
+            print(f'{i}: run: {run}, file: {file}, event: {event}, channels: {chans}, nPE: {nPE}')        
 
+    @mqCut
+    def applyNPEScaling(self, cutName='nPEScaling', sim=False):
+
+        if sim:
+            #chan_calibrations = ak.full_like(self.events['area'], 4395.33) #older version
+            chan_calibrations = ak.full_like(self.events['area'], 3336.77)
+
+        else:
+            extra_configs = ['configRun1173_1295.json', 'configRun1115_1172.json', 'configRun1097_1114.json', 'configRun1059_1096.json', 'configRun987_1058.json']
+        
+            with open(os.path.dirname(__file__)+f'{self.configDir}/barConfigs/configRun1296_present.json', 'r') as f_cal:
+                calibrations = json.load(f_cal)['speAreas']
+                _, calibrations = ak.broadcast_arrays(self.events['sidebandRMS'], ak.Array([calibrations]))
+
+            chan_calibrations = calibrations[self.events['chan']]
+
+            for config in extra_configs:
+                with open(os.path.dirname(__file__)+f'{self.configDir}/barConfigs/{config}', 'r') as f_cal:
+                    extra_cal = json.load(f_cal)['speAreas']
+                    _, extra_cal = ak.broadcast_arrays(self.events['sidebandRMS'], ak.Array([extra_cal]))   
+
+                    runs = config.split('_')
+                    run_low = int(runs[0].replace('configRun', ''))
+                    run_high = int(runs[1].split('.')[0])
+
+                    extra_chanCalibrations = extra_cal[self.events['chan']]
+                    
+                    mask = (self.events['runNumber'] <= run_high) & (self.events['runNumber'] >= run_low)
+                    chan_calibrations = ak.where(mask, True, chan_calibrations)
+
+        areas = self.events['area']
+        npe = areas / chan_calibrations
+
+        self.events['nPE'] = npe
+
+    @mqCut
+    def applyEnergyScaling(self, cutName='energyScaling'):
+
+        extra_configs = ['configRun1173_1295.json', 'configRun1115_1172.json', 'configRun1097_1114.json', 'configRun1059_1096.json', 'configRun987_1058.json']
     
+        with open(os.path.dirname(__file__)+f'{self.configDir}/barConfigs/configRun1296_present.json', 'r') as f_cal:
+            calibrations = json.load(f_cal)['sourceNPE']
+            _, calibrations = ak.broadcast_arrays(self.events['sidebandRMS'], ak.Array([calibrations]))
 
+        chan_calibrations = calibrations[self.events['chan']]
 
+        for config in extra_configs:
+            with open(os.path.dirname(__file__)+f'{self.configDir}/barConfigs/{config}', 'r') as f_cal:
+                extra_cal = json.load(f_cal)['sourceNPE']
+                _, extra_cal = ak.broadcast_arrays(self.events['sidebandRMS'], ak.Array([extra_cal]))   
 
+                runs = config.split('_')
+                run_low = int(runs[0].replace('configRun', ''))
+                run_high = int(runs[1].split('.')[0])
 
+                extra_chanCalibrations = extra_cal[self.events['chan']]
+                
+                mask = (self.events['runNumber'] <= run_high) & (self.events['runNumber'] >= run_low)
+                chan_calibrations = ak.where(mask, True, chan_calibrations)
+
+        npe = self.events['nPE']
+        energyCal = npe / chan_calibrations
+
+        self.events['energyCal'] = energyCal
 

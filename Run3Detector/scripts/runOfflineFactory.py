@@ -69,7 +69,10 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
         try:
             if drs:
                 runNumber = int(inputFile.split("/")[-1].split("CMS")[-1].split(".")[0])
-                fileNumber = 0
+                fileNumber = int(1)
+            elif sim:
+                runNumber = int(1)
+                fileNumber = int(1)
             else:
                 runNumber = int(inputFile.split("/")[-1].split("Run")[-1].split(".")[0])
                 fileNumber = int(inputFile.split("/")[-1].split(".")[1].split("_")[0]) 
@@ -85,7 +88,8 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
         exit()
     
     #copy files from eos
-    copyFromEOS()
+    if not sim:
+        copyFromEOS()
 
     offlineDir = os.getenv("OFFLINEDIR")
     if not configurations:

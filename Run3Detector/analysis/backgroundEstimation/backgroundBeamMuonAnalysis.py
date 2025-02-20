@@ -251,8 +251,11 @@ if __name__ == "__main__":
     timeMaxMinNoCut = getCutMod(mycuts.timeMaxMin, mycuts, 'timeMaxMinPlot', timeCut=20)
     timeMaxMin = getCutMod(mycuts.timeMaxMin, mycuts, 'timeMaxMin', timeCut=15, cut=makeCut, straight=False)
 
-    #veto events with large hit in front/back panels
+    #veto events with large hit in front/back panels, SR1 only
     beamMuonPanelVeto = getCutMod(mycuts.beamMuonPanelVeto, mycuts, 'beamMuonPanelVeto', cut=makeCut, nPECut=0)
+
+    #veto front/back panel events if nPE > 50, SR2 only
+    beamMuonPanelVeto50 = getCutMod(mycuts.beamMuonPanelVeto, mycuts, 'beamMuonPanelVeto', cut=makeCut, nPECut=0)
 
     #require # bars in event  < cut
     nBarsCut = getCutMod(mycuts.nBarsCut, mycuts, 'nBarsCut', nBarsCut=4, cut=makeCut)
@@ -342,8 +345,8 @@ if __name__ == "__main__":
                 areaCut,
                 barsCut,
                 #panelVeto,
-                #straightLineCut,
-                straightLineCutMod,
+                straightLineCut,
+                #straightLineCutMod,
                 timeMaxMin,
                 mycuts.frontBackPanelInfo,
             ]

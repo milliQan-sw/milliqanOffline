@@ -646,6 +646,10 @@ void OfflineFactory::prepareOutBranches(){
     outTree->Branch("tEvtNum", &outputTreeContents.tEvtNum);
     outTree->Branch("tRunNum", &outputTreeContents.tRunNum);
     outTree->Branch("tTBEvent", &outputTreeContents.tTBEvent);
+
+    if (isSim){
+        outTree->Branch("eventWeight", &outputTreeContents.eventWeight);
+    }
 }
 //Clear vectors and reset 
 void OfflineFactory::resetOutBranches(){
@@ -781,7 +785,8 @@ void OfflineFactory::readMetaData(){
     }
     // For sim data
     else{
-
+      outputTreeContents.runNumber = runNumber;
+      outputTreeContents.fileNumber = fileNumber;
       float secondsPerSample;
       metadata->SetBranchAddress("secondsPerSample", &secondsPerSample);
       metadata->SetBranchAddress("numChan", &numChan);
@@ -1527,6 +1532,9 @@ vector<vector<pair<float,float>>> OfflineFactory::readWaveDataPerEvent(int i){
 
     inTree->GetEntry(i);
     if ( i % 1000 == 0) clog << "Processing event " << i << endl;
+    if (isSim){
+        outputTreeContents.eventWeight = eventWeight;
+    }
     if (!isDRS) {
         //Read timing information
         if(initSecs<0){ //if timestamps for first event are uninitialized
@@ -1956,6 +1964,7 @@ vector< pair<float,float> > OfflineFactory::processChannel(int ic){
 void OfflineFactory::loadBranches(){
     if (!isDRS) {
         inTree->SetBranchAddress("event", &evt);
+        if (isSim) inTree->SetBranchAddress("eventWeight", &eventWeight);
         for(int ic=0;ic<numChan;ic++) waves.push_back(new TH1D());
     }
     else{

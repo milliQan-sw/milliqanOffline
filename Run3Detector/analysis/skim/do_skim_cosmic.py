@@ -13,7 +13,7 @@ outputName = 'MilliQan_Run1000_v35_cosmic_beamOff_tight_slab.root'
 beam = False
 goodRun = 'goodRunTight'
 skimType = 'cosmic'
-debug=True
+debug=False
 #######################################################
 
 if len(sys.argv) > 5:

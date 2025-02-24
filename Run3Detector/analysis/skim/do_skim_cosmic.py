@@ -8,7 +8,7 @@ from utilities import *
 
 ########################################################
 ################### Settings ##########################
-directory = '/store/user/milliqan/trees/v35/slab/1000/MilliQanSlab_Run1089.63_v35.root'
+directory = '/store/user/milliqan/trees/v35/slab/1000/'
 outputName = 'MilliQan_Run1000_v35_cosmic_beamOff_tight_slab.root'
 beam = False
 goodRun = 'goodRunTight'

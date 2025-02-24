@@ -66,7 +66,7 @@ void myLooper::Loop(TString outFile, TString lumi, TString runTime)
       for (unsigned long k = 0; k < chan->size(); k++){
          // Apply the standard cuts
          if (pickupFlagTight->at(k)) continue;
-         if (boardsMatched->at(k)) continue;
+         if (!boardsMatched) continue;
          if (ipulse->at(k) != 0) continue;
          if (timeFit_module_calibrated->at(k) < 900 ||
              timeFit_module_calibrated->at(k) > 1500) continue;

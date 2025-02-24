@@ -7,9 +7,9 @@ sys.path.append('../utilities')
 from utilities import *
 
 ########################################################
-################### Settings ##########################
-directory = '/store/user/milliqan/trees/v35/slab/1000/'
-outputName = 'MilliQan_Run1000_v35_cosmic_beamOff_tight_slab.root'
+################### Settings ########################## 600 / 700 / 800 / 900 / 1000
+directory = '/store/user/milliqan/trees/v35/slab/600/'
+outputName = 'MilliQan_Run600_v35_cosmic_beamOff_tight_slab.root'
 beam = False
 goodRun = 'goodRunTight'
 skimType = 'cosmic'

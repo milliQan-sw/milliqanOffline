@@ -30,7 +30,7 @@ filesProcessed = 0
 filelist = []
 
 for ifile, filename in enumerate(os.listdir(directory)):
-    if debug and filesProcessed > 100: break
+    if debug and filesProcessed > 2: break #############################
     if not filename.endswith('root'): continue
     fin = r.TFile.Open(directory+filename)
     if fin.IsZombie(): 

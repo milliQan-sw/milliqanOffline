@@ -8,8 +8,8 @@ from utilities import *
 
 ########################################################
 ################### Settings ########################## 600 / 700 / 800 / 900 / 1000
-directory = '/store/user/milliqan/trees/v35/slab/1000/'
-outputName = 'MilliQan_Run1000_v35_cosmic_beamOff_tight_slab.root'
+directory = '/store/user/milliqan/trees/v35/slab/900/'
+outputName = 'MilliQan_Run900_v35_cosmic_beamOff_tight_slab.root'
 beam = False
 goodRun = 'goodRunTight'
 skimType = 'cosmic'

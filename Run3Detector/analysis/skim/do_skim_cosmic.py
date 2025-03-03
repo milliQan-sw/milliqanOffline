@@ -13,7 +13,7 @@ outputName = 'MilliQan_Run900_v35_cosmic_beamOff_tight_slab.root'
 beam = False
 goodRun = 'goodRunTight'
 skimType = 'cosmic'
-debug=False
+debug = False
 #######################################################
 
 if len(sys.argv) > 5:
@@ -30,12 +30,18 @@ filesProcessed = 0
 filelist = []
 
 for ifile, filename in enumerate(os.listdir(directory)):
-    if debug and filesProcessed > 100: break
-    if not filename.endswith('root'): continue
-    fin = r.TFile.Open(directory+filename)
-    if fin.IsZombie(): 
-        print("File {} is a zombie".format(filename))
-        fin.Close()
+    if debug and filesProcessed > 100: 
+        break
+    if not filename.endswith('root'): 
+        continue
+
+    file_path = os.path.join(directory, filename)
+    fin = r.TFile.Open(file_path)
+    # Check if file failed to open or is a zombie (corrupted/truncated)
+    if not fin or fin.IsZombie():
+        print("Skipping corrupted file: {}".format(filename))
+        if fin:
+            fin.Close()
         continue
     fin.Close()
 
@@ -44,9 +50,8 @@ for ifile, filename in enumerate(os.listdir(directory)):
 
     print(filename)
 
-    mychain.Add(directory+filename)
-    filesProcessed+=1
-
+    mychain.Add(file_path)
+    filesProcessed += 1
     filelist.append(filename)
 
 lumi, runTime = getLumiofFileList(filelist)

@@ -10,6 +10,9 @@
 #include "TNamed.h"
 #include <vector>
 #include <iomanip>
+#include <map>
+#include <set>
+#include <utility>
 
 void myLooper::Loop(TString outFile, TString lumi, TString runTime)
 {
@@ -41,6 +44,15 @@ void myLooper::Loop(TString outFile, TString lumi, TString runTime)
    Long64_t passed = 0;
    
    Long64_t nbytes = 0, nb = 0;
+   
+   // Retrieve the channel mapping from the first event.
+   // We assume the branch "chanMap" is already set up and is of type
+   // std::vector<std::vector<int>>* where each inner vector has 4 ints: 
+   // [col, row, layer, PMT].
+   fChain->GetEntry(0);
+   // "chanMap" is assumed to be a member variable (pointer) set via SetBranchAddress.
+   
+   // Loop over entries (events)
    for (Long64_t jentry = 0; jentry < nentries; jentry++) {
       Long64_t ientry = LoadTree(jentry);
       if (ientry < 0) break;
@@ -56,15 +68,12 @@ void myLooper::Loop(TString outFile, TString lumi, TString runTime)
          std::cout << "Different sizes in 'chan' and 'area' for entry " << jentry << std::endl;
       }
       
-      // Initialize a 3D array to record slab hits.
-      // Dimensions: 4 layers x 4 rows x 3 columns.
-      std::vector<std::vector<std::vector<bool>>> slabHit(
-         4, std::vector<std::vector<bool>>(4, std::vector<bool>(3, false))
-      );
+      // Build a map keyed by (col, row) to record which layers have a hit.
+      std::map< std::pair<int,int>, std::set<int> > hit_map;
       
       // Loop over hits in the event
       for (unsigned long k = 0; k < chan->size(); k++){
-         // Apply the standard cuts
+         // Apply standard cuts
          if (pickupFlagTight->at(k)) continue;
          if (!boardsMatched) continue;
          if (ipulse->at(k) != 0) continue;
@@ -72,48 +81,34 @@ void myLooper::Loop(TString outFile, TString lumi, TString runTime)
              timeFit_module_calibrated->at(k) > 1500) continue;
          if (area->at(k) < minArea) continue;
          
-         // Get the offline channel number for this hit
+         // Get the channel number for this hit
          int ch = chan->at(k);
          
-         // Determine the layer from the channel number.
-         // Channels 0-23: Layer 0, 24-47: Layer 1, 48-71: Layer 2, 72-95: Layer 3.
-         int layer = ch / 24;  // 0-indexed layers
-         if (layer < 0 || layer > 3) continue; // safety check
+         // Retrieve the mapping for channel 'ch' from the chanMap branch.
+         // Each mapping is a vector with 4 integers: [col, row, layer, PMT]
+         if (ch < 0 || ch >= static_cast<int>(chanMap->size())) continue;
+         std::vector<int> mapping = chanMap->at(ch);
+         if (mapping.size() < 4) continue; // Safety check
          
-         // Determine the channel number within the layer.
-         int ch_in_layer = ch % 24;
+         int col   = mapping[0];
+         int row   = mapping[1];
+         int layer = mapping[2];
+         // int pmt = mapping[3]; // PMT info not needed here.
          
-         // Determine the column:
-         // ch_in_layer in [0,7] -> column 2, [8,15] -> column 1, [16,23] -> column 0.
-         int col;
-         if (ch_in_layer < 8)      col = 2;
-         else if (ch_in_layer < 16) col = 1;
-         else                      col = 0;
-         
-         // Determine the row:
-         // For each column block of 8 channels, row = 3 - ((ch_in_layer % 8) / 2)
-         int row = 3 - ((ch_in_layer % 8) / 2);
-         
-         // Mark this slab as hit in the given layer.
-         slabHit[layer][row][col] = true;
+         std::pair<int,int> key = std::make_pair(col, row);
+         hit_map[key].insert(layer);
       }
       
-      // Now, for each slab position (row, col), count how many layers are hit.
+      // Check if any (col, row) location has hits in at least 3 distinct layers.
       bool straightLineEvent = false;
-      for (int r = 0; r < 4 && !straightLineEvent; r++){
-         for (int c = 0; c < 3 && !straightLineEvent; c++){
-            int layersHit = 0;
-            for (int l = 0; l < 4; l++){
-               if (slabHit[l][r][c])
-                  layersHit++;
-            }
-            // Require the slab to be hit in at least 3 layers.
-            if (layersHit >= 3)
-               straightLineEvent = true;
+      for (auto const &entry : hit_map) {
+         if (entry.second.size() >= 3) {
+            straightLineEvent = true;
+            break;
          }
       }
       
-      // Fill the event only if the straight-line cut is satisfied.
+      // Fill the event only if the condition is met.
       if (straightLineEvent) {
          tout->Fill();
          passed++;

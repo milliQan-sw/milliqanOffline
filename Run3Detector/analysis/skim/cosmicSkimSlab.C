@@ -45,13 +45,6 @@ void myLooper::Loop(TString outFile, TString lumi, TString runTime)
    
    Long64_t nbytes = 0, nb = 0;
    
-   // Retrieve the channel mapping from the first event.
-   // We assume the branch "chanMap" is already set up and is of type
-   // std::vector<std::vector<int>>* where each inner vector has 4 ints: 
-   // [col, row, layer, PMT].
-   fChain->GetEntry(0);
-   // "chanMap" is assumed to be a member variable (pointer) set via SetBranchAddress.
-   
    // Loop over entries (events)
    for (Long64_t jentry = 0; jentry < nentries; jentry++) {
       Long64_t ientry = LoadTree(jentry);
@@ -73,7 +66,7 @@ void myLooper::Loop(TString outFile, TString lumi, TString runTime)
       
       // Loop over hits in the event
       for (unsigned long k = 0; k < chan->size(); k++){
-         // Apply standard cuts
+         // Apply the standard cuts
          if (pickupFlagTight->at(k)) continue;
          if (!boardsMatched) continue;
          if (ipulse->at(k) != 0) continue;
@@ -84,17 +77,19 @@ void myLooper::Loop(TString outFile, TString lumi, TString runTime)
          // Get the channel number for this hit
          int ch = chan->at(k);
          
-         // Retrieve the mapping for channel 'ch' from the chanMap branch.
-         // Each mapping is a vector with 4 integers: [col, row, layer, PMT]
-         if (ch < 0 || ch >= static_cast<int>(chanMap->size())) continue;
-         std::vector<int> mapping = chanMap->at(ch);
-         if (mapping.size() < 4) continue; // Safety check
+         // Calculate layer, column, and row based on the known channel map
+         int layer = ch / 24;            // There are 24 channels per layer
+         int ch_in_layer = ch % 24;
+         int col, row;
+         if (ch_in_layer < 8)
+            col = 2;
+         else if (ch_in_layer < 16)
+            col = 1;
+         else
+            col = 0;
+         row = 3 - ((ch_in_layer % 8) / 2);
          
-         int col   = mapping[0];
-         int row   = mapping[1];
-         int layer = mapping[2];
-         // int pmt = mapping[3]; // PMT info not needed here.
-         
+         // Record the layer hit for this (col, row)
          std::pair<int,int> key = std::make_pair(col, row);
          hit_map[key].insert(layer);
       }

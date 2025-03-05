@@ -36,7 +36,12 @@ for ifile, filename in enumerate(os.listdir(directory)):
         continue
 
     file_path = os.path.join(directory, filename)
-    fin = r.TFile.Open(file_path)
+    try:
+        fin = r.TFile.Open(file_path)
+    except Exception as e:
+        print("Skipping corrupted file: {}".format(filename))
+        continue
+
     # Check if file failed to open or is a zombie (corrupted/truncated)
     if not fin or fin.IsZombie():
         print("Skipping corrupted file: {}".format(filename))
@@ -69,5 +74,4 @@ if nEntries > 0:
         r.gROOT.LoadMacro("signalSkim.C")
 
     mylooper = r.myLooper(mychain)
-
     mylooper.Loop(outputName, r.TString(str(lumi)), r.TString(str(runTime.total_seconds())))

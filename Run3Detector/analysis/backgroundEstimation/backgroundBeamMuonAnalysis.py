@@ -72,13 +72,13 @@ def cosmicMuonCutHard(self, cutName='cosmicMuonCutHard', nBarsRequired=4, areaCu
 
 
 @mqCut
-def frontBackPanelInfo(self, cutName='frontBackPanelInfo', cut=False, branches=None):
+def frontBackPanelInfo(self, cutName='frontBackPanelInfo', cut=False, areaCut=100e3, branches=None):
 
-    frontPanelCut = (self.events['type']==1) & (self.events['layer']==-1)
+    frontPanelCut = (self.events['type']==1) & (self.events['layer']==-1) 
     backPanelCut = (self.events['type']==1) & (self.events['layer']==4)
 
-    #frontPanelCut = frontPanelCut & (self.events['height']>=1200)
-    #backPanelCut = backPanelCut & (self.events['height']>=1200)
+    frontPanelCut = frontPanelCut & (self.events['area']>=areaCut)
+    backPanelCut = backPanelCut & (self.events['area']>=areaCut)
     
     self.events['frontArea'] = self.events['area'][frontPanelCut]
     self.events['backArea'] = self.events['area'][backPanelCut]
@@ -100,7 +100,87 @@ def frontBackPanelInfo(self, cutName='frontBackPanelInfo', cut=False, branches=N
 
     _, self.events['frontHits'] = ak.broadcast_arrays(self.events['npulses'], ak.count(self.events['npulses'][frontPanelCut], axis=1))
     _, self.events['backHits'] = ak.broadcast_arrays(self.events['npulses'], ak.count(self.events['npulses'][backPanelCut], axis=1))
+
+    frontTime = ak.max(self.events['timeFit_module_calibrated'][frontPanelCut], axis=1, keepdims=True)
+    backTime = ak.max(self.events['timeFit_module_calibrated'][backPanelCut], axis=1, keepdims=True)
+
+    timeDiff = backTime - frontTime
+
+    self.events['panelTimeDiff'] = timeDiff
+
+
+@mqCut
+def timeDiffBars(self, cutName='timeDiffBars'):
+
+    frontPanelCut = (self.events['type']==1) & (self.events['layer']==-1) & (self.events['area']>100e3)
+
+    L0Mask = (self.events['layer'] == 0) & (self.events['type']==0) & (self.events['straightLineCutModPulse'])
+    L1Mask = (self.events['layer'] == 1) & (self.events['type']==0) & (self.events['straightLineCutModPulse'])
+    L2Mask = (self.events['layer'] == 2) & (self.events['type']==0) & (self.events['straightLineCutModPulse'])
+    L3Mask = (self.events['layer'] == 3) & (self.events['type']==0) & (self.events['straightLineCutModPulse'])
+
+    #changes
+    maxL0 = ak.argmax(self.events['area'][L0Mask], axis=1, keepdims=True)
+    maxL1 = ak.argmax(self.events['area'][L1Mask], axis=1, keepdims=True)
+    maxL2 = ak.argmax(self.events['area'][L2Mask], axis=1, keepdims=True)
+    maxL3 = ak.argmax(self.events['area'][L3Mask], axis=1, keepdims=True)
+
+    frontPanelExists = ak.any(frontPanelCut, axis=1) & ak.any(L0Mask, axis=1)
+    _, frontPanelExists = ak.broadcast_arrays(self.events['npulses'], frontPanelExists)
+
+    #L0Front = L0Mask[maxL0]
+    #L1Front = L1Mask[maxL1]
+    #L2Front = L2Mask[maxL2]
+    #L3Front = L3Mask[maxL3]
+
+    maxL0Front = ak.argmax(self.events['area'][L0Mask&frontPanelExists], axis=1, keepdims=True)
+    maxL1Front = ak.argmax(self.events['area'][L1Mask&frontPanelExists], axis=1, keepdims=True)
+    maxL2Front = ak.argmax(self.events['area'][L2Mask&frontPanelExists], axis=1, keepdims=True)
+    maxL3Front = ak.argmax(self.events['area'][L3Mask&frontPanelExists], axis=1, keepdims=True)
+
+    timesL0Front = ak.drop_none(self.events['timeFit_module_calibrated'][L0Mask&frontPanelExists][maxL0Front])
+    timesL1Front = ak.drop_none(self.events['timeFit_module_calibrated'][L1Mask&frontPanelExists][maxL1Front])
+    timesL2Front = ak.drop_none(self.events['timeFit_module_calibrated'][L2Mask&frontPanelExists][maxL2Front])
+    timesL3Front = ak.drop_none(self.events['timeFit_module_calibrated'][L3Mask&frontPanelExists][maxL3Front])
+
+    timesFront = self.events['timeFit_module_calibrated'][frontPanelCut & ak.any(L0Mask, axis=1)]
     
+    timesL0 = self.events['timeFit_module_calibrated'][L0Mask]
+    timesL1 = self.events['timeFit_module_calibrated'][L1Mask]
+    timesL2 = self.events['timeFit_module_calibrated'][L2Mask]
+    timesL3 = self.events['timeFit_module_calibrated'][L3Mask]
+
+    timesL0 = timesL0[maxL0]
+    timesL1 = timesL1[maxL1]
+    timesL2 = timesL2[maxL2]
+    timesL3 = timesL3[maxL3]
+    #changes
+    
+    timeDiffL30 = timesL3 - timesL0
+    timeDiffL20 = timesL2 - timesL0
+    timeDiffL10 = timesL1 - timesL0
+    
+    #timeDiffFront0 = ak.drop_none(ak.mask(timesL0, frontPanelExists))-ak.drop_none(ak.mask(timesFront, layer0Exists))
+    #timeDiffFront1 = ak.drop_none(ak.mask(timesL1, frontPanelExists))-ak.drop_none(ak.mask(timesFront, layer0Exists))
+    #timeDiffFront2 = ak.drop_none(ak.mask(timesL2, frontPanelExists))-ak.drop_none(ak.mask(timesFront, layer0Exists))
+    #timeDiffFront3 = ak.drop_none(ak.mask(timesL3, frontPanelExists))-ak.drop_none(ak.mask(timesFront, layer0Exists))
+    timeDiffFront0 = timesL0Front - timesFront
+    timeDiffFront1 = timesL1Front - timesFront
+    timeDiffFront2 = timesL2Front - timesFront
+    timeDiffFront3 = timesL3Front - timesFront
+
+    self.events['timeDiffL30'] = timeDiffL30
+    self.events['timeDiffL20'] = timeDiffL20
+    self.events['timeDiffL10'] = timeDiffL10
+    
+    self.events['timeDiffFront0'] = timeDiffFront0
+    self.events['timeDiffFront1'] = timeDiffFront1
+    self.events['timeDiffFront2'] = timeDiffFront2
+    self.events['timeDiffFront3'] = timeDiffFront3
+
+    self.events['nPEL3'] = self.events['nPE'][L3Mask&frontPanelExists&(self.events['chan']==60)]
+    self.events['nPEFront'] = self.events['nPE'][frontPanelCut & ak.any(L0Mask, axis=1)]
+
 
 @mqCut
 def cutStraightPulses(self, cutName='cutStraightPulses', cut=False, branches=None):
@@ -118,52 +198,148 @@ def cutStraightPulses(self, cutName='cutStraightPulses', cut=False, branches=Non
     if cut:
         self.cutBranches(branches, cutName)
 
+@mqCut
+def panelRequired(self, cutName='panelRequired', cut=False, branches=None):
+
+    panelCut = ak.any(self.events['type']==2, axis=1)
+
+    _, panelCut = ak.broadcast_arrays(self.events['npulses'], panelCut)
+
+    self.events[cutName] = panelCut
+
+    if cut:
+        self.cutBranches(branches, cutName)
+
+@mqCut
+def frontAndBackRequired(self, cutName='frontAndBackRequired', areaCut=1e5, timeCut=None, cut=False, branches=None):
+
+    frontPanelCut = ak.any((self.events['type']==1) & (self.events['layer']==-1) & (self.events['area']>areaCut), axis=1)
+    backPanelCut = ak.any((self.events['type']==1) & (self.events['layer']==4) & (self.events['area']>areaCut), axis=1)
+
+    maxFront = ak.argmax(self.events['area'][(self.events['type']==1) & (self.events['layer']==-1) & (self.events['area']>areaCut)], axis=1, keepdims=True)
+    maxBack = ak.argmax(self.events['area'][(self.events['type']==1) & (self.events['layer']==4) & (self.events['area']>areaCut)], axis=1, keepdims=True)
+
+    timesFront = ak.fill_none(self.events['timeFit_module_calibrated'][(self.events['type']==1) & (self.events['layer']==-1) & (self.events['area']>areaCut)][maxFront], 0)
+    timesBack = ak.fill_none(self.events['timeFit_module_calibrated'][(self.events['type']==1) & (self.events['layer']==4) & (self.events['area']>areaCut)][maxBack], 1e10)
+
+    timeDiff = ak.firsts(abs(timesFront-timesBack), axis=1)
+    
+    requireBoth = frontPanelCut & backPanelCut
+
+    if timeCut=='beam':
+        passTime = timeDiff < 15
+    elif timeCut=='cosmic':
+        passTime = timeDiff >=15
+
+    if timeCut is None:
+        requireBoth = requireBoth
+    else:
+        requireBoth = requireBoth & passTime
+
+    _, requireBoth = ak.broadcast_arrays(self.events['npulses'], requireBoth)
+    
+    self.events[cutName] = requireBoth
+
+    if cut:
+        self.cutBranches(branches, cutName)
+
+@mqCut
+def beamMuonCut(self, cutName='beamMuonCut', timeCut=None, cut=False, branches=None):
+
+    layer0Mask = (self.events['layer'] == 0) & (self.events['type']==0)
+    layer1Mask = (self.events['layer'] == 1) & (self.events['type']==0)
+    layer2Mask = (self.events['layer'] == 2) & (self.events['type']==0)
+    layer3Mask = (self.events['layer'] == 3) & (self.events['type']==0)
+
+    max0 = ak.argmax(self.events['area'][layer0Mask], axis=1, keepdims=True)
+    max3 = ak.argmax(self.events['area'][layer3Mask], axis=1, keepdims=True)
+
+    time0 = self.events['timeFit_module_calibrated'][layer0Mask][max0]
+    time3 = self.events['timeFit_module_calibrated'][layer3Mask][max3]
+
+    passing = ak.any(layer0Mask, axis=1) & \
+                ak.any(layer1Mask, axis=1) & \
+                ak.any(layer2Mask, axis=1) & \
+                ak.any(layer3Mask, axis=1)
+
+    self.events['timeDiffL30'] = time3-time0
+    
+    if timeCut is not None:
+        timeMask = abs(time3-time0) < timeCut
+        passing = passing & ak.any(timeMask, axis=1)
+    
+    #self.events['timeDiffL30'] = ak.where(passing, time3-time0, 1e10)
+
+    print(passing)
+    passing = ak.fill_none(passing, False)
+    _, passing = ak.broadcast_arrays(self.events['npulses'], passing)
+    self.events[cutName] = passing
+
+    if cut:
+        self.cutBranches(branches, cutName)
+    
 
 if __name__ == "__main__":
 
-    beam = False
+    beam = True
     skim = True
-    sim = True
-    outputFile = 'bgBeamMuonAnalysis.root'
-    qualityLevel = 'tight'
+    sim = False
+    outputFile = 'beamMuonArea_beamOn_300kDebug.root'
+    qualityLevel = 'override'
     maxEvents = None
     stepSize = 20000
     makeCut = True
 
-    filelist = [     
+    #filelist = ['/eos/experiment/milliqan/sim/bar/beam/beamMuonTree_v2.root']
 
+    filelist = [     
+        '/eos/experiment/milliqan/skims/beam/MilliQan_Run1000_v36_beam_beamOn_medium.root',      
+        '/eos/experiment/milliqan/skims/beam/MilliQan_Run1100_v36_beam_beamOn_medium.root',      
+        '/eos/experiment/milliqan/skims/beam/MilliQan_Run1400_v36_beam_beamOn_medium.root',      
+        '/eos/experiment/milliqan/skims/beam/MilliQan_Run1500_v36_beam_beamOn_medium.root',      
+        '/eos/experiment/milliqan/skims/beam/MilliQan_Run1600_v36_beam_beamOn_medium.root',      
+        '/eos/experiment/milliqan/skims/beam/MilliQan_Run1700_v36_beam_beamOn_medium.root',      
+        '/eos/experiment/milliqan/skims/beam/MilliQan_Run1800_v36_beam_beamOn_medium.root',      
+        '/eos/experiment/milliqan/skims/beam/MilliQan_Run1900_v36_beam_beamOn_medium.root', 
+    ]
+
+    '''filelist = [     
+        '/eos/experiment/milliqan/skims/beam/MilliQan_Run1000_v36_beam_beamOff_medium.root',      
+        '/eos/experiment/milliqan/skims/beam/MilliQan_Run1100_v36_beam_beamOff_medium.root', 
+        '/eos/experiment/milliqan/skims/beam/MilliQan_Run1300_v36_beam_beamOff_medium.root',
+        '/eos/experiment/milliqan/skims/beam/MilliQan_Run1400_v36_beam_beamOff_medium.root',      
+        '/eos/experiment/milliqan/skims/beam/MilliQan_Run1500_v36_beam_beamOff_medium.root',      
+        '/eos/experiment/milliqan/skims/beam/MilliQan_Run1600_v36_beam_beamOff_medium.root',      
+        '/eos/experiment/milliqan/skims/beam/MilliQan_Run1700_v36_beam_beamOff_medium.root',      
+        '/eos/experiment/milliqan/skims/beam/MilliQan_Run1800_v36_beam_beamOff_medium.root',      
+        '/eos/experiment/milliqan/skims/beam/MilliQan_Run1900_v36_beam_beamOff_medium.root', 
+    ]'''
+
+    '''filelist = [     
+        #'/eos/experiment/milliqan/skims/beam/MilliQan_Run1000_v35_beam_beamOn_tight.root',      
+        #'/eos/experiment/milliqan/skims/beam/MilliQan_Run1100_v35_beam_beamOn_tight.root',      
         '/eos/experiment/milliqan/skims/beam/MilliQan_Run1400_v35_beam_beamOn_tight.root',      
         '/eos/experiment/milliqan/skims/beam/MilliQan_Run1500_v35_beam_beamOn_tight.root',      
         '/eos/experiment/milliqan/skims/beam/MilliQan_Run1600_v35_beam_beamOn_tight.root',      
         '/eos/experiment/milliqan/skims/beam/MilliQan_Run1700_v35_beam_beamOn_tight.root',      
         '/eos/experiment/milliqan/skims/beam/MilliQan_Run1800_v35_beam_beamOn_tight.root',      
-        '/eos/experiment/milliqan/skims/beam/MilliQan_Run1900_v35_beam_beamOn_tight.root',      
+        '/eos/experiment/milliqan/skims/beam/MilliQan_Run1900_v35_beam_beamOn_tight.root', 
+    ]'''
 
-        #'/eos/experiment/milliqan/skims/beam/MilliQan_Run1400_v35_beam_beamOn_tight.root',
-        #'/eos/experiment/milliqan/skims/beam/MilliQan_Run1500_v35_beam_beamOn_tight.root',
-        #'/eos/experiment/milliqan/skims/beam/MilliQan_Run1600_v35_beam_beamOn_tight.root',
-        #'/eos/experiment/milliqan/skims/beam/MilliQan_Run1700_v35_beam_beamOn_tight.root',
-        #'/eos/experiment/milliqan/skims/beam/MilliQan_Run1800_v35_beam_beamOn_tight.root',
-        #'/eos/experiment/milliqan/skims/beam/MilliQan_Run1900_v35_beam_beamOn_tight.root',
+    '''filelist = [
 
-        #"/eos/experiment/milliqan/skims/signal/panel50kAllowed/MilliQan_Run1000_v35_signal_beamOff_medium.root",
-        #"/eos/experiment/milliqan/skims/signal/panel50kAllowed/MilliQan_Run1100_v35_signal_beamOff_medium.root",
-        #"/eos/experiment/milliqan/skims/signal/panel50kAllowed/MilliQan_Run1300_v35_signal_beamOff_medium.root",
-        #"/eos/experiment/milliqan/skims/signal/panel50kAllowed/MilliQan_Run1400_v35_signal_beamOff_medium.root",
-        #"/eos/experiment/milliqan/skims/signal/panel50kAllowed/MilliQan_Run1500_v35_signal_beamOff_medium.root",
-        #"/eos/experiment/milliqan/skims/signal/panel50kAllowed/MilliQan_Run1600_v35_signal_beamOff_medium.root",
-        #"/eos/experiment/milliqan/skims/signal/panel50kAllowed/MilliQan_Run1700_v35_signal_beamOff_medium.root",
-        #"/eos/experiment/milliqan/skims/signal/panel50kAllowed/MilliQan_Run1800_v35_signal_beamOff_medium.root",
-        #"/eos/experiment/milliqan/skims/signal/panel50kAllowed/MilliQan_Run1900_v35_signal_beamOff_medium.root",
+        '/eos/experiment/milliqan/skims/cosmic/MilliQan_Run1000_v36_cosmic_beamOff_medium.root',
+        '/eos/experiment/milliqan/skims/cosmic/MilliQan_Run1100_v36_cosmic_beamOff_medium.root',
+        '/eos/experiment/milliqan/skims/cosmic/MilliQan_Run1300_v36_cosmic_beamOff_medium.root',
+        '/eos/experiment/milliqan/skims/cosmic/MilliQan_Run1400_v36_cosmic_beamOff_medium.root',
+        '/eos/experiment/milliqan/skims/cosmic/MilliQan_Run1500_v36_cosmic_beamOff_medium.root',
+        '/eos/experiment/milliqan/skims/cosmic/MilliQan_Run1600_v36_cosmic_beamOff_medium.root',
+        '/eos/experiment/milliqan/skims/cosmic/MilliQan_Run1700_v36_cosmic_beamOff_medium.root',
+        '/eos/experiment/milliqan/skims/cosmic/MilliQan_Run1800_v36_cosmic_beamOff_medium.root',
+        '/eos/experiment/milliqan/skims/cosmic/MilliQan_Run1900_v36_cosmic_beamOff_medium.root',
 
-        #"/eos/experiment/milliqan/skims/signal/MilliQan_Run1300_v35_signal_beamOff_tight.root",
-        #"/eos/experiment/milliqan/skims/signal/MilliQan_Run1400_v35_signal_beamOff_tight.root",
-        #"/eos/experiment/milliqan/skims/signal/MilliQan_Run1500_v35_signal_beamOff_tight.root",
-        #"/eos/experiment/milliqan/skims/signal/MilliQan_Run1600_v35_signal_beamOff_tight.root",
-        #"/eos/experiment/milliqan/skims/signal/MilliQan_Run1700_v35_signal_beamOff_tight.root",
-        #"/eos/experiment/milliqan/skims/signal/MilliQan_Run1800_v35_signal_beamOff_tight.root",
-        #"/eos/experiment/milliqan/skims/signal/MilliQan_Run1900_v35_signal_beamOff_tight.root",
-        ]
+    ]'''
+
 
     if skim:
         qualityLevel = 'override'
@@ -210,7 +386,11 @@ if __name__ == "__main__":
     setattr(milliqanCuts, "comsicMuonCut", cosmicMuonCut)
     setattr(milliqanCuts, "comsicMuonCutHard", cosmicMuonCutHard)
     setattr(milliqanCuts, "cutStraightPulses", cutStraightPulses)
-    
+    setattr(milliqanCuts, "timeDiffBars", timeDiffBars)
+    setattr(milliqanCuts, "panelRequired", panelRequired)
+    setattr(milliqanCuts, "frontAndBackRequired", frontAndBackRequired)
+    setattr(milliqanCuts, 'beamMuonCut', beamMuonCut)
+
 
 
     #require pulses are in trigger window
@@ -232,6 +412,8 @@ if __name__ == "__main__":
     panelVeto = getCutMod(mycuts.panelVeto, mycuts, 'panelVeto', cut=makeCut, nPECut=None)
     #panelVeto = getCutMod(mycuts.panelVetoMod, mycuts, 'panelVeto', cut=makeCut, nPECut=None, areaCut=100e3, panelsAllowed=1)
 
+    panelRequired = getCutMod(mycuts.panelRequired, mycuts, 'panelRequired', cut=makeCut)
+
     #first pulse max
     firstPulseMax = getCutMod(mycuts.firstPulseMax, mycuts, 'firstPulseMax', cut=makeCut)
 
@@ -252,10 +434,10 @@ if __name__ == "__main__":
     timeMaxMin = getCutMod(mycuts.timeMaxMin, mycuts, 'timeMaxMin', timeCut=15, cut=makeCut, straight=False)
 
     #veto events with large hit in front/back panels, SR1 only
-    beamMuonPanelVeto = getCutMod(mycuts.beamMuonPanelVeto, mycuts, 'beamMuonPanelVeto', cut=makeCut, nPECut=0)
+    #beamMuonPanelVeto = getCutMod(mycuts.beamMuonPanelVeto, mycuts, 'beamMuonPanelVeto', cut=makeCut, nPECut=0)
 
     #veto front/back panel events if nPE > 50, SR2 only
-    beamMuonPanelVeto50 = getCutMod(mycuts.beamMuonPanelVeto, mycuts, 'beamMuonPanelVeto', cut=makeCut, nPECut=0)
+    #beamMuonPanelVeto50 = getCutMod(mycuts.beamMuonPanelVeto, mycuts, 'beamMuonPanelVeto', cut=makeCut, nPECut=0)
 
     #require # bars in event  < cut
     nBarsCut = getCutMod(mycuts.nBarsCut, mycuts, 'nBarsCut', nBarsCut=4, cut=makeCut)
@@ -280,13 +462,19 @@ if __name__ == "__main__":
 
     straightLineCut = getCutMod(mycuts.straightLineCut, mycuts, 'straightLineCut', cut=makeCut, allowedMove=False)
 
-    straightLineCutMod = getCutMod(mycuts.straightLineCutMod, mycuts, 'straightLineCutMod', cut=True, allowedMove=True)
+    #straightLineCutMod = getCutMod(mycuts.straightLineCutModWiggle, mycuts, 'straightLineCutMod', timeCut=15, cut=True, allowedMove=True)
+    straightLineCutMod = getCutMod(mycuts.straightLineCutMod, mycuts, 'straightLineCutMod', restrictPaths=True, timeCut=None, cut=False, allowedMove=True)
 
     cutStraightPulses = getCutMod(mycuts.cutStraightPulses, mycuts, 'cutStraightPulses', cut=True)
 
     nPECut = getCutMod(mycuts.nPECut, mycuts, 'nPECut', nPECut=20, cut=True)
-    areaCut = getCutMod(mycuts.areaCut, mycuts, 'areaCut', areaCut=300e3, cut=True)
+    areaCut = getCutMod(mycuts.areaCut, mycuts, 'areaCut', areaCut=300e3, barsOnly=True, cut=True)
 
+    threeInLine = getCutMod(mycuts.threeInLine, mycuts, 'threeInLine', cut=True)
+
+    frontAndBackRequired = getCutMod(mycuts.frontAndBackRequired, mycuts, 'frontAndBackRequired', timeCut='beam', cut=True)
+
+    beamMuonCut = getCutMod(mycuts.beamMuonCut, mycuts, 'beamMuonCut', timeCut=15, cut=True)
     
     h_frontPanelHits = r.TH1F('h_frontPanelHits', 'Number of Front Panel Hits;# Panels;Events', 10, 0, 10)
     h_backPanelHits = r.TH1F('h_backPanelHits', 'Number of Back Panel Hits;# Panels;Events', 10, 0, 10)
@@ -307,8 +495,24 @@ if __name__ == "__main__":
     h_backPanelAreaVsHeight = r.TH2F('h_backPanelAreaVsHeight', 'Area vs Height Back Panel;Area;Height', 900, 0, 9e5, 130, 0, 1300)
     h_frontPanelDurationVsHeight = r.TH2F('h_frontPanelDurationVsHeight', 'Duration vs Height Front Panel', 200, 0, 600, 130, 0, 1300)
     h_backPanelDurationVsHeight = r.TH2F('h_backPanelDurationVsHeight', 'Duration vs Height Back Panel', 200, 0, 600, 130, 0, 1300)
+    h_timeDiffL30 = r.TH1F('h_timeDiffL30', 'Time Between Front/Back Layer', 800, -200, 200)
+    h_timeDiffL20 = r.TH1F('h_timeDiffL20', 'Time Between Front/Back Layer', 800, -200, 200)
+    h_timeDiffL10 = r.TH1F('h_timeDiff10', 'Time Between Front/Back Layer', 800, -200, 200)
+
+    h_timeDiffFront0 = r.TH1F('h_timeDiffFront0', 'Time Between Front/Back Layer', 800, -200, 200)
+    h_timeDiffFront1 = r.TH1F('h_timeDiffFront1', 'Time Between Front/Back Layer', 800, -200, 200)
+    h_timeDiffFront2 = r.TH1F('h_timeDiffFront2', 'Time Between Front/Back Layer', 800, -200, 200)
+    h_timeDiffFront3 = r.TH1F('h_timeDiffFront3', 'Time Between Front/Back Layer', 800, -200, 200)
+
+    h_timeDiffPanel = r.TH1F('h_timeDiffPanel', 'Time Between Front/Back Panel', 200, -200, 200)
+    h_timeDiffPanelRun = r.TH2F('h_timeDiffPanelRun', 'Time Between Front/Back Panel Per Run', 400, -200, 200, 100, 1000, 2000)
+
+    h_nPEL3 = r.TH1F('h_nPEL3', '', 500, 0, 1000)
+    h_nPEFront = r.TH1F('h_nPEFront', '', 500, 0, 1000)
 
     h_beamMuonPerRun = r.TH1F('h_beamMuonPerRun', 'Beam Muons Per Run;Run Number;# Events', 1000, 1000, 2000)
+
+    h_chanVsTime = r.TH2F('h_chanVsTime', 'Channel vs Time', 80, 0, 80, 2400, 0, 2400)
 
     #define milliqan plotter
     myplotter = milliqanPlotter()
@@ -334,6 +538,24 @@ if __name__ == "__main__":
     myplotter.addHistograms(h_frontPanelDurationVsHeight, ['frontDuration', 'frontHeight'])
     myplotter.addHistograms(h_backPanelDurationVsHeight, ['backDuration', 'backHeight'])
     myplotter.addHistograms(h_beamMuonPerRun, 'runNumber', 'first')
+    myplotter.addHistograms(h_timeDiffL30, 'timeDiffL30')
+    myplotter.addHistograms(h_timeDiffL20, 'timeDiffL20')
+    myplotter.addHistograms(h_timeDiffL10, 'timeDiffL10')
+
+    myplotter.addHistograms(h_timeDiffFront0, 'timeDiffFront0')
+    myplotter.addHistograms(h_timeDiffFront1, 'timeDiffFront1')
+    myplotter.addHistograms(h_timeDiffFront2, 'timeDiffFront2')
+    myplotter.addHistograms(h_timeDiffFront3, 'timeDiffFront3')
+
+    myplotter.addHistograms(h_nPEL3, 'nPEL3')
+    myplotter.addHistograms(h_nPEFront, 'nPEFront')
+
+    myplotter.addHistograms(h_timeDiffPanel, 'panelTimeDiff')
+    #myplotter.addHistograms(h_timeDiffPanel, ['panelTimeDiff', 'runNumber'])
+
+    myplotter.addHistograms(h_chanVsTime, ['chan', 'timeFit_module_calibrated'])
+
+
 
     
     cutflow = [mycuts.totalEventCounter, 
@@ -342,13 +564,20 @@ if __name__ == "__main__":
                 pickupCut, 
                 firstPulseCut,
                 centralTimeCut,
-                areaCut,
-                barsCut,
+                #frontBackPanelRequired,
                 #panelVeto,
-                straightLineCut,
+                #panelRequired,
+                areaCut,
+                #straightLineCut,
+                #threeInLine,
+                #frontAndBackRequired,
+                beamMuonCut,
                 #straightLineCutMod,
-                timeMaxMin,
-                mycuts.frontBackPanelInfo,
+
+                #straightLineCut,
+                #timeMaxMin,
+                #mycuts.frontBackPanelInfo,
+                #mycuts.timeDiffBars,
             ]
 
     for key, value in myplotter.dict.items():

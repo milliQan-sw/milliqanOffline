@@ -114,10 +114,10 @@ def timeDiffBars(self, cutName='timeDiffBars'):
 
     frontPanelCut = (self.events['type']==1) & (self.events['layer']==-1) & (self.events['area']>100e3)
 
-    L0Mask = (self.events['layer'] == 0) & (self.events['type']==0) & (self.events['straightLineCutModPulse'])
-    L1Mask = (self.events['layer'] == 1) & (self.events['type']==0) & (self.events['straightLineCutModPulse'])
-    L2Mask = (self.events['layer'] == 2) & (self.events['type']==0) & (self.events['straightLineCutModPulse'])
-    L3Mask = (self.events['layer'] == 3) & (self.events['type']==0) & (self.events['straightLineCutModPulse'])
+    L0Mask = (self.events['layer'] == 0) & (self.events['type']==0) #& (self.events['straightLineCutModPulse'])
+    L1Mask = (self.events['layer'] == 1) & (self.events['type']==0) #& (self.events['straightLineCutModPulse'])
+    L2Mask = (self.events['layer'] == 2) & (self.events['type']==0) #& (self.events['straightLineCutModPulse'])
+    L3Mask = (self.events['layer'] == 3) & (self.events['type']==0) #& (self.events['straightLineCutModPulse'])
 
     #changes
     maxL0 = ak.argmax(self.events['area'][L0Mask], axis=1, keepdims=True)
@@ -252,9 +252,13 @@ def beamMuonCut(self, cutName='beamMuonCut', timeCut=None, cut=False, branches=N
     layer3Mask = (self.events['layer'] == 3) & (self.events['type']==0)
 
     max0 = ak.argmax(self.events['area'][layer0Mask], axis=1, keepdims=True)
+    max1 = ak.argmax(self.events['area'][layer1Mask], axis=1, keepdims=True)
+    max2 = ak.argmax(self.events['area'][layer2Mask], axis=1, keepdims=True)
     max3 = ak.argmax(self.events['area'][layer3Mask], axis=1, keepdims=True)
 
     time0 = self.events['timeFit_module_calibrated'][layer0Mask][max0]
+    time1 = self.events['timeFit_module_calibrated'][layer1Mask][max1]
+    time2 = self.events['timeFit_module_calibrated'][layer2Mask][max2]
     time3 = self.events['timeFit_module_calibrated'][layer3Mask][max3]
 
     passing = ak.any(layer0Mask, axis=1) & \
@@ -263,6 +267,8 @@ def beamMuonCut(self, cutName='beamMuonCut', timeCut=None, cut=False, branches=N
                 ak.any(layer3Mask, axis=1)
 
     self.events['timeDiffL30'] = time3-time0
+    self.events['timeDiffL20'] = time2-time0
+    self.events['timeDiffL10'] = time1-time0
     
     if timeCut is not None:
         timeMask = abs(time3-time0) < timeCut
@@ -270,7 +276,6 @@ def beamMuonCut(self, cutName='beamMuonCut', timeCut=None, cut=False, branches=N
     
     #self.events['timeDiffL30'] = ak.where(passing, time3-time0, 1e10)
 
-    print(passing)
     passing = ak.fill_none(passing, False)
     _, passing = ak.broadcast_arrays(self.events['npulses'], passing)
     self.events[cutName] = passing
@@ -284,7 +289,7 @@ if __name__ == "__main__":
     beam = True
     skim = True
     sim = False
-    outputFile = 'beamMuonArea_beamOn_300kDebug.root'
+    outputFile = 'beamMuonPlots/beamMuonArea_beamOff_300kDebug.root'
     qualityLevel = 'override'
     maxEvents = None
     stepSize = 20000
@@ -292,7 +297,7 @@ if __name__ == "__main__":
 
     #filelist = ['/eos/experiment/milliqan/sim/bar/beam/beamMuonTree_v2.root']
 
-    filelist = [     
+    '''filelist = [     
         '/eos/experiment/milliqan/skims/beam/MilliQan_Run1000_v36_beam_beamOn_medium.root',      
         '/eos/experiment/milliqan/skims/beam/MilliQan_Run1100_v36_beam_beamOn_medium.root',      
         '/eos/experiment/milliqan/skims/beam/MilliQan_Run1400_v36_beam_beamOn_medium.root',      
@@ -301,9 +306,9 @@ if __name__ == "__main__":
         '/eos/experiment/milliqan/skims/beam/MilliQan_Run1700_v36_beam_beamOn_medium.root',      
         '/eos/experiment/milliqan/skims/beam/MilliQan_Run1800_v36_beam_beamOn_medium.root',      
         '/eos/experiment/milliqan/skims/beam/MilliQan_Run1900_v36_beam_beamOn_medium.root', 
-    ]
+    ]'''
 
-    '''filelist = [     
+    filelist = [     
         '/eos/experiment/milliqan/skims/beam/MilliQan_Run1000_v36_beam_beamOff_medium.root',      
         '/eos/experiment/milliqan/skims/beam/MilliQan_Run1100_v36_beam_beamOff_medium.root', 
         '/eos/experiment/milliqan/skims/beam/MilliQan_Run1300_v36_beam_beamOff_medium.root',
@@ -313,7 +318,7 @@ if __name__ == "__main__":
         '/eos/experiment/milliqan/skims/beam/MilliQan_Run1700_v36_beam_beamOff_medium.root',      
         '/eos/experiment/milliqan/skims/beam/MilliQan_Run1800_v36_beam_beamOff_medium.root',      
         '/eos/experiment/milliqan/skims/beam/MilliQan_Run1900_v36_beam_beamOff_medium.root', 
-    ]'''
+    ]
 
     '''filelist = [     
         #'/eos/experiment/milliqan/skims/beam/MilliQan_Run1000_v35_beam_beamOn_tight.root',      
@@ -455,7 +460,7 @@ if __name__ == "__main__":
     barsCut = getCutMod(mycuts.barCut, mycuts, 'barCut', cut=makeCut)
 
     #require a hit in front and/or back panel
-    frontBackPanelRequired = getCutMod(mycuts.requireFrontBackPanel, mycuts, 'frontBackPanelRequired', cut=makeCut)
+    frontBackPanelRequired = getCutMod(mycuts.requireFrontBackPanel, mycuts, 'frontBackPanelRequired', cut=True)
 
     cosmicMuonCut = getCutMod(cosmicMuonCut, mycuts, 'cosmicMuonCut', cut=makeCut)
     cosmicMuonCutHard = getCutMod(cosmicMuonCutHard, mycuts, 'cosmicMuonCutHard', cut=makeCut)
@@ -497,7 +502,7 @@ if __name__ == "__main__":
     h_backPanelDurationVsHeight = r.TH2F('h_backPanelDurationVsHeight', 'Duration vs Height Back Panel', 200, 0, 600, 130, 0, 1300)
     h_timeDiffL30 = r.TH1F('h_timeDiffL30', 'Time Between Front/Back Layer', 800, -200, 200)
     h_timeDiffL20 = r.TH1F('h_timeDiffL20', 'Time Between Front/Back Layer', 800, -200, 200)
-    h_timeDiffL10 = r.TH1F('h_timeDiff10', 'Time Between Front/Back Layer', 800, -200, 200)
+    h_timeDiffL10 = r.TH1F('h_timeDiffL10', 'Time Between Front/Back Layer', 800, -200, 200)
 
     h_timeDiffFront0 = r.TH1F('h_timeDiffFront0', 'Time Between Front/Back Layer', 800, -200, 200)
     h_timeDiffFront1 = r.TH1F('h_timeDiffFront1', 'Time Between Front/Back Layer', 800, -200, 200)
@@ -513,7 +518,10 @@ if __name__ == "__main__":
     h_beamMuonPerRun = r.TH1F('h_beamMuonPerRun', 'Beam Muons Per Run;Run Number;# Events', 1000, 1000, 2000)
 
     h_chanVsTime = r.TH2F('h_chanVsTime', 'Channel vs Time', 80, 0, 80, 2400, 0, 2400)
-
+    h_nPEFrontPanel = r.TH1F('h_nPEFrontPanel', 'NPE Front Panel;NPE;Pulses', 75, 0, 150)
+    h_nPEBackPanel = r.TH1F('h_nPEBackPanel', 'NPE Back Panel;NPE;Pulses', 75, 0, 150)
+    h_nPEPanels = r.TH2F('h_nPEPanels', 'NPE of Panels;Front Panel NPE;Back Panel NPE', 76, -2, 150, 76, -2, 150)
+    h_numPanels = r.TH1F('h_numPanels', 'Number of Front/Back Panels;Panels Hit;Events', 4, 0, 4)
     #define milliqan plotter
     myplotter = milliqanPlotter()
     myplotter.dict.clear()
@@ -547,14 +555,17 @@ if __name__ == "__main__":
     myplotter.addHistograms(h_timeDiffFront2, 'timeDiffFront2')
     myplotter.addHistograms(h_timeDiffFront3, 'timeDiffFront3')
 
-    myplotter.addHistograms(h_nPEL3, 'nPEL3')
-    myplotter.addHistograms(h_nPEFront, 'nPEFront')
+    #myplotter.addHistograms(h_nPEL3, 'nPEL3')
+    #myplotter.addHistograms(h_nPEFront, 'nPEFront')
 
     myplotter.addHistograms(h_timeDiffPanel, 'panelTimeDiff')
     #myplotter.addHistograms(h_timeDiffPanel, ['panelTimeDiff', 'runNumber'])
 
     myplotter.addHistograms(h_chanVsTime, ['chan', 'timeFit_module_calibrated'])
-
+    myplotter.addHistograms(h_nPEFrontPanel, 'frontNPE')
+    myplotter.addHistograms(h_nPEBackPanel, 'backNPE')
+    myplotter.addHistograms(h_nPEPanels, ['frontNPE', 'backNPE'])
+    myplotter.addHistograms(h_numPanels, 'nPanels')
 
 
     
@@ -577,11 +588,13 @@ if __name__ == "__main__":
                 #straightLineCut,
                 #timeMaxMin,
                 #mycuts.frontBackPanelInfo,
-                #mycuts.timeDiffBars,
+                mycuts.timeDiffBars,
+                mycuts.panelInfo,
             ]
 
     for key, value in myplotter.dict.items():
         if value not in cutflow:
+            print("appending", value)
             cutflow.append(value)
 
     #create a schedule of the cuts

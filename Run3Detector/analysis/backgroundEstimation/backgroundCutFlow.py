@@ -31,7 +31,7 @@ if __name__ == "__main__":
     beam = False
     skim = True
     sim = False
-    outputFile = 'bgCutFlow_SR1_v35.root'
+    outputFile = 'bgCutFlow_SR1_beamOff_energyDepAnalysis.root'
     qualityLevel = 'tight'
     maxEvents = None
     stepSize = 20000
@@ -39,28 +39,36 @@ if __name__ == "__main__":
     blindVar = None
 
     if blind:
-        blindVar = 'nPEMaxMin'
-    
+        blindVar = 'energyMaxMin'
 
-    filelist = [     
-        "/eos/experiment/milliqan/skims/signal/panel50kAllowed/MilliQan_Run1000_v35_signal_beamOff_medium.root",
-        "/eos/experiment/milliqan/skims/signal/panel50kAllowed/MilliQan_Run1100_v35_signal_beamOff_medium.root",
-        "/eos/experiment/milliqan/skims/signal/panel50kAllowed/MilliQan_Run1300_v35_signal_beamOff_medium.root",
-        "/eos/experiment/milliqan/skims/signal/panel50kAllowed/MilliQan_Run1400_v35_signal_beamOff_medium.root",
-        "/eos/experiment/milliqan/skims/signal/panel50kAllowed/MilliQan_Run1500_v35_signal_beamOff_medium.root",
-        "/eos/experiment/milliqan/skims/signal/panel50kAllowed/MilliQan_Run1600_v35_signal_beamOff_medium.root",
-        "/eos/experiment/milliqan/skims/signal/panel50kAllowed/MilliQan_Run1700_v35_signal_beamOff_medium.root",
-        "/eos/experiment/milliqan/skims/signal/panel50kAllowed/MilliQan_Run1800_v35_signal_beamOff_medium.root",
-        "/eos/experiment/milliqan/skims/signal/panel50kAllowed/MilliQan_Run1900_v35_signal_beamOff_medium.root",
+    if beam and not blind:
+        print("should be blinded if using beam")
+        sys.exit(0)
 
-        #"/eos/experiment/milliqan/skims/signal/MilliQan_Run1300_v35_signal_beamOff_tight.root",
-        #"/eos/experiment/milliqan/skims/signal/MilliQan_Run1400_v35_signal_beamOff_tight.root",
-        #"/eos/experiment/milliqan/skims/signal/MilliQan_Run1500_v35_signal_beamOff_tight.root",
-        #"/eos/experiment/milliqan/skims/signal/MilliQan_Run1600_v35_signal_beamOff_tight.root",
-        #"/eos/experiment/milliqan/skims/signal/MilliQan_Run1700_v35_signal_beamOff_tight.root",
-        #"/eos/experiment/milliqan/skims/signal/MilliQan_Run1800_v35_signal_beamOff_tight.root",
-        #"/eos/experiment/milliqan/skims/signal/MilliQan_Run1900_v35_signal_beamOff_tight.root",
+    if beam:
+        filelist = [
+            "/eos/experiment/milliqan/skims/signal/MilliQan_Run1000_v36_signal_beamOn_medium.root",
+            "/eos/experiment/milliqan/skims/signal/MilliQan_Run1100_v36_signal_beamOn_medium.root",  
+            "/eos/experiment/milliqan/skims/signal/MilliQan_Run1400_v36_signal_beamOn_medium.root",
+            "/eos/experiment/milliqan/skims/signal/MilliQan_Run1500_v36_signal_beamOn_medium.root",
+            "/eos/experiment/milliqan/skims/signal/MilliQan_Run1600_v36_signal_beamOn_medium.root",
+            "/eos/experiment/milliqan/skims/signal/MilliQan_Run1700_v36_signal_beamOn_medium.root",
+            "/eos/experiment/milliqan/skims/signal/MilliQan_Run1800_v36_signal_beamOn_medium.root",
+            "/eos/experiment/milliqan/skims/signal/MilliQan_Run1900_v36_signal_beamOn_medium.root",
         ]
+    else:
+        filelist = [
+            "/eos/experiment/milliqan/skims/signal/MilliQan_Run1000_v36_signal_beamOff_medium.root",
+            "/eos/experiment/milliqan/skims/signal/MilliQan_Run1100_v36_signal_beamOff_medium.root",  
+            "/eos/experiment/milliqan/skims/signal/MilliQan_Run1300_v36_signal_beamOff_medium.root",
+            "/eos/experiment/milliqan/skims/signal/MilliQan_Run1400_v36_signal_beamOff_medium.root",
+            "/eos/experiment/milliqan/skims/signal/MilliQan_Run1500_v36_signal_beamOff_medium.root",
+            "/eos/experiment/milliqan/skims/signal/MilliQan_Run1600_v36_signal_beamOff_medium.root",
+            "/eos/experiment/milliqan/skims/signal/MilliQan_Run1700_v36_signal_beamOff_medium.root",
+            "/eos/experiment/milliqan/skims/signal/MilliQan_Run1800_v36_signal_beamOff_medium.root",
+            "/eos/experiment/milliqan/skims/signal/MilliQan_Run1900_v36_signal_beamOff_medium.root",
+        ]
+
 
     if skim:
         qualityLevel = 'override'
@@ -102,6 +110,8 @@ if __name__ == "__main__":
     #define the milliqan cuts object
     mycuts = milliqanCuts()
 
+    mycuts.selectionEfficiencies=False
+    
     #set the directory with milliqan configs
     mycuts.configDir = '/../../configuration/'
     
@@ -137,6 +147,7 @@ if __name__ == "__main__":
     
     #npe max/min < 20 cut
     nPEMaxMin = getCutMod(mycuts.nPEMaxMin, mycuts, 'nPEMaxMin', nPERatioCut=20, cut=makeCut, straight=False)
+    energyMaxMin = getCutMod(mycuts.energyMaxMin, mycuts, 'energyMaxMin', energyRatioCut=10, cut=makeCut, straight=False)
     
     nPEMaxCut = getCutMod(mycuts.nPEMaxCut, mycuts, 'nPEMaxCut', nPECut=20, cut=makeCut)
     energyMaxCut2p5 = getCutMod(mycuts.energyMaxCut, mycuts, 'energyMaxCut2p5', energyCut=2.5, cut=makeCut)
@@ -230,6 +241,7 @@ if __name__ == "__main__":
     h_timeDiff = r.TH1F('h_timeDiff', 'Time Difference (Max-Min);Time Diff (ns);Events', 500, 0, 500)
     h_ABCD = r.TH2F('h_ABCD', 'Straight Line vs Time Window Cuts for ABCD;Straight Line Paths;Max-Min Time (ns)', 2, 0, 2, 300, 0, 300)
     h_ABCD2 = r.TH2F('h_ABCD2', 'Max Panel NPE vs N Bars Hit;Max Panel NPE;N Bars Hit', 100, 0, 500, 20, 0, 20)
+    h_energyDeposited = r.TH1F('h_energyDeposited', 'Energy Deposited in Bars;Energy [keV];Pulses', 700, 0, 700)
 
     h_TimeDiffStraight = r.TH1F('h_TimeDiffStraight', 'Max-Min Time Difference Straight Paths', 600, 0, 2400)
     h_TimeDiffNotStraight = r.TH1F('h_TimeDiffNotStraight', 'Max-Min Time Difference Non Straight Paths', 600, 0, 2400)
@@ -291,15 +303,18 @@ if __name__ == "__main__":
     myplotter.addHistograms(h_timeAfter, ['minTimeAfter', 'maxTimeAfter'])
     myplotter.addHistograms(h_timeDiff, 'timeMaxMinDiff')
     myplotter.addHistograms(h_ABCD, ['straightLineCutPlot', 'timeMaxMinPlotDiff'], 'straightLineCutNew')
-    myplotter.addHistograms(h_TimeDiffStraight, 'timeMaxMinPlotDiff', 'straightLineCutNew')
-    myplotter.addHistograms(h_TimeDiffNotStraight, 'timeMaxMinPlotDiff', 'straightLineCutNew', invert=True)
+    #myplotter.addHistograms(h_TimeDiffStraight, 'timeDiff', 'straightLineCutNew')
+    myplotter.addHistograms(h_TimeDiffStraight, 'timeMaxMinPlotDiffStraight')
+    myplotter.addHistograms(h_TimeDiffNotStraight, 'timeMaxMinPlotDiffNotStraight')
+    myplotter.addHistograms(h_energyDeposited, 'energyCal')
+
     if SR==2:
         myplotter.addHistograms(h_ABCD2, ['maxPanelNPE', 'countNBars'])
 
     if SR==1:
         cutflow = [mycuts.totalEventCounter, 
                 mycuts.fullEventCounter,
-                mycuts.applyNPEScaling,
+                #mycuts.applyNPEScaling,
                 mycuts.applyEnergyScaling,                
                 mycuts.timeDiff,
                 boardMatchCut, 
@@ -313,7 +328,6 @@ if __name__ == "__main__":
 
                 myplotter.dict['h_nLayersBeforeAllLayers'],
                 hitInAllLayers,
-                #mycuts.printEvents,
 
                 myplotter.dict['h_nLayersAfterAllLayers'],
                 myplotter.dict['h_nHitsPerLayerBefore'],
@@ -328,7 +342,7 @@ if __name__ == "__main__":
                 barsCut,
 
                 #nPEMaxCut,
-                energyMaxCut2p5, #SR1 only
+                #energyMaxCut2p5, #SR1 only
 
                 sidebandRMSCut,
 
@@ -342,7 +356,7 @@ if __name__ == "__main__":
 
                 vetoEarlyPulse,
                 
-                nPEMaxMin,
+                energyMaxMin,
                 myplotter.dict['h_maxNPEBefore'],
                 myplotter.dict['h_minNPEBefore'],
                 myplotter.dict['h_maxNPEAfter'],
@@ -378,7 +392,7 @@ if __name__ == "__main__":
     else:
         cutflow = [mycuts.totalEventCounter, 
                 mycuts.fullEventCounter,
-                mycuts.applyNPEScaling,
+                #mycuts.applyNPEScaling,
                 mycuts.applyEnergyScaling,
                 mycuts.timeDiff,
                 boardMatchCut, 
@@ -406,8 +420,7 @@ if __name__ == "__main__":
 
                 vetoEarlyPulse,
 
-                straightLineMaxMin,                
-                nPEMaxMin,
+                energyMaxMin,
                 myplotter.dict['h_maxNPEBefore'],
                 myplotter.dict['h_minNPEBefore'],
                 myplotter.dict['h_maxNPEAfter'],
@@ -444,7 +457,7 @@ if __name__ == "__main__":
                    
                 nBarsCut, #move cut here for SR2 only
                 beamMuonPanelVeto50, #SR2 only
-                mycuts.printEvents,
+
             ]
 
     for key, value in myplotter.dict.items():

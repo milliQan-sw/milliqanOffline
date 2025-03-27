@@ -162,7 +162,7 @@ class milliqanCuts():
     #method to apply cut to a function, used by the decorator
     def cutBranches(self, branches, cutName):
 
-        perChanBranches = ['sidebandRMS']
+        perChanBranches = ['sidebandRMS', 'sidebandMean']
 
         #self.events['fullSelection'] = self.events['fullSelection'] & self.events[cutName] #2/4
 
@@ -229,6 +229,59 @@ class milliqanCuts():
         if tight: mycut = ~self.events.pickupFlagTight
         else: mycut = ~self.events.pickupFlag
         self.events[cutName] = mycut
+
+        if cut:
+            self.cutBranches(branches, cutName)
+
+    @mqCut
+    def pickupCutCustom(self, cutName='pickupCutCustom', cut=False, branches=None):
+        failRiseTime = self.events['riseSamples'] < 3
+        failFallTime = self.events['fallSamples'] < 5
+        #add height requirement to ensure saturating pulses with small rise/fall times are excluded
+        heightReq = self.events['height'] < 450
+
+        pickupFail = failRiseTime & failFallTime & heightReq
+        self.events[cutName] = ~pickupFail
+
+        if cut:
+            self.cutBranches(branches, cutName)
+
+    @mqCut
+    def noiseCut(self, cutName='noiseCut', cut=False, branches=None):
+
+        channelsHit = self.events['chan']
+
+        #select  -5 <= prePulseMean <= 5
+        passPrePulseMean = (self.events['prePulseMean'] >= -5) & (self.events['prePulseMean'] <= 5)
+
+        #select prePulse RMS < 5
+        passPrePulseRMS = self.events['prePulseRMS'] <= 5
+
+        #select -5 <= sideband mean <= 5
+        passSidebandMean = (self.events['sidebandMean'][channelsHit] >= -5) & (self.events['sidebandMean'][channelsHit] <= 5)
+
+        #select sidebandRMS <= 5
+        passSidebandRMS = self.events['sidebandRMS'][channelsHit] <= 5
+
+        passNoise = passPrePulseMean & passSidebandRMS & passPrePulseRMS & passSidebandMean
+
+        self.events['noiseCut'] = passNoise
+
+        if cut:
+            self.cutBranches(branches, cutName)
+
+    @mqCut
+    def darkRateCut(self, cutName='darkRateCut', cut=False, branches=None):
+
+        #duration >= 50ns
+        passDuration = self.events['duration'] >= 50
+
+        #nPE > 0.3
+        passNPE = self.events['nPE'] >= 0.3
+
+        passDarkRate = passNPE & passDuration
+
+        self.events[cutName] = passDarkRate
 
         if cut:
             self.cutBranches(branches, cutName)
@@ -811,9 +864,10 @@ class milliqanCuts():
         for x in range(4):
             for y in range(4):
                 _, this_straightCut = ak.broadcast_arrays(self.events['npulses'], straight_cuts[4*x+y])
-                if(x == 0 and y == 0): straight_pulse = (this_straightCut) & (self.events['column'] == x) & (self.events['row'] == y)
-                else: straight_pulse = (straight_pulse) | ((this_straightCut) & (self.events['column'] == x) & (self.events['row'] == y))
-            
+                if(x == 0 and y == 0): straight_pulse = (this_straightCut) & (self.events['column'] == x) & (self.events['row'] == y) & (self.events['type'] == 0)
+                else: straight_pulse = (straight_pulse) | ((this_straightCut) & (self.events['column'] == x) & (self.events['row'] == y) & (self.events['type'] == 0))
+
+
         self.events['numStraightPaths'] = ak.sum(straight_pulse, axis=1) / 4
 
         if allowPanels:
@@ -1208,12 +1262,12 @@ class milliqanCuts():
 
         timesMask = (self.events['type']==0)
 
-        times = self.events['timeFit_module_calibrated']
+        times = self.events['timeFit_module_calibrated'][timesMask]
         if straight:
             timesMask = self.events['straightLineCutPulse']
             times = ak.where(ak.any(self.events['straightLineCutPulse'], axis=1), 
                              self.events['timeFit_module_calibrated'][self.events['straightLineCutPulse']], 
-                             self.events['timeFit_module_calibrated'])
+                             self.events['timeFit_module_calibrated'][timesMask])
         
         maxTime = ak.max(times, axis=1, keepdims=True)
         minTime = ak.min(times, axis=1, keepdims=True)
@@ -1323,7 +1377,6 @@ class milliqanCuts():
         if cut:
             self.cutBranches(branches, cutName)
 
-
     #cuts on std dev between max/min nPE pulses
     @mqCut
     def nPEStdDev(self, cutName='nPEStdDev', cut=False, std=5, branches=None):
@@ -1366,29 +1419,34 @@ class milliqanCuts():
             print(f'{i}: run: {run}, file: {file}, event: {event}, channels: {chans}, nPE: {nPE}')        
 
     @mqCut
-    def applyNPEScaling(self, cutName='nPEScaling'):
-    
-        extra_configs = ['configRun1173_1295.json', 'configRun1115_1172.json', 'configRun1097_1114.json', 'configRun1059_1096.json', 'configRun987_1058.json']
-    
-        with open(os.path.dirname(__file__)+f'{self.configDir}/barConfigs/configRun1296_present.json', 'r') as f_cal:
-            calibrations = json.load(f_cal)['speAreas']
-            _, calibrations = ak.broadcast_arrays(self.events['sidebandRMS'], ak.Array([calibrations]))
+    def applyNPEScaling(self, cutName='nPEScaling', sim=False):
 
-        chan_calibrations = calibrations[self.events['chan']]
+        if sim:
+            #chan_calibrations = ak.full_like(self.events['area'], 4395.33) #older version
+            chan_calibrations = ak.full_like(self.events['area'], 3336.77)
 
-        for config in extra_configs:
-            with open(os.path.dirname(__file__)+f'{self.configDir}/barConfigs/{config}', 'r') as f_cal:
-                extra_cal = json.load(f_cal)['speAreas']
-                _, extra_cal = ak.broadcast_arrays(self.events['sidebandRMS'], ak.Array([extra_cal]))   
+        else:
+            extra_configs = ['configRun1173_1295.json', 'configRun1115_1172.json', 'configRun1097_1114.json', 'configRun1059_1096.json', 'configRun987_1058.json']
+        
+            with open(os.path.dirname(__file__)+f'{self.configDir}/barConfigs/configRun1296_present.json', 'r') as f_cal:
+                calibrations = json.load(f_cal)['speAreas']
+                _, calibrations = ak.broadcast_arrays(self.events['sidebandRMS'], ak.Array([calibrations]))
 
-                runs = config.split('_')
-                run_low = int(runs[0].replace('configRun', ''))
-                run_high = int(runs[1].split('.')[0])
+            chan_calibrations = calibrations[self.events['chan']]
 
-                extra_chanCalibrations = extra_cal[self.events['chan']]
-                
-                mask = (self.events['runNumber'] <= run_high) & (self.events['runNumber'] >= run_low)
-                chan_calibrations = ak.where(mask, True, chan_calibrations)
+            for config in extra_configs:
+                with open(os.path.dirname(__file__)+f'{self.configDir}/barConfigs/{config}', 'r') as f_cal:
+                    extra_cal = json.load(f_cal)['speAreas']
+                    _, extra_cal = ak.broadcast_arrays(self.events['sidebandRMS'], ak.Array([extra_cal]))   
+
+                    runs = config.split('_')
+                    run_low = int(runs[0].replace('configRun', ''))
+                    run_high = int(runs[1].split('.')[0])
+
+                    extra_chanCalibrations = extra_cal[self.events['chan']]
+                    
+                    mask = (self.events['runNumber'] <= run_high) & (self.events['runNumber'] >= run_low)
+                    chan_calibrations = ak.where(mask, True, chan_calibrations)
 
         areas = self.events['area']
         npe = areas / chan_calibrations
@@ -1396,7 +1454,7 @@ class milliqanCuts():
         self.events['nPE'] = npe
 
     @mqCut
-    def applyEnergyScaling(self, cutName='energyScaling'):
+    def applyEnergyScaling(self, cutName='energyScaling', sim=False):
 
         extra_configs = ['configRun1173_1295.json', 'configRun1115_1172.json', 'configRun1097_1114.json', 'configRun1059_1096.json', 'configRun987_1058.json']
     
@@ -1406,22 +1464,24 @@ class milliqanCuts():
 
         chan_calibrations = calibrations[self.events['chan']]
 
-        for config in extra_configs:
-            with open(os.path.dirname(__file__)+f'{self.configDir}/barConfigs/{config}', 'r') as f_cal:
-                extra_cal = json.load(f_cal)['sourceNPE']
-                _, extra_cal = ak.broadcast_arrays(self.events['sidebandRMS'], ak.Array([extra_cal]))   
+        if not sim:
+            for config in extra_configs:
+                with open(os.path.dirname(__file__)+f'{self.configDir}/barConfigs/{config}', 'r') as f_cal:
+                    extra_cal = json.load(f_cal)['sourceNPE']
+                    _, extra_cal = ak.broadcast_arrays(self.events['sidebandRMS'], ak.Array([extra_cal]))   
 
-                runs = config.split('_')
-                run_low = int(runs[0].replace('configRun', ''))
-                run_high = int(runs[1].split('.')[0])
+                    runs = config.split('_')
+                    run_low = int(runs[0].replace('configRun', ''))
+                    run_high = int(runs[1].split('.')[0])
 
-                extra_chanCalibrations = extra_cal[self.events['chan']]
-                
-                mask = (self.events['runNumber'] <= run_high) & (self.events['runNumber'] >= run_low)
-                chan_calibrations = ak.where(mask, True, chan_calibrations)
+                    extra_chanCalibrations = extra_cal[self.events['chan']]
+                    
+                    mask = (self.events['runNumber'] <= run_high) & (self.events['runNumber'] >= run_low)
+                    chan_calibrations = ak.where(mask, True, chan_calibrations)
 
         npe = self.events['nPE']
-        energyCal = npe / chan_calibrations
+        energyCal = (npe / chan_calibrations) * 22.1
 
         self.events['energyCal'] = energyCal
+
 

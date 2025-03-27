@@ -42,7 +42,11 @@ class milliqanPlot():
                 
         else:
             if self.cut:
-                if self.cut == 'first': #cut to get just first pulse for plotting event level
+                if self.cut == 'weight':
+                    weight = ak.sum(ak.firsts(events[self.variables]))
+                    self.histogram.Fill(0, weight)
+                    return
+                elif self.cut == 'first': #cut to get just first pulse for plotting event level
                     output = ak.flatten(ak.firsts(events[self.variables]),axis=None)
                 elif self.cut in events.fields:
                     if self.invert: #TODO fix this inversion

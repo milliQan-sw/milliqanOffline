@@ -65,13 +65,16 @@ class milliQanScheduler():
 
     def plotEventWeight(self):
         
-        weight = ak.sum(ak.firsts(self.events['eventWeight']))
+
+        weightlist = ak.to_list(ak.drop_none(ak.firsts(self.events['eventWeight'])))
+        weight = ak.sum(ak.firsts(self.events['eventWeight'], axis=1))
 
         self.eventWeights = TH1F('h_eventWeights', 'Event Weight', 1, 0, 1)
 
         self.eventWeights.Fill(0, weight)
         
-        self.plotter.histograms.append(milliqanPlot(self.eventWeights, None))
+        if not self.eventWeights in self.plotter.histograms():
+            self.plotter.histograms.append(milliqanPlot(self.eventWeights, None))
 
     #if option blind is set to a cutflow cut name all cuts after will not be shown
     def cutFlowPlots(self, blind=None):

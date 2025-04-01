@@ -22,10 +22,10 @@ class milliqanPlot():
                 if self.cut == 'first': #cut to get just first pulse for plotting event level
                     output = [ak.flatten(ak.firsts(events[x]),axis=None) for x in self.variables]
                 elif self.cut in events.fields:
-                    #if self.invert: #TODO fix this inversion
-                    #    output = [ak.flatten(events[x][~events[self.cut]],axis=None) for x in self.variables]
-                    #else:
-                    output = [ak.flatten(events[x][events[self.cut]],axis=None) for x in self.variables]
+                    if self.invert: #TODO fix this inversion
+                        output = [ak.flatten(events[x][~events[self.cut]],axis=None) for x in self.variables]
+                    else:
+                        output = [ak.flatten(events[x][events[self.cut]],axis=None) for x in self.variables]
                 else:
                     print("No branch {} found in keys".format(self.cut))
             else:
@@ -49,10 +49,10 @@ class milliqanPlot():
                 elif self.cut == 'first': #cut to get just first pulse for plotting event level
                     output = ak.flatten(ak.firsts(events[self.variables]),axis=None)
                 elif self.cut in events.fields:
-                    #if self.invert: #TODO fix this inversion
-                    #    output = ak.flatten(events[self.variables][~events[self.cut]],axis=None)
-                    #else:
-                    output = ak.flatten(events[self.variables][events[self.cut]],axis=None)
+                    if self.invert: #TODO fix this inversion
+                        output = ak.flatten(events[self.variables][~events[self.cut]],axis=None)
+                    else:
+                        output = ak.flatten(events[self.variables][events[self.cut]],axis=None)
                 else:
                     print("No branch {} found in keys".format(self.cut))
             else:

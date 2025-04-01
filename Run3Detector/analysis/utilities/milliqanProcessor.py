@@ -124,7 +124,7 @@ class milliqanProcessor():
 
                     else:
                         print("MilliQan Processor: Branch {0} does not exist in event array or custom output".format(branch.variables))
-                        continue
+                        break
             else:
                 branch()
         return events
@@ -173,14 +173,6 @@ class milliqanProcessor():
             _, events['tTrigger'] = ak.broadcast_arrays(events[broadcastChan], events['tTrigger'])
             _, events['event'] = ak.broadcast_arrays(events[broadcastChan], events['event'])
             _, events['boardsMatched'] = ak.broadcast_arrays(events[broadcastChan], events['boardsMatched'])
-            if self.sim:
-                _, events['eventWeight'] = ak.broadcast_arrays(events[broadcastChan], events['eventWeight'])
-            events['fullSelection'] = ak.full_like(events[broadcastChan], True)
-
-            #this is a new branch we are creating and it needs to be cut with all other branches
-            #TODO add function to handle any cases similar to this
-            if 'energyCal' not in self.mqSchedule.cuts.branches:
-                self.mqSchedule.cuts.branches.append('energyCal')
 
             if self.max_events and total_events >= self.max_events: break
 

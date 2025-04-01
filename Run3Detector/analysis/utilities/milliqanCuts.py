@@ -716,14 +716,15 @@ class milliqanCuts():
     
     #creates mask/cut vetoing any event with front/back panel hit w/ nPE > nPECut
     @mqCut
-    def beamMuonPanelVeto(self, cutName='beamMuonPanelVeto', cut=False, nPECut=100, branches=None):
+    def beamMuonPanelVeto(self, cutName='beamMuonPanelVeto', cut=False, nPECut=100, invert=False, branches=None):
         
         passNPECut = self.events['nPE'] > nPECut
         panelCut = self.events['type'] == 1
 
         finalCut = passNPECut & panelCut
         finalCut = ak.any(finalCut, axis=1)
-        finalCut = ~finalCut
+        if not invert:
+            finalCut = ~finalCut
 
         finalCut = ak.fill_none(finalCut, False)
         testIndex = ak.where(ak.num(self.events['nPE'][(self.events['layer'] == -1) & panelCut], axis=1) > 0)

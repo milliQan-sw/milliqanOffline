@@ -150,15 +150,15 @@ if __name__ == "__main__":
     energyMaxMin = getCutMod(mycuts.energyMaxMin, mycuts, 'energyMaxMin', energyRatioCut=10, cut=makeCut, straight=False)
     
     nPEMaxCut = getCutMod(mycuts.nPEMaxCut, mycuts, 'nPEMaxCut', nPECut=20, cut=makeCut)
-    energyMaxCut2p5 = getCutMod(mycuts.energyMaxCut, mycuts, 'energyMaxCut2p5', energyCut=2.5, cut=makeCut)
+    energyMaxCut = getCutMod(mycuts.energyMaxCut, mycuts, 'energyMaxCut2p5', energyCut=1000, cut=makeCut)
 
     #time max-min < 15 cut
     timeMaxMinNoCut = getCutMod(mycuts.timeMaxMin, mycuts, 'timeMaxMinPlot', timeCut=20, straight=True)
     timeMaxMin = getCutMod(mycuts.timeMaxMin, mycuts, 'timeMaxMin', timeCut=20, cut=makeCut, straight=True)
 
-    #veto events with nPE>50 in SR2
-    beamMuonPanelVeto50 = getCutMod(mycuts.beamMuonPanelVeto, mycuts, 'beamMuonPanelVeto50', cut=makeCut, nPECut=50)
-    beamMuonPanelVeto50NoCut = getCutMod(mycuts.beamMuonPanelVeto, mycuts, 'beamMuonPanelVeto50NoCut', cut=False, nPECut=0)
+    #veto events with nPE>70 in SR2
+    beamMuonPanelVeto70 = getCutMod(mycuts.beamMuonPanelVeto, mycuts, 'beamMuonPanelVeto', cut=makeCut, nPECut=70)
+    beamMuonPanelVeto70NoCut = getCutMod(mycuts.beamMuonPanelVeto, mycuts, 'beamMuonPanelVetoNoCut', cut=False, nPECut=0)
     
     #veto events with large hit in front/back panels, SR1
     beamMuonPanelVeto = getCutMod(mycuts.beamMuonPanelVeto, mycuts, 'beamMuonPanelVeto', cut=makeCut, nPECut=0)
@@ -341,16 +341,11 @@ if __name__ == "__main__":
 
                 barsCut,
 
-                #nPEMaxCut,
-                #energyMaxCut2p5, #SR1 only
+                energyMaxCut, #SR1 only
 
                 sidebandRMSCut,
 
                 myplotter.dict['h_nBars'],
-
-                #myplotter.dict['h_nLayersBeforeOneHitPerLayer'],
-                #oneHitPerLayer,
-                #myplotter.dict['h_nLayersAfterOneHitPerLayer'],
 
                 firstPulseMax,
 
@@ -452,11 +447,11 @@ if __name__ == "__main__":
                 myplotter.dict['h_maxTimeAfter'],
 
                 mycuts.countNBars,
-                beamMuonPanelVeto50NoCut, 
+                beamMuonPanelVeto70NoCut, 
                 myplotter.dict['h_ABCD2'],
                    
                 nBarsCut, #move cut here for SR2 only
-                beamMuonPanelVeto50, #SR2 only
+                beamMuonPanelVeto70, #SR2 only
 
             ]
 

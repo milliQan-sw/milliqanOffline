@@ -108,7 +108,7 @@ if __name__ == "__main__":
         mass = filelist[0].split('/')[-1].split('_')[1]
         charge = filelist[0].split('/')[-1].split('_')[-1].split('.')[0]
 
-    SR=2
+    SR=1
     outputFile = f'bgCutFlow_signalSim_{mass}_{charge}_{job}.root'
     beam = False
     skim = True

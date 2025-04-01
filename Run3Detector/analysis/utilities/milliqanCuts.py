@@ -753,6 +753,12 @@ class milliqanCuts():
         self.events['frontNPE'] = frontNPE
         self.events['backNPE'] = backNPE
 
+        barEnergy = self.events['energyCal'][(self.events['type'] == 0)]
+        barNPE = self.events['nPE'][(self.events['type'] == 0)]
+
+        self.events['barEnergy'] = barEnergy
+        self.events['barNPE'] =barNPE
+
     ######################################
     ## Geometric Selections
     #######################################
@@ -1310,6 +1316,7 @@ class milliqanCuts():
             _, calibrations = ak.broadcast_arrays(self.events['sidebandRMS'], ak.Array([calibrations]))
 
         chan_calibrations = calibrations[self.events['chan']]
+        npe = self.events['nPE']
 
         if not sim:
             for config in extra_configs:
@@ -1326,7 +1333,14 @@ class milliqanCuts():
                     mask = (self.events['runNumber'] <= run_high) & (self.events['runNumber'] >= run_low)
                     chan_calibrations = ak.where(mask, True, chan_calibrations)
 
-        npe = self.events['nPE']
+        
+        else:
+            with open(os.path.dirname(__file__)+f'{self.configDir}/barConfigs/simConfig.json', 'r') as f_cal:
+                calibrations = json.load(f_cal)['sourceNPE']
+                _, calibrations = ak.broadcast_arrays(self.events['sidebandRMS'], ak.Array([calibrations]))
+
+            chan_calibrations = calibrations[self.events['chan']]
+
         energyCal = (npe / chan_calibrations) * 22.1
 
         self.events['energyCal'] = energyCal

@@ -299,7 +299,7 @@ if __name__ == "__main__":
     if SR==1:
         cutflow = [mycuts.totalEventCounter, 
                 mycuts.fullEventCounter,
-                mycuts.applyNPEScaling,
+                #mycuts.applyNPEScaling,
                 mycuts.applyEnergyScaling,                
                 mycuts.timeDiff,
                 boardMatchCut, 
@@ -378,7 +378,7 @@ if __name__ == "__main__":
     else:
         cutflow = [mycuts.totalEventCounter, 
                 mycuts.fullEventCounter,
-                mycuts.applyNPEScaling,
+                #mycuts.applyNPEScaling,
                 mycuts.applyEnergyScaling,
                 mycuts.timeDiff,
                 boardMatchCut, 

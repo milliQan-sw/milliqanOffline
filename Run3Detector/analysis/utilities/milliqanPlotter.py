@@ -22,10 +22,10 @@ class milliqanPlot():
                 if self.cut == 'first': #cut to get just first pulse for plotting event level
                     output = [ak.flatten(ak.firsts(events[x]),axis=None) for x in self.variables]
                 elif self.cut in events.fields:
-                    #if self.invert: #TODO fix this inversion
-                    #    output = [ak.flatten(events[x][~events[self.cut]],axis=None) for x in self.variables]
-                    #else:
-                    output = [ak.flatten(events[x][events[self.cut]],axis=None) for x in self.variables]
+                    if self.invert: #TODO fix this inversion
+                        output = [ak.flatten(events[x][~events[self.cut]],axis=None) for x in self.variables]
+                    else:
+                        output = [ak.flatten(events[x][events[self.cut]],axis=None) for x in self.variables]
                 else:
                     print("No branch {} found in keys".format(self.cut))
             else:
@@ -42,13 +42,17 @@ class milliqanPlot():
                 
         else:
             if self.cut:
-                if self.cut == 'first': #cut to get just first pulse for plotting event level
+                if self.cut == 'weight':
+                    weight = ak.sum(ak.firsts(events[self.variables]))
+                    self.histogram.Fill(0, weight)
+                    return
+                elif self.cut == 'first': #cut to get just first pulse for plotting event level
                     output = ak.flatten(ak.firsts(events[self.variables]),axis=None)
                 elif self.cut in events.fields:
-                    #if self.invert: #TODO fix this inversion
-                    #    output = ak.flatten(events[self.variables][~events[self.cut]],axis=None)
-                    #else:
-                    output = ak.flatten(events[self.variables][events[self.cut]],axis=None)
+                    if self.invert: #TODO fix this inversion
+                        output = ak.flatten(events[self.variables][~events[self.cut]],axis=None)
+                    else:
+                        output = ak.flatten(events[self.variables][events[self.cut]],axis=None)
                 else:
                     print("No branch {} found in keys".format(self.cut))
             else:
@@ -80,6 +84,10 @@ class milliqanPlotter():
         h_ = milliqanPlot(histogram, variable, cut, invert)
         self.histograms.append(h_)
         self.updateDict(h_)
+
+    def resetHistograms(self):
+        for hist in self.histograms:
+            hist.histogram.Reset()
 
     def saveHistograms(self, outputFile):
         fout = TFile.Open(outputFile, 'RECREATE')

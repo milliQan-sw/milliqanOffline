@@ -73,6 +73,7 @@ class milliqanCuts():
         self.branches = []
         self.configDir = '../../configuration/'
         self.debug = False
+        self.selectionEfficiencies = False
 
     def to_binary(self, x):
         return bin(int(x))[2:]
@@ -86,17 +87,24 @@ class milliqanCuts():
         threshold = 1
         if name == 'totalEventCounter': threshold = 0
 
-        if name in self.cutflow:
-            remaining = ak.sum(self.events['fileNumber'], axis=1) >= threshold
-            remaining = self.events['fileNumber'][remaining]
-            self.cutflow[name]['events'] += len(remaining)
-            self.cutflow[name]['pulses'] += len(ak.flatten(self.events['fileNumber']))
+        skipSelectionEff = ['totalEventCounter', 'fullEventCounter', 'applyEnergyScaling']
 
+        #option to print out selection efficiencies if no cuts are actually made
+        if self.selectionEfficiencies and cut:
+            remaining = ak.sum(self.events['fileNumber'][self.events[name]], axis=1) >= threshold
+            remaining = self.events['fileNumber'][remaining]
         else:
             remaining = ak.sum(self.events['fileNumber'], axis=1) >= threshold
             remaining = self.events['fileNumber'][remaining]
+
+        if name in self.cutflow:
+            self.cutflow[name]['events'] += len(remaining)
+            self.cutflow[name]['pulses'] += len(ak.flatten(self.events['fileNumber']))
+    
+        else:
             this_cutflow = {'events': len(remaining), 'pulses': len(ak.flatten(self.events['fileNumber'])), 'cut': cut}
             self.cutflow[name]=this_cutflow
+            
         self.counter+=1
 
     #print out all of the cutflows
@@ -154,9 +162,11 @@ class milliqanCuts():
     #method to apply cut to a function, used by the decorator
     def cutBranches(self, branches, cutName):
 
-        perChanBranches = ['sidebandRMS']
+        perChanBranches = ['sidebandRMS', 'sidebandMean']
 
         #self.events['fullSelection'] = self.events['fullSelection'] & self.events[cutName] #2/4
+
+        if self.selectionEfficiencies: return
 
         for branch in branches:
             if branch in perChanBranches:
@@ -219,6 +229,59 @@ class milliqanCuts():
         if tight: mycut = ~self.events.pickupFlagTight
         else: mycut = ~self.events.pickupFlag
         self.events[cutName] = mycut
+
+        if cut:
+            self.cutBranches(branches, cutName)
+
+    @mqCut
+    def pickupCutCustom(self, cutName='pickupCutCustom', cut=False, branches=None):
+        failRiseTime = self.events['riseSamples'] < 3
+        failFallTime = self.events['fallSamples'] < 5
+        #add height requirement to ensure saturating pulses with small rise/fall times are excluded
+        heightReq = self.events['height'] < 450
+
+        pickupFail = failRiseTime & failFallTime & heightReq
+        self.events[cutName] = ~pickupFail
+
+        if cut:
+            self.cutBranches(branches, cutName)
+
+    @mqCut
+    def noiseCut(self, cutName='noiseCut', cut=False, branches=None):
+
+        channelsHit = self.events['chan']
+
+        #select  -5 <= prePulseMean <= 5
+        passPrePulseMean = (self.events['prePulseMean'] >= -5) & (self.events['prePulseMean'] <= 5)
+
+        #select prePulse RMS < 5
+        passPrePulseRMS = self.events['prePulseRMS'] <= 5
+
+        #select -5 <= sideband mean <= 5
+        passSidebandMean = (self.events['sidebandMean'][channelsHit] >= -5) & (self.events['sidebandMean'][channelsHit] <= 5)
+
+        #select sidebandRMS <= 5
+        passSidebandRMS = self.events['sidebandRMS'][channelsHit] <= 5
+
+        passNoise = passPrePulseMean & passSidebandRMS & passPrePulseRMS & passSidebandMean
+
+        self.events['noiseCut'] = passNoise
+
+        if cut:
+            self.cutBranches(branches, cutName)
+
+    @mqCut
+    def darkRateCut(self, cutName='darkRateCut', cut=False, branches=None):
+
+        #duration >= 50ns
+        passDuration = self.events['duration'] >= 50
+
+        #nPE > 0.3
+        passNPE = self.events['nPE'] >= 0.3
+
+        passDarkRate = passNPE & passDuration
+
+        self.events[cutName] = passDarkRate
 
         if cut:
             self.cutBranches(branches, cutName)
@@ -481,8 +544,15 @@ class milliqanCuts():
                 
     #create mask/cut for pulses passing area cuts
     @mqCut
-    def areaCut(self, cutName='areaCut', areaCut=50000, cut=False, branches=None):
-        self.events[cutName] = self.events.area >= int(areaCut)
+    def areaCut(self, cutName='areaCut', areaCut=50000, barsOnly=False, cut=False, branches=None):
+
+        if barsOnly:
+            cutMask = (self.events['area'] < int(areaCut)) & (self.events['type'] == 0)
+            cutMask = ~cutMask
+        else:
+            cutMask = self.events.area >= int(areaCut)
+            
+        self.events[cutName] = cutMask
         if cut:
             self.cutBranches(branches, cutName)
 
@@ -501,7 +571,7 @@ class milliqanCuts():
 
     @mqCut
     def energyMaxCut(self, cutName='energyMaxCut', energyCut=2.5, cut=False, branches=None):
-        self.events[cutName] = self.events['energyCal'] < energyCut
+        self.events[cutName] = self.events['energyCal'][self.events['type']==0] < energyCut
         if cut:
             self.cutBranches(branches, cutName)
 
@@ -646,14 +716,15 @@ class milliqanCuts():
     
     #creates mask/cut vetoing any event with front/back panel hit w/ nPE > nPECut
     @mqCut
-    def beamMuonPanelVeto(self, cutName='beamMuonPanelVeto', cut=False, nPECut=100, branches=None):
+    def beamMuonPanelVeto(self, cutName='beamMuonPanelVeto', cut=False, nPECut=100, invert=False, branches=None):
         
         passNPECut = self.events['nPE'] > nPECut
         panelCut = self.events['type'] == 1
 
         finalCut = passNPECut & panelCut
         finalCut = ak.any(finalCut, axis=1)
-        finalCut = ~finalCut
+        if not invert:
+            finalCut = ~finalCut
 
         finalCut = ak.fill_none(finalCut, False)
         testIndex = ak.where(ak.num(self.events['nPE'][(self.events['layer'] == -1) & panelCut], axis=1) > 0)
@@ -682,6 +753,30 @@ class milliqanCuts():
         if cut:
             self.cutBranches(branches, cutName)
 
+    @mqCut
+    def panelInfo(self, cutName='panelInfo'):
+
+        num_panels = ak.count(self.events['type'][self.events['type']==1], axis=1)
+
+        #for events with no passing pulses set the number of panels to -1 (technically also zero but want to separate passing events)
+        num_panels = ak.where(ak.count(self.events['type'], axis=1) == 0, -1, num_panels)
+
+        frontNPE = self.events['nPE'][(self.events['type']==1) & (self.events['layer']==-1)]
+        backNPE = self.events['nPE'][(self.events['type']==1) & (self.events['layer']==4)]
+
+        frontNPE = ak.fill_none(ak.pad_none(frontNPE, 1), -1)
+        backNPE = ak.fill_none(ak.pad_none(backNPE, 1), -1)
+
+        self.events['nPanels'] = num_panels
+        self.events['frontNPE'] = frontNPE
+        self.events['backNPE'] = backNPE
+
+        barEnergy = self.events['energyCal'][(self.events['type'] == 0)]
+        barNPE = self.events['nPE'][(self.events['type'] == 0)]
+
+        self.events['barEnergy'] = barEnergy
+        self.events['barNPE'] =barNPE
+
     ######################################
     ## Geometric Selections
     #######################################
@@ -690,7 +785,7 @@ class milliqanCuts():
     #option allowedMove will select events that only move one bar horizontally/vertically
     #option limitPaths requires only one straight line path through detector
     @mqCut
-    def straightLineCut(self, cutName='straightLineCut', allowedMove=False, limitPaths=False, innerBars=False, outerBars=False, cut=False, cutPulse=False, branches=None):
+    def straightLineCut(self, cutName='straightLineCut', allowedMove=False, limitPaths=False, allowPanels=False, innerBars=False, outerBars=False, cut=False, cutPulse=False, branches=None):
         
         #allowed combinations of moving
         combos = []
@@ -771,15 +866,19 @@ class milliqanCuts():
 
         remaining = ak.sum(self.events['fileNumber'], axis=1) >= 1
         self.events[cutName+'New'] = remaining
+        self.events[cutName+'NewInvert'] = ~remaining
 
         for x in range(4):
             for y in range(4):
                 _, this_straightCut = ak.broadcast_arrays(self.events['npulses'], straight_cuts[4*x+y])
-                if(x == 0 and y == 0): straight_pulse = (this_straightCut) & (self.events['column'] == x) & (self.events['row'] == y)
-                else: straight_pulse = (straight_pulse) | ((this_straightCut) & (self.events['column'] == x) & (self.events['row'] == y))
+                if(x == 0 and y == 0): straight_pulse = (this_straightCut) & (self.events['column'] == x) & (self.events['row'] == y) & (self.events['type'] == 0)
+                else: straight_pulse = (straight_pulse) | ((this_straightCut) & (self.events['column'] == x) & (self.events['row'] == y) & (self.events['type'] == 0))
 
 
         self.events['numStraightPaths'] = ak.sum(straight_pulse, axis=1) / 4
+
+        if allowPanels:
+            straight_pulse = straight_pulse | (self.events['type']>0)
 
         if limitPaths:
             maskMultiple = self.events['numStraightPaths'] == 1
@@ -806,7 +905,124 @@ class milliqanCuts():
     #modified version of straight line cut to allow any straight line path
     #allowed move=True will allow any straight line path through the detector
     @mqCut
-    def straightLineCutMod(self, cutName='straightLineCutMod', allowedMove=False, cut=False, branches=None):
+    def straightLineCutMod(self, cutName='straightLineCutMod', timeCut=None, restrictPaths=True, allowedMove=False, cut=False, branches=None):
+
+        #combos = ak.argcombinations(self.events['layer'], 4)
+        
+        newMask = self.events['layer'] == 100 #create false array intentionally
+        allIndices = ak.Array([np.arange(len(x)) for x in newMask])
+
+        layer0 = (self.events['layer'] == 0) & (self.events['type']==0)
+        layer1 = (self.events['layer'] == 1) & (self.events['type']==0)
+        layer2 = (self.events['layer'] == 2) & (self.events['type']==0)
+        layer3 = (self.events['layer'] == 3) & (self.events['type']==0)
+
+        ilayer0 = allIndices[layer0]
+        ilayer1 = allIndices[layer1]
+        ilayer2 = allIndices[layer2]
+        ilayer3 = allIndices[layer3]
+
+        #print(ak.to_list(ilayer0), ak.to_list(ilayer1), ak.to_list(ilayer2), ak.to_list(ilayer3))
+
+        combos = ak.cartesian([ilayer0, ilayer1, ilayer2, ilayer3])
+
+        #print(ak.to_list(combos))
+
+        '''for i in range(4):
+            this_layer = (self.events['layer'][combos['0']] == i) | \
+                        (self.events['layer'][combos['1']] == i) | \
+                        (self.events['layer'][combos['2']] == i) | \
+                        (self.events['layer'][combos['3']] == i) 
+            if i == 0:
+                layer_req = this_layer
+            else:
+                layer_req = layer_req & this_layer
+
+        type_req = (self.events['type'][combos['0']] == 0) & \
+                    (self.events['type'][combos['1']] == 0) & \
+                    (self.events['type'][combos['2']] == 0) & \
+                    (self.events['type'][combos['3']] == 0)
+
+        
+        row01 = abs(self.events['row'][combos['0']] - self.events['row'][combos['1']]) <= allowedMove
+        row02 = abs(self.events['row'][combos['0']] - self.events['row'][combos['2']]) <= allowedMove
+        row03 = abs(self.events['row'][combos['0']] - self.events['row'][combos['3']]) <= allowedMove
+        row12 = abs(self.events['row'][combos['1']] - self.events['row'][combos['2']]) <= allowedMove
+        row13 = abs(self.events['row'][combos['1']] - self.events['row'][combos['3']]) <= allowedMove
+        row23 = abs(self.events['row'][combos['2']] - self.events['row'][combos['3']]) <= allowedMove
+
+        row_req = (ak.values_astype(row01, np.int32) + \
+                ak.values_astype(row02, np.int32) + \
+                ak.values_astype(row03, np.int32) + \
+                ak.values_astype(row12, np.int32) + \
+                ak.values_astype(row13, np.int32) + \
+                ak.values_astype(row23, np.int32)) >= 4
+
+        col01 = abs(self.events['column'][combos['0']] - self.events['column'][combos['1']]) <= allowedMove
+        col02 = abs(self.events['column'][combos['0']] - self.events['column'][combos['2']]) <= allowedMove
+        col03 = abs(self.events['column'][combos['0']] - self.events['column'][combos['3']]) <= allowedMove
+        col12 = abs(self.events['column'][combos['1']] - self.events['column'][combos['2']]) <= allowedMove
+        col13 = abs(self.events['column'][combos['1']] - self.events['column'][combos['3']]) <= allowedMove
+        col23 = abs(self.events['column'][combos['2']] - self.events['column'][combos['3']]) <= allowedMove
+
+        col_req = (ak.values_astype(col01, np.int32) + \
+                   ak.values_astype(col02, np.int32) + \
+                   ak.values_astype(col03, np.int32) + \
+                   ak.values_astype(col12, np.int32) + \
+                   ak.values_astype(col13, np.int32) + \
+                   ak.values_astype(col23, np.int32)) >= 4'''
+
+        row01 = self.events['row'][combos['1']] - self.events['row'][combos['0']]
+        row12 = self.events['row'][combos['2']] - self.events['row'][combos['1']]
+        row23 = self.events['row'][combos['3']] - self.events['row'][combos['2']]
+
+
+        passRow = (abs(row01) > allowedMove) | (abs(row12) > allowedMove) | (abs(row23) > allowedMove)
+        if restrictPaths:
+            passRow = passRow | ((row12!=0) & (row01!=0) & (row12 != row01))
+            passRow = passRow | ((row01!=0) & (row23 != row01))
+            passRow = passRow | ((row12!=0) & (row23!=row12))
+        passRow = ~passRow
+
+        col01 = self.events['column'][combos['1']] - self.events['column'][combos['0']]
+        col12 = self.events['column'][combos['2']] - self.events['column'][combos['1']]
+        col23 = self.events['column'][combos['3']] - self.events['column'][combos['2']]
+
+        passCol = (abs(col01) > allowedMove) | (abs(col12) > allowedMove) | (abs(col23) > allowedMove)
+        if restrictPaths:
+            passCol = passCol | ((col12!=0) & (col01!=0) & (col12 != col01))
+            passCol = passCol | ((col01!=0) & (col23 != col01))
+            passCol = passCol | ((col12!=0) & (col23 != col12))
+        passCol = ~passCol
+
+        if timeCut is not None:
+            passTime = abs((self.events['timeFit_module_calibrated'][combos['3']] - self.events['timeFit_module_calibrated'][combos['0']])) < timeCut
+            straightTest = passCol & passRow & passTime
+        else:
+            straightTest = passCol & passRow
+
+        straightTestAny = ak.any(straightTest, axis=1)
+
+        _, straightTestAny = ak.broadcast_arrays(self.events['npulses'], straightTestAny)
+
+        passingCombos = combos[straightTest]
+        
+        newCombos = ak.concatenate([passingCombos['0'], passingCombos['1'], passingCombos['2'], passingCombos['3']], axis=1)
+
+        newMask = self.events['layer'] == 100 #create false array intentionally
+
+        indices = ak.Array([np.arange(len(x)) for x in newMask])
+        newMask = ak.Array([np.isin(x, newCombos[i]) for i, x in enumerate(indices)])
+
+        self.events[cutName+'Pulse'] = newMask
+
+        if cut:
+            self.cutBranches(branches, cutName+'Pulse')        
+
+    #modified version of straight line cut to allow any straight line path
+    #allowed move=True will allow any straight line path through the detector
+    @mqCut
+    def straightLineCutModWiggle(self, cutName='straightLineCutModWiggle', timeCut=None, allowedMove=False, cut=False, branches=None):
         
         combos = ak.argcombinations(self.events['row'], 4)
 
@@ -848,6 +1064,7 @@ class milliqanCuts():
                    ak.values_astype(col12, np.int32) + \
                    ak.values_astype(col13, np.int32) + \
                    ak.values_astype(col23, np.int32)) >= 4
+            
 
         straightTest = layer_req & col_req & row_req
 
@@ -867,7 +1084,8 @@ class milliqanCuts():
         self.events[cutName+'Pulse'] = newMask
 
         if cut:
-            self.cutBranches(branches, cutName+'Pulse')        
+            self.cutBranches(branches, cutName+'Pulse') 
+
 
     #select self.events that have 3 area saturating pulses in a line
     @mqCut
@@ -895,7 +1113,7 @@ class milliqanCuts():
 
     #creates cut/mask on 3 pulses in a line
     @mqCut
-    def threeInLine(self, cutName='threeInLine', cut=False, pulseCut=True, branches=None):
+    def threeInLine(self, cutName='threeInLine', cut=False, pulseCut=False, branches=None):
         npeCut = 0
 
         for path in range(16):
@@ -915,6 +1133,7 @@ class milliqanCuts():
             threeStraight_f2 = ak.any(layer0, axis=1) & ak.any(layer1, axis=1) & ak.any(layer3, axis=1)
             threeStraight_f3 = ak.any(layer0, axis=1) & ak.any(layer1, axis=1) & ak.any(layer2, axis=1)
 
+            #array for each "free" layer without required hit
             self.events[outputName+'_f0'] = threeStraight_f0
             self.events[outputName+'_f1'] = threeStraight_f1
             self.events[outputName+'_f2'] = threeStraight_f2
@@ -926,11 +1145,13 @@ class milliqanCuts():
             _, b2 = ak.broadcast_arrays(self.events.nPE, threeStraight_f2)
             _, b3 = ak.broadcast_arrays(self.events.nPE, threeStraight_f3)
 
+            #pulses in the "not free" layers
             self.events[outputName+'_p0'] = (b0) & ((layer1) | (layer2) | (layer3))
             self.events[outputName+'_p1'] = (b1) & ((layer0) | (layer2) | (layer3))
             self.events[outputName+'_p2'] = (b2) & ((layer0) | (layer1) | (layer3))
             self.events[outputName+'_p3'] = (b3) & ((layer0) | (layer1) | (layer2))
 
+            #pulses in the free layer
             self.events[outputName+'_s0'] = (threeStraight_f0) & (self.events.layer == 0) & (self.events.nPE >= npeCut)
             self.events[outputName+'_s1'] = (threeStraight_f1) & (self.events.layer == 1) & (self.events.nPE >= npeCut)
             self.events[outputName+'_s2'] = (threeStraight_f2) & (self.events.layer == 2) & (self.events.nPE >= npeCut)
@@ -942,7 +1163,9 @@ class milliqanCuts():
                 allPaths = allPulses
             else:
                 allPaths = allPaths | allPulses
-
+        
+        self.events[cutName+'Pulses'] = allPaths
+        
         if pulseCut:
             self.events['threeHitPath_allPulses'] = allPaths
         else:
@@ -970,7 +1193,7 @@ class milliqanCuts():
 
     ##################################
     ## Pulse Timing Cuts
-    ##################################
+    ##################################xf
 
     #cut gets max time difference between pulses if there are 4 pulses in an event
     @mqCut
@@ -1046,12 +1269,12 @@ class milliqanCuts():
 
         timesMask = (self.events['type']==0)
 
-        times = self.events['timeFit_module_calibrated']
+        times = self.events['timeFit_module_calibrated'][timesMask]
         if straight:
             timesMask = self.events['straightLineCutPulse']
             times = ak.where(ak.any(self.events['straightLineCutPulse'], axis=1), 
                              self.events['timeFit_module_calibrated'][self.events['straightLineCutPulse']], 
-                             self.events['timeFit_module_calibrated'])
+                             self.events['timeFit_module_calibrated'][timesMask])
         
         maxTime = ak.max(times, axis=1, keepdims=True)
         minTime = ak.min(times, axis=1, keepdims=True)
@@ -1072,6 +1295,14 @@ class milliqanCuts():
 
         self.events[cutName] = timeCut
         self.events[cutName+'Diff'] = timeDiff
+
+        timeDiffStraight = ak.mask(timeDiff, ak.firsts(self.events['straightLineCut'], axis=1))
+        timeDiffNotStraight = ak.mask(timeDiff, ak.firsts(~self.events['straightLineCut'], axis=1))
+
+        self.events[cutName+'DiffStraight'] = timeDiffStraight
+        self.events[cutName+'DiffNotStraight'] = timeDiffNotStraight
+
+        
 
         if cut:
             self.cutBranches(branches, cutName)
@@ -1123,6 +1354,38 @@ class milliqanCuts():
         if cut:
             self.cutBranches(branches, cutName)
 
+    #creates mask/cut vetoing any event where the min/max nPE ratio < nPECut
+    @mqCut
+    def energyMaxMin(self, cutName='energyMaxMin', cut=False, energyRatioCut = 10, straight=False, branches=None):
+        
+        if straight:
+            maxEnergy = ak.max(self.events['energyCal'][self.events['straightLineMaxMinPulse']], axis=1, keepdims=True)
+            minEnergy = ak.min(self.events['energyCal'][self.events['straightLineMaxMinPulse']], axis=1, keepdims=True)            
+        else:
+            maxEnergy = ak.max(self.events['energyCal'][self.events['type']==0], axis=1, keepdims=True)
+            minEnergy = ak.min(self.events['energyCal'][self.events['type']==0], axis=1, keepdims=True)
+
+        #print(len(self.events['energyCal'][0]), len(self.events['area'][0]))
+        self.events['maxEnergyBefore'] = maxEnergy
+        self.events['minEnergyBefore'] = minEnergy
+
+        energyRatio = maxEnergy/minEnergy
+        energyCut = energyRatio < energyRatioCut
+
+        #print(maxEnergy, minEnergy, energyRatio)
+
+        energyCut = ak.fill_none(energyCut, False)
+
+        _, energyCutMod = ak.broadcast_arrays(maxEnergy, energyCut)
+        self.events['maxEnergyAfter'] = maxEnergy[energyCutMod] 
+        self.events['minEnergyAfter'] = minEnergy[energyCutMod]
+        self.events['energyRatio'] = energyRatio
+
+        _, energyCut = ak.broadcast_arrays(self.events.npulses, energyCut)
+
+        self.events[cutName] = energyCut
+        if cut:
+            self.cutBranches(branches, cutName)
 
     #cuts on std dev between max/min nPE pulses
     @mqCut
@@ -1193,7 +1456,7 @@ class milliqanCuts():
                     extra_chanCalibrations = extra_cal[self.events['chan']]
                     
                     mask = (self.events['runNumber'] <= run_high) & (self.events['runNumber'] >= run_low)
-                    chan_calibrations = ak.where(mask, True, chan_calibrations)
+                    chan_calibrations = ak.where(mask, extra_chanCalibrations, chan_calibrations)
 
         areas = self.events['area']
         npe = areas / chan_calibrations
@@ -1201,7 +1464,7 @@ class milliqanCuts():
         self.events['nPE'] = npe
 
     @mqCut
-    def applyEnergyScaling(self, cutName='energyScaling'):
+    def applyEnergyScaling(self, cutName='energyScaling', sim=False):
 
         extra_configs = ['configRun1173_1295.json', 'configRun1115_1172.json', 'configRun1097_1114.json', 'configRun1059_1096.json', 'configRun987_1058.json']
     
@@ -1210,23 +1473,37 @@ class milliqanCuts():
             _, calibrations = ak.broadcast_arrays(self.events['sidebandRMS'], ak.Array([calibrations]))
 
         chan_calibrations = calibrations[self.events['chan']]
-
-        for config in extra_configs:
-            with open(os.path.dirname(__file__)+f'{self.configDir}/barConfigs/{config}', 'r') as f_cal:
-                extra_cal = json.load(f_cal)['sourceNPE']
-                _, extra_cal = ak.broadcast_arrays(self.events['sidebandRMS'], ak.Array([extra_cal]))   
-
-                runs = config.split('_')
-                run_low = int(runs[0].replace('configRun', ''))
-                run_high = int(runs[1].split('.')[0])
-
-                extra_chanCalibrations = extra_cal[self.events['chan']]
-                
-                mask = (self.events['runNumber'] <= run_high) & (self.events['runNumber'] >= run_low)
-                chan_calibrations = ak.where(mask, True, chan_calibrations)
-
         npe = self.events['nPE']
-        energyCal = npe / chan_calibrations
+
+        if not sim:
+            for config in extra_configs:
+                with open(os.path.dirname(__file__)+f'{self.configDir}/barConfigs/{config}', 'r') as f_cal:
+                    extra_cal = json.load(f_cal)['sourceNPE']
+                    _, extra_cal = ak.broadcast_arrays(self.events['sidebandRMS'], ak.Array([extra_cal]))   
+
+                    runs = config.split('_')
+                    run_low = int(runs[0].replace('configRun', ''))
+                    run_high = int(runs[1].split('.')[0])
+
+                    extra_chanCalibrations = extra_cal[self.events['chan']]
+                    
+                    mask = (self.events['runNumber'] <= run_high) & (self.events['runNumber'] >= run_low)
+                    chan_calibrations = ak.where(mask, extra_chanCalibrations, chan_calibrations)
+
+        
+        else:
+            with open(os.path.dirname(__file__)+f'{self.configDir}/barConfigs/simConfig.json', 'r') as f_cal:
+                calibrations = json.load(f_cal)['sourceNPE']
+                _, calibrations = ak.broadcast_arrays(self.events['sidebandRMS'], ak.Array([calibrations]))
+
+            chan_calibrations = calibrations[self.events['chan']]
+
+        energyCal = (npe / chan_calibrations) * 22.1
 
         self.events['energyCal'] = energyCal
+
+        if 'energyCal' not in self.branches:
+            self.branches.append('energyCal')
+
+
 

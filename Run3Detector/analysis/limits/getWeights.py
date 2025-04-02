@@ -46,7 +46,7 @@ def charge_to_float(s):
 
 if __name__ == "__main__":
 
-    dataDir = '/data/user/mcarrigan/milliqan/bgCutFlow_signalSim_SR1/'
+    dataDir = '/data/user/mcarrigan/milliqan/bgCutFlow_signalSim_SR2_v6/'
 
     #fout = open('weightsSR2.txt', 'w+')
 
@@ -55,10 +55,12 @@ if __name__ == "__main__":
     df = pd.DataFrame(columns=["mass", "charge", "yield"])
 
     for filename in os.listdir(dataDir):
-        if not filename.endswith('.root'):continue
+        if not filename.endswith('.root') or not filename.startswith('bgCutFlow'): continue
 
         mass_s = filename.split('_')[2]
         charge_s = filename.split('_')[3]
+
+        print(filename, mass_s, charge_s)
 
         mass = mass_to_float(mass_s)
         charge = charge_to_float(charge_s)
@@ -66,12 +68,13 @@ if __name__ == "__main__":
         fin = r.TFile.Open('/'.join([dataDir, filename]), 'READ')
         weights = fin.Get('h_eventWeights')
 
-        weight = weights.GetBinContent(1) * charge**2
+        count = weights.GetBinContent(1) 
+        weight = count* charge**2
 
         df.loc[len(df)] = [mass, charge, weight]
     
     df = df.sort_values(by=['mass', 'charge'])
     
-    df.to_csv('weightsSR1.txt', sep=' ', index=False)
+    df.to_csv('weightsSR2.txt', sep=' ', index=False)
     #fout.close()
 

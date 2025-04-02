@@ -26,12 +26,12 @@ from utilities import *
 
 if __name__ == "__main__":
 
-    SR = 1
+    SR = 2
     blind = False
     beam = False
     skim = True
     sim = False
-    outputFile = 'bgCutFlow_SR1_beamOff_energyDepAnalysis.root'
+    outputFile = 'bgCutFlow_SR2_beamOff_debug.root'
     qualityLevel = 'tight'
     maxEvents = None
     stepSize = 20000
@@ -104,7 +104,8 @@ if __name__ == "__main__":
 
     #define the necessary branches to run over
     branches = ['event', 'tTrigger', 'boardsMatched', 'pickupFlag', 'pickupFlagTight', 'fileNumber', 'runNumber', 'type', 'ipulse', 'nPE', 'chan',
-                'time_module_calibrated', 'timeFit_module_calibrated', 'row', 'column', 'layer', 'height', 'area', 'npulses', 'sidebandRMS']
+                'time_module_calibrated', 'timeFit_module_calibrated', 'row', 'column', 'layer', 'height', 'area', 'npulses', 'sidebandRMS',
+                'riseSamples', 'fallSamples', 'prePulseMean', 'prePulseRMS', 'sidebandMean', 'duration']
 
 
     #define the milliqan cuts object
@@ -119,7 +120,10 @@ if __name__ == "__main__":
     centralTimeCut = getCutMod(mycuts.centralTime, mycuts, 'centralTimeCut', cut=makeCut)
 
     #require pulses are not pickup
-    pickupCut = getCutMod(mycuts.pickupCut, mycuts, 'pickupCut', cut=makeCut, tight=True)
+    #pickupCut = getCutMod(mycuts.pickupCut, mycuts, 'pickupCut', cut=makeCut, tight=True)
+    pickupCut = getCutMod(mycuts.pickupCutCustom, mycuts, 'pickupCut', cut=makeCut)
+    noiseCut = getCutMod(mycuts.noiseCut, mycuts, 'noiseCut', cut=makeCut)
+    darkRateCut = getCutMod(mycuts.darkRateCut, mycuts, 'darkRateCut', cut=makeCut)
 
     #require that all digitizer boards are matched
     boardMatchCut = getCutMod(mycuts.boardsMatched, mycuts, 'boardMatchCut', cut=makeCut, branches=branches)
@@ -150,15 +154,15 @@ if __name__ == "__main__":
     energyMaxMin = getCutMod(mycuts.energyMaxMin, mycuts, 'energyMaxMin', energyRatioCut=10, cut=makeCut, straight=False)
     
     nPEMaxCut = getCutMod(mycuts.nPEMaxCut, mycuts, 'nPEMaxCut', nPECut=20, cut=makeCut)
-    energyMaxCut2p5 = getCutMod(mycuts.energyMaxCut, mycuts, 'energyMaxCut2p5', energyCut=2.5, cut=makeCut)
+    energyMaxCut = getCutMod(mycuts.energyMaxCut, mycuts, 'energyMaxCut2p5', energyCut=1000, cut=makeCut)
 
     #time max-min < 15 cut
     timeMaxMinNoCut = getCutMod(mycuts.timeMaxMin, mycuts, 'timeMaxMinPlot', timeCut=20, straight=True)
     timeMaxMin = getCutMod(mycuts.timeMaxMin, mycuts, 'timeMaxMin', timeCut=20, cut=makeCut, straight=True)
 
-    #veto events with nPE>50 in SR2
-    beamMuonPanelVeto50 = getCutMod(mycuts.beamMuonPanelVeto, mycuts, 'beamMuonPanelVeto50', cut=makeCut, nPECut=50)
-    beamMuonPanelVeto50NoCut = getCutMod(mycuts.beamMuonPanelVeto, mycuts, 'beamMuonPanelVeto50NoCut', cut=False, nPECut=0)
+    #veto events with nPE>70 in SR2
+    beamMuonPanelVeto70 = getCutMod(mycuts.beamMuonPanelVeto, mycuts, 'beamMuonPanelVeto70', cut=makeCut, nPECut=70)
+    beamMuonPanelVeto70NoCut = getCutMod(mycuts.beamMuonPanelVeto, mycuts, 'beamMuonPanelVeto70NoCut', cut=False, nPECut=0)
     
     #veto events with large hit in front/back panels, SR1
     beamMuonPanelVeto = getCutMod(mycuts.beamMuonPanelVeto, mycuts, 'beamMuonPanelVeto', cut=makeCut, nPECut=0)
@@ -261,16 +265,8 @@ if __name__ == "__main__":
     myplotter.addHistograms(h_nLayersAfterOneHitPerLayer, 'nLayers', 'first')
     myplotter.addHistograms(h_nBarsBeforeCut, 'countNBars', 'first')
     myplotter.addHistograms(h_nBarsAfterCut, 'countNBars', 'first')
-    #myplotter.addHistograms(h_nBarsInWindowBefore, 'nBarsInWindowBefore', 'first')
-    #myplotter.addHistograms(h_nBarsInWindowAfter, 'nBarsInWindow', 'first')
     myplotter.addHistograms(h_sidebandsBefore, 'sidebandsBeforeCut')
     myplotter.addHistograms(h_sidebandsAfter, 'sidebandsAfterCut')
-    myplotter.addHistograms(h_panelNPEBefore, 'panelVetoNPEBefore')
-    if SR==1:
-        myplotter.addHistograms(h_panelAreaBefore, 'panelVetoAreaBefore')
-        myplotter.addHistograms(h_panelAreaAfter, 'panelVetoAreaAfter')
-
-    myplotter.addHistograms(h_panelNPEAfter, 'panelVetoNPEAfter')
     myplotter.addHistograms(h_panelHitsBefore, 'panelVetoHitsBefore', 'first')
     myplotter.addHistograms(h_panelHitsAfter, 'panelVetoHitsAfter', 'first')
     myplotter.addHistograms(h_frontPanelNPEBefore, 'frontPanelNPEBefore')
@@ -288,13 +284,6 @@ if __name__ == "__main__":
     myplotter.addHistograms(h_straightTimeBefore, 'timeFit_module_calibrated')
     myplotter.addHistograms(h_straightTimeAfter, 'timeFit_module_calibrated')
     myplotter.addHistograms(h_straightNumPaths, 'numStraightPaths')
-    myplotter.addHistograms(h_maxNPEBefore, 'maxNPEBefore')
-    myplotter.addHistograms(h_minNPEBefore, 'minNPEBefore')
-    myplotter.addHistograms(h_maxNPEAfter, 'maxNPEAfter')
-    myplotter.addHistograms(h_minNPEAfter, 'minNPEAfter')
-    myplotter.addHistograms(h_nPEBefore, ['minNPEBefore', 'maxNPEBefore'])
-    myplotter.addHistograms(h_nPEAfter, ['minNPEAfter', 'maxNPEAfter'])
-    myplotter.addHistograms(h_nPERatio, 'nPERatio')
     myplotter.addHistograms(h_minTimeBefore, 'minTimeBefore')
     myplotter.addHistograms(h_maxTimeBefore, 'maxTimeBefore')
     myplotter.addHistograms(h_minTimeAfter, 'minTimeAfter')
@@ -319,6 +308,8 @@ if __name__ == "__main__":
                 mycuts.timeDiff,
                 boardMatchCut, 
                 pickupCut, 
+                noiseCut, 
+                darkRateCut,
                 firstPulseCut,
                 centralTimeCut,
                 panelVeto,                
@@ -341,27 +332,17 @@ if __name__ == "__main__":
 
                 barsCut,
 
-                #nPEMaxCut,
-                #energyMaxCut2p5, #SR1 only
+                energyMaxCut, #SR1 only
 
                 sidebandRMSCut,
 
                 myplotter.dict['h_nBars'],
-
-                #myplotter.dict['h_nLayersBeforeOneHitPerLayer'],
-                #oneHitPerLayer,
-                #myplotter.dict['h_nLayersAfterOneHitPerLayer'],
 
                 firstPulseMax,
 
                 vetoEarlyPulse,
                 
                 energyMaxMin,
-                myplotter.dict['h_maxNPEBefore'],
-                myplotter.dict['h_minNPEBefore'],
-                myplotter.dict['h_maxNPEAfter'],
-                myplotter.dict['h_minNPEAfter'],
-                myplotter.dict['h_nPERatio'],
 
                 #include versions of these selections w/o cutting to make ABCD plot
                 mycuts.straightLineCut, 
@@ -397,6 +378,8 @@ if __name__ == "__main__":
                 mycuts.timeDiff,
                 boardMatchCut, 
                 pickupCut, 
+                noiseCut, 
+                darkRateCut,                
                 firstPulseCut,
                 centralTimeCut,
                 panelVeto,                
@@ -421,12 +404,6 @@ if __name__ == "__main__":
                 vetoEarlyPulse,
 
                 energyMaxMin,
-                myplotter.dict['h_maxNPEBefore'],
-                myplotter.dict['h_minNPEBefore'],
-                myplotter.dict['h_maxNPEAfter'],
-                myplotter.dict['h_minNPEAfter'],
-                myplotter.dict['h_nPERatio'],
-
                 #include versions of these selections w/o cutting to make ABCD plot
                 mycuts.straightLineCut, 
                 timeMaxMinNoCut,
@@ -452,11 +429,11 @@ if __name__ == "__main__":
                 myplotter.dict['h_maxTimeAfter'],
 
                 mycuts.countNBars,
-                beamMuonPanelVeto50NoCut, 
+                beamMuonPanelVeto70NoCut, 
                 myplotter.dict['h_ABCD2'],
                    
                 nBarsCut, #move cut here for SR2 only
-                beamMuonPanelVeto50, #SR2 only
+                beamMuonPanelVeto70, #SR2 only
 
             ]
 

@@ -716,14 +716,15 @@ class milliqanCuts():
     
     #creates mask/cut vetoing any event with front/back panel hit w/ nPE > nPECut
     @mqCut
-    def beamMuonPanelVeto(self, cutName='beamMuonPanelVeto', cut=False, nPECut=100, branches=None):
+    def beamMuonPanelVeto(self, cutName='beamMuonPanelVeto', cut=False, nPECut=100, invert=False, branches=None):
         
         passNPECut = self.events['nPE'] > nPECut
         panelCut = self.events['type'] == 1
 
         finalCut = passNPECut & panelCut
         finalCut = ak.any(finalCut, axis=1)
-        finalCut = ~finalCut
+        if not invert:
+            finalCut = ~finalCut
 
         finalCut = ak.fill_none(finalCut, False)
         testIndex = ak.where(ak.num(self.events['nPE'][(self.events['layer'] == -1) & panelCut], axis=1) > 0)
@@ -1364,11 +1365,14 @@ class milliqanCuts():
             maxEnergy = ak.max(self.events['energyCal'][self.events['type']==0], axis=1, keepdims=True)
             minEnergy = ak.min(self.events['energyCal'][self.events['type']==0], axis=1, keepdims=True)
 
+        #print(len(self.events['energyCal'][0]), len(self.events['area'][0]))
         self.events['maxEnergyBefore'] = maxEnergy
         self.events['minEnergyBefore'] = minEnergy
 
         energyRatio = maxEnergy/minEnergy
         energyCut = energyRatio < energyRatioCut
+
+        #print(maxEnergy, minEnergy, energyRatio)
 
         energyCut = ak.fill_none(energyCut, False)
 
@@ -1452,7 +1456,7 @@ class milliqanCuts():
                     extra_chanCalibrations = extra_cal[self.events['chan']]
                     
                     mask = (self.events['runNumber'] <= run_high) & (self.events['runNumber'] >= run_low)
-                    chan_calibrations = ak.where(mask, True, chan_calibrations)
+                    chan_calibrations = ak.where(mask, extra_chanCalibrations, chan_calibrations)
 
         areas = self.events['area']
         npe = areas / chan_calibrations
@@ -1484,7 +1488,7 @@ class milliqanCuts():
                     extra_chanCalibrations = extra_cal[self.events['chan']]
                     
                     mask = (self.events['runNumber'] <= run_high) & (self.events['runNumber'] >= run_low)
-                    chan_calibrations = ak.where(mask, True, chan_calibrations)
+                    chan_calibrations = ak.where(mask, extra_chanCalibrations, chan_calibrations)
 
         
         else:
@@ -1497,5 +1501,9 @@ class milliqanCuts():
         energyCal = (npe / chan_calibrations) * 22.1
 
         self.events['energyCal'] = energyCal
+
+        if 'energyCal' not in self.branches:
+            self.branches.append('energyCal')
+
 
 

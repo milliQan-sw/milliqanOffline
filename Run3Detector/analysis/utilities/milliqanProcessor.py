@@ -116,7 +116,7 @@ class milliqanProcessor():
                     for i in branch.variables:
                         if i not in events.fields:
                             print("MilliQan Processor: Branch {0} does not exist in event array".format(i))
-                            break
+                            continue
                     branch.plot(events)
                 else:
                     if branch.variables in events.fields:
@@ -124,7 +124,7 @@ class milliqanProcessor():
 
                     else:
                         print("MilliQan Processor: Branch {0} does not exist in event array or custom output".format(branch.variables))
-                        break
+                        continue
             else:
                 branch()
         return events

@@ -28,8 +28,8 @@ if __name__ == "__main__":
     dataDir = '/data/user/mcarrigan/milliqan/signalSim/'
     outputDir = os.getcwd()
 
-    #processingDir = "/../../../../"
-    processingDir = '/'
+    processingDir = "/../../../../"
+    #processingDir = '/'
 
     args = parse_args()
     if args.outputDir:
@@ -78,10 +78,16 @@ if __name__ == "__main__":
 
     if outputDir != os.getcwd():
         print(f"Moving {outputFile} to {args.outputDir+'/trees/'}")
+        if os.path.exists(args.outputDir+'/trees/'+outputFile):
+            os.remove(args.outputDir+'/trees/'+outputFile)
         shutil.move(outputFile, args.outputDir+'/trees/')
         os.chdir('../../')
         print(f"Moving {pulse_output} to {args.outputDir+'/pulseInjected/'}")
+        if os.path.exists(args.outputDir+'/pulseInjected/'+pulse_output):
+            os.remove(args.outputDir+'/pulseInjected/'+pulse_output)
         shutil.move(pulse_output, args.outputDir+'/pulseInjected/')
         print(f"Moving {tmp_output} to {args.outputDir+'/globalEvent/'}")
+        if os.path.exists(args.outputDir+'/globalEvent/'+tmp_output):
+            os.remove(args.outputDir+'/globalEvent/'+tmp_output)
         shutil.move(tmp_output, args.outputDir+'/globalEvent/')
 

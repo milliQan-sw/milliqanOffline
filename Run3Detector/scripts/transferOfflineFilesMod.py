@@ -114,4 +114,4 @@ if __name__ == '__main__':
 
     #transferOfflineFiles(args.input, args.destination, site, version, args.logFile, force=args.force, debug=args.debug)
     transferOfflineFiles(args.input, '/eos/experiment/milliqan/trees/v35/', 'lxplus', version, args.logFile, force=args.force, debug=args.debug)
-
+    transferOfflineFiles('/store/user/milliqan/trees/v35/slab/', '/eos/experiment/milliqan/trees/v35/slab/', 'lxplus', version, args.logFile, force=args.force, debug=args.debug)

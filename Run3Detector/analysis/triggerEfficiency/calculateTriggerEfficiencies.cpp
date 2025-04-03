@@ -22,6 +22,10 @@ struct globalHist{
     float nPEMaxRatio;
     float maxRatioTripleRate, maxRatioDoubleRate;
     float maxRatioErr;
+    float heightFitLambda, heightFitMu, heightFitSigma, heightFitChi;
+    float heightFitLambdaErr, heightFitMuErr, heightFitSigmaErr, heightFitChiErr;
+    float npeFitLambda, npeFitMu, npeFitSigma, npeFitChi;
+    float npeFitLambdaErr, npeFitMuErr, npeFitSigmaErr, npeFitChiErr;
 };
 
 struct passingEvent{
@@ -40,7 +44,62 @@ struct passingEvent{
 //double variableHeightBins[28] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 20, 40, 60, 80, 100, 150, 200, 250, 300, 400, 500, 1400};
 double variableHeightBins[36] = {0, 5, 8, 8.5, 9, 9.5, 10, 10.5, 11, 11.5, 12, 12.5, 13, 13.5, 14, 14.5, 15, 15.5, 16, 16.5, 17, 18, 19, 20, 22.5, 25, 27.5, 30, 50, 75, 100, 200, 300, 400, 500, 1400};
 
-double variableNPEBins[16] = {0.0, 0.2, 0.4, 0.6, 0.8, 0.9, 1.0, 1.1, 1.2, 1.4, 1.6, 2.0, 3.0, 4.0, 5.0, 10.0};
+double variableNPEBins[15] = {0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0};
+
+float heightFitBinsLow[64] = {10, 10, 10, 10, 10, 10, 12, 10,
+                            10, 10, 10, 10, 10, 10, 10, 15,
+                            10, 15, 10, 10, 10, 10, 10, 10,
+                            10, 10, 10, 10, 10, 10, 10, 10,
+                            10, 12, 10, 10, 10, 10, 10, 10,
+                            10, 10, 10, 12, 10, 10, 10, 10,
+                            10, 10, 10, 10, 15, 10, 10, 10,
+                            10, 10, 10, 10, 10, 10, 10, 10};
+
+float heightFitBinsHigh[64] = {100, 100, 100, 100, 100, 100, 100, 100,
+                            100, 100, 100, 100, 100, 100, 100, 500,
+                            100, 500, 100, 100, 100, 100, 100, 100,
+                            100, 100, 100, 100, 100, 100, 100, 100,
+                            100, 500, 100, 100, 100, 100, 100, 100,
+                            100, 100, 100, 500, 100, 100, 100, 100,
+                            100, 100, 100, 100, 500, 100, 100, 100,
+                            100, 100, 100, 100, 100, 100, 100, 100};
+
+float npeFitBinsLow[64] = {0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 
+                        0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 
+                        0.1, 0.3, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 
+                        0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 
+                        0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 
+                        0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 
+                        0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 
+                        0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1}; //normal nPE bins low
+
+/*float npeFitBinsLow[64] = {0.1, 0.1, 0.1, 0.1, 0.1, 0.0, 0.0, 0.1, 
+                        0.1, 0.1, 0.1, 0.1, 0.0, 0.1, 0.1, 0.1, 
+                        0.1, 0.1, 0.1, 0.1, 0.0, 0.1, 0.1, 0.1, 
+                        0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 
+                        0.1, 0.0, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 
+                        0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 
+                        0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 
+                        0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1};*/ //tight nPE bins low
+
+/*float npeFitBinsLow[64] = {0.1, 0.1, 0.0, 0.1, 0.1, 0.1, 0.0, 0.0, 
+                        0.1, 0.1, 0.1, 0.1, 0.0, 0.1, 0.1, 0.1, 
+                        0.1, 0.1, 0.1, 0.1, 0.0, 0.1, 0.1, 0.1, 
+                        0.1, 0.1, 0.0, 0.1, 0.1, 0.1, 0.1, 0.1, 
+                        0.0, 0.0, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 
+                        0.1, 0.1, 0.1, 0.1, 0.0, 0.1, 0.1, 0.1, 
+                        0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 
+                        0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1};*/ //loose nPE bins low
+
+
+float npeFitBinsHigh[64] = {10, 10, 10, 10, 10, 10, 10, 10,
+                            10, 10, 10, 10, 10, 10, 10, 10,
+                            10, 10, 10, 10, 10, 10, 10, 10,
+                            10, 10, 10, 10, 10, 10, 10, 10,
+                            10, 10, 10, 10, 10, 10, 10, 10,
+                            10, 10, 10, 10, 10, 10, 10, 10,
+                            10, 10, 10, 10, 10, 10, 10, 10,
+                            10, 10, 10, 10, 10, 10, 10, 10};
 
 class channelHistsBase {
 public:
@@ -303,7 +362,7 @@ void coincidenceCounts(TFile *fout, int run, float prescale, std::vector<channel
     ULong_t daqFileClose;
 
     // General directory to get files
-    TString s_directory = "/store/user/milliqan/triggerEfficiency/";
+    TString s_directory = "/store/user/milliqan/triggerEfficiency/v2/";
     //TString s_directory = "/store/user/milliqan/trees/v35/bar/";
 
     //TString subDir = TString::Format("%i", (run / 100) * 100);
@@ -360,10 +419,17 @@ void coincidenceCounts(TFile *fout, int run, float prescale, std::vector<channel
             if (this_pickup) continue;
 
             int this_pulse = v_ipulse->at(ipulse);
-            //if(this_pulse != 0) continue;
+            if(this_pulse != 0) continue;
+
+            if(v_height->at(ipulse) < 8) continue;
+
+            if(v_height->at(ipulse) < 8) continue;
 
             float this_time = v_time->at(ipulse);
             if(this_time < 1000 || this_time > 1500) continue;
+            //if(this_time < 500 || this_time > 2000) continue; //loose selection
+            //if(this_time < 1200 || this_time > 1400) continue; //tight selection
+
 
             int this_chan = v_chan->at(ipulse);
             if (this_chan==78) this_chan = 24;
@@ -489,7 +555,7 @@ void coincidenceCounts(TFile *fout, int run, float prescale, std::vector<channel
     outFile.close();
 }
 
-std::vector<globalHist> calculateRates(TFile* fout){
+std::vector<globalHist> calculateRates(TFile* fout, TString pdf){
 
     // Set values of nPE cut to use
     vector<float> nPECuts;
@@ -509,17 +575,29 @@ std::vector<globalHist> calculateRates(TFile* fout){
 
     std::vector<std::vector<int> > chanMap = loadChanMap("../../configuration/barConfigs/configRun1296_present.json");
 
+
+    vector<int> nom_threshold = {1913, 1944, 1998, 2000, 2001};
+    vector<int> low_threshold = {1963, 2003, 2006, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2021, 2022, 2024};
+
     //coincidenceCounts(fout, 1925, 10.0, h_channelsDouble, chanMap);
     //coincidenceCounts(fout, 1946, 10.0, h_channelsDouble, chanMap);
     //coincidenceCounts(fout, 1948, 20.0, h_channelsDouble, chanMap);
-    coincidenceCounts(fout, 1963, 1.0, h_channelsDouble, chanMap); //altered threshold run
-    coincidenceCounts(fout, 1913, 1.0, h_channelsTriple, chanMap);
-    coincidenceCounts(fout, 1944, 1.0, h_channelsTriple, chanMap);
+    //coincidenceCounts(fout, 1963, 1.0, h_channelsDouble, chanMap); //altered threshold run
+    //coincidenceCounts(fout, 1913, 1.0, h_channelsTriple, chanMap);
+    //coincidenceCounts(fout, 1944, 1.0, h_channelsTriple, chanMap);
 
     //coincidenceCounts(fout, 1931, 1.0, h_channelsTriple);
     //coincidenceCounts(fout, 1934, 1.0, h_channelsDouble);
     //coincidenceCounts(fout, 1935, 1.0, h_channelsDouble);
     //coincidenceCounts(fout, 1936, 1.0, h_channelsDouble);
+
+    for(auto& run: nom_threshold){
+        coincidenceCounts(fout, run, 1.0, h_channelsTriple, chanMap);
+    }
+
+    for(auto& run: low_threshold){
+        coincidenceCounts(fout, run, 1.0, h_channelsDouble, chanMap);
+    }
 
     std::cout << "Event selection finished... creating ratio plots" << std::endl;
 
@@ -690,6 +768,8 @@ std::vector<globalHist> calculateRates(TFile* fout){
 
             x_val = h_tripleHeight->GetBinLowEdge(ibin);
 
+            if(x_val < 10) continue;
+
             g_rateHeight2->SetPoint(ibin, x_val, countDoubleHeight/timeDouble);
             g_rateHeight3->SetPoint(ibin, x_val, countTripleHeight/timeTriple);
 
@@ -780,10 +860,10 @@ std::vector<globalHist> calculateRates(TFile* fout){
         TCanvas* c4 = new TCanvas("ratioRatesBinned", "ratioRatesBinned", 800, 600);
         TF1 *f2 = new TF1("f2", "[0] * (0.5 * (1 + TMath::Erf((x - [1]) / ([2] * sqrt(2)))))", 0.001, 10);
         f2->SetParLimits(1, 0.0001, 20);
-        f2->SetParLimits(2, 0.1, 10);
+        f2->SetParLimits(2, 0.1, 1);
         f2->SetParLimits(0, 0.7, 1.3);
-        f2->SetParameters(1, 1, 5);
-        auto fitOut = g_rateBinned->Fit(f2, "SW", "", 0.5, 10);
+        f2->SetParameters(1, 1, 0.5);
+        auto fitOut = g_rateBinned->Fit(f2, "SW", "", npeFitBinsLow[channel], npeFitBinsHigh[channel]);
         g_rateBinned->GetYaxis()->SetRangeUser(0, 2);
         f2->Draw("same");
         c4->cd();
@@ -797,6 +877,21 @@ std::vector<globalHist> calculateRates(TFile* fout){
         float mu = round(f2->GetParameter(1)*100)/100;
         float sigma = round(f2->GetParameter(2)*100)/100;
         float chi = round(fitOut->Chi2() / fitOut->Ndf() * 100)/100;
+
+        float lambErr = round(f2->GetParError(0)*100)/100;
+        float muErr = round(f2->GetParError(0)*100)/100;
+        float sigmaErr = round(f2->GetParError(0)*100)/100;
+        //float chiErr = round(f2->GetParError(0)*100)/100;
+
+        thisChan.npeFitLambda = lamb;
+        thisChan.npeFitMu = mu;
+        thisChan.npeFitSigma = sigma;
+        thisChan.npeFitChi = chi;
+
+        thisChan.npeFitLambdaErr = lambErr;
+        thisChan.npeFitMuErr = muErr;
+        thisChan.npeFitSigmaErr = sigmaErr;
+        thisChan.npeFitChiErr = 0;
         
         TLatex* text1 = new TLatex();
         text1->SetTextSize(0.03);  
@@ -817,7 +912,7 @@ std::vector<globalHist> calculateRates(TFile* fout){
         //text1->DrawLatex(3, 1.7, TString::Format("Double Coincidence Events: %i", dEntries));
         text1->DrawLatex(3, 1.7, TString::Format("Triple Coincidence Events (8mV): %i", dEntries));
         text2->DrawLatex(3, 1.6, TString::Format("Triple Coincidence Events (15mV): %i",tEntries));
-        text3->DrawLatex(3, 0.4, TString::Format("#lambda: %f, #mu %f",lamb, mu));
+        text3->DrawLatex(3, 0.4, TString::Format("#lambda: %f#pm %f, #mu %f",lamb, lambErr, mu));
         text4->DrawLatex(3, 0.3, TString::Format("#sigma %f, #chi^2/ndof %f",sigma, chi));
         //double maxYBin = TMath::MaxElement(g_rateBinned->GetN(), g_rateBinned->GetY());
         //double minYBin = TMath::MinElement(g_rateBinned->GetN(), g_rateBinned->GetY());
@@ -855,7 +950,7 @@ std::vector<globalHist> calculateRates(TFile* fout){
         c6->cd();
         g_rateHeight->SetMarkerStyle(8);
         g_rateHeight->Draw("AP");
-        fitOut = g_rateHeight->Fit(f1, "SEWW", "", 10, 1000);
+        fitOut = g_rateHeight->Fit(f1, "SEWW", "", heightFitBinsLow[channel], heightFitBinsHigh[channel]);
         g_rateHeight->GetYaxis()->SetRangeUser(0, 2);
         f1->Draw("same");
 
@@ -866,6 +961,21 @@ std::vector<globalHist> calculateRates(TFile* fout){
         mu = round(f1->GetParameter(1)*100)/100;
         sigma = round(f1->GetParameter(2)*100)/100;
         chi = round(fitOut->Chi2() / fitOut->Ndf() * 100)/100;
+
+        lambErr = round(f1->GetParError(0)*100)/100;
+        muErr = round(f1->GetParError(0)*100)/100;
+        sigmaErr = round(f1->GetParError(0)*100)/100;
+        //chiErr = round(fitOut->GetParError(0)*100)/100;
+
+        thisChan.heightFitLambda = lamb;
+        thisChan.heightFitMu = mu;
+        thisChan.heightFitSigma = sigma;
+        thisChan.heightFitChi = chi;
+
+        thisChan.heightFitLambdaErr = lambErr;
+        thisChan.heightFitMuErr = muErr;
+        thisChan.heightFitSigmaErr = sigmaErr;
+        thisChan.heightFitChiErr = 0;
 
         TLine* line1 = new TLine(15, 0, 15, 2);
         line1->SetLineStyle(2);
@@ -892,7 +1002,7 @@ std::vector<globalHist> calculateRates(TFile* fout){
         //text1->DrawLatex(60, 1.7, TString::Format("Double Coincidence Events: %i", dEntries));
         text1->DrawLatex(60, 1.7, TString::Format("Triple Coincidence Events (8mV): %i", dEntries));
         text2->DrawLatex(60, 1.6, TString::Format("Triple Coincidence Events (15mV): %i",tEntries));
-        text3->DrawLatex(60, 0.4, TString::Format("#lambda: %f, #mu %f",lamb, mu));
+        text3->DrawLatex(60, 0.4, TString::Format("#lambda: %f #pm %f, #mu %f",lamb, lambErr, mu));
         text4->DrawLatex(60, 0.3, TString::Format("#sigma %f, #chi^2/ndof %f",sigma, chi));
 
 
@@ -903,6 +1013,28 @@ std::vector<globalHist> calculateRates(TFile* fout){
         c6->SetLogx(1);
         fout->cd(dir);
         c6->Write("ratioRatesBinnedHeight");
+
+        /*TH1F* h_heightFitLambda = new TH1F("h_heightFitLambda", "#lambda Values of Fit;Channel;#lambda", 80, -1, 79);
+        TH1F* h_heightFitMu = new TH1F("h_heightFitMu", "#mu Values of Fit;Channel;#mu", 80, -1, 79);
+        TH1F* h_heightFitSigma = new TH1F("h_heightFitSigma", "#sigma Values of Fit;Channel;#sigma", 80, -1, 79);
+        TH1F* h_heightFitChi = new TH1F("h_heightFitChi", "#chi^{2}/ndof Values of Fit;Channel;#chi^{2}/ndof", 80, -1, 79);
+
+        TH1F* h_npeFitLambda = new TH1F("h_npeFitLambda", "#lambda Values of Fit;Channel;#lambda", 80, -1, 79);
+        TH1F* h_npeFitMu = new TH1F("h_npeFitMu", "#mu Values of Fit;Channel;#mu", 80, -1, 79);
+        TH1F* h_npeFitSigma = new TH1F("h_npeFitSigma", "#sigma Values of Fit;Channel;#sigma", 80, -1, 79);
+        TH1F* h_npeFitChi = new TH1F("h_npeFitChi", "#chi^{2}/ndof Values of Fit;Channel;#chi^{2}/ndof", 80, -1, 79);
+
+        for (int i=0; i<64; i++){
+            h_heightFitLambda->Fill(heightFitLambda[i]);
+            h_heightFitMu->Fill(heightFitMu[i]);
+            h_heightFitSigma->Fill(heightFitSigma[i]);
+            h_heightFitChi->Fill(heightFitChi[i]);
+
+            h_npeFitLambda->Fill(npeFitLambda[i]);
+            h_npeFitMu->Fill(npeFitMu[i]);
+            h_npeFitSigma->Fill(npeFitSigma[i]);
+            h_npeFitChi->Fill(npeFitChi[i]);
+        }*/
 
         fout->cd(dir);
         h_channelsTriple[channel]->h->Write("tripleCoincidenceCount");
@@ -936,19 +1068,29 @@ std::vector<globalHist> calculateRates(TFile* fout){
         g_rateHeight2->Write("h_ratioRateHeight2");
         g_rateHeight3->Write("h_ratioRateHeight3");
 
+        /*h_heightFitLambda->Write();
+        h_heightFitMu->Write();
+        h_heightFitSigma->Write();
+        h_heightFitChi->Write();
+
+        h_npeFitLambda->Write();
+        h_npeFitMu->Write();
+        h_npeFitSigma->Write();
+        h_npeFitChi->Write();*/
+
         allChannels.push_back(thisChan);
 
         if(channel==0){
-            c4->Print("outputRatiosBinned8mv.pdf(");
-            c6->Print("outputHeightRatio8mv.pdf(");
+            c4->Print(pdf + "NPE.pdf(");
+            c6->Print(pdf + "Height.pdf(");
         }
         else if(channel==63){
-            c4->Print("outputRatiosBinned8mv.pdf)");
-            c6->Print("outputHeightRatio8mv.pdf)");
+            c4->Print(pdf + "NPE.pdf)");
+            c6->Print(pdf + "Height.pdf)");
         }
         else{
-            c4->Print("outputRatiosBinned8mv.pdf");
-            c6->Print("outputHeightRatio8mv.pdf");
+            c4->Print(pdf + "NPE.pdf");
+            c6->Print(pdf + "Height.pdf");
         }
 
     }
@@ -957,13 +1099,14 @@ std::vector<globalHist> calculateRates(TFile* fout){
 
 }
 
-void calculateTriggerEfficienciesCombined_v2(){
+void calculateTriggerEfficiencies(){
 
     //gStyle->SetOptStat(0);
     gROOT->SetBatch(1);
 
     //output file for plots
-    TFile* fout = TFile::Open("triggerEfficiencyPlots8mv.root", "RECREATE");
+    TFile* fout = TFile::Open("triggerEfficiencyPlots.root", "RECREATE");
+    TString pdf = "outputPlots";
 
     //initialize some global histograms
     TGraph* doubleRatesMax = new TGraph();
@@ -976,10 +1119,21 @@ void calculateTriggerEfficienciesCombined_v2(){
     TGraph* maxRatioRatesGood = new TGraph();
     TGraph* maxRatioRatesBad = new TGraph();
 
+    TGraphErrors* h_heightFitLambda = new TGraphErrors(); //"h_heightFitLambda", "#lambda Values of Fit;Channel;#lambda", 80, -1, 79);
+    TGraphErrors* h_heightFitMu = new TGraphErrors(); //"h_heightFitMu", "#mu Values of Fit;Channel;#mu", 80, -1, 79);
+    TGraphErrors* h_heightFitSigma = new TGraphErrors(); //"h_heightFitSigma", "#sigma Values of Fit;Channel;#sigma", 80, -1, 79);
+    TGraphErrors* h_heightFitChi = new TGraphErrors(); //"h_heightFitChi", "#chi^{2}/ndof Values of Fit;Channel;#chi^{2}/ndof", 80, -1, 79);
+
+    TGraphErrors* h_npeFitLambda = new TGraphErrors(); //"h_npeFitLambda", "#lambda Values of Fit;Channel;#lambda", 80, -1, 79);
+    TGraphErrors* h_npeFitMu = new TGraphErrors();//"h_npeFitMu", "#mu Values of Fit;Channel;#mu", 80, -1, 79);
+    TGraphErrors* h_npeFitSigma = new TGraphErrors();//"h_npeFitSigma", "#sigma Values of Fit;Channel;#sigma", 80, -1, 79);
+    TGraphErrors* h_npeFitChi = new TGraphErrors();//"h_npeFitChi", "#chi^{2}/ndof Values of Fit;Channel;#chi^{2}/ndof", 80, -1, 79);
+
     vector<bool> goodRatio = {};
     float maxRate = -1;
     float minRate = 10e12;
-    std::vector<globalHist> thisChan = calculateRates(fout);
+    std::cout << "Going to calculate rates" << std::endl;
+    std::vector<globalHist> thisChan = calculateRates(fout, pdf);
 
     //fout->Close();
 
@@ -994,6 +1148,24 @@ void calculateTriggerEfficienciesCombined_v2(){
         allRatios->SetPointError(ichan, 0, thisChan[ichan].maxRatioErr);
         maxRatioVNPE->SetPoint(ichan, thisChan[ichan].nPEMaxRatio, thisChan[ichan].maxRatio);
         maxNPECut->SetPoint(ichan, ichan, thisChan[ichan].nPEMaxRatio);
+        
+        h_heightFitLambda->SetPoint(ichan, ichan, thisChan[ichan].heightFitLambda);
+        h_heightFitLambda->SetPointError(ichan, 0, thisChan[ichan].heightFitLambdaErr);
+        h_heightFitMu->SetPoint(ichan, ichan, thisChan[ichan].heightFitMu);
+        h_heightFitMu->SetPointError(ichan, 0, thisChan[ichan].heightFitMuErr);
+        h_heightFitSigma->SetPoint(ichan, ichan, thisChan[ichan].heightFitSigma);
+        h_heightFitSigma->SetPointError(ichan, 0, thisChan[ichan].heightFitSigmaErr);
+        h_heightFitChi->SetPoint(ichan, ichan, thisChan[ichan].heightFitChi);
+        h_heightFitChi->SetPointError(ichan, 0, thisChan[ichan].heightFitChiErr);
+
+        h_npeFitLambda->SetPoint(ichan, ichan, thisChan[ichan].npeFitLambda);
+        h_npeFitLambda->SetPointError(ichan, 0, thisChan[ichan].npeFitLambdaErr);
+        h_npeFitMu->SetPoint(ichan, ichan, thisChan[ichan].npeFitMu);
+        h_npeFitMu->SetPointError(ichan, 0, thisChan[ichan].npeFitMuErr);
+        h_npeFitSigma->SetPoint(ichan, ichan, thisChan[ichan].npeFitSigma);
+        h_npeFitSigma->SetPointError(ichan, 0, thisChan[ichan].npeFitSigmaErr);
+        h_npeFitChi->SetPoint(ichan, ichan, thisChan[ichan].npeFitChi);
+        h_npeFitChi->SetPointError(ichan, 0, thisChan[ichan].npeFitChiErr);
 
         if (thisChan[ichan].min2 < minRate) minRate = thisChan[ichan].min2;
         if (thisChan[ichan].min3 < minRate) minRate = thisChan[ichan].min3;
@@ -1020,6 +1192,26 @@ void calculateTriggerEfficienciesCombined_v2(){
     maxRatioRatesGood->SetTitle("Double and Triple Coincidence Rates for Max Ratio;Double Coincidence Rate;Triple Coincidence Rate");
     maxRatioRatesBad->SetTitle("Double and Triple Coincidence Rates for Max Ratio;Double Coincidence Rate;Triple Coincidence Rate");
 
+    h_heightFitLambda->SetTitle("#lambda Fit Values;Channel;#lambda");
+    h_heightFitMu->SetTitle("#mu Fit Values;Channel;#mu");
+    h_heightFitSigma->SetTitle("#sigma Fit Values;Channel;#sigma");
+    h_heightFitChi->SetTitle("#chi^{2}/ndof Fit Values;Channel;#chi^{2}/ndof");
+
+    h_npeFitLambda->SetTitle("#lambda Fit Values;Channel;#lambda");
+    h_npeFitMu->SetTitle("#mu Fit Values;Channel;#mu");
+    h_npeFitSigma->SetTitle("#sigma Fit Values;Channel;#sigma");
+    h_npeFitChi->SetTitle("#chi^{2}/ndof Fit Values;Channel;#chi^{2}/ndof");
+
+    fout->cd();
+    h_heightFitLambda->Write("heightFitLambda");
+    h_heightFitMu->Write("heghtFitMu");
+    h_heightFitSigma->Write("heightFitSigma");
+    h_heightFitChi->Write("heightFitChi");
+
+    h_npeFitLambda->Write("npeFitLambda");
+    h_npeFitMu->Write("npeFitMu");
+    h_npeFitSigma->Write("npeFitSigma");
+    h_npeFitChi->Write("npeFitChi");
 
     TCanvas* c1 = new TCanvas("c1", "Max and Min Coincidence Rates", 1000, 800);
     c1->cd();

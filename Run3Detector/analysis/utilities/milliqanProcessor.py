@@ -15,16 +15,20 @@ from processorConstants import *
 
 class milliqanProcessor():
 
-    def __init__(self, filelist, branches, schedule=None, cuts=None, plotter=None, max_events=None, step_size=10000, qualityLevel="tight", verbosity='minimal', goodRunsList=None):
+    def __init__(self, filelist, branches, schedule=None, cuts=None, plotter=None, max_events=None, step_size=10000, qualityLevel="tight", verbosity='minimal', goodRunsList=None, sim=False):
         self.script_dir = os.path.abspath(__file__).replace("milliqanProcessor.py", "")
         self.qualityLevelString = qualityLevel
         self.verbosityString = verbosity
-        self.qualityLevel, self.verbosity = self.constantPuller()
+        self.sim = sim
         
         #Checks the filelist against goodRuns.json
         self.filelist = filelist
-        self.fileChecker() 
         
+        self.qualityLevel, self.verbosity = self.constantPuller()
+
+        if not self.sim:
+            self.fileChecker() 
+
         self.branches = branches
         self.mqSchedule = schedule
         self.max_events = max_events
@@ -32,6 +36,10 @@ class milliqanProcessor():
         self.mqSchedule.cuts.branches = list(branches)
         self.goodRunsList = goodRunsList
 
+    def reset(self):
+        self.mqSchedule.cuts.cutflow = {}
+        self.mqSchedule.cuts.counter = 0
+    
     #Pulls the quality level and verbosity from the processorConstants class based on the quality level input string
     def constantPuller(self):
         if self.qualityLevelString not in processorConstants.qualityDict.keys():
@@ -103,13 +111,12 @@ class milliqanProcessor():
 
         self.mqSchedule.setEvents(events)
         for branch in self.mqSchedule.schedule:
-
             if isinstance(branch, milliqanPlot):
                 if isinstance(branch.variables, list):
                     for i in branch.variables:
                         if i not in events.fields:
                             print("MilliQan Processor: Branch {0} does not exist in event array".format(i))
-                            break
+                            continue
                     branch.plot(events)
                 else:
                     if branch.variables in events.fields:
@@ -117,7 +124,7 @@ class milliqanProcessor():
 
                     else:
                         print("MilliQan Processor: Branch {0} does not exist in event array or custom output".format(branch.variables))
-                        break
+                        continue
             else:
                 branch()
         return events
@@ -138,6 +145,8 @@ class milliqanProcessor():
     def run(self):
 
         total_events = 0
+
+        self.reset()
         
         for events in uproot.iterate(
 

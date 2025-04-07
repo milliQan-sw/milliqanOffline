@@ -40,12 +40,14 @@ if pmt_lookup is None:
 
 # Helper function to lookup PMT type for a (possibly jagged) array of channel indices.
 def lookup_pmt(channels):
-    # Flatten the jagged array.
-    flat = ak.flatten(channels)
-    # Look up the pmt type for each flat channel.
-    flat_pmt = pmt_lookup[flat]
-    # Reconstruct the original jagged structure.
-    return ak.unflatten(flat_pmt, channels.offsets)
+    # Check if channels has an 'offsets' attribute (i.e. if it's a jagged array)
+    if hasattr(channels, "offsets"):
+        flat = ak.flatten(channels)
+        flat_pmt = pmt_lookup[flat]
+        return ak.unflatten(flat_pmt, channels.offsets)
+    else:
+        # If channels is already flat, just return the corresponding pmt values.
+        return pmt_lookup[channels]
 
 
 def getFileList(filelist, job):
@@ -118,7 +120,6 @@ def straightLineCut(self, cutName='straightLineCut', cut=True, branches=None):
     for row in range(4):
         for col in range(3):
             for p in [0, 1]:
-                # Use lookup_pmt to get the PMT type for each channel.
                 mask = (self.events.row == row) & (self.events.column == col) & (lookup_pmt(self.events.chan) == p)
                 unique_layers = ak.num(ak.unique(self.events.layer[mask]))
                 valid_candidate = (unique_layers == 4)
@@ -371,4 +372,3 @@ if __name__ == "__main__":
     myschedule.cutFlowPlots()
     myplotter.saveHistograms("timingCorrection{}_slabDetector.root".format('_beamOff'))
     mycuts.getCutflowCounts()
-

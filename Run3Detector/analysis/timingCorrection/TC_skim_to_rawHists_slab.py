@@ -70,7 +70,7 @@ def getRunTimes(df):
 ##################################################################
 # NEW: Updated findChannel for the slab detector layout.
 # The new chanMap entries are of the form [col, row, layer, pmt]
-def findChannel(layer, row, col, pmt, config='Run3Detector/configuration/slabConfigs/configRun19_present.json'):
+def findChannel(layer, row, col, pmt, config='configRun19_present.json'):
     with open(config, 'r') as fin:
         data = json.load(fin)
     chan_list = data['chanMap']  # list of lists: [col, row, layer, pmt]

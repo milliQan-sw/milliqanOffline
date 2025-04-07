@@ -38,6 +38,15 @@ except Exception as e:
 if pmt_lookup is None:
     raise RuntimeError("pmt_lookup is not defined. Check that configRun19_present.json exists and is valid.")
 
+# Helper function to lookup PMT type for a (possibly jagged) array of channel indices.
+def lookup_pmt(channels):
+    # Flatten the jagged array.
+    flat = ak.flatten(channels)
+    # Look up the pmt type for each flat channel.
+    flat_pmt = pmt_lookup[flat]
+    # Reconstruct the original jagged structure.
+    return ak.unflatten(flat_pmt, channels.offsets)
+
 
 def getFileList(filelist, job):
     with open(filelist, 'r') as fin:
@@ -109,8 +118,8 @@ def straightLineCut(self, cutName='straightLineCut', cut=True, branches=None):
     for row in range(4):
         for col in range(3):
             for p in [0, 1]:
-                # Use ak.take to index pmt_lookup with a possibly jagged self.events.chan.
-                mask = (self.events.row == row) & (self.events.column == col) & (ak.take(pmt_lookup, self.events.chan) == p)
+                # Use lookup_pmt to get the PMT type for each channel.
+                mask = (self.events.row == row) & (self.events.column == col) & (lookup_pmt(self.events.chan) == p)
                 unique_layers = ak.num(ak.unique(self.events.layer[mask]))
                 valid_candidate = (unique_layers == 4)
                 valid = valid | valid_candidate
@@ -215,7 +224,7 @@ def timeDiff(self, cutName='timeDiff'):
                             (self.events['layer'] == layer) &
                             (self.events['row'] == row) &
                             (self.events['column'] == col) &
-                            (ak.take(pmt_lookup, self.events.chan) == p)
+                            (lookup_pmt(self.events.chan) == p)
                         ]
                         t_combo = ak.cartesian([chanTimes, frontPanelTimes], axis=1)
                         t_diff = t_combo['0'] - t_combo['1']
@@ -308,7 +317,6 @@ if __name__ == "__main__":
     for row in range(4):
         for col in range(3):
             for p in [0, 1]:
-                # Get the base channel index for layer 0 (for labeling).
                 baseChannel = findChannel(0, row, col, p)
                 for layer in [1, 2, 3]:
                     histName = "h_timeDiff_L{}_r{}_c{}_p{}".format(layer, row, col, p)
@@ -363,3 +371,4 @@ if __name__ == "__main__":
     myschedule.cutFlowPlots()
     myplotter.saveHistograms("timingCorrection{}_slabDetector.root".format('_beamOff'))
     mycuts.getCutflowCounts()
+

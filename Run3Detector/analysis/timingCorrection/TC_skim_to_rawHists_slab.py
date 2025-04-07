@@ -81,9 +81,8 @@ def findChannel(layer, row, col, pmt, config='Run3Detector/configuration/slabCon
     return None
 
 ##################################################################
-# NEW: Straight Line Cut redefinition for the new layout.
-# Requirement: at least one (row, col) combination must have hits in all 4 layers
-# with the same PMT (either 0 or 1).
+# NEW: Straight Line Cut redefinition for the slab layout.
+# Requirement: at least one (row, col) combination must have hits in all 4 layers with the same PMT (either 0 or 1).
 @mqCut
 def straightLineCut(self, cutName='straightLineCut', cut=True, branches=None):
     # Initialize a boolean mask per event.
@@ -96,7 +95,6 @@ def straightLineCut(self, cutName='straightLineCut', cut=True, branches=None):
                 # Select hits that have the required row, column, and PMT.
                 mask = (self.events.row == row) & (self.events.column == col) & (self.events.pmt == p)
                 # For each event, count the number of unique layers with a hit.
-                # (Assuming self.events.layer is an array of layers for each event.)
                 unique_layers = ak.num(ak.unique(self.events.layer[mask]))
                 # If there are hits in all four layers, mark these events as valid.
                 valid_candidate = (unique_layers == 4)

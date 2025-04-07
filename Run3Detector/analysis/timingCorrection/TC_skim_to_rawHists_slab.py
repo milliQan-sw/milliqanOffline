@@ -12,9 +12,13 @@ import numpy as np
 import shutil
 import tarfile
 
-# --- Patch awkward.is_none to return a proper numpy boolean array ---
+# --- Patch ak.is_none to a custom implementation ---
 def my_is_none(x, axis):
-    return np.array(ak.operations.is_none(x, axis=axis))
+    lst = ak.to_list(x)
+    if axis == 1:
+        return np.array([[elem is None for elem in sublist] for sublist in lst])
+    else:
+        return np.array([elem is None for elem in lst])
 ak.is_none = my_is_none
 # --- End patch ---
 
@@ -46,7 +50,6 @@ if chanMap is None:
 # Given an awkward array (or scalar) of channel numbers, return an awkward array of PMT types.
 def lookup_pmt(channels):
     channels_list = ak.to_list(channels)
-    # Check if channels_list is nested (i.e. each event has a list of channels)
     if channels_list and isinstance(channels_list[0], list):
         flat_list = [x for sublist in channels_list for x in sublist]
         flat_pmt = [chanMap[int(x)][3] for x in flat_list]
@@ -61,7 +64,6 @@ def unique_lengths(arr_in):
 
 # NEW helper: Extract the time corresponding to the maximum height for each event in a given layer.
 def time_of_max_height(layer, events, time_field='timeFit_module_calibrated', height_field='height', cut_mask=None):
-    # Select pulses in the specified layer that pass the cut.
     sel = (events.layer == layer) & (cut_mask)
     times_list = ak.to_list(events[time_field][sel])
     heights_list = ak.to_list(events[height_field][sel])

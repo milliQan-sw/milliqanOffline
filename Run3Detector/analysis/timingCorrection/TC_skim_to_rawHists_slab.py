@@ -40,13 +40,14 @@ if pmt_lookup is None:
 
 # Helper function to lookup PMT type for a (possibly jagged) array of channel indices.
 def lookup_pmt(channels):
-    # Check if channels has an 'offsets' attribute (i.e. if it's a jagged array)
-    if hasattr(channels, "offsets"):
+    # If channels is an awkward array with a ListOffsetArray layout, use the counts for unflattening.
+    if hasattr(channels, "layout") and hasattr(channels.layout, "offsets"):
+        counts = ak.num(channels)
         flat = ak.flatten(channels)
         flat_pmt = pmt_lookup[flat]
-        return ak.unflatten(flat_pmt, channels.offsets)
+        # Convert counts to a Python list and unflatten.
+        return ak.unflatten(flat_pmt, ak.to_list(counts))
     else:
-        # If channels is already flat, just return the corresponding pmt values.
         return pmt_lookup[channels]
 
 
@@ -113,10 +114,7 @@ def findChannel(layer, row, col, p, config='configRun19_present.json'):
 # with the same PMT (either 0 or 1).
 @mqCut
 def straightLineCut(self, cutName='straightLineCut', cut=True, branches=None):
-    # Initialize a boolean mask per event.
     valid = ak.zeros_like(self.events.event, dtype=bool)
-    # Loop over all possible (row, col, pmt) combinations.
-    # New detector: 4 rows, 3 columns, 2 PMTs.
     for row in range(4):
         for col in range(3):
             for p in [0, 1]:
@@ -133,7 +131,6 @@ def straightLineCut(self, cutName='straightLineCut', cut=True, branches=None):
 # NEW: The getTimeDiffs function now loops over 24 possible four‐in‐line paths.
 @mqCut
 def getTimeDiffs(self):
-    # Loop over all possible 4 in line paths (4 rows x 3 cols x 2 PMTs = 24 lines)
     for i in range(24):
         cut0 = self.events['threeHitPath{}_p0'.format(i)]
         cut1 = self.events['threeHitPath{}_p1'.format(i)]
@@ -215,7 +212,6 @@ def timeDiff(self, cutName='timeDiff'):
 
     if allStraightLine:
         frontPanelTimes = self.events.timeFit[(self.events['type'] == 1) & (self.events['layer'] == -1)]
-        # Loop over 4 layers, 4 rows, 3 columns and for each PMT type.
         for layer in range(4):
             for row in range(4):
                 for col in range(3):
@@ -268,7 +264,6 @@ if __name__ == "__main__":
     goodRuns = loadJson('/share/scratch0/peng/CMSSW_12_4_11_patch3/src/milliqanOffline/Run3Detector/configuration/slabConfigs/goodRunsList.json')
     lumis = loadJson('/share/scratch0/peng/CMSSW_12_4_11_patch3/src/milliqanOffline/Run3Detector/configuration/slabConfigs/mqLumis.json')
 
-    # Define a file list to run over.
     filelist = [
         '/share/scratch0/peng/CMSSW_12_4_11_patch3/src/milliqanOffline/Run3Detector/analysis/skim/MilliQan_Run900_v35_cosmic_beamOff_tight_slab.root',
         '/share/scratch0/peng/CMSSW_12_4_11_patch3/src/milliqanOffline/Run3Detector/analysis/skim/MilliQan_Run1000_v35_cosmic_beamOff_tight_slab.root'
@@ -276,24 +271,18 @@ if __name__ == "__main__":
 
     print("Running on files {}".format(filelist))
 
-    # Optionally, check the luminosity.
-    # getLumiofFileList(filelist)
-
     # Define the necessary branches.
     branches = ['event', 'tTrigger', 'boardsMatched', 'pickupFlag', 'pickupFlagTight', 'fileNumber', 'runNumber',
                 'type', 'ipulse', 'nPE', 'chan', 'time_module_calibrated', 'timeFit_module_calibrated',
                 'row', 'column', 'layer', 'height', 'area', 'npulses', 'timeFit']
 
-    # Define the milliqan cuts object.
     mycuts = milliqanCuts()
 
-    # Replace the old methods with the updated versions.
     setattr(milliqanCuts, "getTimeDiffs", getTimeDiffs)
     setattr(milliqanCuts, 'timeDiff', timeDiff)
     setattr(milliqanCuts, "pulseTime", pulseTime)
     setattr(milliqanCuts, "straightLineCut", straightLineCut)
 
-    # Set up the cuts.
     pickupCut = getCutMod(mycuts.pickupCut, mycuts, 'pickupCut', tight=True, cut=True, branches=branches)
     boardMatchCut = getCutMod(mycuts.boardsMatched, mycuts, 'boardMatchCut', cut=True, branches=branches)
     hitInAllLayers = getCutMod(mycuts.oneHitPerLayerCut, mycuts, 'hitInAllLayers', cut=True, branches=branches, multipleHits=False)
@@ -302,19 +291,13 @@ if __name__ == "__main__":
     firstPulseCut = getCutMod(mycuts.firstPulseCut, mycuts, 'firstPulseCut', cut=True, branches=branches)
     centralTime = getCutMod(mycuts.centralTime, mycuts, 'centralTime', cut=True, branches=branches)
 
-    ##################################################################
-    # NEW: Histogram output for time differences.
-    # For each (row, col, pmt) combination (24 total), create a histogram for the time difference
-    # between layer n (n = 1,2,3) and layer 0: 3 x 24 = 72 histograms.
     nbins = 100
     minx = -50
     maxx = 50
 
-    # Create containers for histograms for each non-baseline layer.
     canvasHistos = {1: [], 2: [], 3: []}
     cutNames = {1: [], 2: [], 3: []}
 
-    # Loop over all positions in the slab detector: 4 rows, 3 columns, 2 PMTs.
     for row in range(4):
         for col in range(3):
             for p in [0, 1]:
@@ -329,7 +312,6 @@ if __name__ == "__main__":
     myplotter = milliqanPlotter()
     myplotter.dict.clear()
 
-    # (Optional: Add global histograms.)
     h_channels = r.TH1F('h_channels', 'Channel', 96, 0, 96)
     h_timeDiff = r.TH1F('h_timeDiff', 'Time Difference L3-L0', 50, -50, 100)
     h_timeDiffNoCorr = r.TH1F('h_timeDiffNoCorr', 'Time Difference L3-L0', 50, -50, 100)
@@ -340,13 +322,10 @@ if __name__ == "__main__":
     myplotter.addHistograms(h_timeDiffNoCorr, 'timeDiffNoCorr')
     myplotter.addHistograms(h_timeDiffOld, 'timeDiffOld')
 
-    # Add the 72 new histograms, grouping by non-baseline layer.
     for layer in [1, 2, 3]:
         for h, n in zip(canvasHistos[layer], cutNames[layer]):
             myplotter.addHistograms(h, n)
 
-    ##################################################################
-    # Build the cutflow.
     cutflow = [mycuts.totalEventCounter, mycuts.fullEventCounter,
                boardMatchCut,
                pickupCut,
@@ -372,3 +351,4 @@ if __name__ == "__main__":
     myschedule.cutFlowPlots()
     myplotter.saveHistograms("timingCorrection{}_slabDetector.root".format('_beamOff'))
     mycuts.getCutflowCounts()
+

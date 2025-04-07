@@ -24,6 +24,7 @@ from milliqanPlotter import *
 #################################################################
 
 # Build a global lookup for pmt type from channel mapping.
+# The configuration file is assumed to be local now.
 try:
     with open('configRun19_present.json', 'r') as f:
         config_data = json.load(f)
@@ -36,6 +37,7 @@ except Exception as e:
 if pmt_lookup is None:
     raise RuntimeError("pmt_lookup is not defined. Check that configRun19_present.json exists and is valid.")
 
+# Helper function to lookup PMT type for a (possibly jagged) array of channel indices.
 def lookup_pmt(channels):
     if hasattr(channels, "layout") and hasattr(channels.layout, "offsets"):
         counts = ak.num(channels)
@@ -45,8 +47,24 @@ def lookup_pmt(channels):
     else:
         return pmt_lookup[channels]
 
+# Helper function to compute the number of unique elements for each sublist.
 def unique_lengths(arr_in):
     return ak.Array([len(np.unique(x)) for x in ak.to_list(arr_in)])
+
+# NEW helper: Extract the time corresponding to the maximum height for a given layer.
+def time_of_max_height(layer, events, time_field='timeFit_module_calibrated', height_field='height', cut_mask=None):
+    # Select pulses in the specified layer that pass the cut.
+    sel = (events.layer == layer) & (cut_mask)
+    times_list = ak.to_list(events[time_field][sel])
+    heights_list = ak.to_list(events[height_field][sel])
+    result = []
+    for t, h in zip(times_list, heights_list):
+        if len(h) == 0:
+            result.append(None)
+        else:
+            max_idx = int(np.argmax(h))
+            result.append(t[max_idx])
+    return ak.Array(result)
 
 def getFileList(filelist, job):
     with open(filelist, 'r') as fin:
@@ -58,6 +76,7 @@ def extract_tar_file(tar_file='milliqanProcessing.tar.gz'):
     with tarfile.open(tar_file, "r:gz") as tar:
         tar.extractall()
 
+##################################################################
 def checkBeam(mqLumis, run, file, branch='beam'):
     beam = mqLumis[branch].loc[(mqLumis['run'] == run) & (mqLumis['file'] == file)]
     if beam.size == 0:
@@ -91,6 +110,7 @@ def getRunTimes(df):
     total_time = runTimes.sum()
     return total_time
 
+##################################################################
 def findChannel(layer, row, col, p, config='configRun19_present.json'):
     with open(config, 'r') as fin:
         data = json.load(fin)
@@ -100,6 +120,7 @@ def findChannel(layer, row, col, p, config='configRun19_present.json'):
             return idx
     return None
 
+##################################################################
 @mqCut
 def straightLineCut(self, cutName='straightLineCut', cut=True, branches=None):
     valid = ak.zeros_like(self.events.event, dtype=bool)
@@ -115,6 +136,7 @@ def straightLineCut(self, cutName='straightLineCut', cut=True, branches=None):
         for branch in branches:
             self.events[branch] = self.events[branch][valid]
 
+##################################################################
 @mqCut
 def getTimeDiffs(self):
     for i in range(24):
@@ -171,6 +193,7 @@ def getTimeDiffs(self):
         self.events[cutName3_02] = ak.pad_none(times3_2, 1, axis=1) - ak.pad_none(times3_0, 1, axis=1)
         self.events[cutName3_12] = ak.pad_none(times3_2, 1, axis=1) - ak.pad_none(times3_1, 1, axis=1)
 
+##################################################################
 @mqCut
 def timeDiff(self, cutName='timeDiff'):
     allPulses = True
@@ -215,6 +238,7 @@ def timeDiff(self, cutName='timeDiff'):
                         branchName = cutName + str(channel)
                         self.events[branchName] = t_diff
 
+##################################################################
 @mqCut
 def pulseTime(self):
     events = self.events
@@ -229,6 +253,7 @@ def pulseTime(self):
 
     self.events['timeDiffOld'] = self.events['straightPathL3Time'] - self.events['straightPathL0Time']
 
+##################################################################
 if __name__ == "__main__":
     goodRuns = loadJson('/share/scratch0/peng/CMSSW_12_4_11_patch3/src/milliqanOffline/Run3Detector/configuration/slabConfigs/goodRunsList.json')
     lumis = loadJson('/share/scratch0/peng/CMSSW_12_4_11_patch3/src/milliqanOffline/Run3Detector/configuration/slabConfigs/mqLumis.json')

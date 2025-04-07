@@ -350,4 +350,3 @@ if __name__ == "__main__":
     myschedule.cutFlowPlots()
     myplotter.saveHistograms("timingCorrection{}_slabDetector.root".format('_beamOff'))
     mycuts.getCutflowCounts()
-

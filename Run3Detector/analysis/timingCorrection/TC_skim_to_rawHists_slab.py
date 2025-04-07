@@ -48,9 +48,8 @@ def lookup_pmt(channels):
         return pmt_lookup[channels]
 
 # Helper function to compute the number of unique elements for each sublist.
-def unique_lengths(arr):
-    # Convert the jagged array to a Python list, compute np.unique on each sublist, and return lengths.
-    return ak.Array([len(np.unique(x)) for x in ak.to_list(arr)])
+def unique_lengths(arr_in):
+    return ak.Array([len(np.unique(x)) for x in ak.to_list(arr_in)])
 
 def getFileList(filelist, job):
     with open(filelist, 'r') as fin:
@@ -120,12 +119,11 @@ def straightLineCut(self, cutName='straightLineCut', cut=True, branches=None):
         for col in range(3):
             for p in [0, 1]:
                 mask = (self.events.row == row) & (self.events.column == col) & (lookup_pmt(self.events.chan) == p)
-                # Use our unique_lengths helper to get the number of unique layers per event.
                 unique_layers = unique_lengths(self.events.layer[mask])
                 valid_candidate = (unique_layers == 4)
                 valid = valid | valid_candidate
     self.events[cutName] = valid
-    if cut:
+    if cut and branches is not None:
         for branch in branches:
             self.events[branch] = self.events[branch][valid]
 
@@ -352,3 +350,4 @@ if __name__ == "__main__":
     myschedule.cutFlowPlots()
     myplotter.saveHistograms("timingCorrection{}_slabDetector.root".format('_beamOff'))
     mycuts.getCutflowCounts()
+

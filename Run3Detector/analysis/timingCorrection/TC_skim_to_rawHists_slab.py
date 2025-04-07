@@ -269,7 +269,6 @@ if __name__ == "__main__":
 
     # Replace the old methods with the updated versions.
     setattr(milliqanCuts, "getTimeDiffs", getTimeDiffs)
-    setattr(milliqanCuts, 'frontPanelHit', frontPanelHit)  # Assuming frontPanelHit remains unchanged.
     setattr(milliqanCuts, 'timeDiff', timeDiff)
     setattr(milliqanCuts, "pulseTime", pulseTime)
     setattr(milliqanCuts, "straightLineCut", straightLineCut)
@@ -280,11 +279,7 @@ if __name__ == "__main__":
     hitInAllLayers = getCutMod(mycuts.oneHitPerLayerCut, mycuts, 'hitInAllLayers', cut=True, branches=branches, multipleHits=False)
     oneHitPerLayer = getCutMod(mycuts.oneHitPerLayerCut, mycuts, 'oneHitPerLayer', cut=True, branches=branches, multipleHits=False)
     fourLayerCut = getCutMod(mycuts.fourLayerCut, mycuts, 'fourLayerCut', cut=True, branches=branches)
-    panelVeto = getCutMod(mycuts.panelVeto, mycuts, 'panelVeto', nPECut=40e3, cut=True, branches=branches)
-    nPECut = getCutMod(mycuts.nPECut, mycuts, 'nPECut', nPECut=200, cut=True, branches=branches)
-    areaCut = getCutMod(mycuts.areaCut, mycuts, 'areaCut', areaCut=300000, cut=True, branches=branches)
     firstPulseCut = getCutMod(mycuts.firstPulseCut, mycuts, 'firstPulseCut', cut=True, branches=branches)
-    frontPanelHit = getCutMod(mycuts.frontPanelHit, mycuts, 'frontPanelHit', cut=True, branches=branches)
     centralTime = getCutMod(mycuts.centralTime, mycuts, 'centralTime', cut=True, branches=branches)
 
     # Define histograms for timing differences.
@@ -342,13 +337,10 @@ if __name__ == "__main__":
                boardMatchCut, 
                pickupCut, 
                firstPulseCut,
-               nPECut,
                centralTime,
                fourLayerCut,
-               frontPanelHit,
                mycuts.straightLineCut, 
                mycuts.pulseTime,
-               mycuts.threeInLine,
                mycuts.timeDiff,
                mycuts.getTimeDiffs
               ]
@@ -364,5 +356,5 @@ if __name__ == "__main__":
     myiterator.run()
 
     myschedule.cutFlowPlots()
-    myplotter.saveHistograms("cosSkim_timingCorrection{}_newDetector.root".format('_beamOff'))
+    myplotter.saveHistograms("timingCorrection{}_slabDetector.root".format('_beamOff'))
     mycuts.getCutflowCounts()

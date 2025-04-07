@@ -23,8 +23,7 @@ from milliqanPlotter import *
 ################ Global Setup and Helper Functions ##############
 #################################################################
 
-# Build a global lookup for pmt type from channel mapping.
-# The configuration file is assumed to be local now.
+# Build a global lookup for PMT type from channel mapping.
 try:
     with open('configRun19_present.json', 'r') as f:
         config_data = json.load(f)
@@ -37,7 +36,6 @@ except Exception as e:
 if pmt_lookup is None:
     raise RuntimeError("pmt_lookup is not defined. Check that configRun19_present.json exists and is valid.")
 
-# Helper function to lookup PMT type for a (possibly jagged) array of channel indices.
 def lookup_pmt(channels):
     if hasattr(channels, "layout") and hasattr(channels.layout, "offsets"):
         counts = ak.num(channels)
@@ -47,24 +45,8 @@ def lookup_pmt(channels):
     else:
         return pmt_lookup[channels]
 
-# Helper function to compute the number of unique elements for each sublist.
 def unique_lengths(arr_in):
     return ak.Array([len(np.unique(x)) for x in ak.to_list(arr_in)])
-
-# NEW helper: Extract the time corresponding to the maximum height for a given layer.
-def time_of_max_height(layer, events, time_field='timeFit_module_calibrated', height_field='height', cut_mask=None):
-    # Select pulses in the specified layer that pass the cut.
-    sel = (events.layer == layer) & (cut_mask)
-    times_list = ak.to_list(events[time_field][sel])
-    heights_list = ak.to_list(events[height_field][sel])
-    result = []
-    for t, h in zip(times_list, heights_list):
-        if len(h) == 0:
-            result.append(None)
-        else:
-            max_idx = int(np.argmax(h))
-            result.append(t[max_idx])
-    return ak.Array(result)
 
 def getFileList(filelist, job):
     with open(filelist, 'r') as fin:
@@ -81,14 +63,12 @@ def checkBeam(mqLumis, run, file, branch='beam'):
     beam = mqLumis[branch].loc[(mqLumis['run'] == run) & (mqLumis['file'] == file)]
     if beam.size == 0:
         return None
-    beam = beam.values[0]
-    return beam
+    return beam.values[0]
 
 def loadJson(jsonFile):
     with open(jsonFile, 'r') as fin:
         data = json.load(fin)
-    lumis = pd.DataFrame(data['data'], columns=data['columns'])
-    return lumis
+    return pd.DataFrame(data['data'], columns=data['columns'])
 
 def getRunFile(filename):
     run = filename.split('Run')[1].split('.')[0]
@@ -106,11 +86,8 @@ def getLumiofFileList(filelist):
     print("Running over {} files \n total of {} pb^-1 \n total run time {}s".format(len(filelist), totalLumi, runTime))
 
 def getRunTimes(df):
-    runTimes = df['stop'] - df['start']
-    total_time = runTimes.sum()
-    return total_time
+    return (df['stop'] - df['start']).sum()
 
-##################################################################
 def findChannel(layer, row, col, p, config='configRun19_present.json'):
     with open(config, 'r') as fin:
         data = json.load(fin)
@@ -139,6 +116,10 @@ def straightLineCut(self, cutName='straightLineCut', cut=True, branches=None):
 ##################################################################
 @mqCut
 def getTimeDiffs(self):
+    # Check for the existence of expected branches.
+    if "threeHitPath0_p0" not in self.events:
+        print("Warning: 'threeHitPath0_p0' not found in events. Skipping getTimeDiffs.")
+        return
     for i in range(24):
         cut0 = self.events['threeHitPath{}_p0'.format(i)]
         cut1 = self.events['threeHitPath{}_p1'.format(i)]
@@ -245,7 +226,6 @@ def pulseTime(self):
     straightPath = self.events['straightLineCut']
     timeToUse = 'timeFit_module_calibrated'
 
-    # Extract the time corresponding to the maximum height per event for each layer.
     self.events['straightPathL0Time'] = time_of_max_height(0, events, time_field=timeToUse, height_field='height', cut_mask=straightPath)
     self.events['straightPathL1Time'] = time_of_max_height(1, events, time_field=timeToUse, height_field='height', cut_mask=straightPath)
     self.events['straightPathL2Time'] = time_of_max_height(2, events, time_field=timeToUse, height_field='height', cut_mask=straightPath)

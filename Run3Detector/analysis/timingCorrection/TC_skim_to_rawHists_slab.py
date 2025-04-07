@@ -2,10 +2,10 @@ import sys
 sys.path.append('/root/lib/')
 
 import ROOT as r
-import os 
+import os
 import json
 import pandas as pd
-import uproot 
+import uproot
 import awkward as ak
 import array as arr
 import numpy as np
@@ -25,15 +25,19 @@ from milliqanPlotter import *
 #################################################################
 
 # Build a global lookup for pmt type from channel mapping.
-# The configuration file is taken from the master branch copy.
+# The configuration file is assumed to be local now.
 try:
-    with open('Run3Detector/configuration/slabConfigs/configRun19_present.json','r') as f:
+    with open('configRun19_present.json', 'r') as f:
         config_data = json.load(f)
     chanMap = config_data['chanMap']  # each entry: [col, row, layer, pmt]
     pmt_lookup = np.array([entry[3] for entry in chanMap])
 except Exception as e:
     print("Could not build pmt lookup: ", e)
     pmt_lookup = None
+
+if pmt_lookup is None:
+    raise RuntimeError("pmt_lookup is not defined. Check that configRun19_present.json exists and is valid.")
+
 
 def getFileList(filelist, job):
     with open(filelist, 'r') as fin:
@@ -48,7 +52,7 @@ def extract_tar_file(tar_file='milliqanProcessing.tar.gz'):
 ##################################################################
 def checkBeam(mqLumis, run, file, branch='beam'):
     beam = mqLumis[branch].loc[(mqLumis['run'] == run) & (mqLumis['file'] == file)]
-    if beam.size == 0: 
+    if beam.size == 0:
         return None
     beam = beam.values[0]
     return beam
@@ -81,20 +85,21 @@ def getRunTimes(df):
 
 ##################################################################
 # NEW: Updated findChannel for the slab detector layout.
-# The new chanMap entries are of the form [col, row, layer, pmt]
+# The new chanMap entries are of the form [col, row, layer, pmt].
+# Do NOT change this function.
 def findChannel(layer, row, col, p, config='configRun19_present.json'):
     with open(config, 'r') as fin:
         data = json.load(fin)
     chan_list = data['chanMap']  # list of lists: [col, row, layer, pmt]
     for idx, mapping in enumerate(chan_list):
-        # mapping: [col, row, layer, pmt]
         if mapping[0] == col and mapping[1] == row and mapping[2] == layer and mapping[3] == p:
             return idx
     return None
 
 ##################################################################
 # NEW: Straight Line Cut redefinition for the slab layout.
-# Requirement: at least one (row, col) combination must have hits in all 4 layers with the same PMT (either 0 or 1).
+# Requirement: at least one (row, col) combination must have hits in all 4 layers
+# with the same PMT (either 0 or 1).
 @mqCut
 def straightLineCut(self, cutName='straightLineCut', cut=True, branches=None):
     # Initialize a boolean mask per event.
@@ -104,11 +109,9 @@ def straightLineCut(self, cutName='straightLineCut', cut=True, branches=None):
     for row in range(4):
         for col in range(3):
             for p in [0, 1]:
-                # Instead of using self.events['pmt'], derive the pmt type from the channel number.
+                # Use pmt_lookup derived from the channel mapping instead of a branch.
                 mask = (self.events.row == row) & (self.events.column == col) & (ak.Array(pmt_lookup)[self.events.chan] == p)
-                # For each event, count the number of unique layers with a hit.
                 unique_layers = ak.num(ak.unique(self.events.layer[mask]))
-                # If there are hits in all four layers, mark these events as valid.
                 valid_candidate = (unique_layers == 4)
                 valid = valid | valid_candidate
     self.events[cutName] = valid
@@ -120,14 +123,13 @@ def straightLineCut(self, cutName='straightLineCut', cut=True, branches=None):
 # NEW: The getTimeDiffs function now loops over 24 possible four‐in‐line paths.
 @mqCut
 def getTimeDiffs(self):
-    # Loop over all possible 4 in line paths (new detector: 4 rows x 3 cols x 2 pmts = 24 lines)
+    # Loop over all possible 4 in line paths (4 rows x 3 cols x 2 PMTs = 24 lines)
     for i in range(24):
-        cut0 = self.events['threeHitPath{}_p0'.format(i)]  # layers 1,2,3
-        cut1 = self.events['threeHitPath{}_p1'.format(i)]  # layers 0,2,3
-        cut2 = self.events['threeHitPath{}_p2'.format(i)]  # layers 0,1,3
-        cut3 = self.events['threeHitPath{}_p3'.format(i)]  # layers 0,1,2
+        cut0 = self.events['threeHitPath{}_p0'.format(i)]
+        cut1 = self.events['threeHitPath{}_p1'.format(i)]
+        cut2 = self.events['threeHitPath{}_p2'.format(i)]
+        cut3 = self.events['threeHitPath{}_p3'.format(i)]
 
-        # Create branch names for time differences among layers.
         cutName0_12 = 'timeDiff_path{}_line{}_layers{}_{}'.format(i, 0, 1, 2)
         cutName0_13 = 'timeDiff_path{}_line{}_layers{}_{}'.format(i, 0, 1, 3)
         cutName0_23 = 'timeDiff_path{}_line{}_layers{}_{}'.format(i, 0, 2, 3)
@@ -178,7 +180,7 @@ def getTimeDiffs(self):
 
 ##################################################################
 # NEW: Updated timeDiff function.
-# In addition to the “all pulses” branch (kept similar), the straight-line part now loops
+# In addition to the “all pulses” branch, the straight-line part now loops
 # over 4 layers, 4 rows, 3 columns and, for each cell, separately for PMT type 0 and 1.
 @mqCut
 def timeDiff(self, cutName='timeDiff'):
@@ -215,7 +217,6 @@ def timeDiff(self, cutName='timeDiff'):
                             (self.events['column'] == col) &
                             (ak.Array(pmt_lookup)[self.events.chan] == p)
                         ]
-                        # Compute the time difference between the channel hits and front panel times.
                         t_combo = ak.cartesian([chanTimes, frontPanelTimes], axis=1)
                         t_diff = t_combo['0'] - t_combo['1']
                         channel = int(findChannel(layer, row, col, p))
@@ -223,8 +224,7 @@ def timeDiff(self, cutName='timeDiff'):
                         self.events[branchName] = t_diff
 
 ##################################################################
-# The pulseTime function is left mostly unchanged – assuming that the
-# branch "straightLineCutPulse" is redefined elsewhere to follow the new layout.
+# The pulseTime function is left mostly unchanged.
 @mqCut
 def pulseTime(self):
     events = self.events
@@ -266,12 +266,12 @@ if __name__ == "__main__":
 
     print("Running on files {}".format(filelist))
 
-    # Optionally, you can check the luminosity of the files.
+    # Optionally, check the luminosity.
     # getLumiofFileList(filelist)
 
     # Define the necessary branches.
-    branches = ['event', 'tTrigger', 'boardsMatched', 'pickupFlag', 'pickupFlagTight', 'fileNumber', 'runNumber', 
-                'type', 'ipulse', 'nPE', 'chan', 'time_module_calibrated', 'timeFit_module_calibrated', 
+    branches = ['event', 'tTrigger', 'boardsMatched', 'pickupFlag', 'pickupFlagTight', 'fileNumber', 'runNumber',
+                'type', 'ipulse', 'nPE', 'chan', 'time_module_calibrated', 'timeFit_module_calibrated',
                 'row', 'column', 'layer', 'height', 'area', 'npulses', 'timeFit']
 
     # Define the milliqan cuts object.
@@ -294,14 +294,13 @@ if __name__ == "__main__":
 
     ##################################################################
     # NEW: Histogram output for time differences.
-    # For each (row, col, pmt) combination (24 total) we create a histogram for the time difference
-    # between layer n (n = 1,2,3) and layer 0. That is 3 x 24 = 72 histograms.
+    # For each (row, col, pmt) combination (24 total), create a histogram for the time difference
+    # between layer n (n = 1,2,3) and layer 0: 3 x 24 = 72 histograms.
     nbins = 100
     minx = -50
     maxx = 50
 
-    # Create containers for histograms for each layer difference.
-    # Each key corresponds to the non-baseline layer (1, 2, or 3).
+    # Create containers for histograms for each non-baseline layer.
     canvasHistos = {1: [], 2: [], 3: []}
     cutNames = {1: [], 2: [], 3: []}
 
@@ -311,19 +310,17 @@ if __name__ == "__main__":
             for p in [0, 1]:
                 # Get the base channel index for layer 0 (for labeling).
                 baseChannel = findChannel(0, row, col, p)
-                # For each non-baseline layer, create a histogram for the time difference relative to layer 0.
                 for layer in [1, 2, 3]:
                     histName = "h_timeDiff_L{}_r{}_c{}_p{}".format(layer, row, col, p)
                     title = "Time Diff: L{} - L0 for row {}, col {}, pmt {}".format(layer, row, col, p)
                     h = r.TH1F(histName, title, nbins, minx, maxx)
                     canvasHistos[layer].append(h)
-                    # Create a cut name/identifier; here we include the layer and base channel.
                     cutNames[layer].append("timeDiff_L{}_channel{}".format(layer, baseChannel))
 
     myplotter = milliqanPlotter()
     myplotter.dict.clear()
 
-    # (Optional: Add any global histograms if needed.)
+    # (Optional: Add global histograms.)
     h_channels = r.TH1F('h_channels', 'Channel', 96, 0, 96)
     h_timeDiff = r.TH1F('h_timeDiff', 'Time Difference L3-L0', 50, -50, 100)
     h_timeDiffNoCorr = r.TH1F('h_timeDiffNoCorr', 'Time Difference L3-L0', 50, -50, 100)
@@ -334,20 +331,20 @@ if __name__ == "__main__":
     myplotter.addHistograms(h_timeDiffNoCorr, 'timeDiffNoCorr')
     myplotter.addHistograms(h_timeDiffOld, 'timeDiffOld')
 
-    # Add the 72 new histograms, grouping them by layer difference.
+    # Add the 72 new histograms, grouping by non-baseline layer.
     for layer in [1, 2, 3]:
         for h, n in zip(canvasHistos[layer], cutNames[layer]):
             myplotter.addHistograms(h, n)
 
     ##################################################################
     # Build the cutflow.
-    cutflow = [mycuts.totalEventCounter, mycuts.fullEventCounter, 
-               boardMatchCut, 
-               pickupCut, 
+    cutflow = [mycuts.totalEventCounter, mycuts.fullEventCounter,
+               boardMatchCut,
+               pickupCut,
                firstPulseCut,
                centralTime,
                fourLayerCut,
-               mycuts.straightLineCut, 
+               mycuts.straightLineCut,
                mycuts.pulseTime,
                mycuts.timeDiff,
                mycuts.getTimeDiffs

@@ -51,14 +51,12 @@ def lookup_pmt(channels):
 def unique_lengths(arr_in):
     return ak.Array([len(np.unique(x)) for x in ak.to_list(arr_in)])
 
-# New helper: For a given layer and cut, extract the time corresponding to the maximum height.
+# New helper: for pulseTime, extract time corresponding to maximum height per event.
 def time_of_max_height(layer, events, time_field='timeFit_module_calibrated', height_field='height', cut_mask=None):
-    # Select events in the given layer that pass the cut.
+    # Select pulses in the given layer that pass the provided cut.
     sel = (events.layer == layer) & (cut_mask)
-    # Convert the selected times and heights to lists.
     times_list = ak.to_list(events[time_field][sel])
     heights_list = ak.to_list(events[height_field][sel])
-    # For each event, find the index of the maximum height and record the corresponding time.
     result = []
     for t, h in zip(times_list, heights_list):
         if len(h) == 0:
@@ -224,13 +222,15 @@ def timeDiff(self, cutName='timeDiff'):
         self.events[cutName + 'NoCorr'] = diffNoCorr
 
     if allStraightLine:
+        # Use the event-level straight line cut.
+        straightPath = self.events['straightLineCut']
         frontPanelTimes = self.events.timeFit[(self.events['type'] == 1) & (self.events['layer'] == -1)]
         for layer in range(4):
             for row in range(4):
                 for col in range(3):
                     for p in [0, 1]:
                         chanTimes = self.events.timeFit[
-                            (self.events['threeHitPath_allPulses']) &
+                            (straightPath) &
                             (self.events['layer'] == layer) &
                             (self.events['row'] == row) &
                             (self.events['column'] == col) &
@@ -244,22 +244,18 @@ def timeDiff(self, cutName='timeDiff'):
 
 ##################################################################
 # NEW: Updated pulseTime function.
-# Now using the 'straightLineCut' branch instead of 'straightLineCutPulse'
-# and extracting the time corresponding to the maximum height per event.
+# Now using the 'straightLineCut' branch and extracting the time corresponding to the maximum height per event.
 @mqCut
 def pulseTime(self):
     events = self.events
-    # Use the new straight line cut
     straightPath = self.events['straightLineCut']
     timeToUse = 'timeFit_module_calibrated'
 
-    # For each layer, extract the time corresponding to the maximum height among pulses passing the cut.
     self.events['straightPathL0Time'] = time_of_max_height(0, events, time_field=timeToUse, height_field='height', cut_mask=straightPath)
     self.events['straightPathL1Time'] = time_of_max_height(1, events, time_field=timeToUse, height_field='height', cut_mask=straightPath)
     self.events['straightPathL2Time'] = time_of_max_height(2, events, time_field=timeToUse, height_field='height', cut_mask=straightPath)
     self.events['straightPathL3Time'] = time_of_max_height(3, events, time_field=timeToUse, height_field='height', cut_mask=straightPath)
 
-    # Compute the time difference between layer 3 and layer 0.
     self.events['timeDiffOld'] = self.events['straightPathL3Time'] - self.events['straightPathL0Time']
 
 ##################################################################

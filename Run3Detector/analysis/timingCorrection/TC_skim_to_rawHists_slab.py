@@ -104,7 +104,6 @@ def straightLineCut(self, cutName='straightLineCut', cut=True, branches=None):
         for branch in branches:
             self.events[branch] = self.events[branch][valid]
 
-
 ##################################################################
 # NEW: The getTimeDiffs function now loops over 24 possible four‐in‐line paths.
 @mqCut
@@ -164,7 +163,6 @@ def getTimeDiffs(self):
         self.events[cutName3_01] = ak.pad_none(times3_1, 1, axis=1) - ak.pad_none(times3_0, 1, axis=1)
         self.events[cutName3_02] = ak.pad_none(times3_2, 1, axis=1) - ak.pad_none(times3_0, 1, axis=1)
         self.events[cutName3_12] = ak.pad_none(times3_2, 1, axis=1) - ak.pad_none(times3_1, 1, axis=1)
-
 
 ##################################################################
 # NEW: Updated timeDiff function.
@@ -282,57 +280,55 @@ if __name__ == "__main__":
     firstPulseCut = getCutMod(mycuts.firstPulseCut, mycuts, 'firstPulseCut', cut=True, branches=branches)
     centralTime = getCutMod(mycuts.centralTime, mycuts, 'centralTime', cut=True, branches=branches)
 
-    # Define histograms for timing differences.
-    timingHistos = []
-    cutNames = []
+    ##################################################################
+    # NEW: Histogram output for time differences.
+    # For each (row, col, pmt) combination (24 total) we create a histogram for the time difference
+    # between layer n (n = 1,2,3) and layer 0. That is 3 x 24 = 72 histograms.
     nbins = 100
     minx = -50
     maxx = 50
-    for i in range(16):
-        # Create 12 histograms per path (one for each combination of 3 layers out of 4).
-        for name_fmt in [
-            'h_timeDiff{}_{}_layers{}{}',
-            'h_timeDiff{}_{}_layers{}{}',
-            'h_timeDiff{}_{}_layers{}{}'
-        ]:
-            # (Names and titles remain similar to before.)
-            h = r.TH1F(name_fmt.format(i, 0, 1, 2), 'Time Difference Path {}, Cut {}, Layers {} and {}'.format(i, 0, 1, 2), nbins, minx, maxx)
-            timingHistos.append(h)
-            cutNames.append('timeDiff_path{}_line{}_layers{}_{}'.format(i, 0, 1, 2))
-        # (Repeat for the remaining 9 combinations as needed – adjust as desired.)
-        # For brevity, only one combination per path is explicitly shown here.
 
-    # Create histograms for the channel-to-panel time differences.
-    channelToPanelHists = []
-    chanToPanelNames = []
-    # New detector has 96 channels according to the new mapping.
-    for i in range(96):
-        h_name = 'h_timeDiffFrontPanel{}'.format(i)
-        h = r.TH1F(h_name, "Time Difference Between Front Panel and Channel {}".format(i), nbins, minx, maxx)
-        channelToPanelHists.append(h)
-        cutName = 'timeDiff{}'.format(i)
-        chanToPanelNames.append(cutName)
+    # Create containers for histograms for each layer difference.
+    # Each key corresponds to the non-baseline layer (1, 2, or 3).
+    canvasHistos = {1: [], 2: [], 3: []}
+    cutNames = {1: [], 2: [], 3: []}
 
+    # Loop over all positions in the slab detector: 4 rows, 3 columns, 2 PMTs.
+    for row in range(4):
+        for col in range(3):
+            for p in [0, 1]:
+                # Optional: Get the base channel index for layer 0 (for labeling).
+                baseChannel = findChannel(0, row, col, p)
+                # For each non-baseline layer, create a histogram for the time difference relative to layer 0.
+                for layer in [1, 2, 3]:
+                    histName = "h_timeDiff_L{}_r{}_c{}_p{}".format(layer, row, col, p)
+                    title = "Time Diff: L{} - L0 for row {}, col {}, pmt {}".format(layer, row, col, p)
+                    h = r.TH1F(histName, title, nbins, minx, maxx)
+                    canvasHistos[layer].append(h)
+                    # Create a cut name/identifier; here we include the layer and base channel.
+                    cutNames[layer].append("timeDiff_L{}_channel{}".format(layer, baseChannel))
+
+    myplotter = milliqanPlotter()
+    myplotter.dict.clear()
+
+    # (Optional: Add any global histograms if needed.)
     h_channels = r.TH1F('h_channels', 'Channel', 96, 0, 96)
     h_timeDiff = r.TH1F('h_timeDiff', 'Time Difference L3-L0', 50, -50, 100)
     h_timeDiffNoCorr = r.TH1F('h_timeDiffNoCorr', 'Time Difference L3-L0', 50, -50, 100)
     h_timeDiffOld = r.TH1F('h_timeDiffOld', 'Time Difference L3-L0', 50, -50, 100)
-
-    myplotter = milliqanPlotter()
-    myplotter.dict.clear()
 
     myplotter.addHistograms(h_channels, 'chan')
     myplotter.addHistograms(h_timeDiff, 'timeDiff')
     myplotter.addHistograms(h_timeDiffNoCorr, 'timeDiffNoCorr')
     myplotter.addHistograms(h_timeDiffOld, 'timeDiffOld')
 
-    for h, n in zip(channelToPanelHists, chanToPanelNames):
-        myplotter.addHistograms(h, n)
+    # Add the 72 new histograms, grouping them by layer difference.
+    for layer in [1, 2, 3]:
+        for h, n in zip(canvasHistos[layer], cutNames[layer]):
+            myplotter.addHistograms(h, n)
 
-    for h, n in zip(timingHistos, cutNames):
-        myplotter.addHistograms(h, n)
-
-    # Append any missing cuts to the cutflow.
+    ##################################################################
+    # Build the cutflow.
     cutflow = [mycuts.totalEventCounter, mycuts.fullEventCounter, 
                boardMatchCut, 
                pickupCut, 

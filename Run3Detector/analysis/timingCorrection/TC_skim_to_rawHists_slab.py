@@ -51,6 +51,23 @@ def lookup_pmt(channels):
 def unique_lengths(arr_in):
     return ak.Array([len(np.unique(x)) for x in ak.to_list(arr_in)])
 
+# New helper: For a given layer and cut, extract the time corresponding to the maximum height.
+def time_of_max_height(layer, events, time_field='timeFit_module_calibrated', height_field='height', cut_mask=None):
+    # Select events in the given layer that pass the cut.
+    sel = (events.layer == layer) & (cut_mask)
+    # Convert the selected times and heights to lists.
+    times_list = ak.to_list(events[time_field][sel])
+    heights_list = ak.to_list(events[height_field][sel])
+    # For each event, find the index of the maximum height and record the corresponding time.
+    result = []
+    for t, h in zip(times_list, heights_list):
+        if len(h) == 0:
+            result.append(None)
+        else:
+            max_idx = int(np.argmax(h))
+            result.append(t[max_idx])
+    return ak.Array(result)
+
 def getFileList(filelist, job):
     with open(filelist, 'r') as fin:
         data = json.load(fin)
@@ -110,8 +127,6 @@ def findChannel(layer, row, col, p, config='configRun19_present.json'):
 
 ##################################################################
 # NEW: Straight Line Cut redefinition for the slab layout.
-# Requirement: at least one (row, col) combination must have hits in all 4 layers
-# with the same PMT (either 0 or 1).
 @mqCut
 def straightLineCut(self, cutName='straightLineCut', cut=True, branches=None):
     valid = ak.zeros_like(self.events.event, dtype=bool)
@@ -187,8 +202,6 @@ def getTimeDiffs(self):
 
 ##################################################################
 # NEW: Updated timeDiff function.
-# In addition to the “all pulses” branch, the straight-line part now loops
-# over 4 layers, 4 rows, 3 columns and, for each cell, separately for PMT type 0 and 1.
 @mqCut
 def timeDiff(self, cutName='timeDiff'):
     allPulses = True
@@ -231,38 +244,22 @@ def timeDiff(self, cutName='timeDiff'):
 
 ##################################################################
 # NEW: Updated pulseTime function.
-# Now using the 'straightLineCut' branch instead of 'straightLineCutPulse',
-# and extracting a single time per event using ak.firsts().
+# Now using the 'straightLineCut' branch instead of 'straightLineCutPulse'
+# and extracting the time corresponding to the maximum height per event.
 @mqCut
 def pulseTime(self):
     events = self.events
+    # Use the new straight line cut
     straightPath = self.events['straightLineCut']
     timeToUse = 'timeFit_module_calibrated'
 
-    # Extract times for each layer using the straight-line cut.
-    self.events['straightPathL0Time'] = ak.firsts(events[timeToUse][(events.layer == 0) & straightPath])
-    self.events['straightPathL1Time'] = ak.firsts(events[timeToUse][(events.layer == 1) & straightPath])
-    self.events['straightPathL2Time'] = ak.firsts(events[timeToUse][(events.layer == 2) & straightPath])
-    self.events['straightPathL3Time'] = ak.firsts(events[timeToUse][(events.layer == 3) & straightPath])
+    # For each layer, extract the time corresponding to the maximum height among pulses passing the cut.
+    self.events['straightPathL0Time'] = time_of_max_height(0, events, time_field=timeToUse, height_field='height', cut_mask=straightPath)
+    self.events['straightPathL1Time'] = time_of_max_height(1, events, time_field=timeToUse, height_field='height', cut_mask=straightPath)
+    self.events['straightPathL2Time'] = time_of_max_height(2, events, time_field=timeToUse, height_field='height', cut_mask=straightPath)
+    self.events['straightPathL3Time'] = time_of_max_height(3, events, time_field=timeToUse, height_field='height', cut_mask=straightPath)
 
-    # Find maximum heights for each layer.
-    height0 = ak.max(events['height'][(events.layer == 0) & straightPath], axis=1)
-    height1 = ak.max(events['height'][(events.layer == 1) & straightPath], axis=1)
-    height2 = ak.max(events['height'][(events.layer == 2) & straightPath], axis=1)
-    height3 = ak.max(events['height'][(events.layer == 3) & straightPath], axis=1)
-
-    mask0 = (events['height'][(events.layer == 0) & straightPath] == height0)
-    mask1 = (events['height'][(events.layer == 1) & straightPath] == height1)
-    mask2 = (events['height'][(events.layer == 2) & straightPath] == height2)
-    mask3 = (events['height'][(events.layer == 3) & straightPath] == height3)
-
-    # Apply the mask and again extract the first (and ideally only) time.
-    self.events['straightPathL0Time'] = ak.firsts(self.events['straightPathL0Time'][mask0])
-    self.events['straightPathL1Time'] = ak.firsts(self.events['straightPathL1Time'][mask1])
-    self.events['straightPathL2Time'] = ak.firsts(self.events['straightPathL2Time'][mask2])
-    self.events['straightPathL3Time'] = ak.firsts(self.events['straightPathL3Time'][mask3])
-
-    # Compute the difference between layer 3 and layer 0 times.
+    # Compute the time difference between layer 3 and layer 0.
     self.events['timeDiffOld'] = self.events['straightPathL3Time'] - self.events['straightPathL0Time']
 
 ##################################################################
@@ -279,8 +276,8 @@ if __name__ == "__main__":
 
     branches = ['event', 'tTrigger', 'boardsMatched', 'pickupFlag', 'pickupFlagTight',
                 'fileNumber', 'runNumber', 'type', 'ipulse', 'nPE', 'chan',
-                'time_module_calibrated', 'timeFit_module_calibrated', 'row', 'column',
-                'layer', 'height', 'area', 'npulses', 'timeFit']
+                'time_module_calibrated', 'timeFit_module_calibrated',
+                'row', 'column', 'layer', 'height', 'area', 'npulses', 'timeFit']
 
     mycuts = milliqanCuts()
 

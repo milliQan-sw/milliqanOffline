@@ -106,11 +106,11 @@ def straightLineCut(self, cutName='straightLineCut', cut=True, branches=None):
 
 
 ##################################################################
-# The getTimeDiffs function (unchanged) still loops over possible four‐in‐line paths.
+# NEW: The getTimeDiffs function now loops over 24 possible four‐in‐line paths.
 @mqCut
 def getTimeDiffs(self):
-    # Loop over all possible 4 in line paths (logic assumed unchanged)
-    for i in range(16):
+    # Loop over all possible 4 in line paths (new detector: 4 rows x 3 cols x 2 pmts = 24 lines)
+    for i in range(24):
         cut0 = self.events['threeHitPath{}_p0'.format(i)]  # layers 1,2,3
         cut1 = self.events['threeHitPath{}_p1'.format(i)]  # layers 0,2,3
         cut2 = self.events['threeHitPath{}_p2'.format(i)]  # layers 0,1,3
@@ -133,21 +133,21 @@ def getTimeDiffs(self):
         cutName3_02 = 'timeDiff_path{}_line{}_layers{}_{}'.format(i, 3, 0, 2)
         cutName3_12 = 'timeDiff_path{}_line{}_layers{}_{}'.format(i, 3, 1, 2)
 
-        times0_1 = self.events['timeFit_module_calibrated'][(cut0) & (self.events.layer==1)]
-        times0_2 = self.events['timeFit_module_calibrated'][(cut0) & (self.events.layer==2)]
-        times0_3 = self.events['timeFit_module_calibrated'][(cut0) & (self.events.layer==3)]
+        times0_1 = self.events['timeFit_module_calibrated'][(cut0) & (self.events.layer == 1)]
+        times0_2 = self.events['timeFit_module_calibrated'][(cut0) & (self.events.layer == 2)]
+        times0_3 = self.events['timeFit_module_calibrated'][(cut0) & (self.events.layer == 3)]
 
-        times1_0 = self.events['timeFit_module_calibrated'][(cut1) & (self.events.layer==0)]
-        times1_2 = self.events['timeFit_module_calibrated'][(cut1) & (self.events.layer==2)]
-        times1_3 = self.events['timeFit_module_calibrated'][(cut1) & (self.events.layer==3)]
+        times1_0 = self.events['timeFit_module_calibrated'][(cut1) & (self.events.layer == 0)]
+        times1_2 = self.events['timeFit_module_calibrated'][(cut1) & (self.events.layer == 2)]
+        times1_3 = self.events['timeFit_module_calibrated'][(cut1) & (self.events.layer == 3)]
 
-        times2_0 = self.events['timeFit_module_calibrated'][(cut2) & (self.events.layer==0)]
-        times2_1 = self.events['timeFit_module_calibrated'][(cut2) & (self.events.layer==1)]
-        times2_3 = self.events['timeFit_module_calibrated'][(cut2) & (self.events.layer==3)]
+        times2_0 = self.events['timeFit_module_calibrated'][(cut2) & (self.events.layer == 0)]
+        times2_1 = self.events['timeFit_module_calibrated'][(cut2) & (self.events.layer == 1)]
+        times2_3 = self.events['timeFit_module_calibrated'][(cut2) & (self.events.layer == 3)]
 
-        times3_0 = self.events['timeFit_module_calibrated'][(cut3) & (self.events.layer==0)]
-        times3_1 = self.events['timeFit_module_calibrated'][(cut3) & (self.events.layer==1)]
-        times3_2 = self.events['timeFit_module_calibrated'][(cut3) & (self.events.layer==2)]
+        times3_0 = self.events['timeFit_module_calibrated'][(cut3) & (self.events.layer == 0)]
+        times3_1 = self.events['timeFit_module_calibrated'][(cut3) & (self.events.layer == 1)]
+        times3_2 = self.events['timeFit_module_calibrated'][(cut3) & (self.events.layer == 2)]
 
         self.events[cutName0_12] = ak.pad_none(times0_2, 1, axis=1) - ak.pad_none(times0_1, 1, axis=1)
         self.events[cutName0_13] = ak.pad_none(times0_3, 1, axis=1) - ak.pad_none(times0_1, 1, axis=1)
@@ -164,6 +164,7 @@ def getTimeDiffs(self):
         self.events[cutName3_01] = ak.pad_none(times3_1, 1, axis=1) - ak.pad_none(times3_0, 1, axis=1)
         self.events[cutName3_02] = ak.pad_none(times3_2, 1, axis=1) - ak.pad_none(times3_0, 1, axis=1)
         self.events[cutName3_12] = ak.pad_none(times3_2, 1, axis=1) - ak.pad_none(times3_1, 1, axis=1)
+
 
 ##################################################################
 # NEW: Updated timeDiff function.

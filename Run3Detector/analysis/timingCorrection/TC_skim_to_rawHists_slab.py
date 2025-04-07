@@ -7,6 +7,7 @@ import json
 import pandas as pd
 import uproot
 import awkward as ak
+from awkward.operations.structure import unique  # Import unique explicitly
 import array as arr
 import numpy as np
 import shutil
@@ -40,16 +41,13 @@ if pmt_lookup is None:
 
 # Helper function to lookup PMT type for a (possibly jagged) array of channel indices.
 def lookup_pmt(channels):
-    # If channels is an awkward array with a ListOffsetArray layout, use the counts for unflattening.
     if hasattr(channels, "layout") and hasattr(channels.layout, "offsets"):
         counts = ak.num(channels)
         flat = ak.flatten(channels)
         flat_pmt = pmt_lookup[flat]
-        # Convert counts to a Python list and unflatten.
         return ak.unflatten(flat_pmt, ak.to_list(counts))
     else:
         return pmt_lookup[channels]
-
 
 def getFileList(filelist, job):
     with open(filelist, 'r') as fin:
@@ -102,7 +100,7 @@ def getRunTimes(df):
 def findChannel(layer, row, col, p, config='configRun19_present.json'):
     with open(config, 'r') as fin:
         data = json.load(fin)
-    chan_list = data['chanMap']  # list of lists: [col, row, layer, pmt]
+    chan_list = data['chanMap']
     for idx, mapping in enumerate(chan_list):
         if mapping[0] == col and mapping[1] == row and mapping[2] == layer and mapping[3] == p:
             return idx
@@ -119,7 +117,8 @@ def straightLineCut(self, cutName='straightLineCut', cut=True, branches=None):
         for col in range(3):
             for p in [0, 1]:
                 mask = (self.events.row == row) & (self.events.column == col) & (lookup_pmt(self.events.chan) == p)
-                unique_layers = ak.num(ak.unique(self.events.layer[mask]))
+                # Use the imported unique function instead of ak.unique
+                unique_layers = ak.num(unique(self.events.layer[mask]))
                 valid_candidate = (unique_layers == 4)
                 valid = valid | valid_candidate
     self.events[cutName] = valid
@@ -271,7 +270,6 @@ if __name__ == "__main__":
 
     print("Running on files {}".format(filelist))
 
-    # Define the necessary branches.
     branches = ['event', 'tTrigger', 'boardsMatched', 'pickupFlag', 'pickupFlagTight', 'fileNumber', 'runNumber',
                 'type', 'ipulse', 'nPE', 'chan', 'time_module_calibrated', 'timeFit_module_calibrated',
                 'row', 'column', 'layer', 'height', 'area', 'npulses', 'timeFit']
@@ -351,4 +349,3 @@ if __name__ == "__main__":
     myschedule.cutFlowPlots()
     myplotter.saveHistograms("timingCorrection{}_slabDetector.root".format('_beamOff'))
     mycuts.getCutflowCounts()
-

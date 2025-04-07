@@ -21,7 +21,19 @@ from milliqanPlotter import *
 
 
 #################################################################
-################ condor function definitions ####################
+################ Global Setup and Helper Functions ##############
+#################################################################
+
+# Build a global lookup for pmt type from channel mapping.
+# The configuration file is taken from the master branch copy.
+try:
+    with open('Run3Detector/configuration/slabConfigs/configRun19_present.json','r') as f:
+        config_data = json.load(f)
+    chanMap = config_data['chanMap']  # each entry: [col, row, layer, pmt]
+    pmt_lookup = np.array([entry[3] for entry in chanMap])
+except Exception as e:
+    print("Could not build pmt lookup: ", e)
+    pmt_lookup = None
 
 def getFileList(filelist, job):
     with open(filelist, 'r') as fin:
@@ -70,13 +82,13 @@ def getRunTimes(df):
 ##################################################################
 # NEW: Updated findChannel for the slab detector layout.
 # The new chanMap entries are of the form [col, row, layer, pmt]
-def findChannel(layer, row, col, pmt, config='configRun19_present.json'):
+def findChannel(layer, row, col, p, config='Run3Detector/configuration/slabConfigs/configRun19_present.json'):
     with open(config, 'r') as fin:
         data = json.load(fin)
     chan_list = data['chanMap']  # list of lists: [col, row, layer, pmt]
     for idx, mapping in enumerate(chan_list):
         # mapping: [col, row, layer, pmt]
-        if mapping[0] == col and mapping[1] == row and mapping[2] == layer and mapping[3] == pmt:
+        if mapping[0] == col and mapping[1] == row and mapping[2] == layer and mapping[3] == p:
             return idx
     return None
 
@@ -92,8 +104,8 @@ def straightLineCut(self, cutName='straightLineCut', cut=True, branches=None):
     for row in range(4):
         for col in range(3):
             for p in [0, 1]:
-                # Select hits that have the required row, column, and PMT.
-                mask = (self.events.row == row) & (self.events.column == col) & (self.events.pmt == p)
+                # Instead of using self.events['pmt'], derive the pmt type from the channel number.
+                mask = (self.events.row == row) & (self.events.column == col) & (ak.Array(pmt_lookup)[self.events.chan] == p)
                 # For each event, count the number of unique layers with a hit.
                 unique_layers = ak.num(ak.unique(self.events.layer[mask]))
                 # If there are hits in all four layers, mark these events as valid.
@@ -191,7 +203,7 @@ def timeDiff(self, cutName='timeDiff'):
 
     if allStraightLine:
         frontPanelTimes = self.events.timeFit[(self.events['type'] == 1) & (self.events['layer'] == -1)]
-        # Loop now over 4 layers, 4 rows, 3 columns, and for each PMT type.
+        # Loop over 4 layers, 4 rows, 3 columns and for each PMT type.
         for layer in range(4):
             for row in range(4):
                 for col in range(3):
@@ -201,7 +213,7 @@ def timeDiff(self, cutName='timeDiff'):
                             (self.events['layer'] == layer) &
                             (self.events['row'] == row) &
                             (self.events['column'] == col) &
-                            (self.events['pmt'] == p)
+                            (ak.Array(pmt_lookup)[self.events.chan] == p)
                         ]
                         # Compute the time difference between the channel hits and front panel times.
                         t_combo = ak.cartesian([chanTimes, frontPanelTimes], axis=1)
@@ -260,7 +272,7 @@ if __name__ == "__main__":
     # Define the necessary branches.
     branches = ['event', 'tTrigger', 'boardsMatched', 'pickupFlag', 'pickupFlagTight', 'fileNumber', 'runNumber', 
                 'type', 'ipulse', 'nPE', 'chan', 'time_module_calibrated', 'timeFit_module_calibrated', 
-                'row', 'column', 'layer', 'pmt', 'height', 'area', 'npulses', 'timeFit']
+                'row', 'column', 'layer', 'height', 'area', 'npulses', 'timeFit']
 
     # Define the milliqan cuts object.
     mycuts = milliqanCuts()
@@ -297,7 +309,7 @@ if __name__ == "__main__":
     for row in range(4):
         for col in range(3):
             for p in [0, 1]:
-                # Optional: Get the base channel index for layer 0 (for labeling).
+                # Get the base channel index for layer 0 (for labeling).
                 baseChannel = findChannel(0, row, col, p)
                 # For each non-baseline layer, create a histogram for the time difference relative to layer 0.
                 for layer in [1, 2, 3]:

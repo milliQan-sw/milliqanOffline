@@ -109,8 +109,8 @@ def straightLineCut(self, cutName='straightLineCut', cut=True, branches=None):
     for row in range(4):
         for col in range(3):
             for p in [0, 1]:
-                # Use pmt_lookup derived from the channel mapping instead of a branch.
-                mask = (self.events.row == row) & (self.events.column == col) & (ak.Array(pmt_lookup)[self.events.chan] == p)
+                # Use ak.take to index pmt_lookup with a possibly jagged self.events.chan.
+                mask = (self.events.row == row) & (self.events.column == col) & (ak.take(pmt_lookup, self.events.chan) == p)
                 unique_layers = ak.num(ak.unique(self.events.layer[mask]))
                 valid_candidate = (unique_layers == 4)
                 valid = valid | valid_candidate
@@ -215,7 +215,7 @@ def timeDiff(self, cutName='timeDiff'):
                             (self.events['layer'] == layer) &
                             (self.events['row'] == row) &
                             (self.events['column'] == col) &
-                            (ak.Array(pmt_lookup)[self.events.chan] == p)
+                            (ak.take(pmt_lookup, self.events.chan) == p)
                         ]
                         t_combo = ak.cartesian([chanTimes, frontPanelTimes], axis=1)
                         t_diff = t_combo['0'] - t_combo['1']

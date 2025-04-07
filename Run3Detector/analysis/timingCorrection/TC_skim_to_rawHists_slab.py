@@ -36,11 +36,20 @@ except Exception as e:
 if chanMap is None:
     raise RuntimeError("chanMap is not defined. Please check configRun19_present.json.")
 
-# Simplified lookup function: Given an awkward array (or scalar) of channel numbers,
-# return an awkward array of PMT types by simply indexing into chanMap.
+# Simplified lookup function:
+# Given an awkward array (or scalar) of channel numbers, it returns an awkward array of PMT types
+# by accessing chanMap[x][3] for each channel number x.
 def lookup_pmt(channels):
-    # Convert the channels to a Python list and map each channel to its pmt type.
-    return ak.Array([chanMap[x][3] for x in ak.to_list(channels)])
+    channels_list = ak.to_list(channels)
+    # Check if channels_list is nested (i.e. each event has a list of channels)
+    if channels_list and isinstance(channels_list[0], list):
+        # Flatten the list manually
+        flat_list = [x for sublist in channels_list for x in sublist]
+        flat_pmt = [chanMap[int(x)][3] for x in flat_list]
+        counts = [len(sublist) for sublist in channels_list]
+        return ak.unflatten(flat_pmt, counts)
+    else:
+        return ak.Array([chanMap[int(x)][3] for x in channels_list])
 
 # Helper function to compute the number of unique elements for each sublist.
 def unique_lengths(arr_in):

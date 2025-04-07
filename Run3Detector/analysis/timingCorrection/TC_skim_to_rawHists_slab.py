@@ -234,7 +234,8 @@ def timeDiff(self, cutName='timeDiff'):
 @mqCut
 def pulseTime(self):
     events = self.events
-    straightPath = self.events['straightLineCutPulse']
+    # Use the new straightLineCut branch to select events that pass the straight-line requirement.
+    straightPath = self.events['straightLineCut']
     timeToUse = 'timeFit_module_calibrated'
 
     self.events['straightPathL0Time'] = events[timeToUse][(events.layer == 0) & straightPath]

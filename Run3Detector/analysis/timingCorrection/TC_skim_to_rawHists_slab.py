@@ -7,7 +7,6 @@ import json
 import pandas as pd
 import uproot
 import awkward as ak
-from awkward.operations.structure import unique  # Import unique explicitly
 import array as arr
 import numpy as np
 import shutil
@@ -19,7 +18,6 @@ from milliqanProcessor import *
 from milliqanScheduler import *
 from milliqanCuts import *
 from milliqanPlotter import *
-
 
 #################################################################
 ################ Global Setup and Helper Functions ##############
@@ -48,6 +46,11 @@ def lookup_pmt(channels):
         return ak.unflatten(flat_pmt, ak.to_list(counts))
     else:
         return pmt_lookup[channels]
+
+# Helper function to compute the number of unique elements for each sublist.
+def unique_lengths(arr):
+    # Convert the jagged array to a Python list, compute np.unique on each sublist, and return lengths.
+    return ak.Array([len(np.unique(x)) for x in ak.to_list(arr)])
 
 def getFileList(filelist, job):
     with open(filelist, 'r') as fin:
@@ -117,8 +120,8 @@ def straightLineCut(self, cutName='straightLineCut', cut=True, branches=None):
         for col in range(3):
             for p in [0, 1]:
                 mask = (self.events.row == row) & (self.events.column == col) & (lookup_pmt(self.events.chan) == p)
-                # Use the imported unique function instead of ak.unique
-                unique_layers = ak.num(unique(self.events.layer[mask]))
+                # Use our unique_lengths helper to get the number of unique layers per event.
+                unique_layers = unique_lengths(self.events.layer[mask])
                 valid_candidate = (unique_layers == 4)
                 valid = valid | valid_candidate
     self.events[cutName] = valid

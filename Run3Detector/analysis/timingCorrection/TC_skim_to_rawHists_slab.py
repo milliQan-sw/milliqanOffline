@@ -23,29 +23,24 @@ from milliqanPlotter import *
 ################ Global Setup and Helper Functions ##############
 #################################################################
 
-# Build a global lookup for PMT type from channel mapping.
-# The configuration file is assumed to be local now.
+# Load the configuration file containing the chanMap.
 try:
     with open('configRun19_present.json', 'r') as f:
         config_data = json.load(f)
-    chanMap = config_data['chanMap']  # each entry: [col, row, layer, pmt]
-    pmt_lookup = np.array([entry[3] for entry in chanMap])
+    # The chanMap is assumed to be a list of lists where each element is [col, row, layer, pmt].
+    chanMap = config_data['chanMap']
 except Exception as e:
-    print("Could not build pmt lookup: ", e)
-    pmt_lookup = None
+    print("Could not load chanMap: ", e)
+    chanMap = None
 
-if pmt_lookup is None:
-    raise RuntimeError("pmt_lookup is not defined. Check that configRun19_present.json exists and is valid.")
+if chanMap is None:
+    raise RuntimeError("chanMap is not defined. Please check configRun19_present.json.")
 
-# Helper function to lookup PMT type for a (possibly jagged) array of channel indices.
+# Simplified lookup function: Given an awkward array (or scalar) of channel numbers,
+# return an awkward array of PMT types by simply indexing into chanMap.
 def lookup_pmt(channels):
-    if hasattr(channels, "layout") and hasattr(channels.layout, "offsets"):
-        counts = ak.num(channels)
-        flat = ak.flatten(channels)
-        flat_pmt = pmt_lookup[flat]
-        return ak.unflatten(flat_pmt, ak.to_list(counts))
-    else:
-        return pmt_lookup[channels]
+    # Convert the channels to a Python list and map each channel to its pmt type.
+    return ak.Array([chanMap[x][3] for x in ak.to_list(channels)])
 
 # Helper function to compute the number of unique elements for each sublist.
 def unique_lengths(arr_in):
@@ -69,8 +64,7 @@ def time_of_max_height(layer, events, time_field='timeFit_module_calibrated', he
 def getFileList(filelist, job):
     with open(filelist, 'r') as fin:
         data = json.load(fin)
-    mylist = data[job]
-    return mylist
+    return data[job]
 
 def extract_tar_file(tar_file='milliqanProcessing.tar.gz'):
     with tarfile.open(tar_file, "r:gz") as tar:
@@ -200,16 +194,12 @@ def timeDiff(self, cutName='timeDiff'):
     if allPulses:
         times0 = self.events.timeFit[(self.events['layer'] == -1) & (self.events['type'] == 1)]
         times3 = self.events.timeFit[self.events.layer == 3]
-
         timesNoCorr0 = self.events.timeFit[self.events.layer == 0]
         timesNoCorr3 = self.events.timeFit[self.events.layer == 3]
-
         combos = ak.cartesian([times0, times3], axis=1)
         combosNoCorr = ak.cartesian([timesNoCorr0, timesNoCorr3], axis=1)
-
         diff = combos['1'] - combos['0']
         diffNoCorr = combosNoCorr['1'] - combosNoCorr['0']
-
         self.events[cutName] = diff
         self.events[cutName + 'NoCorr'] = diffNoCorr
 
@@ -242,39 +232,30 @@ def pulseTime(self):
     events = self.events
     straightPath = self.events['straightLineCut']
     timeToUse = 'timeFit_module_calibrated'
-
-    # Extract the time corresponding to the maximum height per event for each layer.
     self.events['straightPathL0Time'] = time_of_max_height(0, events, time_field=timeToUse, height_field='height', cut_mask=straightPath)
     self.events['straightPathL1Time'] = time_of_max_height(1, events, time_field=timeToUse, height_field='height', cut_mask=straightPath)
     self.events['straightPathL2Time'] = time_of_max_height(2, events, time_field=timeToUse, height_field='height', cut_mask=straightPath)
     self.events['straightPathL3Time'] = time_of_max_height(3, events, time_field=timeToUse, height_field='height', cut_mask=straightPath)
-
     self.events['timeDiffOld'] = self.events['straightPathL3Time'] - self.events['straightPathL0Time']
 
 ##################################################################
 if __name__ == "__main__":
     goodRuns = loadJson('/share/scratch0/peng/CMSSW_12_4_11_patch3/src/milliqanOffline/Run3Detector/configuration/slabConfigs/goodRunsList.json')
     lumis = loadJson('/share/scratch0/peng/CMSSW_12_4_11_patch3/src/milliqanOffline/Run3Detector/configuration/slabConfigs/mqLumis.json')
-
     filelist = [
         '/share/scratch0/peng/CMSSW_12_4_11_patch3/src/milliqanOffline/Run3Detector/analysis/skim/MilliQan_Run900_v35_cosmic_beamOff_tight_slab.root',
         '/share/scratch0/peng/CMSSW_12_4_11_patch3/src/milliqanOffline/Run3Detector/analysis/skim/MilliQan_Run1000_v35_cosmic_beamOff_tight_slab.root'
     ]
-
     print("Running on files {}".format(filelist))
-
     branches = ['event', 'tTrigger', 'boardsMatched', 'pickupFlag', 'pickupFlagTight',
                 'fileNumber', 'runNumber', 'type', 'ipulse', 'nPE', 'chan',
                 'time_module_calibrated', 'timeFit_module_calibrated',
                 'row', 'column', 'layer', 'height', 'area', 'npulses', 'timeFit']
-
     mycuts = milliqanCuts()
-
     setattr(milliqanCuts, "getTimeDiffs", getTimeDiffs)
     setattr(milliqanCuts, 'timeDiff', timeDiff)
     setattr(milliqanCuts, "pulseTime", pulseTime)
     setattr(milliqanCuts, "straightLineCut", straightLineCut)
-
     pickupCut = getCutMod(mycuts.pickupCut, mycuts, 'pickupCut', tight=True, cut=True, branches=branches)
     boardMatchCut = getCutMod(mycuts.boardsMatched, mycuts, 'boardMatchCut', cut=True, branches=branches)
     hitInAllLayers = getCutMod(mycuts.oneHitPerLayerCut, mycuts, 'hitInAllLayers', cut=True, branches=branches, multipleHits=False)
@@ -282,14 +263,11 @@ if __name__ == "__main__":
     fourLayerCut = getCutMod(mycuts.fourLayerCut, mycuts, 'fourLayerCut', cut=True, branches=branches)
     firstPulseCut = getCutMod(mycuts.firstPulseCut, mycuts, 'firstPulseCut', cut=True, branches=branches)
     centralTime = getCutMod(mycuts.centralTime, mycuts, 'centralTime', cut=True, branches=branches)
-
     nbins = 100
     minx = -50
     maxx = 50
-
     canvasHistos = {1: [], 2: [], 3: []}
     cutNames = {1: [], 2: [], 3: []}
-
     for row in range(4):
         for col in range(3):
             for p in [0, 1]:
@@ -300,24 +278,19 @@ if __name__ == "__main__":
                     h = r.TH1F(histName, title, nbins, minx, maxx)
                     canvasHistos[layer].append(h)
                     cutNames[layer].append("timeDiff_L{}_channel{}".format(layer, baseChannel))
-
     myplotter = milliqanPlotter()
     myplotter.dict.clear()
-
     h_channels = r.TH1F('h_channels', 'Channel', 96, 0, 96)
     h_timeDiff = r.TH1F('h_timeDiff', 'Time Difference L3-L0', 50, -50, 100)
     h_timeDiffNoCorr = r.TH1F('h_timeDiffNoCorr', 'Time Difference L3-L0', 50, -50, 100)
     h_timeDiffOld = r.TH1F('h_timeDiffOld', 'Time Difference L3-L0', 50, -50, 100)
-
     myplotter.addHistograms(h_channels, 'chan')
     myplotter.addHistograms(h_timeDiff, 'timeDiff')
     myplotter.addHistograms(h_timeDiffNoCorr, 'timeDiffNoCorr')
     myplotter.addHistograms(h_timeDiffOld, 'timeDiffOld')
-
     for layer in [1, 2, 3]:
         for h, n in zip(canvasHistos[layer], cutNames[layer]):
             myplotter.addHistograms(h, n)
-
     cutflow = [mycuts.totalEventCounter, mycuts.fullEventCounter,
                boardMatchCut,
                pickupCut,
@@ -327,19 +300,14 @@ if __name__ == "__main__":
                mycuts.straightLineCut,
                mycuts.pulseTime,
                mycuts.timeDiff,
-               mycuts.getTimeDiffs
-              ]
-    
+               mycuts.getTimeDiffs]
     for key, value in myplotter.dict.items():
         if value not in cutflow:
             cutflow.append(value)
-
     myschedule = milliQanScheduler(cutflow, mycuts, myplotter)
     myschedule.printSchedule()
-
     myiterator = milliqanProcessor(filelist, branches, myschedule, step_size=10000, qualityLevel='override')
     myiterator.run()
-
     myschedule.cutFlowPlots()
     myplotter.saveHistograms("timingCorrection{}_slabDetector.root".format('_beamOff'))
     mycuts.getCutflowCounts()

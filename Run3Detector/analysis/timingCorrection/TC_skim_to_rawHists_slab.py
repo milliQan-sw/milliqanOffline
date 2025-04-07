@@ -12,6 +12,12 @@ import numpy as np
 import shutil
 import tarfile
 
+# --- Patch awkward.is_none to return a proper numpy boolean array ---
+def my_is_none(x, axis):
+    return np.array(ak.operations.is_none(x, axis=axis))
+ak.is_none = my_is_none
+# --- End patch ---
+
 # Append utilities directory
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'utilities'))
 from milliqanProcessor import *
@@ -37,13 +43,11 @@ if chanMap is None:
     raise RuntimeError("chanMap is not defined. Please check configRun19_present.json.")
 
 # Simplified lookup function:
-# Given an awkward array (or scalar) of channel numbers, it returns an awkward array of PMT types
-# by accessing chanMap[x][3] for each channel number x.
+# Given an awkward array (or scalar) of channel numbers, return an awkward array of PMT types.
 def lookup_pmt(channels):
     channels_list = ak.to_list(channels)
     # Check if channels_list is nested (i.e. each event has a list of channels)
     if channels_list and isinstance(channels_list[0], list):
-        # Flatten the list manually
         flat_list = [x for sublist in channels_list for x in sublist]
         flat_pmt = [chanMap[int(x)][3] for x in flat_list]
         counts = [len(sublist) for sublist in channels_list]

@@ -17,70 +17,13 @@ from milliqanScheduler import *
 from milliqanCuts import *
 from milliqanPlotter import *
 
-
-#################################################################
-################ condor function definitions ####################
-
-def getFileList(filelist, job):
-
-    with open(filelist, 'r') as fin:
-        data = json.load(fin)
-
-    mylist = data[job]
-
-    return mylist
-
-def extract_tar_file(tar_file='milliqanProcessing.tar.gz'):
-    with tarfile.open(tar_file, "r:gz") as tar:
-        tar.extractall()
-
 ##################################################################
-
-def checkBeam(mqLumis, run, file, branch='beam'):
-    #print("check beam run {} file {}".format(run, file))
-    beam = mqLumis[branch].loc[(mqLumis['run'] == run) & (mqLumis['file'] == file)]
-    if beam.size == 0: return None
-    beam = beam.values[0]
-    return beam
 
 def loadJson(jsonFile):
     fin = open(jsonFile)
     data = json.load(fin)
     lumis = pd.DataFrame(data['data'], columns=data['columns'])
     return lumis
-
-
-def getRunFile(filename):
-    run = filename.split('Run')[1].split('.')[0]
-    file = filename.split('.')[1].split('_')[0]
-    return [int(run), int(file)]
-
-
-def getLumiofFileList(filelist):
-
-    inputFiles = [getRunFile(x.split('/')[-1]) for x in filelist]
-
-    #mqLumis = shutil.copy('/eos/experiment/milliqan/Configs/mqLumis.json', 'mqLumis.json')
-    lumis = pd.read_json('mqLumis.json', orient = 'split', compression = 'infer')
-
-    lumis['start'] = pd.to_datetime(lumis['start'])
-    lumis['stop'] = pd.to_datetime(lumis['stop'])
-
-    myfiles = lumis[lumis.apply(lambda row: [int(row['run']), int(row['file'])] in inputFiles, axis=1)]
-
-    totalLumi = myfiles['lumiEst'].sum()
-
-    runTime = getRunTimes(myfiles)
-
-    print("Running over {} files \n total of {} pb^-1 \n total run time {}s".format(len(filelist), totalLumi, runTime))
-
-def getRunTimes(df):
-
-    runTimes = df['stop'] - df['start']
-
-    total_time = runTimes.sum()
-
-    return total_time
 
 def findChannel(layer, row, col, htype=0, config='../../configuration/barConfigs/configRun1296_present.json'):
     with open(config, 'r') as fin:
@@ -238,54 +181,6 @@ if __name__ == "__main__":
 
     goodRuns = loadJson('/share/scratch0/peng/CMSSW_12_4_11_patch3/src/milliqanOffline/Run3Detector/configuration/slabConfigs/goodRunsList.json')
     lumis = loadJson('/share/scratch0/peng/CMSSW_12_4_11_patch3/src/milliqanOffline/Run3Detector/configuration/slabConfigs/mqLumis.json')
-
-    #get list of files to look at
-    #files = []
-
-    #beam = True
-
-    #get the filelist and job number
-    '''filelist = sys.argv[1]
-    job = sys.argv[2]'''
-    #job = 0
-
-    #define a file list to run over
-    #TODO select only beam on or beam off
-    '''
-    dataDir = '/store/user/milliqan/trees/v35/bar/1500/'
-
-    filelist = []
-    
-    for filename in os.listdir(dataDir):
-        if 'Run1541' not in filename: continue
-        run = int(filename.split('Run')[1].split('.')[0])
-        file = int(filename.split('.')[1].split('_')[0])
-        #beamOn = checkBeam(lumis, run, file, branch='beamInFill')
-        #if beam and not beamOn: continue
-        #if not beam and beamOn: continue
-        filelist.append('/'.join([dataDir, filename])+':t')'''
-    '''
-    filelist = [        
-        "/store/user/milliqan/trees/v35/bar/1700/MilliQan_Run1702.59_v35.root:t",
-        "/store/user/milliqan/trees/v35/bar/1700/MilliQan_Run1702.60_v35.root:t",
-        "/store/user/milliqan/trees/v35/bar/1700/MilliQan_Run1702.61_v35.root:t",
-        "/store/user/milliqan/trees/v35/bar/1700/MilliQan_Run1702.62_v35.root:t",
-        "/store/user/milliqan/trees/v35/bar/1700/MilliQan_Run1702.63_v35.root:t",
-        "/store/user/milliqan/trees/v35/bar/1700/MilliQan_Run1702.64_v35.root:t",
-        "/store/user/milliqan/trees/v35/bar/1700/MilliQan_Run1702.65_v35.root:t",
-        "/store/user/milliqan/trees/v35/bar/1700/MilliQan_Run1702.66_v35.root:t",
-        "/store/user/milliqan/trees/v35/bar/1700/MilliQan_Run1702.67_v35.root:t",
-        "/store/user/milliqan/trees/v35/bar/1700/MilliQan_Run1702.68_v35.root:t"
-        ]'''
-    
-
-    '''
-    filelist = [
-        '/mnt/hadoop/se/store/user/milliqan/skims/muonSkim/MilliQan_Run1400_v35_skim_beamOn_tight.root',
-        '/mnt/hadoop/se/store/user/milliqan/skims/muonSkim/MilliQan_Run1500_v35_skim_beamOn_tight.root',
-        '/mnt/hadoop/se/store/user/milliqan/skims/muonSkim/MilliQan_Run1600_v35_skim_beamOn_tight.root',
-        '/mnt/hadoop/se/store/user/milliqan/skims/muonSkim/MilliQan_Run1700_v35_skim_beamOn_tight.root'
-    ]'''
     
     filelist = [
         '/mnt/hadoop/se/store/user/milliqan/skims/muonSkim/MilliQan_Run1300_v35_skim_beamOff_tight.root',
@@ -296,9 +191,6 @@ if __name__ == "__main__":
     ]
 
     print("Running on files {}".format(filelist))
-
-    #find the luminosity of files in filelist
-    #getLumiofFileList(filelist)
 
     #define the necessary branches to run over
     branches = ['event', 'tTrigger', 'boardsMatched', 'pickupFlag', 'pickupFlagTight', 'fileNumber', 'runNumber', 'type', 'ipulse', 'nPE', 'chan',
@@ -352,6 +244,7 @@ if __name__ == "__main__":
     nbins = 100
     minx = -50
     maxx = 50
+
     for i in range(16):
         h_name1 = 'h_timeDiff{}_{}_layers{}{}'.format(i, 0, 1, 2)
         h_name2 = 'h_timeDiff{}_{}_layers{}{}'.format(i, 0, 1, 3)
@@ -410,6 +303,7 @@ if __name__ == "__main__":
     nbins = 100
     minx = -50
     maxx = 50
+    
     for i in range(80):
         h_name = 'h_timeDiffFrontPanel{}'.format(i)
         h = r.TH1F(h_name, "Time Difference Between Front Panel and Channel {}".format(i), nbins, minx, maxx)

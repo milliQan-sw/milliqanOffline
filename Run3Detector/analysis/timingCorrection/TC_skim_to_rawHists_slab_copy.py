@@ -172,7 +172,6 @@ def pulseTime(self):
 
 if __name__ == "__main__":
 
-
     goodRuns = loadJson('/share/scratch0/peng/CMSSW_12_4_11_patch3/src/milliqanOffline/Run3Detector/configuration/slabConfigs/goodRunsList.json')
     
     filelist = [

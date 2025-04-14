@@ -19,12 +19,6 @@ from milliqanPlotter import *
 
 ##################################################################
 
-def loadJson(jsonFile):
-    fin = open(jsonFile)
-    data = json.load(fin)
-    lumis = pd.DataFrame(data['data'], columns=data['columns'])
-    return lumis
-
 def findChannel(layer, row, col, htype=0, config='../../configuration/barConfigs/configRun1296_present.json'):
     with open(config, 'r') as fin:
         df = json.load(fin)['chanMap']
@@ -180,7 +174,6 @@ if __name__ == "__main__":
 
 
     goodRuns = loadJson('/share/scratch0/peng/CMSSW_12_4_11_patch3/src/milliqanOffline/Run3Detector/configuration/slabConfigs/goodRunsList.json')
-    lumis = loadJson('/share/scratch0/peng/CMSSW_12_4_11_patch3/src/milliqanOffline/Run3Detector/configuration/slabConfigs/mqLumis.json')
     
     filelist = [
         '/mnt/hadoop/se/store/user/milliqan/skims/muonSkim/MilliQan_Run1300_v35_skim_beamOff_tight.root',
@@ -303,7 +296,7 @@ if __name__ == "__main__":
     nbins = 100
     minx = -50
     maxx = 50
-    
+
     for i in range(80):
         h_name = 'h_timeDiffFrontPanel{}'.format(i)
         h = r.TH1F(h_name, "Time Difference Between Front Panel and Channel {}".format(i), nbins, minx, maxx)

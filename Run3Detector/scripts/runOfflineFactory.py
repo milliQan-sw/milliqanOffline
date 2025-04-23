@@ -99,7 +99,7 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
             chanConfig = offlineDir + "/configuration/slabConfigs/" + getConfigs(runNumber, offlineDir+'/configuration/slabConfigs') + '.json'
             print("Using the chan config", chanConfig)
             configurations = [chanConfig, offlineDir+"/configuration/pulseFinding/pulseFindingSlab.json"]
-        if sim:
+        elif sim:
             print("Using sim config file")
             chanConfig = offlineDir + '/configuration/barConfigs/simConfig.json'
             configurations = [chanConfig, offlineDir+"/configuration/pulseFinding/pulseFindingBar.json"]
@@ -244,10 +244,10 @@ def getConfigs(runNum, offlineDir):
 
 def copyFromEOS(slab=False):
 
-    if not slab and os.path.exists('configuration/barConfigs/goodRunsList.json'): 
+    if not slab and not os.path.exists('configuration/barConfigs/goodRunsList.json'): 
         print("Warning (runOfflineFactory.py): goodRunsList.json is not available locally, trying to access from eos")
         try:
-            os.system('cp /eos/experiment/milliqan/Configs/goodRunsList.json configuration/slabConfigs/')
+            os.system('xrdcp root://eospublic.cern.ch://eos/experiment/milliqan/Configs/goodRunsList.json configuration/slabConfigs/')
         except:
             print("Error (runOfflineFactory.py): could not access the goodRunList.json on eos or locally")
     
@@ -255,7 +255,7 @@ def copyFromEOS(slab=False):
         if not os.path.exists('configuration/barConfigs/mqLumis.json'):
             print("Warning (runOfflineFactory.py): mqLumis.json is not available locally, trying to access from eos")
             try:
-                os.system('cp /eos/experiment/milliqan/Configs/mqLumis.json configuration/barConfigs/')
+                os.system('xrdcp root://eospublic.cern.ch://eos/experiment/milliqan/Configs/mqLumis.json configuration/barConfigs/')
             except:
                 print("Error (runOfflineFactory.py): unable to access the mqLumis file on eos or locally")
         

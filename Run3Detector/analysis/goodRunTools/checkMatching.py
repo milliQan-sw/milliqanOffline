@@ -64,10 +64,10 @@ rawSubDirectories = ['0000', '0001', '0002', '0003', '0004', '0005', '0006', '00
 
 def parse_args():
     parser=argparse.ArgumentParser()
-    parser.add_argument('-d', '--dir', help='Main directory to check files in', type=str, required=True)
-    parser.add_argument('-s', '--subdir', help='Subdirectory to check for files', type=str, required=True)
+    parser.add_argument('-d', '--dir', help='Main directory to check files in', type=str)
+    parser.add_argument('-s', '--subdir', help='Subdirectory to check for files', type=str)
     parser.add_argument('-n', '--outputName', help='Name of the output json files', type=str)
-    parser.add_argument('-c', '--configDir', help='Path to config dir', type=str, default='../../configuration/barConfigs/')
+    parser.add_argument('-c', '--configDir', help='Path to config dir', type=str, default=os.path.dirname(os.path.abspath(__file__))+'/../../configuration/barConfigs/')
     parser.add_argument('-t', '--tag', help="Version of good run list (format v1p0)", type=str, default='v1p0')
     parser.add_argument('--debug', help='Option to run in debug mode', action='store_true')
     args = parser.parse_args()
@@ -75,7 +75,7 @@ def parse_args():
 
 class fileChecker():
     
-    def __init__(self, rawDir='/store/user/milliqan/run3/bar/', offlineDir='/store/user/milliqan/trees/v34/', configDir='../../configuration/barConfigs/'):
+    def __init__(self, rawDir='/store/user/milliqan/run3/bar/', offlineDir='/store/user/milliqan/trees/v35/bar/', configDir=os.path.dirname(os.path.abspath(__file__))+'/../../configuration/barConfigs/'):
         self.min_run = 1200
         self.max_run = 1300
         self.rawDir = rawDir
@@ -128,7 +128,7 @@ class fileChecker():
             if cfg.startRun > run: continue
             elif cfg.startRun <= run and cfg.endRun >= run:
                 return cfg.name
-            elif cfg.endRun == -1 and cfg.startRun < run:
+            elif cfg.endRun == -1 and cfg.startRun <= run:
                 return cfg.name
         return None
 
@@ -236,7 +236,6 @@ class fileChecker():
     
         #TODO temporary hack to get trigger board meta data, eventually move these checks to offline checks
         fileListMeta = [x.split(':')[0] for x in fileList]
-        print(fileListMeta)
         for file in fileListMeta:
             runNum, fileNum = self.getRunFile(file)
             myfile = r.TFile.Open(file, 'read')
@@ -271,15 +270,17 @@ class fileChecker():
 
     
     def getOfflineInfo(self):
+
+        print("Getting Offline Info...")
         #add loc statement to only get those that haven't been updated yet
         rawFiles = self.runInfos[['run', 'file']].loc[~pd.notnull(self.runInfos['offlineFile'])].to_numpy()
         for pair in rawFiles:
             thisConfig = self.getTriggerConfig(pair[0])
+            print("Setting run config", thisConfig, pair)
             self.runInfos['runConfig'].loc[(self.runInfos['run'] == pair[0]) & (self.runInfos['file'] == pair[1])] = thisConfig
 
             subdir = int(math.floor(pair[0] / 100.0)) * 100
-            offlineFile = '{0}/MilliQan_Run{1}.{2}_v34.root'.format(subdir, pair[0], pair[1])
-            print(offlineFile)
+            offlineFile = '{0}/MilliQan_Run{1}.{2}_v35.root'.format(subdir, pair[0], pair[1])
             if os.path.exists(self.offlineDir+'/'+offlineFile): 
                 self.runInfos['offlineFile'].loc[(self.runInfos['run'] == pair[0]) & (self.runInfos['file'] == pair[1])] = offlineFile
                 self.runInfos['offlineDir'].loc[(self.runInfos['run'] == pair[0]) & (self.runInfos['file'] == pair[1])] = self.offlineDir
@@ -287,35 +288,43 @@ class fileChecker():
             else:
                 print("File {0} does not exist".format(self.offlineDir+'/'+offlineFile))
 
-    def getRawInfo(self, directory):
-        fullPath = self.rawDir+directory
-        if not os.path.isdir(fullPath): 
-            print("Directory {0} does not exist, skipping...".format(fullPath))
-            return
-        for ifile, filename in enumerate(os.listdir(fullPath)):
-            if not filename.endswith('.root'): continue
-            if not filename.startswith('MilliQan'): continue
-            if self.debug and len(self.runInfos) > 10: break
+    def getRawInfo(self, dir):
+        print("Getting Raw Info...")
+        if not isinstance(dir, dict):
+            fullPath = self.rawDir+dir
+            if not os.path.isdir(fullPath): 
+                print("Directory {0} does not exist, skipping...".format(fullPath))
+                return
+            dir = {}
+            files = os.listdir(fullPath)
+            dir[fullPath] =files
 
-            thisRun = runInfo()
-            runNum, fileNum = self.getRunFile(filename)
-            thisRun.run = int(runNum)
-            thisRun.file = int(fileNum)
-            thisRun.daqFile = filename
-            thisRun.rawDir = fullPath
-            thisRun.daqCTime = datetime.fromtimestamp(os.path.getctime(fullPath+'/'+filename))
-            trigName = "TriggerBoard_Run{0}.{1}.root".format(runNum, fileNum)
-            matchName = "MatchedEvents_Run{0}.{1}_rematch.root".format(runNum, fileNum)
-            if os.path.exists(fullPath+'/'+trigName): 
-                thisRun.trigFile = trigName
-                thisRun.trigCTime = datetime.fromtimestamp(os.path.getctime(fullPath+'/'+trigName))
-            if os.path.exists(fullPath+'/'+matchName): 
-                thisRun.matchFile = matchName
-                thisRun.matchCTime = datetime.fromtimestamp(os.path.getctime(fullPath+'/'+matchName))
+        for idir, (fullPath, files) in enumerate(dir.items()):
+            for filename in files:
+                if not filename.endswith('.root'): continue
+                if not filename.startswith('MilliQan'): continue
+                if self.debug and len(self.runInfos) > 100: break
+                print("File", filename, "Path", fullPath)
+                thisRun = runInfo()
+                runNum, fileNum = self.getRunFile(filename)
+                thisRun.run = int(runNum)
+                thisRun.file = int(fileNum)
+                thisRun.daqFile = filename
+                thisRun.rawDir = fullPath
+                thisRun.daqCTime = datetime.fromtimestamp(os.path.getctime(fullPath+'/'+filename))
+                trigName = "TriggerBoard_Run{0}.{1}.root".format(runNum, fileNum)
+                matchName = "MatchedEvents_Run{0}.{1}_rematch.root".format(runNum, fileNum)
+                if os.path.exists(fullPath+'/'+trigName): 
+                    thisRun.trigFile = trigName
+                    thisRun.trigCTime = datetime.fromtimestamp(os.path.getctime(fullPath+'/'+trigName))
+                if os.path.exists(fullPath+'/'+matchName): 
+                    thisRun.matchFile = matchName
+                    thisRun.matchCTime = datetime.fromtimestamp(os.path.getctime(fullPath+'/'+matchName))
 
-            self.runInfos.loc[len(self.runInfos.index)] = thisRun.__dict__
+                self.runInfos.loc[len(self.runInfos.index)] = thisRun.__dict__
                             
     def runCheckMatchedFiles(self):
+        print("Checking Matched Files...")
         runs = self.runInfos.run.unique()
         for run in runs:
             runList = self.runInfos[['rawDir', 'matchFile']].loc[(self.runInfos['run']==run) & (self.runInfos['totalEvents']==0)].apply(lambda x: '/'.join((x.rawDir, x.matchFile)) if (x.rawDir!=None and x.matchFile!=None) else None, axis=1).values.tolist()
@@ -324,6 +333,7 @@ class fileChecker():
             self.checkMatchedFiles(runList)
         
     def runCheckOfflineFiles(self):
+        print("Checking Offline Files...")
         #now look at offline files post processing info
         runs = self.runInfos.run.unique()
         for run in runs:
@@ -348,7 +358,101 @@ class fileChecker():
                 self.finalChecks()
                 self.saveJson(jsonName)
 
+    def updateRunList(self, startingDir=None, startingFile=None, checkTrigs=True, checkOffline=True):
+        print("Updating run lists")
+        filesToProcess = self.getFilesToProcess(startingDir, startingFile, checkTrigs, checkOffline)
+        #print(filesToProcess)
+        '''for id, (directory, files) in enumerate(filesToProcess.items()):
+            print("There are {} total directories to process".format(len(filesToProcess)))'''
+        self.getRawInfo(filesToProcess)
+        self.getOfflineInfo()
+        self.runCheckMatchedFiles()
+        self.runCheckOfflineFiles()
+        self.finalChecks()
+
+    def getFilesToProcess(self, lastRun=None, lastFile=None, checkTrigs=True, checkOffline=True):
+
+        filesToProcess = {}
+
+        prevFile = pd.read_json(self.outputFile, orient = 'split', compression = 'infer')
+
+        #this block gets all raw files that have yet to be added to the run list
+        if lastRun is None and lastFile is None:
+            lastRun, lastFile = self.getLastUpdate(prevFile)
+
+        startingDir0 = math.floor(lastRun/100)*100
+        startingDir1 = math.floor((lastRun-startingDir0)/10)
+        
+        startingDir = '{}{}/000{}'.format(self.rawDir, startingDir0, startingDir1)
+        
+        while(os.path.isdir(startingDir)):
+            thisFileList = []
+            for filename in os.listdir(startingDir):
+                if not filename.startswith('MilliQan'): continue
+                if not filename.endswith('.root'): continue
+                runNum, fileNum = self.getRunFile(filename)
+                runNum = int(runNum)
+                fileNum = int(fileNum)
+                if (runNum < lastRun): continue
+                if (runNum == lastRun and fileNum <= lastFile): continue
+                thisFileList.append(filename)
+            filesToProcess[startingDir] = thisFileList
+            
+            if startingDir1 == 9:
+                startingDir0+=100
+                startingDir1 = 0
+            else:
+                startingDir1+=1
+            startingDir = '{}{}/000{}'.format(self.rawDir, startingDir0, str(startingDir1))
+
+        #this block checks for any files that have not been matched
+        if checkTrigs:
+            unmatched = prevFile[pd.isnull(prevFile['matchFile'])]
+            unmatched = unmatched[['rawDir', 'daqFile']]
+
+        #this block checks for files that have not had offline files produced (or offline files are unmatched)
+        if checkOffline:
+            missingOffline = prevFile[pd.isnull(prevFile['offlineFile'])]
+            missingOffline = missingOffline[['rawDir', 'daqFile']]
+
+            unmatchedOffline = prevFile[prevFile['OfflineFilesTrigMatched']==False]
+            unmatchedOffline = unmatchedOffline[['rawDir', 'daqFile']]
+
+            reprocessOffline = pd.concat((missingOffline, unmatchedOffline), ignore_index=True)
+
+        if checkOffline and checkTrigs:
+            reprocess = pd.concat((unmatched, reprocessOffline), ignore_index=True)
+        elif checkTrigs:
+            reprocess = unmatched
+        elif checkOffline:
+            reprocess = reprocessOffline
+        else:
+            return filesToProcess
+
+        for index, row in reprocess.iterrows():
+            if row['rawDir'] in filesToProcess:
+                filesToProcess[row['rawDir']].append(row['daqFile'])
+            else:
+                filesToProcess[row['rawDir']] = [row['daqFile']]
+
+        return filesToProcess
+
+    #instead of finding the last update need to get the last entry (raw) and add any new files to processing list
+    #also need to add any files missing matching files
+    #also need to add any files missing offline files or non trig matched offline files
+    def getLastUpdate(self, df):
+        lastProcess = df.tail(1)
+        lastRun = lastProcess['run'].values[0]
+        lastFile = lastProcess['file'].values[0]
+        return lastRun, lastFile
+
     def finalChecks(self):
+
+        print("Running Final Checks...")
+        self.runInfos['daqCTime'] = pd.to_datetime(self.runInfos['daqCTime'])
+        self.runInfos['trigCTime'] = pd.to_datetime(self.runInfos['trigCTime'])
+        self.runInfos['matchCTime'] = pd.to_datetime(self.runInfos['matchCTime'])
+        self.runInfos['offlineCTime'] = pd.to_datetime(self.runInfos['offlineCTime'])
 
         self.runInfos['TriggersMatched'] = self.runInfos['unmatchedEvents'].apply(lambda x: True if x < 10 else False)
         self.runInfos['OfflineFilesTrigMatched'] = self.runInfos.apply(lambda x: True if (x['totalEvents'] > 0 and (x['offlineTrigMatched'] / x['totalEvents']) > 0.99) else False, axis=1)
@@ -369,27 +473,61 @@ class fileChecker():
                                     (self.runInfos['singleTriggerPassing']) & \
                                     (self.runInfos['OfflineFilesTrigMatched'])
 
-        self.runInfos['daqCTime'] = self.runInfos['daqCTime'].apply(lambda x: x.strftime("%Y-%m-%d%H:%M:%S") if x != None else None)
-        self.runInfos['trigCTime'] = self.runInfos['trigCTime'].apply(lambda x: x.strftime("%Y-%m-%d%H:%M:%S") if x != None else None)
-        self.runInfos['matchCTime'] = self.runInfos['matchCTime'].apply(lambda x: x.strftime("%Y-%m-%d%H:%M:%S") if x != None else None)
-        self.runInfos['offlineCTime'] = self.runInfos['offlineCTime'].apply(lambda x: x.strftime("%Y-%m-%d%H:%M:%S") if x != None else None)
+        self.runInfos['daqCTime'] = self.runInfos['daqCTime'].apply(lambda x: x.strftime("%Y-%m-%d %H:%M:%S") if not pd.isnull(x) else None)
+        self.runInfos['trigCTime'] = self.runInfos['trigCTime'].apply(lambda x: x.strftime("%Y-%m-%d %H:%M:%S") if not pd.isnull(x) else None)
+        self.runInfos['matchCTime'] = self.runInfos['matchCTime'].apply(lambda x: x.strftime("%Y-%m-%d %H:%M:%S") if not pd.isnull(x) else None)
+        self.runInfos['offlineCTime'] = self.runInfos['offlineCTime'].apply(lambda x: x.strftime("%Y-%m-%d %H:%M:%S") if not pd.isnull(x) else None)
 
-    def makeGoodRunList(self, outName='goodRunList.json', tag='v1p0'):
+    def makeGoodRunList(self, update=False, outName='goodRunList.json', tag='v1p0'):
                 
-        goodRuns = self.runInfos[['run', 'file', 'goodRunLoose', 'goodRunMedium', 'goodRunTight', 'goodSingleTrigger']].copy(deep=True)
+        if update:
+            outName = '/eos/experiment/milliqan/Configs/goodRunsList.json'
+            checksName = '/eos/experiment/milliqan/Configs/checksMerged.json'
 
-        #criteria for good runs
-        goodRuns = goodRuns.drop(goodRuns.loc[(goodRuns['goodRunLoose']==False) & (goodRuns['goodSingleTrigger']==False)].index)
-        
-        goodRuns['tag'] = tag
-        
-        if os.path.exists(outName):
-            goodRunList = pd.read_json(outName, orient='split')
-            goodRuns = pd.concat([goodRunList, goodRuns])
-            goodRuns = goodRuns.drop_duplicates()
+            goodRuns = self.runInfos[['run', 'file', 'goodRunLoose', 'goodRunMedium', 'goodRunTight', 'goodSingleTrigger']].copy(deep=True)
+            goodRuns = goodRuns.drop(goodRuns.loc[(goodRuns['goodRunLoose']==False) & (goodRuns['goodSingleTrigger']==False)].index)
+            goodRuns['tag'] = tag
 
-        goodRuns.to_json(outName, orient = 'split', compression = 'infer', index = 'true')
-        
+            if os.path.exists(outName):
+                goodRunList = pd.read_json(outName, orient='split')
+                goodRuns = pd.concat([goodRunList, goodRuns], ignore_index=True)
+                goodRuns = goodRuns.drop_duplicates(subset=['run', 'file'], keep='last')
+
+                goodRuns = goodRuns.sort_values(by=['run', 'file'])
+
+                goodRuns.to_json('goodRunsListUpdate.json', orient = 'split', compression = 'infer', index = 'true')
+                if not self.debug: os.system('rsync -rzh goodRunsListUpdate.json {}'.format(outName))
+
+            else:
+                print("Error cannot access output file {}".format(outName))
+
+            if os.path.exists(checksName):
+                checks = pd.read_json(checksName, orient='split')
+                checksUpdate = pd.concat([checks, self.runInfos], ignore_index=True)
+                checksUpdate = checksUpdate.drop_duplicates(subset=['run', 'file'], keep='last')
+
+                checksUpdate = checksUpdate.sort_values(by=['run', 'file'])
+
+                checksUpdate.to_json('checksMergedUpdate.json', orient = 'split', compression = 'infer', index = 'true')
+                if not self.debug: os.system('rsync -rzh checksMergedUpdate.json {}'.format(checksName))
+            else:
+                print("Error cannot access output file {}".format(checksName))
+
+        else:
+            goodRuns = self.runInfos[['run', 'file', 'goodRunLoose', 'goodRunMedium', 'goodRunTight', 'goodSingleTrigger']].copy(deep=True)
+
+            #criteria for good runs
+            goodRuns = goodRuns.drop(goodRuns.loc[(goodRuns['goodRunLoose']==False) & (goodRuns['goodSingleTrigger']==False)].index)
+            
+            goodRuns['tag'] = tag
+            
+            if os.path.exists(outName):
+                goodRunList = pd.read_json(outName, orient='split')
+                goodRuns = pd.concat([goodRunList, goodRuns])
+                goodRuns = goodRuns.drop_duplicates(subset=['run', 'file'], keep='last')
+
+            goodRuns.to_json(outName, orient = 'split', compression = 'infer', index = 'true')
+
     def customStyle(self, s):
         colors = ['background-color: white']*len(s)
         if s.unmatchedEvents > 10:
@@ -423,6 +561,8 @@ if __name__ == "__main__":
     goodRunListName = ''
     jsonName = ''
 
+    update=False
+
     if not isinstance(args.dir, list): args.dir = [args.dir]
     if not isinstance(args.subdir, list): args.subdir = [args.subdir]
 
@@ -440,14 +580,27 @@ if __name__ == "__main__":
     if not jsonName.endswith('.json'): jsonName += '.json'
     if not goodRunListName.endswith('.json'): goodRunListName += '.json'
 
-    print("Running on", args.dir, args.subdir)
-    
-    myfileChecker = fileChecker(configDir=args.configDir)
-    
-    myfileChecker.debug = args.debug
-    
-    myfileChecker.looper(dirs=args.dir, subDirs=args.subdir, jsonName=jsonName)
+    if update:
+        print("Updating the good runs list")
 
-    myfileChecker.printInfo()
-    
-    myfileChecker.makeGoodRunList(outName=goodRunListName, tag=args.tag)
+        os.system('~/accessEOS.sh')
+        jsonName = 'checksMatchedUpdate.json'
+        goodRunListName = 'goodRunListUpdate.json'
+        myfileChecker = fileChecker()
+        myfileChecker.outputFile = '/eos/experiment/milliqan/Configs/checksMerged.json'
+        myfileChecker.debug = False
+        myfileChecker.updateRunList(startingDir=None, startingFile=None, checkTrigs=False, checkOffline=False)
+        myfileChecker.makeGoodRunList(update=True, tag=args.tag)
+
+    else:
+        print("Running on", args.dir, args.subdir)
+
+        myfileChecker = fileChecker(configDir=args.configDir)
+        
+        myfileChecker.debug = args.debug
+        
+        myfileChecker.looper(dirs=args.dir, subDirs=args.subdir, jsonName=jsonName)
+
+        myfileChecker.printInfo()
+        
+        myfileChecker.makeGoodRunList(outName=goodRunListName, tag=args.tag)

@@ -69,6 +69,7 @@ void OfflineFactory::addFriendTree(){
         trigMetaData = (TTree*) matchedFile->Get("MetaData");
         trigMetaDataCopy = trigMetaData->CloneTree();
         trigMetaDataCopy->SetDirectory(0);
+        writeTriggerMetaData=true;
     }
     matchedFile->Close();
 
@@ -188,6 +189,7 @@ std::vector<std::string> OfflineFactory::splitLumiContents(std::string input){
 
 //Function to load good runs list and check if this file is "good"
 void OfflineFactory::checkGoodRunList(std::string goodRunList){
+    if (isSlab) return; //temporary while no good runs
     std::string json;
     if (goodRunList.find("{") != std::string::npos){
         json = goodRunList;
@@ -219,12 +221,14 @@ void OfflineFactory::checkGoodRunList(std::string goodRunList){
         }
     }
     else{
+        std::cout << "Error: OfflineFactory::checkGoodRunList" << std::endl;
         throw invalid_argument(goodRunList);
     }
 }
 
 //Function to load lumis json file
 void OfflineFactory::getLumis(std::string lumiFile){
+    if(isSlab) return; //temporary while there are no lumis
     std::string json;
     if (lumiFile.find("{") != std::string::npos){
         json = lumiFile;
@@ -245,15 +249,16 @@ void OfflineFactory::getLumis(std::string lumiFile){
             for (int index = 0; index < data.size(); index ++){
                 //TODO fix it so that the filenumber is an int
                 if ( data[index][0].asInt() == runNumber && stoi(data[index][1].asString()) == fileNumber){
-                    if (data[index][11].isArray()){
+                    if (data[index][3].isArray()){
                         std::cout << "Run split among multiple fills" << std::endl;
 
-                        for (int ifill=0; ifill < data[index][11].size(); ifill++){
+                        for (int ifill=0; ifill < data[index][3].size(); ifill++){
                             v_fillId.push_back(data[index][3][ifill].asInt());
-                            v_beamType.push_back(data[index][9][ifill].asString());
-                            v_fillStart.push_back(data[index][12][ifill].asUInt64());
-                            v_fillEnd.push_back(data[index][13][ifill].asUInt64());
-                            if (data[index][10][ifill].isNull() || data[index][11][ifill].isNull() || data[index][2][ifill].isNull()){
+                            v_beamType.push_back(data[index][10][ifill].asString());
+                            v_fillStart.push_back(data[index][13][ifill].asUInt64());
+                            v_fillEnd.push_back(data[index][14][ifill].asUInt64());
+                            v_beamInFill.push_back(data[index][5][ifill].asBool());
+                            if (data[index][11][ifill].isNull() || data[index][12][ifill].isNull() || data[index][2][ifill].isNull()){
                                 v_beamEnergy.push_back(-1);
                                 v_betaStar.push_back(-1);
                                 v_stableBeamStart.push_back(0);
@@ -261,10 +266,10 @@ void OfflineFactory::getLumis(std::string lumiFile){
                                 v_lumi.push_back(0);
                             }
                             else{
-                                v_beamEnergy.push_back(data[index][10][ifill].asFloat());
-                                v_betaStar.push_back(data[index][11][ifill].asFloat());
-                                v_stableBeamStart.push_back(data[index][14][ifill].asUInt64());
-                                v_stableBeamEnd.push_back(data[index][15][ifill].asUInt64());
+                                v_beamEnergy.push_back(data[index][11][ifill].asFloat());
+                                v_betaStar.push_back(data[index][12][ifill].asFloat());
+                                v_stableBeamStart.push_back(data[index][15][ifill].asUInt64());
+                                v_stableBeamEnd.push_back(data[index][16][ifill].asUInt64());
                                 v_lumi.push_back(data[index][2][ifill].asFloat());
                             }
                         }
@@ -272,20 +277,33 @@ void OfflineFactory::getLumis(std::string lumiFile){
                     else{
                         v_lumi.push_back(data[index][2].asFloat());
                         v_fillId.push_back(data[index][3].asInt());
-                        v_beamType.push_back(data[index][9].asString());
-                        v_beamEnergy.push_back(data[index][10].asFloat()); 
-                        v_betaStar.push_back(data[index][11].asFloat());
-                        v_fillStart.push_back(data[index][12].asUInt64()); 
-                        v_fillEnd.push_back(data[index][13].asUInt64());
-                        v_stableBeamStart.push_back(data[index][14].asUInt64());
-                        v_stableBeamEnd.push_back(data[index][15].asUInt64());
+                        v_beamType.push_back(data[index][10].asString());
+                        v_beamEnergy.push_back(data[index][11].asFloat()); 
+                        v_betaStar.push_back(data[index][12].asFloat());
+                        v_fillStart.push_back(data[index][13].asUInt64()); 
+                        v_fillEnd.push_back(data[index][14].asUInt64());
+                        v_stableBeamStart.push_back(data[index][15].asUInt64());
+                        v_stableBeamEnd.push_back(data[index][16].asUInt64());
+                        v_beamInFill.push_back(data[index][5].asBool());
+
                     }
                 }
+                /*if (!v_lumi.empty()) std::cout << "lumi: " << v_lumi.back() << std::endl;
+                if (!v_fillId.empty())std::cout<< "\n fill: " << v_fillId.back() << std::endl;
+                if (!v_beamType.empty())std::cout<< "\n type: " << v_beamType.back() << std::endl;
+                if (!v_beamEnergy.empty())std::cout<< "\n energy: " << v_beamEnergy.back()  << std::endl;
+                if (!v_betaStar.empty())std::cout<< "\n beta star: " << v_betaStar.back() << std::endl;
+                if (!v_fillStart.empty())std::cout<< "\n fill start: " << v_fillStart.back()<< std::endl;
+                if (!v_fillEnd.empty())std::cout<< "\n fill end: " << v_fillEnd.back()<< std::endl;
+                if (!v_stableBeamStart.empty())std::cout<< "\n stable beam start: " << v_stableBeamStart.back() << std::endl;
+                if (!v_stableBeamEnd.empty())std::cout<< "\n stable beam end: " << v_stableBeamEnd.back() << std::endl;
+                if (!v_beamInFill.empty())std::cout<< "\n beam in fill: " << v_beamInFill.back() << std::endl;*/
             }
 
         }
     }
     else{
+        std::cout << "Error: OfflineFactory::getLumis" << std::endl;
         throw invalid_argument(lumiFile);
     }
 }
@@ -300,45 +318,50 @@ void OfflineFactory::setGoodRuns(){
 void OfflineFactory::getEventLumis(){
     Long64_t event_time = outputTreeContents.event_time_fromTDC;
 
-    auto maxFillEnd = std::max_element(v_fillEnd.begin(), v_fillEnd.end());
-    auto minFillBegin = std::min_element(v_fillStart.begin(), v_fillStart.end());
-    
-    if (event_time > *maxFillEnd){
-        outputTreeContents.beamOn=false;
-        outputTreeContents.lumi = -1;
-        outputTreeContents.fillId = -1;
-        outputTreeContents.beamType = TString("None");
-        outputTreeContents.beamEnergy = -1;
-        outputTreeContents.betaStar = -1;
-        outputTreeContents.fillStart = 0;
-        outputTreeContents.fillEnd = 0;
-        if(firstWarning) {
-            cout << "Warning some events occured after last fill time in mqLumis" << endl;
-            firstWarning=false;
-        }
-        return;
-    }
+    if (v_fillEnd.size() > 0 && v_fillStart.size() > 0){
+        auto maxFillEnd = std::max_element(v_fillEnd.begin(), v_fillEnd.end());
+        auto minFillBegin = std::min_element(v_fillStart.begin(), v_fillStart.end());
+      
 
-    if (event_time < *minFillBegin){
-        outputTreeContents.beamOn=false;
-        outputTreeContents.lumi = -1;
-        outputTreeContents.fillId = -1;
-        outputTreeContents.beamType = TString("None");
-        outputTreeContents.beamEnergy = -1;
-        outputTreeContents.betaStar = -1;
-        outputTreeContents.fillStart = 0;
-        outputTreeContents.fillEnd = 0;        
-        if(firstWarning){
-            cout << "Warning some event occured before first fill time in mqLumis" << endl;
-            firstWarning=false;
+        if (event_time > *maxFillEnd){
+            outputTreeContents.beamOn=false;
+            outputTreeContents.lumi = -1;
+            outputTreeContents.fillId = -1;
+            outputTreeContents.beamType = TString("None");
+            outputTreeContents.beamEnergy = -1;
+            outputTreeContents.betaStar = -1;
+            outputTreeContents.fillStart = 0;
+            outputTreeContents.fillEnd = 0;
+            outputTreeContents.beamInFill = false;
+            if(firstWarning) {
+                cout << "Warning some events occured after last fill time in mqLumis" << endl;
+                firstWarning=false;
+            }
+            return;
         }
-        return;
+
+        if (event_time < *minFillBegin){
+            outputTreeContents.beamOn=false;
+            outputTreeContents.lumi = -1;
+            outputTreeContents.fillId = -1;
+	    outputTreeContents.beamType = TString("None");
+	    outputTreeContents.beamEnergy = -1;
+	    outputTreeContents.betaStar = -1;
+	    outputTreeContents.fillStart = 0;
+	    outputTreeContents.fillEnd = 0;
+	    outputTreeContents.beamInFill = false;        
+	    if(firstWarning){
+	        cout << "Warning some event occured before first fill time in mqLumis" << endl;
+	        firstWarning=false;
+            }
+	    return;
+	}
     }
 
     for(int ifill=0; ifill < v_fillId.size(); ifill++){
         //cout << "event time: " << event_time << ", fill start: " << v_fillStart[ifill]/long(1e3) << ", fill end: " << v_fillEnd[ifill]/long(1e3) << endl;
-        if (event_time >= v_fillStart[ifill]/1e3 && event_time <= v_fillEnd[ifill]/1e3){
-            cout << "Found good fill" << endl;
+        if (event_time >= v_fillStart[ifill] && event_time <= v_fillEnd[ifill]){
+            //cout << "Found good fill" << endl;
             outputTreeContents.lumi = v_lumi[ifill];
             outputTreeContents.fillId = v_fillId[ifill];
             outputTreeContents.beamType = v_beamType[ifill];
@@ -346,7 +369,8 @@ void OfflineFactory::getEventLumis(){
             outputTreeContents.betaStar = v_betaStar[ifill];
             outputTreeContents.fillStart = v_fillStart[ifill];
             outputTreeContents.fillEnd = v_fillEnd[ifill];
-            if(event_time >= v_stableBeamStart[ifill]/1e3 && event_time <= v_stableBeamEnd[ifill]/1e3) outputTreeContents.beamOn=true;
+            outputTreeContents.beamInFill = v_beamInFill[ifill];
+            if(event_time >= v_stableBeamStart[ifill] && event_time <= v_stableBeamEnd[ifill]) outputTreeContents.beamOn=true;
             else outputTreeContents.beamOn=false;
             return;
         }
@@ -358,7 +382,8 @@ void OfflineFactory::getEventLumis(){
     outputTreeContents.beamEnergy = -1;
     outputTreeContents.betaStar = -1;
     outputTreeContents.fillStart = 0;
-    outputTreeContents.fillEnd = 0;    
+    outputTreeContents.fillEnd = 0;   
+    outputTreeContents.beamInFill = false; 
     if(firstWarning){
         cout << "Warning did not find matching fill time for some events" << endl;
         firstWarning=false;
@@ -373,7 +398,6 @@ void OfflineFactory::setTotalLumi(){
         else if (firstTDC_time > v_stableBeamEnd[ifill] && lastTDC_time > v_stableBeamEnd[ifill]) continue;
         else if (firstTDC_time < v_stableBeamStart[ifill] && lastTDC_time < v_stableBeamStart[ifill]) continue;
         else if (firstTDC_time < v_stableBeamStart[ifill] && lastTDC_time >= v_stableBeamEnd[ifill]){
-            cout << "case 1" << endl;
             totalLumi+=v_lumi[ifill];
         }
         else if(firstTDC_time < v_stableBeamStart[ifill] && lastTDC_time < v_stableBeamEnd[ifill]){
@@ -437,7 +461,7 @@ void OfflineFactory::validateInput(){
     }
     else{ 
         for (int ic = 0; ic < numChan-1; ic++) highThresh.push_back(highThresh.at(0));
-        if(variableThresholds){
+        if(variableThresholds && !isSlab){
             for (int ic = 0; ic < numChan; ic++){
                 if (outputTreeContents.v_triggerThresholds[ic]*10e3 > 50) continue; //if pannel keep default
                 highThresh[ic] = outputTreeContents.v_triggerThresholds[ic]*10e3 - thresholdDecrease;
@@ -490,7 +514,6 @@ void OfflineFactory::processDisplays( vector<int> & eventsToDisplay,TString disp
 void OfflineFactory::process(){
 
     // Testing json stuff
-
     makeOutputTree();
     inFile = TFile::Open(inFileName, "READ");
     readMetaData();
@@ -538,6 +561,7 @@ void OfflineFactory::prepareOutBranches(){
     outTree->Branch("beamOn",&outputTreeContents.beamOn);
     outTree->Branch("fillStart",&outputTreeContents.fillStart);
     outTree->Branch("fillEnd",&outputTreeContents.fillEnd);
+    outTree->Branch("beamInFill",&outputTreeContents.beamInFill);
 
     outTree->Branch("goodRunLoose", &outputTreeContents.goodRunLoose);
     outTree->Branch("goodRunMedium", &outputTreeContents.goodRunMedium);
@@ -1524,7 +1548,7 @@ vector<vector<pair<float,float>>> OfflineFactory::readWaveDataPerEvent(int i){
     for(int idig=0; idig < nDigitizers; idig++){
 
         //correct all pulses to the TDC time of digitizer 0
-        float thisCorrection = (float)5*((int64_t)evt->digitizers[0].TDC[0] - (int64_t)evt->digitizers[idig].TDC[0]);
+        float thisCorrection = (float)5*((int64_t)evt->digitizers[idig].TDC[0] - (int64_t)evt->digitizers[0].TDC[0]);
         tdcCorrection[idig] = thisCorrection; //5ns per TDC clock
         if(evt->digitizers[idig].TDC[0] == 0) {
             outputTreeContents.boardsMatched = false;
@@ -1580,14 +1604,13 @@ void OfflineFactory::readWaveData(){
     }
     triggerFileMatched = false;
     if (friendFileName != "") {
-	addFriendTree();
-	triggerFileMatched = true;
+	  addFriendTree();
+	  triggerFileMatched = true;
     }
     loadBranches();
     // int maxEvents = 1;
     int maxEvents = inTree->GetEntries();
     cout<<"Processing "<<maxEvents<<" events in this file"<<endl;
-    cout<<"Starting event loop"<<endl;
     bool showBar = false;
 
     for(int i=0;i<maxEvents;i++){
@@ -1611,12 +1634,13 @@ void OfflineFactory::readWaveData(){
 
         findExtrema();
 
-        getEventLumis();
+        if (!isSlab){ //temporary while slab has no lumi/good runs
+            getEventLumis();
+            setGoodRuns();
+        } 
 
-        setGoodRuns();
-
-        if (outputTreeContents.event_time_fromTDC*1e3 < firstTDC_time) firstTDC_time = outputTreeContents.event_time_fromTDC*1e3; 
-        if (outputTreeContents.event_time_fromTDC*1e3 > lastTDC_time) lastTDC_time = outputTreeContents.event_time_fromTDC*1e3;
+        if (outputTreeContents.event_time_fromTDC < firstTDC_time) firstTDC_time = outputTreeContents.event_time_fromTDC; 
+        if (outputTreeContents.event_time_fromTDC > lastTDC_time) lastTDC_time = outputTreeContents.event_time_fromTDC;
 
         outTree->Fill();
         //Totally necessary progress bar
@@ -1636,16 +1660,13 @@ void OfflineFactory::readWaveData(){
         
     }
 
-    setTotalLumi();
-
-    std::cout << std::endl;
-    
+    setTotalLumi();    
 }
 
 void OfflineFactory::writeOutputTree(){
     outFile->cd();
     outTree->Write();
-    if (friendFileName != "") trigMetaDataCopy->Write();
+    if (writeTriggerMetaData) trigMetaDataCopy->Write();
     writeVersion();
     outFile->Close();
     if (inFile) inFile->Close();
@@ -1924,6 +1945,7 @@ void OfflineFactory::loadWavesMilliDAQ(){
         board = boardArray->GetAt(ic);
         chan = chanArray->GetAt(ic);
         waves[ic] = (TH1D*)evt->GetWaveform(board, chan, Form("digitizers[%i].waveform[%i]",board,ic));  
+        if (isSlab) waves[ic]->Scale(-1);
     }
 
 }    

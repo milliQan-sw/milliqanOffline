@@ -1,12 +1,13 @@
 
 stages:
-  - setup
+  #- setup
   - compile
   - offlineProduction
   - analysis
 
 variables:
     DOCKER_IMAGE: carriganm95/milliqan_uproot:latest
+    CI_REGISTRY_IMAGE: carriganm95/milliqan_offline:x86
   
 setup:
     image: $CI_REGISTRY_IMAGE
@@ -64,20 +65,21 @@ analysis:
         - cd -
         - python3 analysisCI.py
 
-build image:
-    image: docker:24.0.5
-    stage: setup
-    services:
-        - name: docker:24.0.5-dind
-    rules:
-        - if: $CI_PIPELINE_SOURCE == "schedule"
-    variables:
-        DOCKER_HOST: tcp://docker:2375/
-        DOCKER_DRIVER: overlay2
-        DOCKER_TLS_CERTDIR: ""
-    script:
-        - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER $CI_REGISTRY --password-stdin
-        - docker build -t $CI_REGISTRY_IMAGE .
-        - docker push $CI_REGISTRY_IMAGE
-        - echo $CI_REGISTRY_IMAGE
+#build image:
+#    image: docker:24.0.5
+#    stage: setup
+#    services:
+#        - name: docker:24.0.5-dind
+#    rules:
+#        - if: $CI_PIPELINE_SOURCE == "schedule"
+#    variables:
+#        DOCKER_HOST: tcp://docker:2375/
+#        DOCKER_DRIVER: overlay2
+#        DOCKER_TLS_CERTDIR: ""
+#    script:
+#        - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER $CI_REGISTRY --password-stdin
+#        - docker build -t $CI_REGISTRY_IMAGE .
+#        - docker push $CI_REGISTRY_IMAGE
+#        - echo $CI_REGISTRY_IMAGE
+
         

@@ -11,6 +11,9 @@ import traceback
 from pprint import pprint
 from mongoConnect import mongoConnect
 from subprocess import Popen, PIPE
+import pandas as pd
+import numpy as np
+from datetime import datetime
 
 site = os.getenv("OFFLINESITE")
 if not site:
@@ -26,7 +29,7 @@ def parse_args():
     parser.add_argument("-m","--mergedTriggerFile",help="Trigger file friend tree",type=str,default="")
     parser.add_argument("-e","--exe",help="Executable to run",type=str,default="./script.exe")
     parser.add_argument("-d","--database",help="Database string",default=None)
-    parser.add_argument("-p","--publish",help="Publish dataset",action="store_true",default=False)
+    parser.add_argument("-p","--publish",help="Publish dataset",nargs="?",const=True,type=str,default=False)
     parser.add_argument("-f","--force_publish",help="Force publish dataset",action="store_true",default=False)
     parser.add_argument("-c","--configurations",help="JSON Configuration files or string",type=str,nargs="+")
     parser.add_argument("--drs",help="DRS input",action="store_true",default=False)
@@ -40,6 +43,7 @@ def validateOutput(outputFile,runNumber=-1,fileNumber=-1):
         f1 = r.TFile(outputFile,"READ")
         t = f1.Get("t")
         nevts = t.GetEntries()
+        print("Output file {} has {} events".format(outputFile, nevts))
         # print "[RSR] ntuple has %i events and expected %i" % (t.GetEntries(), expectednevts)
         # if int(expectednevts) > 0 and int(t.GetEntries()) != int(expectednevts):
         #     print "[RSR] nevents mismatch"
@@ -58,7 +62,7 @@ def validateOutput(outputFile,runNumber=-1,fileNumber=-1):
         os.system("rm "+outputFile)
     return tag 
 def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publish,database,appendToTag,mergedTriggerFile,drs,display, slab,runNumber=None,fileNumber=None):
-    if force_publish:
+    if force_publish and not publish:
         publish = True
     if runNumber == None:
         try:
@@ -79,6 +83,9 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
         print("Can't publish in display mode!")
         exit()
     
+    #copy files from eos
+    copyFromEOS()
+
     if not configurations:
         offlineDir = os.getenv("OFFLINEDIR")
         if drs:
@@ -86,11 +93,11 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
         if slab:
             chanConfig = offlineDir + "/configuration/slabConfigs/" + getConfigs(runNumber, offlineDir+'/configuration/slabConfigs') + '.json'
             print("Using the chan config", chanConfig)
-            configurations = [chanConfig, offlineDir+"/configuration/pulseFinding/pulseFindingTest.json"]
+            configurations = [chanConfig, offlineDir+"/configuration/pulseFinding/pulseFindingSlab.json"]
         else:
             chanConfig = offlineDir + "/configuration/barConfigs/" + getConfigs(runNumber, offlineDir+'/configuration/barConfigs') + '.json'
             print("Using the chan config", chanConfig)
-            configurations = [chanConfig,offlineDir+"/configuration/pulseFinding/pulseFindingTest.json"]
+            configurations = [chanConfig,offlineDir+"/configuration/pulseFinding/pulseFindingBar.json"]
 
     if "{" in configurations and "}" in configurations:
         configurationsJSONString = configurations
@@ -150,10 +157,29 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
                 tag += "_"+appendToTag
             if drs:
                 inputType = "DRS"
+            elif slab:
+                inputType = 'MilliQanSlab'
             else:
                 inputType = "MilliQan"
             matched = mergedTriggerFile!="" 
-            publishDataset(configurationsJSON,inputFile,outputFile,fileNumber,runNumber,tag,site=site,inputType=inputType,matched=matched,force_publish=force_publish,db=db)
+            publishing_inputs = {
+                'configurationsJSON': configurationsJSON,
+                'inputFile': inputFile,
+                'outputFile': os.path.abspath(outputFile),
+                'fileNumber': fileNumber,
+                'runNumber': runNumber,
+                'tag': tag,
+                'site': site,
+                'inputType': inputType,
+                'matched': matched
+            }
+            if publish and isinstance(publish, str):
+                publish = eval(publish)
+                for k, v in publish.items():
+                    publishing_inputs[k] = v
+            publishDataset(publishing_inputs['configurationsJSON'],publishing_inputs['inputFile'],publishing_inputs['outputFile'], publishing_inputs['fileNumber'],
+                           publishing_inputs['runNumber'],publishing_inputs['tag'],site=publishing_inputs['site'],inputType=publishing_inputs['inputType'],matched=publishing_inputs['matched'],
+                           force_publish=force_publish,db=db)
         return tag != None
 def getId(runNumber,fileNumber,tag,inputType,site):
     _id = "{}_{}_{}_{}_{}".format(runNumber,fileNumber,tag,inputType,site)
@@ -166,11 +192,11 @@ def publishDataset(configurationsJSON,inputFile,outputFile,fileNumber,runNumber,
     milliQanOfflineDataset["run"] = runNumber
     milliQanOfflineDataset["file"] = fileNumber
     milliQanOfflineDataset["version"] = tag
-    milliQanOfflineDataset["location"] = os.path.abspath(outputFile)
+    milliQanOfflineDataset["location"] = outputFile
     milliQanOfflineDataset["type"] = inputType
     milliQanOfflineDataset["site"] = site
     milliQanOfflineDataset["matched"] = matched
-
+    
     nX = 0
     #Check for existing entry
     for x in (db.milliQanOfflineDatasets.find({"_id" : _id})):
@@ -196,14 +222,52 @@ def getConfigs(runNum, offlineDir):
     runs = json.load(fin)
     fin.close()
     for key, value in runs.items():
+        #print(key, value)
         if len(value) > 1:
-            if runNum in range(value[0], value[1]): return key
+            if value[0] <= runNum <= value[1]: return key
         else:
-            print(runNum)
+            #print(runNum)
             if runNum >= value[0]: return key
-    print("Did not find the correct channel map")
+    print("Did not find the correct channel map for run {}".format(runNum))
     sys.exit(1)
 
+def copyFromEOS(slab=False):
+
+    if not slab and not os.path.exists('configuration/barConfigs/goodRunsList.json'): 
+        print("Warning (runOfflineFactory.py): goodRunsList.json is not available locally, trying to access from eos")
+        try:
+            os.system('cp /eos/experiment/milliqan/Configs/goodRunsList.json configuration/slabConfigs/')
+        except:
+            print("Error (runOfflineFactory.py): could not access the goodRunList.json on eos or locally")
+    
+    if not slab:
+        if not os.path.exists('configuration/barConfigs/mqLumis.json'):
+            print("Warning (runOfflineFactory.py): mqLumis.json is not available locally, trying to access from eos")
+            try:
+                os.system('cp /eos/experiment/milliqan/Configs/mqLumis.json configuration/barConfigs/')
+            except:
+                print("Error (runOfflineFactory.py): unable to access the mqLumis file on eos or locally")
+        
+        #make datetimes into uint64 to be read by c++
+        lumis = pd.read_json('configuration/barConfigs/mqLumis.json', orient = 'split', compression = 'infer')
+        convert_cols = ['start', 'stop', 'fillStart', 'fillEnd', 'startStableBeam', 'endStableBeam']
+
+        for col in convert_cols:
+            lumis[col] = convertTimes(lumis[col])
+        lumis.to_json('configuration/barConfigs/mqLumis.json', orient = 'split', compression = 'infer', index = 'true')
+
+def convertTimes(input):
+    input = input.apply(datetime_to_uint64)
+    return input
+
+def datetime_to_uint64(x):
+    if isinstance(x, str):  # If x is a string
+        dt = datetime.strptime(x, '%Y-%m-%dT%H:%M:%S.%fZ')
+        return np.uint64(dt.timestamp())
+    elif isinstance(x, list):  # If x is a list
+        timestamps = [datetime_to_uint64(item) for item in x]
+        return timestamps
+    return x  # Return unchanged if x is None or some other non-string value
 
 if __name__ == "__main__":
     valid = runOfflineFactory(**vars(parse_args()))

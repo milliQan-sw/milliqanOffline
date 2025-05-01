@@ -59,15 +59,15 @@ for datasetName in ["MilliQ","ArgoNeut","SENSEI","CMS","milliQan","milliQanRun3F
     elif datasetName == "MilliQ":
         plt.loglog(dataset[:,0],dataset[:,1],color="lightgray",linewidth=2)
     elif datasetName == "milliQan":
-        plt.loglog(dataset[:,0],dataset[:,1],color="lightcoral",alpha=0.8,linewidth=2,label="milliQan Run 2 demonstrator 37.5/fb\n [PRD 102, 032002 (2020)]")
+        plt.loglog(dataset[:,0],dataset[:,1],color="lightcoral",alpha=0.8,linewidth=2,label="Run 2 milliQan demonstrator 37.5 $\\rm{fb}^{-1}$\n [PRD 102, 032002 (2020)]")
     elif datasetName == "milliQanRun3Bar":
-        plt.loglog(dataset[:,0],dataset[:,1],color="blue",alpha=0.2,linewidth=2,label="Run 3 200/fb Proj")
+        plt.loglog(dataset[:,0],dataset[:,1],color="blue",alpha=0.2,linewidth=2,label="Run 3 200 $\\rm{fb}^{-1}$ Proj")
     elif datasetName == "milliQanProjHighBkg":
-        plt.loglog(dataset[:,0],dataset[:,1],color="red",linestyle="--",alpha=1,linewidth=2,label="Run 3 304/fb Proj")
+        plt.loglog(dataset[:,0],dataset[:,1],color="red",linestyle="--",alpha=1,linewidth=2,label="Run 3 304 $\\rm{fb}^{-1}$ Proj")
     elif datasetName == "milliQanRun3Slab":
         plt.loglog(dataset[:,0],dataset[:,1],color="gray",linewidth=2,label="Run 3 Slab Proj")
     elif  "milliQanRun3Fix" in datasetName:
-        plt.loglog(dataset[:,0],dataset[:,1],color="red",linewidth=2,label="Run 3 milliQan bar detector 124/fb")
+        plt.loglog(dataset[:,0],dataset[:,1],color="red",linewidth=2,label="Run 3 milliQan bar detector 124 $\\rm{fb}^{-1}$")
     elif datasetName == "SENSEI":
         plt.loglog(dataset[:,0]/1000,dataset[:,1],color="lightblue",linewidth=2, label="SENSEI\n[PRL 133, 071801 (2024)]")
     elif datasetName == "BEBC":
@@ -91,7 +91,7 @@ for datasetName in ["MilliQ","ArgoNeut","SENSEI","CMS","milliQan","milliQanRun3F
     elif datasetName == "moedalRun3":
         plt.loglog(dataset[:,0],dataset[:,1],color="lightblue",linewidth=2,label="Moedal Run 3")
     elif datasetName == "CMS":
-        plt.loglog(dataset[:,0],dataset[:,1],color="orange",linewidth=2,label="CMS FCP 138/fb\n[PRL 134, 131802 (2025]")
+        plt.loglog(dataset[:,0],dataset[:,1],color="orange",linewidth=2,label="CMS FCP 138 $\\rm{fb}^{-1}$\n[PRL 134, 131802 (2025]")
     else:
         plt.loglog(dataset[:,0],dataset[:,1],color="gray",linewidth=2)
     datasets[datasetName] = dataset

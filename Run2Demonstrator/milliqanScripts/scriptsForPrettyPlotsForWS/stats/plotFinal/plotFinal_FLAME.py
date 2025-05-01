@@ -38,8 +38,7 @@ fig = plt.figure()
 iFile = "./limitsMQMC_V5.root"
 datasets = {}
 # for datasetName in ["directDetection","ArgoNeut","SK","MilliQ","milliQanRun3Both","milliQan","CMS","Collider","SUBMET"][:-1]:
-"FORMOSA_crystal100"
-for datasetName in ["directDetection","ArgoNeut","SK","MilliQ","milliQan","milliQanRun3Both","FORMOSA_nominal","CMS","Collider","SENSEI","luminiQPlastic","LongQuestLarge","SHIP"][:-1]:
+for datasetName in ["directDetection","ArgoNeut","SK","MilliQ","milliQan","milliQanRun3Both","CMS","Collider","SENSEI","LongQuestSmallFinal","LongQuestSmallCrystalFinal","luminiQER1","luminiQER2"][:]:
     if  datasetName == "FORMOSA_crystal100_test":
         dataset = np.loadtxt("external/FORMOSA_nominal.csv",delimiter=",")
         dataset = extrapolate(dataset,4)
@@ -50,14 +49,19 @@ for datasetName in ["directDetection","ArgoNeut","SK","MilliQ","milliQan","milli
         dataset = np.loadtxt("external/"+datasetName+".csv",delimiter=",")
     if datasetName == "SK":
         plt.loglog(dataset[:,0],dataset[:,1],color="lightsalmon",linewidth=2)
-    elif datasetName == "luminiQ":
-        plt.loglog(dataset[:,0],dataset[:,1],color="darkkhaki",linewidth=2,label="LANSCE-mQ")
+    elif datasetName == "luminiQER1":
+        plt.loglog(dataset[:,0],dataset[:,1],color="salmon",linewidth=2,label="FLAME LANL 10m")
+    elif datasetName == "luminiQER2":
+        plt.loglog(dataset[:,0],dataset[:,1],color="orange",linewidth=2,label="FLAME LANL 30m")
     elif  "LongQuestSmall" in datasetName:
-        plt.loglog(dataset[:,0],dataset[:,1],color="orchid",linewidth=2,label="FLAME demonstrator")
+        if "Crystal" in datasetName:
+            plt.loglog(dataset[:,0],dataset[:,1],color="maroon",linewidth=2,label="FLAME FNAL CeBr")
+        else:
+            plt.loglog(dataset[:,0],dataset[:,1],color="orchid",linewidth=2,label="FLAME FNAL")
     elif  "LongQuest" in datasetName:
-        plt.loglog(dataset[:,0],dataset[:,1],color="purple",linewidth=2,label="FLAME FNAL")
+        plt.loglog(dataset[:,0],dataset[:,1],color="purple",linewidth=2,label="FNAL mQ")
     elif datasetName == "luminiQPlastic":
-        plt.loglog(dataset[:,0],dataset[:,1],color="darkkhaki",linewidth=2,label="FLAME LANL")
+        plt.loglog(dataset[:,0],dataset[:,1],color="darkkhaki",linewidth=2,label="LANL mQ")
     elif datasetName == "MilliQ":
         plt.loglog(dataset[:,0],dataset[:,1],color="green",linewidth=2)
     elif datasetName == "SHIP":
@@ -65,7 +69,7 @@ for datasetName in ["directDetection","ArgoNeut","SK","MilliQ","milliQan","milli
     elif datasetName == "milliQan":
         plt.loglog(dataset[:,0],dataset[:,1],color="red",linewidth=2)
     elif datasetName == "milliQanRun3Both":
-        plt.loglog(dataset[:,0],dataset[:,1],color="blue",linewidth=2,alpha=0.5,label="Run 3 milliQan")
+        plt.loglog(dataset[:,0],dataset[:,1],color="blue",linewidth=2,alpha=0.5)
     elif datasetName == "milliQanRun3Slab":
         plt.loglog(dataset[:,0],dataset[:,1],color="green",linewidth=2,label="Run 3 Slab Detector")
     elif datasetName == "ArgoNeut":
@@ -91,7 +95,6 @@ for datasetName in ["directDetection","ArgoNeut","SK","MilliQ","milliQan","milli
     elif datasetName == "FORMOSA_dem":
         plt.loglog(dataset[:,0],dataset[:,1],color="darkmagenta",linewidth=2,alpha=0.5,label="FORMOSA demonstrator")
     elif datasetName == "directDetection":
-        continue
         plt.loglog(dataset[:,0],dataset[:,1],color="darkgray",linewidth=2,linestyle="--",alpha=0.8)
     elif datasetName == "SUBMET":
         plt.loglog(dataset[:,0],dataset[:,1],color="darkcyan",linewidth=2,label="SUBMET")
@@ -103,7 +106,7 @@ plt.fill_between(datasets["Collider"][:,0],datasets["Collider"][:,1],1,color="si
 plt.fill_between(datasets["ArgoNeut"][:,0],datasets["ArgoNeut"][:,1],1,color="mediumpurple",alpha=0.4)
 if "SENSEI" in datasets:
     plt.fill_between(datasets["SENSEI"][:,0]/1000,datasets["SENSEI"][:,1],1,color="lightblue",alpha=0.4)
-# plt.fill_between(datasets["directDetection"][:,0],datasets["directDetection"][:,1],1E-9,color="gray",alpha=0.1)
+plt.fill_between(datasets["directDetection"][:,0],datasets["directDetection"][:,1],1E-9,color="gray",alpha=0.1)
 plt.fill_between(datasets["milliQan"][:,0],datasets["milliQan"][:,1],1,color="red",alpha=0.4)
 plt.fill_between(datasets["SK"][:,0],datasets["SK"][:,1],1,color="lightsalmon",alpha=0.4)
 plt.fill_betweenx(datasets["CMS"][:,1],datasets["CMS"][:,0],200,color="sienna",alpha=0.4)
@@ -112,16 +115,17 @@ plt.fill_betweenx(datasets["MilliQ"][:,1],0.01,datasets["MilliQ"][:,0],color="li
 # plt.text(4.7,0.11," milliQan\nprototype",fontsize=9,color="red")
 # plt.text(0.12,0.0018,"milliQan Run 3",fontsize=9,color="blue",alpha=0.5)
 # plt.text(8,0.006,"   FORMOSA\ndemonstrator",fontsize=9,color="darkmagenta",alpha=0.5)
+plt.text(2,0.00025,"Direct DM detection",fontsize=9,color="gray",alpha=0.5,rotation=13)
 # plt.text(20,0.0008,"Direct DM detection",fontsize=9,color="gray",alpha=0.5,rotation=20)
 # plt.text(0.43,0.012," ArgoNeuT",fontsize=9,color="mediumpurple")
 # plt.text(0.38,0.007," SuperK",fontsize=9,color="lightsalmon")
 plt.text(0.022,0.001,"SLAC MilliQ",fontsize=9)
-plt.text(7,0.35,"Colliders",fontsize=11)
+plt.text(5,0.35,"Colliders",fontsize=9)
 plt.text(80,0.38,"CMS",fontsize=11)
 plt.xlabel("MCP mass/GeV",fontsize=14)
 plt.ylabel("Q/e",fontsize=14 )
 
 plt.legend(frameon=False)
-plt.xlim([0.021,200])
-plt.ylim([0.00006,0.6])
+plt.xlim([0.021,10])
+plt.ylim([0.000015,0.6])
 fig.savefig("finalLimit.pdf",transparent=True)

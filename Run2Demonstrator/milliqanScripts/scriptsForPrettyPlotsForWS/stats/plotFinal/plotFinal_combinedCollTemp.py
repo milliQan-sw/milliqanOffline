@@ -1,7 +1,9 @@
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 import ROOT as r
 r.gROOT.SetBatch()
+matplotlib.rc('text', usetex = True)
 def extrapolate(dataset,order):
     xsForward = np.loadtxt("external/crossSecForward.csv",delimiter=",")
     xsCentral = np.loadtxt("external/crossSecCentral.csv",delimiter=",")*(1./(4*3.141*33*33))
@@ -43,7 +45,8 @@ def extrapolate(dataset,order):
 fig = plt.figure()
 iFile = "./limitsMQMC_V5.root"
 datasets = {}
-for datasetName in ["MilliQ","milliQan","milliQanRun3Final2","CMS","ColliderExpanded","SENSEI","BEBC"][:-1]:
+datasetCM = np.loadtxt("external/ColliderExpandedWithMilliQ.csv",delimiter=",")
+for datasetName in ["MilliQ","CMS","Collider","SENSEI","milliQan","milliQanRun3Final2","BEBC"][1:-1]:
     if  datasetName == "FORMOSA_dem_test":
         dataset = np.loadtxt("external/milliQanRun3Bar.csv",delimiter=",")
         dataset = extrapolate(dataset,4)
@@ -55,15 +58,15 @@ for datasetName in ["MilliQ","milliQan","milliQanRun3Final2","CMS","ColliderExpa
     if datasetName == "SK":
         plt.loglog(dataset[:,0],dataset[:,1],color="lightsalmon",linewidth=2)
     elif datasetName == "MilliQ":
-        plt.loglog(dataset[:,0],dataset[:,1],color="green",linewidth=2)
+        plt.loglog(dataset[:,0],dataset[:,1],color="lightgray",linewidth=2)
     elif datasetName == "milliQan":
-        plt.loglog(dataset[:,0],dataset[:,1],color="red",linewidth=2,label="Run 2 prototype 37.5/fb")
+        plt.loglog(dataset[:,0],dataset[:,1],color="red",linewidth=2,label="milliQan demonstrator (37.5/fb)")
     elif datasetName == "milliQanRun3Bar":
         plt.loglog(dataset[:,0],dataset[:,1],color="blue",alpha=0.2,linewidth=2,label="Run 3 200/fb Proj")
     elif datasetName == "milliQanRun3Slab":
-        plt.loglog(dataset[:,0],dataset[:,1],color="green",linewidth=2,label="Run 3 Slab Proj")
+        plt.loglog(dataset[:,0],dataset[:,1],color="gray",linewidth=2,label="Run 3 Slab Proj")
     elif  "milliQanRun3Final" in datasetName:
-        plt.loglog(dataset[:,0],dataset[:,1],color="blue",linewidth=2,label="Run 3 124/fb Bar")
+        plt.loglog(dataset[:,0],dataset[:,1],color="blue",linewidth=2,label="Run 3 milliQan bar detector (124/fb)")
     elif datasetName == "SENSEI":
         plt.loglog(dataset[:,0]/1000,dataset[:,1],color="lightblue",linewidth=2)
     elif datasetName == "BEBC":
@@ -87,31 +90,44 @@ for datasetName in ["MilliQ","milliQan","milliQanRun3Final2","CMS","ColliderExpa
     elif datasetName == "moedalRun3":
         plt.loglog(dataset[:,0],dataset[:,1],color="lightblue",linewidth=2,label="Moedal Run 3")
     else:
-        plt.loglog(dataset[:,0],dataset[:,1],color="sienna",linewidth=2)
+        plt.loglog(dataset[:,0],dataset[:,1],color="gray",linewidth=2)
     datasets[datasetName] = dataset
-plt.fill_between(datasets["ColliderExpanded"][:,0],datasets["ColliderExpanded"][:,1],1,color="sienna",alpha=0.4)
+plt.fill_between(datasets["ColliderExpanded"][:,0],datasets["ColliderExpanded"][:,1],1,color="gray",alpha=0.4)
 if "ArgoNeut" in datasets:
-    plt.fill_between(datasets["ArgoNeut"][:,0],datasets["ArgoNeut"][:,1],1,color="mediumpurple",alpha=0.4)
+    pass
+    # plt.fill_between(datasets["ArgoNeut"][:,0],datasets["ArgoNeut"][:,1],1,color="mediumpurple",alpha=0.4)
 # plt.fill_between(datasets["milliQan"][:,0],datasets["milliQan"][:,1],1,color="red",alpha=0.4)
+SENSEI_interpUp = np.interp(datasets["SENSEI"][:,0]/1000,datasets["ColliderExpanded"][:,0],datasets["ColliderExpanded"][:,1])
+SENSEI_interpUp2 = np.interp(datasets["SENSEI"][:,0]/1000,datasetCM[:,0],datasetCM[:,1])
+SENSEI_interpUp3 = np.interp(datasets["SENSEI"][:,1],datasetCM[:,1],datasetCM[:,0])
 if "SENSEI" in datasets:
-    plt.fill_between(datasets["SENSEI"][:,0]/1000,datasets["SENSEI"][:,1],1,color="lightblue",alpha=0.4)
+    plt.fill_between(datasets["SENSEI"][:,0]/1000,datasets["SENSEI"][:,1],SENSEI_interpUp2,color="lightblue",alpha=0.4)
+    # plt.fill_betweenx(datasets["SENSEI"][:,1],SENSEI_interpUp3,datasets["SENSEI"][:,0]/1000,color="sienna",alpha=0.4)
 if "BEBC" in datasets:
     plt.fill_between(datasets["BEBC"][:,0],datasets["BEBC"][:,1],1,color="fuchsia",alpha=0.4)
 if "SK" in datasets:
     plt.fill_between(datasets["SK"][:,0],datasets["SK"][:,1],1,color="lightsalmon",alpha=0.4)
-plt.fill_betweenx(datasets["CMS"][:,1],datasets["CMS"][:,0],200,color="sienna",alpha=0.4)
-plt.fill_betweenx(datasets["MilliQ"][:,1],0.01,datasets["MilliQ"][:,0],color="lightgreen",alpha=0.4)
+plt.fill_betweenx(datasets["CMS"][:,1],datasets["CMS"][:,0],200,color="lightgray",alpha=0.4)
+if "MilliQ" in datasets:
+    plt.fill_betweenx(datasets["MilliQ"][:,1],0.01,datasets["MilliQ"][:,0],color="lightgray",alpha=0.4)
 
 # plt.text(4.7,0.11," milliQan\nprototype",fontsize=9,color="red")
 # plt.text(0.52,0.0125," ArgoNeuT",fontsize=9,color="mediumpurple")
 # plt.text(0.38,0.007," SuperK",fontsize=9,color="lightsalmon")
-plt.text(0.022,0.002,"SLAC MilliQ",fontsize=9)
-plt.text(7,0.35,"Colliders",fontsize=11)
-plt.text(80,0.38,"CMS",fontsize=11)
+# plt.text(0.022,0.002,"SLAC MilliQ",fontsize=9)
+  
+plt.text(14,0.35,"Colliders",fontsize=11)
+# plt.text(50,0.42,"CMS FCP",fontsize=11)
+plt.text(0.105,0.0015,"SENSEI",fontsize=11)
+# plt.text(50,0.36,"PhysRevLett.134.131802",fontsize=4)
 
-plt.legend(frameon=False)
-plt.xlim([0.02,200])
+plt.legend(frameon=False,loc="lower right")
+plt.xlim([0.1,43])
 plt.xlabel("MCP mass/GeV",fontsize=14)
 plt.ylabel("Q/e",fontsize=14 )
 plt.ylim([0.001,0.6])
+plt.text(0.17,1.05, "milliQan $\it{Preliminary}$", horizontalalignment='center',
+     verticalalignment='center',transform=plt.gca().transAxes,fontsize=14)
+plt.text(0.82,1.05, "$124\ \\rm{fb}^{-1}$ (13.6 TeV)", horizontalalignment='center',
+     verticalalignment='center',transform=plt.gca().transAxes,fontsize=14)
 fig.savefig("finalLimit_Run3.pdf",transparent=True)

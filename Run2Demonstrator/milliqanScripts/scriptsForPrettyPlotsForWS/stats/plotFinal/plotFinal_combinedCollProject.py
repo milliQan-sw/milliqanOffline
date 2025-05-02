@@ -45,7 +45,7 @@ iFile = "./limitsMQMC_V5.root"
 datasets = {}
 datasetCM = np.loadtxt("external/ColliderWithMilliQ.csv",delimiter=",")
 #"milliQanProjHighBkg",
-for datasetName in ["MilliQ","ArgoNeut","SENSEI","CMS","milliQan","milliQanRun3Fix","milliQanProjHighBkg","milliQanRun3Slab","Collider","BEBC"][1:-1]:
+for datasetName in ["MilliQ","ArgoNeut","SENSEI","CMS","milliQan","milliQanRun3Fix","milliQanProjHighBkg","milliQanProjLowBkg","milliQanRun3Slab","Collider","BEBC"][1:-1]:
     if  datasetName == "FORMOSA_dem_test":
         dataset = np.loadtxt("external/milliQanRun3Bar.csv",delimiter=",")
         dataset = extrapolate(dataset,4)
@@ -63,17 +63,21 @@ for datasetName in ["MilliQ","ArgoNeut","SENSEI","CMS","milliQan","milliQanRun3F
     elif datasetName == "milliQanRun3Bar":
         plt.loglog(dataset[:,0],dataset[:,1],color="blue",alpha=0.2,linewidth=2,label="Run 3 200 $\\rm{fb}^{-1}$ projection")
     elif datasetName == "milliQanProjHighBkg":
-        plt.loglog(dataset[:,0],dataset[:,1],color="red",linestyle="--",alpha=1,linewidth=2,label="Run 3 bar detector 304 $\\rm{fb}^{-1}$ projection")
+        plt.loglog(dataset[:,0],dataset[:,1],color="red",linestyle="--",alpha=1,linewidth=2,label="Run 3 bar detector 304 $\\rm{fb}^{-1}$ pessimistic")
+    elif datasetName == "milliQanProjLowBkg":
+        plt.loglog(dataset[:,0],dataset[:,1],color="red",linestyle=":",alpha=1,linewidth=2,label="Run 3 bar detector 304 $\\rm{fb}^{-1}$ optimistic")
     elif datasetName == "milliQanRun3Slab":
         plt.loglog(dataset[:,0],dataset[:,1],color="green",linewidth=2,linestyle="--",label="Run 3 slab detector 200 $\\rm{fb}^{-1}$ projection\nPRD 104 032002 (2021)")
     elif  "milliQanRun3Fix" in datasetName:
         plt.loglog(dataset[:,0],dataset[:,1],color="red",linewidth=2,label="Run 3 milliQan bar detector 124 $\\rm{fb}^{-1}$")
     elif datasetName == "SENSEI":
-        plt.loglog(dataset[:,0]/1000,dataset[:,1],color="lightblue",linewidth=2, label="SENSEI\n[PRL 133, 071801 (2024)]")
+        plt.loglog(dataset[:,0]/1000,dataset[:,1],color="lightblue",linewidth=2)
+        # plt.loglog(dataset[:,0]/1000,dataset[:,1],color="lightblue",linewidth=2, label="SENSEI\n[PRL 133, 071801 (2024)]")
     elif datasetName == "BEBC":
         plt.loglog(dataset[:,0],dataset[:,1],color="fuchsia",linewidth=2)
     elif datasetName == "ArgoNeut":
-        plt.loglog(dataset[:,0],dataset[:,1],color="mediumpurple",linewidth=2, label="ArgoNeuT\n[PRL 124, 131801 (2020)]")
+        plt.loglog(dataset[:,0],dataset[:,1],color="mediumpurple",linewidth=2)
+        # plt.loglog(dataset[:,0],dataset[:,1],color="mediumpurple",linewidth=2, label="ArgoNeuT\n[PRL 124, 131801 (2020)]")
     elif datasetName == "FORMOSA_nominal":
         plt.loglog(dataset[:,0],dataset[:,1],color="fuchsia",linewidth=2,label="FORMOSA")
     elif datasetName == "FORMOSA_nominal3layer":
@@ -91,7 +95,8 @@ for datasetName in ["MilliQ","ArgoNeut","SENSEI","CMS","milliQan","milliQanRun3F
     elif datasetName == "moedalRun3":
         plt.loglog(dataset[:,0],dataset[:,1],color="lightblue",linewidth=2,label="Moedal Run 3")
     elif datasetName == "CMS":
-        plt.loglog(dataset[:,0],dataset[:,1],color="orange",linewidth=2,label="CMS FCP 138 $\\rm{fb}^{-1}$\n[PRL 134, 131802 (2025]")
+        plt.loglog(dataset[:,0],dataset[:,1],color="orange",linewidth=2)
+        # plt.loglog(dataset[:,0],dataset[:,1],color="orange",linewidth=2,label="CMS FCP 138 $\\rm{fb}^{-1}$\n[PRL 134, 131802 (2025]")
     else:
         plt.loglog(dataset[:,0],dataset[:,1],color="gray",linewidth=2)
     datasets[datasetName] = dataset

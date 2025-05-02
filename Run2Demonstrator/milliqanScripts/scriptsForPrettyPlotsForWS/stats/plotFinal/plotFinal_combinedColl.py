@@ -69,11 +69,11 @@ for datasetName in ["MilliQ","ArgoNeut","SENSEI","CMS","milliQan","milliQanRun3F
     elif  "milliQanRun3Fix" in datasetName:
         plt.loglog(dataset[:,0],dataset[:,1],color="red",linewidth=2,label="Run 3 milliQan bar detector 124 $\\rm{fb}^{-1}$")
     elif datasetName == "SENSEI":
-        plt.loglog(dataset[:,0]/1000,dataset[:,1],color="lightblue",linewidth=2, label="SENSEI\n[PRL 133, 071801 (2024)]")
+        plt.loglog(dataset[:,0]/1000,dataset[:,1],color="lightskyblue",linewidth=2, label="SENSEI\n[PRL 133, 071801 (2024)]")
     elif datasetName == "BEBC":
         plt.loglog(dataset[:,0],dataset[:,1],color="fuchsia",linewidth=2)
     elif datasetName == "ArgoNeut":
-        plt.loglog(dataset[:,0],dataset[:,1],color="mediumpurple",linewidth=2, label="ArgoNeuT\n[PRL 124, 131801 (2020)]")
+        plt.loglog(dataset[:,0],dataset[:,1],color="steelblue",linewidth=2, label="ArgoNeuT\n[PRL 124, 131801 (2020)]")
     elif datasetName == "FORMOSA_nominal":
         plt.loglog(dataset[:,0],dataset[:,1],color="fuchsia",linewidth=2,label="FORMOSA")
     elif datasetName == "FORMOSA_nominal3layer":
@@ -89,9 +89,9 @@ for datasetName in ["MilliQ","ArgoNeut","SENSEI","CMS","milliQan","milliQanRun3F
     elif datasetName == "FORMOSA_dem":
         plt.loglog(dataset[:,0],dataset[:,1],color="darkmagenta",linewidth=2,label="FORMOSA demonstrator")
     elif datasetName == "moedalRun3":
-        plt.loglog(dataset[:,0],dataset[:,1],color="lightblue",linewidth=2,label="Moedal Run 3")
+        plt.loglog(dataset[:,0],dataset[:,1],color="lightskyblue",linewidth=2,label="Moedal Run 3")
     elif datasetName == "CMS":
-        plt.loglog(dataset[:,0],dataset[:,1],color="orange",linewidth=2,label="CMS FCP 138 $\\rm{fb}^{-1}$\n[PRL 134, 131802 (2025]")
+        plt.loglog(dataset[:,0],dataset[:,1],color="orange",linewidth=2,label="CMS FCP 138 $\\rm{fb}^{-1}$\n[PRL 134, 131802 (2025)]")
     else:
         plt.loglog(dataset[:,0],dataset[:,1],color="gray",linewidth=2)
     datasets[datasetName] = dataset
@@ -99,14 +99,14 @@ plt.fill_between(datasets["Collider"][:,0],datasets["Collider"][:,1],1,color="gr
 if "ArgoNeut" in datasets:
     pass
     AN_interpUp = np.interp(datasets["ArgoNeut"][:,0],datasets["Collider"][:,0],datasets["Collider"][:,1])
-    plt.fill_between(datasets["ArgoNeut"][:,0],datasets["ArgoNeut"][:,1],AN_interpUp,color="mediumpurple",alpha=0.4)
+    plt.fill_between(datasets["ArgoNeut"][:,0],datasets["ArgoNeut"][:,1],AN_interpUp,color="steelblue",alpha=0.4)
 # plt.fill_between(datasets["milliQan"][:,0],datasets["milliQan"][:,1],1,color="red",alpha=0.4)
 SENSEI_interpUp = np.interp(datasets["SENSEI"][:,0]/1000,datasets["Collider"][:,0],datasets["Collider"][:,1])
 SENSEI_interpUp2 = np.interp(datasets["SENSEI"][:,0]/1000,datasetCM[:,0],datasetCM[:,1])
 SENSEI_interpUp3 = np.interp(datasets["SENSEI"][:,1],datasetCM[:,1],datasetCM[:,0])
 SENSEI_interpUp2 = np.interp(datasets["SENSEI"][:,0]/1000,datasets["ArgoNeut"][:,0],datasets["ArgoNeut"][:,1])
 if "SENSEI" in datasets:
-    plt.fill_between(datasets["SENSEI"][:,0]/1000,datasets["SENSEI"][:,1],SENSEI_interpUp2,color="lightblue",alpha=0.4)
+    plt.fill_between(datasets["SENSEI"][:,0]/1000,datasets["SENSEI"][:,1],SENSEI_interpUp2,color="lightskyblue",alpha=0.4)
     # plt.fill_betweenx(datasets["SENSEI"][:,1],SENSEI_interpUp3,datasets["SENSEI"][:,0]/1000,color="sienna",alpha=0.4)
 if "BEBC" in datasets:
     plt.fill_between(datasets["BEBC"][:,0],datasets["BEBC"][:,1],1,color="fuchsia",alpha=0.4)

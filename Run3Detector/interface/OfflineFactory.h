@@ -285,6 +285,7 @@ private:
     double arrayVoltageDRS[100][1024];
     int numChan;
     int numBoards;
+    int numDigis;
     int boardsDRS[100];
     int chansDRS[100];
     Long64_t initTDC=-1;

@@ -12,6 +12,7 @@ OfflineFactory::OfflineFactory(TString inFileName, TString outFileName, TString 
 {
     versionShort = "shorttagplaceholder";
     versionLong = "longtagplaceholder";
+    numDigis = isSlab ? 6 : 5;
     /*
     vector<float> reds ={255./255.,31./255.,235./255.,111./255.,219./255.,151./255.,185./255.,194./255.,127./255.,98./255.,211./255.,69./255.,220./255.,72./255.,225./255.,145./255.,233./255.,125./255.,147./255.,110./255.,209./255.,44};
     vector<float> greens={255./255.,30./255.,205./255.,48./255.,106./255.,206./255.,32./255.,188./255.,128./255.,166./255.,134./255.,120./255.,132./255.,56./255.,161./255.,39./255.,232./255.,23./255.,173./255.,53./255.,45./255.,54};
@@ -1589,7 +1590,7 @@ vector<vector<pair<float,float>>> OfflineFactory::readWaveDataPerEvent(int i){
     vector<vector<pair<float,float> > > allPulseBounds;
     outputTreeContents.boardsMatched = true;
     if(!isSim){
-        for(int idig=0; idig < nDigitizers; idig++){
+        for(int idig=0; idig < numDigis; idig++){
 
             //correct all pulses to the TDC time of digitizer 0
             float thisCorrection = (float)5*((int64_t)evt->digitizers[idig].TDC[0] - (int64_t)evt->digitizers[0].TDC[0]);

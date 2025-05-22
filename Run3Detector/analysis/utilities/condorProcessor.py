@@ -267,7 +267,7 @@ if __name__ == "__main__":
     singularity_image = ''
     exe = 'condor_exe.sh'
     fileListName = 'filelist.json'
-    outputDir = '/data/user/mcarrigan/milliqan/backgroundCutFlow_signalSimTest/'
+    outputDir = '/data/user/mcarrigan/milliqan/bgCutFlow_signalSim_SR1_v9/'
     requirements = ['4', '4000MB', '3000MB'] #CPU, Memory, Disk
     includeDirs = '/data/'
 
@@ -296,7 +296,7 @@ if __name__ == "__main__":
     createTarFile()
 
     if sim:
-        filesList = getSimFilesLocal(dataDir='/data/user/mcarrigan/milliqan/pulseInjectedSim_v3/trees/', debug=False)
+        filesList = getSimFilesLocal(dataDir='/data/user/mcarrigan/milliqan/pulseInjectedSim_v5/trees/', debug=False)
     else:
         filesList = getFilesLocal()
 

@@ -80,6 +80,16 @@ def getRunTimes(df):
 
     return total_time
 
+@mqCut
+def energyInfo(self):
+    maxEnergy = ak.max(self.events['energyCal'][self.events['type']==0], axis=1, keepdims=True)
+    minEnergy = ak.min(self.events['energyCal'][self.events['type']==0], axis=1, keepdims=True)
+    energyRatio = maxEnergy/minEnergy
+
+    self.events['energyRatioFinal'] = energyRatio
+    self.events['energyMinFinal'] = minEnergy
+    self.events['energyMaxFinal'] = maxEnergy
+
 
 if __name__ == "__main__":
 
@@ -134,15 +144,17 @@ if __name__ == "__main__":
     #define the milliqan cuts object
     mycuts = milliqanCuts()
 
+    setattr(milliqanCuts, 'energyInfo', energyInfo)
+
+
     #set the directory with milliqan configs
-    mycuts.configDir = '/../../configuration/'
-    #mycuts.configDir = '/'
+    #mycuts.configDir = '/../../configuration/'
+    mycuts.configDir = '/'
 
     #require pulses are in trigger window
     centralTimeCut = getCutMod(mycuts.centralTime, mycuts, 'centralTimeCut', cut=True)
 
     #require pulses are not pickup
-    #pickupCut = getCutMod(mycuts.pickupCut, mycuts, 'pickupCut', cut=True, tight=True)
     pickupCut = getCutMod(mycuts.pickupCutCustom, mycuts, 'pickupCut', cut=True)
     noiseCut = getCutMod(mycuts.noiseCut, mycuts, 'noiseCut', cut=True)
     darkRateCut = getCutMod(mycuts.darkRateCut, mycuts, 'darkRateCut', cut=True)
@@ -158,7 +170,6 @@ if __name__ == "__main__":
 
     #panel veto
     panelVeto = getCutMod(mycuts.panelVeto, mycuts, 'panelVeto', cut=True, nPECut=None)
-    #panelVeto = getCutMod(mycuts.panelVetoMod, mycuts, 'panelVeto', cut=True, areaCut=80e3, nPECut=None, panelsAllowed=1)
 
     #first pulse max
     firstPulseMax = getCutMod(mycuts.firstPulseMax, mycuts, 'firstPulseMax', cut=True)
@@ -172,20 +183,19 @@ if __name__ == "__main__":
     #four in line cut
     straightLineCutMod = getCutMod(mycuts.straightLineCut, mycuts, 'straightLineCutMod', cut=True)
 
-    #npe max-min < 10 cut
-    nPEMaxMin = getCutMod(mycuts.nPEMaxMin, mycuts, 'nPEMaxMin', nPERatioCut=20, cut=True, straight=False)
+    #energy max-min < 10 cut
     energyMaxMin = getCutMod(mycuts.energyMaxMin, mycuts, 'energyMaxMin', energyRatioCut=10, cut=True, straight=False)
 
-    nPEMaxCut = getCutMod(mycuts.nPEMaxCut, mycuts, 'nPEMaxCut', nPECut=20, cut=True)
-    energyMaxCut2p5 = getCutMod(mycuts.energyMaxCut, mycuts, 'energyMaxCut2p5', energyCut=55, cut=True)
+    #max energy in bars SR1
+    energyMaxCut = getCutMod(mycuts.energyMaxCut, mycuts, 'energyMaxCut', energyCut=1000, cut=True)
 
     #time max-min < 15 cut
     timeMaxMinNoCut = getCutMod(mycuts.timeMaxMin, mycuts, 'timeMaxMinPlot', timeCut=20)
     timeMaxMin = getCutMod(mycuts.timeMaxMin, mycuts, 'timeMaxMin', timeCut=20, cut=True, straight=True)
 
-    #veto events with nPE>50 in SR2
-    beamMuonPanelVeto50 = getCutMod(mycuts.beamMuonPanelVeto, mycuts, 'beamMuonPanelVeto50', cut=True, nPECut=50)
-    beamMuonPanelVeto50NoCut = getCutMod(mycuts.beamMuonPanelVeto, mycuts, 'beamMuonPanelVeto50NoCut', cut=False, nPECut=50)
+    #veto events with nPE>70 in SR2
+    beamMuonPanelVeto70 = getCutMod(mycuts.beamMuonPanelVeto, mycuts, 'beamMuonPanelVeto70', cut=True, nPECut=70)
+    beamMuonPanelVeto70NoCut = getCutMod(mycuts.beamMuonPanelVeto, mycuts, 'beamMuonPanelVeto70NoCut', cut=False, nPECut=0)
     
     #veto events with large hit in front/back panels, SR1
     beamMuonPanelVeto = getCutMod(mycuts.beamMuonPanelVeto, mycuts, 'beamMuonPanelVeto', cut=True, nPECut=0)
@@ -200,7 +210,7 @@ if __name__ == "__main__":
     sidebandRMSCut = getCutMod(mycuts.sidebandRMSCut, mycuts, 'sidebandRMSCut', cutVal=2, cut=True)
 
     #use first pulse in a channel only
-    firstPulseCut = getCutMod(mycuts.firstPulseCut, mycuts, 'firstPulseCut', cut=True)
+    firstPulseCut = getCutMod(mycuts.firstPulseCut, mycuts, 'firstPulseCut', cut=True, calculate=True)
 
     #cut out all pulses except bars
     barsCut = getCutMod(mycuts.barCut, mycuts, 'barCut', cut=True)
@@ -233,8 +243,6 @@ if __name__ == "__main__":
     h_nBarsAfterCut = r.TH1F('h_nBarsAfterCut', 'Number of Bars After Bar Cut;Bars;Events', 64, 0, 64)
     h_nBarsInWindowBefore = r.TH1F('h_nBarsInWindowBefore', 'Number of Bars within Timing Window Before Cut;Bars;Events', 20, 0, 20)
     h_nBarsInWindowAfter = r.TH1F("h_nBarsInWindowAfter", 'Number of Bars Within Timing Window After Cut;Bars;Events', 20, 0, 20)
-    h_sidebandsBefore = r.TH1F('h_sidebandsBefore', 'Sideband RMS Before Cut;Sideband RMS;Events', 50, 0, 10)
-    h_sidebandsAfter = r.TH1F('h_sidebandsAfter', 'Sideband RMS After Cut;Sideband RMS;Events', 50, 0, 10)
     h_panelNPEBefore = r.TH1F('h_panelNPEBefore', 'nPE in Panels Before Cut;nPE;Panel Hits', 100, 0, 1e3)
     h_panelAreaBefore = r.TH1F('h_panelAreaBefore', 'Area in Panels Before Cut;Area;Panel Hits', 200, 0, 100e3)
     h_panelNPEAfter = r.TH1F('h_panelNPEAfter', 'nPE in Panels After Cut;nPE;Panel Hits', 100, 0, 1e3)
@@ -271,34 +279,20 @@ if __name__ == "__main__":
     h_timeDiff = r.TH1F('h_timeDiff', 'Time Difference (Max-Min);Time Diff (ns);Events', 500, 0, 500)
     h_ABCD = r.TH2F('h_ABCD', 'Straight Line vs Time Window Cuts for ABCD;Straight Line Paths;Max-Min Time (ns)', 2, 0, 2, 300, 0, 300)
     h_ABCD2 = r.TH2F('h_ABCD2', 'Max Panel NPE vs N Bars Hit;Max Panel NPE;N Bars Hit', 100, 0, 500, 20, 0, 20)
-    h_eventWeights = r.TH1F('h_eventWeights', 'Event Weights', 200, 0, 200)
     h_nPERatio = r.TH1F('h_nPERatio', 'Ratio of Max/Min nPE', 100, 0, 100)
     h_nPEVsTime = r.TH2F('h_nPEVsTime', 'Time vs NPE of Pulses;Time [ns];nPE', 200, 1000, 1400, 100, 0, 300)
-    h_energyDeposited = r.TH1F('h_energyDeposited', 'Energy Deposited in Bars;Energy [keV];Pulses', 700, 0, 2800)
-    h_nPEDeposited = r.TH1F('h_nPEDeposited', 'nPE Deposited in Bars;NPE;Pulses', 100, 0, 1000)
-
-    h_nPEFrontPanel = r.TH1F('h_nPEFrontPanel', 'NPE Front Panel;NPE;Pulses', 75, 0, 150)
-    h_nPEBackPanel = r.TH1F('h_nPEBackPanel', 'NPE Back Panel;NPE;Pulses', 75, 0, 150)
-    h_nPEPanels = r.TH2F('h_nPEPanels', 'NPE of Panels;Front Panel NPE;Back Panel NPE', 76, -2, 150, 76, -2, 150)
-    h_numPanels = r.TH1F('h_numPanels', 'Number of Front/Back Panels;Panels Hit;Events', 4, 0, 4)
-
+    h_energyDeposited = r.TH1F('h_energyDeposited', 'Energy Deposited in Bars;Energy [keV];Pulses', 700, 0, 700)
+    h_energyRatio = r.TH1F('h_energyRatio', 'Ratio of Max/Min Energy Deposited in Bars;Max/Min Energy;Events', 50, 0, 100)
+    h_energyRatioVsMinEnergy = r.TH2F('h_energyRatioVsMinEnergy', 'Ratio of Max/Min Energy vs Min Energy;Min Energy [keV];Max/Min Energy', 500, 0, 1000, 50, 0, 100)
+    h_energyRatioVsMaxEnergy = r.TH2F('h_energyRatioVsMaxEnergy', 'Ratio of Max/Min Energy vs Max Energy;Max Energy [keV];Max/Min Energy', 500, 0, 1000, 50, 0, 100)
     h_TimeDiffStraight = r.TH1F('h_TimeDiffStraight', 'Max-Min Time Difference Straight Paths', 1200, 0, 2400)
     h_TimeDiffNotStraight = r.TH1F('h_TimeDiffNotStraight', 'Max-Min Time Difference Non Straight Paths', 1200, 0, 2400)
-    h_eventWeights = TH1F('h_eventWeights', 'Event Weight', 1, 0, 1)
-
+    h_eventWeights = r.TH1F('h_eventWeights', 'Event Weights for MC', 1, 0, 1)
+    
     #define milliqan plotter
     myplotter = milliqanPlotter()
     myplotter.dict.clear()
 
-    myplotter.addHistograms(h_timeDiff1, 'timeDiff')
-    myplotter.addHistograms(h_timeDiff2, 'timeDiff')
-    myplotter.addHistograms(h_timeDiff3, 'timeDiff')
-    myplotter.addHistograms(h_timeDiff4, 'timeDiff')
-    myplotter.addHistograms(h_timeDiff5, 'timeDiff')
-    myplotter.addHistograms(h_timeDiff6, 'timeDiff')
-    myplotter.addHistograms(h_timeDiff7, 'timeDiff')
-    myplotter.addHistograms(h_timeDiff8, 'timeDiff')
-    myplotter.addHistograms(h_timeDiff9, 'timeDiff')
     myplotter.addHistograms(h_nBars, 'countNBars', 'first')
     myplotter.addHistograms(h_nLayersBeforeAllLayers, 'nLayers', 'first')
     myplotter.addHistograms(h_nLayersAfterAllLayers, 'nLayers', 'first')
@@ -338,21 +332,18 @@ if __name__ == "__main__":
     myplotter.addHistograms(h_TimeDiffStraight, 'timeMaxMinPlotDiff', 'straightLineCutNew')
     myplotter.addHistograms(h_TimeDiffNotStraight, 'timeMaxMinPlotDiff', 'straightLineCutNew')
     myplotter.addHistograms(h_nPEVsTime, ['timeFit_module_calibrated', 'nPE'])
+    myplotter.addHistograms(h_energyDeposited, 'energyCal')
+    myplotter.addHistograms(h_energyRatio, 'energyRatioFinal')
+    myplotter.addHistograms(h_energyRatioVsMinEnergy, ['energyMinFinal', 'energyRatioFinal'])
+    myplotter.addHistograms(h_energyRatioVsMaxEnergy, ['energyMaxFinal', 'energyRatioFinal'])
     myplotter.addHistograms(h_eventWeights, 'eventWeight', 'weight')
-    myplotter.addHistograms(h_energyDeposited, 'barEnergy')
-    myplotter.addHistograms(h_nPEDeposited, 'barNPE')
-    myplotter.addHistograms(h_nPEFrontPanel, 'frontNPE')
-    myplotter.addHistograms(h_nPEBackPanel, 'backNPE')
-    myplotter.addHistograms(h_nPEPanels, ['frontNPE', 'backNPE'])
-    myplotter.addHistograms(h_numPanels, 'nPanels')
-
     if SR==2:
         myplotter.addHistograms(h_ABCD2, ['maxPanelNPE', 'countNBars'])
+
 
     if SR==1:
         cutflow = [mycuts.totalEventCounter, 
                 mycuts.fullEventCounter,
-                nPEScaling,
                 energyScaling,
                 mycuts.timeDiff,
                 boardMatchCut, 
@@ -379,13 +370,11 @@ if __name__ == "__main__":
                
                 beamMuonPanelVeto, #SR1 only
 
-                energyMaxCut2p5, #SR1 only
+                barsCut,
+
+                energyMaxCut, #SR1 only
 
                 myplotter.dict['h_nBars'],
-
-                firstPulseMax,
-
-                vetoEarlyPulse,
                 
                 energyMaxMin,
 
@@ -406,27 +395,29 @@ if __name__ == "__main__":
                 myplotter.dict['h_straightHeightAfter'],
                 myplotter.dict['h_straightChannelAfter'],
                 myplotter.dict['h_straightNumPaths'],
-                myplotter.dict['h_nPEVsTime'],
+                #myplotter.dict['h_nPEVsTime'],
                 
                 timeMaxMin,
                 myplotter.dict['h_minTimeBefore'],
                 myplotter.dict['h_maxTimeBefore'],
                 myplotter.dict['h_minTimeAfter'],
                 myplotter.dict['h_maxTimeAfter'],
-                mycuts.panelInfo,
+                mycuts.energyInfo,
             ]
 
     else:
         cutflow = [mycuts.totalEventCounter, 
                 mycuts.fullEventCounter,
-                nPEScaling,
                 energyScaling,
                 mycuts.timeDiff,
                 boardMatchCut, 
                 pickupCut, 
+                noiseCut, 
+                darkRateCut,                
                 firstPulseCut,
                 centralTimeCut,
                 panelVeto,                
+                mycuts.countNBars, 
 
                 mycuts.nLayersCut,
 
@@ -438,21 +429,22 @@ if __name__ == "__main__":
 
                 frontBackPanelRequired, #SR2 only
                
-                sidebandRMSCut,
+                #sidebandRMSCut,
 
-                firstPulseMax,
+                myplotter.dict['h_nBars'],
 
-                vetoEarlyPulse,
-                
+                #firstPulseMax,
+
+                #vetoEarlyPulse,
+
                 energyMaxMin,
-
                 #include versions of these selections w/o cutting to make ABCD plot
                 mycuts.straightLineCut, 
                 timeMaxMinNoCut,
                 myplotter.dict['h_ABCD'],
                 myplotter.dict['h_TimeDiffStraight'],
                 myplotter.dict['h_TimeDiffNotStraight'],
-
+                   
                 myplotter.dict['h_straightTimeBefore'],
                 myplotter.dict['h_straightNPEBefore'],
                 myplotter.dict['h_straightHeightBefore'],
@@ -463,8 +455,7 @@ if __name__ == "__main__":
                 myplotter.dict['h_straightHeightAfter'],
                 myplotter.dict['h_straightChannelAfter'],
                 myplotter.dict['h_straightNumPaths'],
-                myplotter.dict['h_nPEVsTime'],
-
+                
                 timeMaxMin,
                 myplotter.dict['h_minTimeBefore'],
                 myplotter.dict['h_maxTimeBefore'],
@@ -472,13 +463,12 @@ if __name__ == "__main__":
                 myplotter.dict['h_maxTimeAfter'],
 
                 mycuts.countNBars,
-                beamMuonPanelVeto50NoCut, 
+                beamMuonPanelVeto70NoCut, 
                 myplotter.dict['h_ABCD2'],
-               
+                   
                 nBarsCut, #move cut here for SR2 only
-                beamMuonPanelVeto50, #SR2 only
-                mycuts.panelInfo,
-
+                beamMuonPanelVeto70, #SR2 only
+                mycuts.energyInfo,
             ]
 
     for key, value in myplotter.dict.items():
@@ -498,8 +488,6 @@ if __name__ == "__main__":
     myiterator.run()
 
     myschedule.cutFlowPlots()
-
-    myschedule.plotEventWeight()
 
     #save plots
     myplotter.saveHistograms(outputFile)

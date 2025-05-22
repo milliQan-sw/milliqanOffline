@@ -173,6 +173,8 @@ class milliqanProcessor():
             _, events['tTrigger'] = ak.broadcast_arrays(events[broadcastChan], events['tTrigger'])
             _, events['event'] = ak.broadcast_arrays(events[broadcastChan], events['event'])
             _, events['boardsMatched'] = ak.broadcast_arrays(events[broadcastChan], events['boardsMatched'])
+            if self.sim:
+                _, events['eventWeight'] = ak.broadcast_arrays(events[broadcastChan], events['eventWeight'])
 
             if self.max_events and total_events >= self.max_events: break
 

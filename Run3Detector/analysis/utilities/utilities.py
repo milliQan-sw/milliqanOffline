@@ -68,6 +68,46 @@ def loadJson(jsonFile):
     lumis = pd.DataFrame(data['data'], columns=data['columns'])
     return lumis
 
+def mass_to_float(s):
+    """
+    Converts a string of the form 'mXpY' into a float.
+    
+    Args:
+        s (str): The input string in the format 'mXpY', where X and Y are digits.
+    
+    Returns:
+        float: The corresponding float value.
+    """
+    if not s.startswith("m") or "p" not in s:
+        raise ValueError("Input string must be in the format 'mXpY'.")
+
+    # Extract parts
+    integer_part = s[1:s.index("p")]  # Part after 'm' and before 'p'
+    fractional_part = s[s.index("p") + 1:]  # Part after 'p'
+
+    # Combine and convert to float
+    return float(f"{integer_part}.{fractional_part}")
+
+def charge_to_float(s):
+    """
+    Converts a string of the form 'mXpY' into a float.
+    
+    Args:
+        s (str): The input string in the format 'mXpY', where X and Y are digits.
+    
+    Returns:
+        float: The corresponding float value.
+    """
+    if not s.startswith("c") or "p" not in s:
+        raise ValueError("Input string must be in the format 'cXpY'.")
+
+    # Extract parts
+    integer_part = s[1:s.index("p")]  # Part after 'm' and before 'p'
+    fractional_part = s[s.index("p") + 1:]  # Part after 'p'
+
+    # Combine and convert to float?
+    return float(f"{integer_part}.{fractional_part}")
+
 #################################################################
 ################ condor function definitions ####################
 

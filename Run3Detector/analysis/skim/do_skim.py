@@ -27,8 +27,8 @@ goodRuns = pd.read_json('goodRunsList.json', orient = 'split', compression = 'in
 
 ########################################################
 ################### Settings ##########################
-directory = '/store/user/milliqan/trees/v35/bar/1400/'
-outputName = 'MilliQan_Run1400_v35_zeroBias_beamOff_tight.root'
+directory = '/store/user/milliqan/trees/v36/bar/1400/'
+outputName = 'MilliQan_Run1400_v36_zeroBias_beamOff_tight.root'
 beam = False
 goodRun = 'goodRunTight'
 skimType = 'zeroBias'

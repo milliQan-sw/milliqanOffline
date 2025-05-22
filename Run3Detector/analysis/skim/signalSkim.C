@@ -72,14 +72,14 @@ void myLooper::Loop( TString outFile, TString lumi, TString runTime)
       bool panelHit = false;
 
       for (unsigned long k=0; k<chan->size(); k++) {
-            if (type->at(k) == 2) {
-                  panelHit = true;
-                  break;
-            }
             if (pickupFlagTight->at(k)) continue;
             if (type->at(k) != 0) continue;
             if (ipulse->at(k) != 0) continue;
             if (timeFit_module_calibrated->at(k) < 900 || timeFit_module_calibrated->at(k) > 1500) continue;
+            if (type->at(k) == 2) {
+                  panelHit = true;
+                  break;
+            }
             if (height->at(k) < 15) continue;
 
             straightPathsHit[row->at(k)*4+column->at(k)][layer->at(k)] = true;

@@ -3,10 +3,10 @@
 # directory, outputFile, beam, goodRun, skim
 
 beam="False"
-goodRun="goodRunTight"
-skim="zeroBias"
+goodRun="goodRunMedium"
+skim="signal"
 
-for run in {1300..1900..100}; do
+for run in {1100..1100..100}; do
     echo "Processing run $run, beam $beam, goodRun $goodRun, and skim $skim"
 
     # Determine beam state
@@ -28,7 +28,7 @@ for run in {1300..1900..100}; do
     fi
 
     # Run the Python script
-    python3 -u do_skim.py /store/user/milliqan/trees/v35/bar/${run}/ \
-        MilliQan_Run${run}_v35_${skim}_${beam_state}_${goodRunCriteria}.root \
+    python3 -u do_skim.py /store/user/milliqan/trees/v36/bar/${run}/ \
+        MilliQan_Run${run}_v36_${skim}_${beam_state}_${goodRunCriteria}.root \
         $beam $goodRun $skim
 done

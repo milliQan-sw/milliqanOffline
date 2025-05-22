@@ -169,8 +169,11 @@ def nm1Plots(self, cutName='nm1Cuts'):
 
     rowDiff = meanRow3 - meanRow0
     colDiff = meanCol3 - meanCol0
-
     slope = np.sqrt(rowDiff*rowDiff + colDiff*colDiff)
+
+    _, rowDiff = ak.broadcast_arrays(self.events['npulses'], rowDiff)
+    _, colDiff = ak.broadcast_arrays(self.events['npulses'], colDiff)
+    _, slope = ak.broadcast_arrays(self.events['npulses'], slope)
 
     self.events[cutName+'StraightRowDiff'] = rowDiff
     self.events[cutName+'StraightColDiff'] = colDiff
@@ -183,8 +186,8 @@ def nm1Plots(self, cutName='nm1Cuts'):
     self.events[cutName+'TimeMaxMin'] = timeDiff
 
     #nBars hit
-    nBars = ak.count(self.events['chan'][self.events['type']==0], axis=1)
-    self.events[cutName+'NBars'] = nBars
+    #nBars = ak.count(self.events['chan'][self.events['type']==0], axis=1)
+    #self.events[cutName+'NBars'] = nBars
 
     #max panel nPE
     maxPanelNPE = ak.max(self.events['nPE'][self.events['type']==1], axis=1, keepdims=True)
@@ -206,11 +209,12 @@ if __name__ == "__main__":
     if blind:
         blindVar = 'energyMaxMin'
 
-    if len(sys.argv) ==2:
+    if len(sys.argv) <=2:
         filelist = sys.argv[1]
-        mass = '0p01'
-        charge = '0p0037'
+        mass = 'test'
+        charge = 'test'
         job=0
+        filelist = [sys.argv[1]]
     else:
         #get the filelist and job number
         filelist = sys.argv[1]
@@ -222,7 +226,7 @@ if __name__ == "__main__":
         mass = filelist[0].split('/')[-1].split('_')[1]
         charge = filelist[0].split('/')[-1].split('_')[-1].split('.')[0]
 
-    SR=1
+    SR=2
     outputFile = f'bgCutFlow_signalSim_{mass}_{charge}_{job}.root'
     beam = False
     skim = True
@@ -241,7 +245,8 @@ if __name__ == "__main__":
     #define the necessary branches to run over
         #define the necessary branches to run over
     branches = ['event', 'tTrigger', 'boardsMatched', 'pickupFlag', 'pickupFlagTight', 'fileNumber', 'runNumber', 'type', 'ipulse', 'nPE', 'chan',
-                'time_module_calibrated', 'timeFit_module_calibrated', 'row', 'column', 'layer', 'height', 'area', 'npulses', 'sidebandRMS', 'eventWeight']
+                'time_module_calibrated', 'timeFit_module_calibrated', 'row', 'column', 'layer', 'height', 'area', 'npulses', 'sidebandRMS', 'eventWeight',
+                'riseSamples', 'fallSamples', 'prePulseMean', 'prePulseRMS', 'sidebandMean', 'duration']
 
 
     #define the milliqan cuts object
@@ -257,7 +262,9 @@ if __name__ == "__main__":
     centralTimeCut = getCutMod(mycuts.centralTime, mycuts, 'centralTimeCut', cut=True)
 
     #require pulses are not pickup
-    pickupCut = getCutMod(mycuts.pickupCut, mycuts, 'pickupCut', cut=True, tight=True)
+    pickupCut = getCutMod(mycuts.pickupCutCustom, mycuts, 'pickupCut', cut=True)
+    noiseCut = getCutMod(mycuts.noiseCut, mycuts, 'noiseCut', cut=True)
+    darkRateCut = getCutMod(mycuts.darkRateCut, mycuts, 'darkRateCut', cut=True)
 
     #require that all digitizer boards are matched
     boardMatchCut = getCutMod(mycuts.boardsMatched, mycuts, 'boardMatchCut', cut=True, branches=branches)
@@ -270,7 +277,6 @@ if __name__ == "__main__":
 
     #panel veto
     panelVeto = getCutMod(mycuts.panelVeto, mycuts, 'panelVeto', cut=True, nPECut=None)
-    #panelVeto = getCutMod(mycuts.panelVetoMod, mycuts, 'panelVeto', cut=True, areaCut=80e3, nPECut=None, panelsAllowed=1)
 
     #first pulse max
     firstPulseMax = getCutMod(mycuts.firstPulseMax, mycuts, 'firstPulseMax', cut=True)
@@ -282,23 +288,21 @@ if __name__ == "__main__":
     straightLineMaxMin = getCutMod(mycuts.straightLineCut, mycuts, 'straightLineMaxMin')
 
     #four in line cut
-    straightLineCutMod = getCutMod(mycuts.straightLineCut, mycuts, 'straightLineCutMod', cut=True)
+    straightLineCutMod = getCutMod(mycuts.straightLineCut, mycuts, 'straightLineCut', cut=True)
 
     #npe max-min < 10 cut
-    nPEMaxMin = getCutMod(mycuts.nPEMaxMin, mycuts, 'nPEMaxMin', nPERatioCut=20, cut=True, straight=False)
     energyMaxMin = getCutMod(mycuts.energyMaxMin, mycuts, 'energyMaxMin', energyRatioCut=10, cut=True, straight=False)
 
-
-    nPEMaxCut = getCutMod(mycuts.nPEMaxCut, mycuts, 'nPEMaxCut', nPECut=20, cut=True)
-    energyMaxCut2p5 = getCutMod(mycuts.energyMaxCut, mycuts, 'energyMaxCut2p5', energyCut=2.5, cut=True)
+    #max energy in bars SR1
+    energyMaxCut = getCutMod(mycuts.energyMaxCut, mycuts, 'energyMaxCut', energyCut=1000, cut=True)
 
     #time max-min < 15 cut
     timeMaxMinNoCut = getCutMod(mycuts.timeMaxMin, mycuts, 'timeMaxMinPlot', timeCut=20)
     timeMaxMin = getCutMod(mycuts.timeMaxMin, mycuts, 'timeMaxMin', timeCut=20, cut=True, straight=True)
 
-    #veto events with nPE>50 in SR2
-    beamMuonPanelVeto50 = getCutMod(mycuts.beamMuonPanelVeto, mycuts, 'beamMuonPanelVeto50', cut=True, nPECut=50)
-    beamMuonPanelVeto50NoCut = getCutMod(mycuts.beamMuonPanelVeto, mycuts, 'beamMuonPanelVeto50NoCut', cut=False, nPECut=50)
+    #veto events with nPE>70 in SR2
+    beamMuonPanelVeto70 = getCutMod(mycuts.beamMuonPanelVeto, mycuts, 'beamMuonPanelVeto70', cut=True, nPECut=70)
+    beamMuonPanelVeto70NoCut = getCutMod(mycuts.beamMuonPanelVeto, mycuts, 'beamMuonPanelVeto70NoCut', cut=False, nPECut=0)
     
     #veto events with large hit in front/back panels, SR1
     beamMuonPanelVeto = getCutMod(mycuts.beamMuonPanelVeto, mycuts, 'beamMuonPanelVeto', cut=True, nPECut=0)
@@ -324,18 +328,6 @@ if __name__ == "__main__":
     nPEScaling = getCutMod(mycuts.applyNPEScaling, mycuts, 'nPEScaling', sim=True)
     energyScaling = getCutMod(mycuts.applyEnergyScaling, mycuts, 'energyScaling', sim=True)
 
-    #define histograms
-    h_timeDiff1 = r.TH1F('h_timeDiff1', "Layer 3 and 0 Time Difference", 100, -50, 50)
-    h_timeDiff2 = r.TH1F('h_timeDiff2', "Layer 3 and 0 Time Difference", 100, -50, 50)
-    h_timeDiff3 = r.TH1F('h_timeDiff3', "Layer 3 and 0 Time Difference", 100, -50, 50)
-    h_timeDiff4 = r.TH1F('h_timeDiff4', "Layer 3 and 0 Time Difference", 100, -50, 50)
-    h_timeDiff5 = r.TH1F('h_timeDiff5', "Layer 3 and 0 Time Difference", 100, -50, 50)
-    h_timeDiff6 = r.TH1F('h_timeDiff6', "Layer 3 and 0 Time Difference", 100, -50, 50)
-    h_timeDiff7 = r.TH1F('h_timeDiff7', "Layer 3 and 0 Time Difference", 100, -50, 50)
-    h_timeDiff8 = r.TH1F('h_timeDiff8', "Layer 3 and 0 Time Difference", 100, -50, 50)
-    h_timeDiff9 = r.TH1F('h_timeDiff9', "Layer 3 and 0 Time Difference", 100, -50, 50)
-
-    h_nBars = r.TH1F('h_nBars', "Number of Bars per Event;# Bars;# Events", 64, 0, 64)
     h_nLayersBeforeAllLayers = r.TH1F('h_nLayersBeforeAllLayers', 'Number of Layers Hit Before N Layers Cut;Layers;Events', 5, 0, 5)
     h_nLayersAfterAllLayers = r.TH1F('h_nLayersAfterAllLayers', 'Number of Layers Hit After N Layers Cut;Layers;Events', 5, 0, 5)
     h_nHitsPerLayerBefore = r.TH1F('h_nHitsPerLayerBefore', 'Number of Hits Per Layer Before All Layers Hit Cut;nHits per Layer;Events*Layers', 16, 0, 16)
@@ -395,10 +387,10 @@ if __name__ == "__main__":
     h_frontBackNPE = r.TH1F('h_frontBackNPE', 'NPE of Front/Back Panel Hits;NPE;Pulses', 200, 0, 600)
     h_nPulses = r.TH1F('h_nPulses', 'Number of Channels w/ Pulses;# Channels;Events', 80, 0, 80)
     h_nPE = r.TH1F('h_nPE', 'NPE of Channels Hit;nPE;Pulses', 100, 0, 400)
-    h_energy = r.TH1F('h_energy', 'Energy of Channels Hit;Energy;Pulses',100, 0, 20)
+    h_energy = r.TH1F('h_energy', 'Energy of Channels Hit;Energy;Pulses',100, 0, 1000)
     h_RMS = r.TH1F('h_RMS', 'Sideband RMS of Channels;RMS;Pulses;', 40, 0, 20)
-    h_energyRatio = r.TH1F('h_energyRatio', 'Ratio of Max/Min Energy;Ratio;Events', 100, 0, 50)
-    h_energyMaxMin = r.TH2F('h_energyMaxMin', 'Energy Max/Min;Min Energy;Max Energy', 100, 0, 100, 100, 0, 100)
+    h_energyRatio = r.TH1F('h_energyRatio', 'Ratio of Max/Min Energy;Ratio;Events', 100, 0, 100)
+    h_energyMaxMin = r.TH2F('h_energyMaxMin', 'Energy Max/Min;Min Energy;Max Energy', 250, 0, 1000, 250, 0, 1000)
     h_pulseTime = r.TH1F('h_pulseTime', 'Time of Pulses;Time [ns];Pulses', 600, 0, 2400)
     h_sidePanels = r.TH1F('h_sidePanels', 'Number of Top/Side Panels Hit', 7, 0, 7)
     h_sidePanelsNPE = r.TH1F('h_sidePanelsNPE', 'NPE in of Top/Side Panels;nPE;Pulses', 100, 0, 100)
@@ -408,14 +400,11 @@ if __name__ == "__main__":
     h_straightColDiff = r.TH1F('h_straightColDiff', "Col Diff Between Layer 3 and Layer 0;Col Diff;Events", 8, -4, 4)
     h_straightDist = r.TH1F('h_straightDist', "Row/Col Distance Between Layer 3 and Layer 0;#sqrt(#Delta(row)^{2} + #Delta(col)^{2});Events", 8, -4, 4)
     h_timeMaxMin = r.TH1F('h_timeMaxMin', 'Max-Min Time;#DeltaT(max-min) [ns];Events', 500, 0, 500)
-    h_nBars = r.TH1F('h_nBars', 'Number of Bars Hit; # Bars Hit;Events', 64, 0, 64)
     h_maxPanelNPE = r.TH1F('h_maxPanelNPE', 'Max NPE in Front/Back Panel;NPE;Events', 250, 0, 500)
 
     #define milliqan plotter
     myplotter = milliqanPlotter()
     myplotter.dict.clear()
-
-    myplotter.addHistograms(h_ABCD, ['straightLineCutPlot', 'timeMaxMinPlotDiff'], 'straightLineCutNew')
     
     #N-1 Plots:
     myplotter.addHistograms(h_nLayers, 'nm1CutsNLayers', 'first')
@@ -433,11 +422,10 @@ if __name__ == "__main__":
     myplotter.addHistograms(h_sidePanelsNPE, 'nm1CutsSidePanelNPE')
     myplotter.addHistograms(h_nPEvsArea, ['nPE', 'area'])
     myplotter.addHistograms(h_nPEvsHeight, ['nPE', 'height'])
-    myplotter.addHistograms(h_straightRowDiff, 'nm1CutsStraightRowDiff')
-    myplotter.addHistograms(h_straightColDiff, 'nm1CutsStraightColDiff')
-    myplotter.addHistograms(h_straightDist, 'nm1CutsStraightSlope')
+    myplotter.addHistograms(h_straightRowDiff, 'nm1CutsStraightRowDiff', 'first')
+    myplotter.addHistograms(h_straightColDiff, 'nm1CutsStraightColDiff', 'first')
+    myplotter.addHistograms(h_straightDist, 'nm1CutsStraightSlope', 'first')
     myplotter.addHistograms(h_timeMaxMin, 'nm1CutsTimeMaxMin')
-    myplotter.addHistograms(h_nBars, 'nm1CutsNBars')
     myplotter.addHistograms(h_maxPanelNPE, 'nm1CutsMaxPanelNPE')
 
     if SR==2:
@@ -446,10 +434,12 @@ if __name__ == "__main__":
     if SR==1:
         cutflow = [mycuts.totalEventCounter, 
                 mycuts.fullEventCounter,
-                nPEScaling,
-                energyScaling,
+                energyScaling,                
+                mycuts.timeDiff,
                 boardMatchCut, 
                 pickupCut, 
+                noiseCut, 
+                darkRateCut,
                 firstPulseCut,
                 centralTimeCut,
                 panelVeto,                
@@ -460,22 +450,12 @@ if __name__ == "__main__":
                 hitInAllLayers,
 
                 nBarsCut, #SR1 only
-               
+
                 beamMuonPanelVeto, #SR1 only
 
-                barsCut,
+                energyMaxCut, #SR1 only
 
-                energyMaxCut2p5, #SR1 only
-
-                sidebandRMSCut,
-
-                firstPulseMax,
-
-                vetoEarlyPulse,
-                
                 energyMaxMin,
-                
-                mycuts.straightLineCut, 
 
                 straightLineCutMod,
                 
@@ -487,10 +467,12 @@ if __name__ == "__main__":
     else:
         cutflow = [mycuts.totalEventCounter, 
                 mycuts.fullEventCounter,
-                nPEScaling,
                 energyScaling,
+                mycuts.timeDiff,
                 boardMatchCut, 
                 pickupCut, 
+                noiseCut, 
+                darkRateCut,                
                 firstPulseCut,
                 centralTimeCut,
                 panelVeto,                
@@ -501,23 +483,16 @@ if __name__ == "__main__":
                 hitInAllLayers,
 
                 frontBackPanelRequired, #SR2 only
-               
-                sidebandRMSCut,
-
-                firstPulseMax,
-
-                vetoEarlyPulse,
 
                 energyMaxMin,
-
-                mycuts.straightLineCut, 
-
+                                
                 straightLineCutMod,
-                   
-                timeMaxMin,
 
+                timeMaxMin,
+                   
                 nBarsCut, #move cut here for SR2 only
-                beamMuonPanelVeto50, #SR2 only
+
+                beamMuonPanelVeto70, #SR2 only
 
                 mycuts.nm1Plots,
 
@@ -528,26 +503,25 @@ if __name__ == "__main__":
             cutflow.append(value)
 
     if SR==1:
-        nm1Cuts = {'allCuts':-1, 'pickupCut':5, 'firstPulse':6, 'centralTiming':7, 'panelVeto':8, 'hitInAllLayers':11, 
-               'nBarsCut':12, 'beamMuonPanelVeto':13, 'barsCut':14, 'energyMaxCut2p5':15, 'sidebandRMS':16, 'energyMaxMin': 19, 'straightLineCut':21, 'timeMaxMin':22}
+        nm1Cuts = {'allCuts':-1, 'panelVeto':10, 'hitInAllLayers':13, 'nBarsCut':14, 'beamMuonPanelVeto':15, 
+                'energyMaxCut2p5':16, 'energyMaxMin': 17, 'straightLineCut':18, 'timeMaxMin':19}
     
     else:
-        #nm1Cuts = {'allCuts':-1, 'pickupCut':5, 'firstPulse':6, 'centralTiming':7, 'panelVeto':8, 'hitInAllLayers':11, 'frontBackPanelRequired':12, 'sidebandRMS':13, 'energyMaxMin': 16}
-        nm1Cuts = {'allCuts':-1, 'pickupCut':5, 'firstPulse':6, 'centralTiming':7, 'panelVeto':8, 'hitInAllLayers':11, 'frontBackPanelRequired':12, 'sidebandRMS':13, 'energyMaxMin': 16,
-                  'straightLineCut':18, 'timeMaxMin':19, 'nBarsCut':20, 'beamMuonPanelVeto':21}
+        nm1Cuts = {'allCuts':-1, 'panelVeto':10, 'hitInAllLayers':13, 'frontBackPanelRequired':14, 'energyMaxMin': 15,
+                  'straightLineCut':16, 'timeMaxMin':17, 'nBarsCut':18, 'beamMuonPanelVeto70':19}
 
     for icut, (key, val) in enumerate(nm1Cuts.items()):
         #if key != 'allCuts': continue
         myplotter.resetHistograms()
         if val==-1:
             cutflowMod = cutflow
-        elif SR ==1 and key=='beamMuonPanelVeto':
-            #need to skim barsCut to see effect
-            cutflowMod = cutflow[:val] + cutflow[val+1:]
-        elif SR == 1 and key=='panelVeto':
-            #want to skim bars cut if panvel veto selected
-            barCutIndex = nm1Cuts['barsCut']
-            cutflowMod = cutflow[:val] + cutflow[val+1:barCutIndex] + cutflow[barCutIndex+1:] 
+            '''elif SR ==1 and key=='beamMuonPanelVeto':
+                #need to skip barsCut to see effect
+                cutflowMod = cutflow[:val] + cutflow[val+1:]
+            elif SR == 1 and key=='panelVeto':
+                #want to skip bars cut if panvel veto selected
+                barCutIndex = nm1Cuts['barsCut']
+                cutflowMod = cutflow[:val] + cutflow[val+1:barCutIndex] + cutflow[barCutIndex+1:] '''
         else:
             cutflowMod = cutflow[:val] + cutflow[val+1:]
         outputFileMod = outputFile.replace('.root', f'{key}.root')

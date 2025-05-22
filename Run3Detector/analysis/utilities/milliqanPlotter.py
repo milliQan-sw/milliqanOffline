@@ -38,7 +38,11 @@ class milliqanPlot():
                 self.histogram.FillN(len(myarray0), myarray0, myarray1, np.ones(len(myarray0)))
             #3d histograms
             elif len(output) == 3 and len(output[0])>0:
-                print("MilliQan Plotter: No 3d printing capabilities yet!")
+                myarray0 = array('d', output[0])
+                myarray1 = array('d', output[1])
+                myarray2 = array('d', output[2])
+                for ival, (x, y, z) in enumerate(zip(myarray0, myarray1, myarray2)):
+                    self.histogram.Fill(x, y, z)
                 
         else:
             if self.cut:

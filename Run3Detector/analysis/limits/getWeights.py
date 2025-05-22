@@ -46,11 +46,9 @@ def charge_to_float(s):
 
 if __name__ == "__main__":
 
-    dataDir = '/data/user/mcarrigan/milliqan/bgCutFlow_signalSim_SR2_v6/'
-
-    #fout = open('weightsSR2.txt', 'w+')
-
-    #fout.write('mass\tcharge\tyield\n')
+    SR=2
+    #dataDir = '/data/user/mcarrigan/milliqan/bgCutFlow_signalSim_SR2_v7/'
+    dataDir = '/data/user/mcarrigan/milliqan/bgCutFlow_signalSim_SR2_v9/'
 
     df = pd.DataFrame(columns=["mass", "charge", "yield"])
 
@@ -75,6 +73,5 @@ if __name__ == "__main__":
     
     df = df.sort_values(by=['mass', 'charge'])
     
-    df.to_csv('weightsSR2.txt', sep=' ', index=False)
-    #fout.close()
+    df.to_csv(f'weightsSR{SR}.txt', sep=' ', index=False)
 

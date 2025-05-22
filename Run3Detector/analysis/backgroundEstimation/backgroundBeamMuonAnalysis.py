@@ -16,7 +16,7 @@ import numpy as np
 import shutil
 import itertools
 
-sys.path.append(os.path.dirname(__file__) + '/../utilities/')
+sys.path.append(os.path.dirname(__file__) + '/../../utilities/')
 from milliqanProcessor import *
 from milliqanScheduler import *
 from milliqanCuts import *
@@ -261,6 +261,12 @@ def beamMuonCut(self, cutName='beamMuonCut', timeCut=None, cut=False, branches=N
     time2 = self.events['timeFit_module_calibrated'][layer2Mask][max2]
     time3 = self.events['timeFit_module_calibrated'][layer3Mask][max3]
 
+    energyMax0 = ak.max(self.events['energyCal'][layer0Mask], axis=1, keepdims=True)
+    energyMax1 = ak.max(self.events['energyCal'][layer1Mask], axis=1, keepdims=True)
+    energyMax2 = ak.max(self.events['energyCal'][layer2Mask], axis=1, keepdims=True)
+    energyMax3 = ak.max(self.events['energyCal'][layer3Mask], axis=1, keepdims=True)
+    energyMax = ak.concatenate([energyMax0, energyMax1, energyMax2, energyMax3], axis=1)
+
     passing = ak.any(layer0Mask, axis=1) & \
                 ak.any(layer1Mask, axis=1) & \
                 ak.any(layer2Mask, axis=1) & \
@@ -277,8 +283,18 @@ def beamMuonCut(self, cutName='beamMuonCut', timeCut=None, cut=False, branches=N
     #self.events['timeDiffL30'] = ak.where(passing, time3-time0, 1e10)
 
     passing = ak.fill_none(passing, False)
+    energyMax = energyMax[passing]
+
     _, passing = ak.broadcast_arrays(self.events['npulses'], passing)
     self.events[cutName] = passing
+
+    maxEnergy = ak.max(energyMax, axis=1, keepdims=True)
+    minEnergy = ak.min(energyMax, axis=1, keepdims=True)
+    energyRatio = maxEnergy/minEnergy
+
+    self.events['maxEnergyMuon'] = maxEnergy
+    self.events['minEnergyMuon'] = minEnergy
+    self.events['ratioEnergyMuon'] = energyRatio
 
     if cut:
         self.cutBranches(branches, cutName)
@@ -289,7 +305,7 @@ if __name__ == "__main__":
     beam = True
     skim = True
     sim = False
-    outputFile = 'beamMuonPlots/beamMuonArea_beamOff_300kDebug.root'
+    outputFile = 'beamMuonPlots/beamMuonEnergy_beamOn_PanelNPE150.root'
     qualityLevel = 'override'
     maxEvents = None
     stepSize = 20000
@@ -297,7 +313,7 @@ if __name__ == "__main__":
 
     #filelist = ['/eos/experiment/milliqan/sim/bar/beam/beamMuonTree_v2.root']
 
-    '''filelist = [     
+    filelist = [     
         '/eos/experiment/milliqan/skims/beam/MilliQan_Run1000_v36_beam_beamOn_medium.root',      
         '/eos/experiment/milliqan/skims/beam/MilliQan_Run1100_v36_beam_beamOn_medium.root',      
         '/eos/experiment/milliqan/skims/beam/MilliQan_Run1400_v36_beam_beamOn_medium.root',      
@@ -306,9 +322,9 @@ if __name__ == "__main__":
         '/eos/experiment/milliqan/skims/beam/MilliQan_Run1700_v36_beam_beamOn_medium.root',      
         '/eos/experiment/milliqan/skims/beam/MilliQan_Run1800_v36_beam_beamOn_medium.root',      
         '/eos/experiment/milliqan/skims/beam/MilliQan_Run1900_v36_beam_beamOn_medium.root', 
-    ]'''
+    ]
 
-    filelist = [     
+    '''filelist = [     
         '/eos/experiment/milliqan/skims/beam/MilliQan_Run1000_v36_beam_beamOff_medium.root',      
         '/eos/experiment/milliqan/skims/beam/MilliQan_Run1100_v36_beam_beamOff_medium.root', 
         '/eos/experiment/milliqan/skims/beam/MilliQan_Run1300_v36_beam_beamOff_medium.root',
@@ -318,7 +334,7 @@ if __name__ == "__main__":
         '/eos/experiment/milliqan/skims/beam/MilliQan_Run1700_v36_beam_beamOff_medium.root',      
         '/eos/experiment/milliqan/skims/beam/MilliQan_Run1800_v36_beam_beamOff_medium.root',      
         '/eos/experiment/milliqan/skims/beam/MilliQan_Run1900_v36_beam_beamOff_medium.root', 
-    ]
+    ]'''
 
     '''filelist = [     
         #'/eos/experiment/milliqan/skims/beam/MilliQan_Run1000_v35_beam_beamOn_tight.root',      
@@ -402,8 +418,10 @@ if __name__ == "__main__":
     centralTimeCut = getCutMod(mycuts.centralTime, mycuts, 'centralTimeCut', cut=makeCut)
 
     #require pulses are not pickup
-    pickupCut = getCutMod(mycuts.pickupCut, mycuts, 'pickupCut', cut=makeCut, tight=True)
-
+    pickupCut = getCutMod(mycuts.pickupCutCustom, mycuts, 'pickupCut', cut=makeCut)
+    noiseCut = getCutMod(mycuts.noiseCut, mycuts, 'noiseCut', cut=makeCut)
+    darkRateCut = getCutMod(mycuts.darkRateCut, mycuts, 'darkRateCut', cut=makeCut)
+    
     #require that all digitizer boards are matched
     boardMatchCut = getCutMod(mycuts.boardsMatched, mycuts, 'boardMatchCut', cut=makeCut, branches=branches)
 
@@ -415,7 +433,6 @@ if __name__ == "__main__":
 
     #panel veto
     panelVeto = getCutMod(mycuts.panelVeto, mycuts, 'panelVeto', cut=makeCut, nPECut=None)
-    #panelVeto = getCutMod(mycuts.panelVetoMod, mycuts, 'panelVeto', cut=makeCut, nPECut=None, areaCut=100e3, panelsAllowed=1)
 
     panelRequired = getCutMod(mycuts.panelRequired, mycuts, 'panelRequired', cut=makeCut)
 
@@ -443,6 +460,8 @@ if __name__ == "__main__":
 
     #veto front/back panel events if nPE > 50, SR2 only
     #beamMuonPanelVeto50 = getCutMod(mycuts.beamMuonPanelVeto, mycuts, 'beamMuonPanelVeto', cut=makeCut, nPECut=0)
+    beamMuonPanelVetoInvert = getCutMod(mycuts.beamMuonPanelVeto, mycuts, 'beamMuonPanelVetoInvert', cut=makeCut, invert=True, nPECut=150)
+
 
     #require # bars in event  < cut
     nBarsCut = getCutMod(mycuts.nBarsCut, mycuts, 'nBarsCut', nBarsCut=4, cut=makeCut)
@@ -454,7 +473,7 @@ if __name__ == "__main__":
     sidebandRMSCut = getCutMod(mycuts.sidebandRMSCut, mycuts, 'sidebandRMSCut', cutVal=2, cut=makeCut)
 
     #use first pulse in a channel only
-    firstPulseCut = getCutMod(mycuts.firstPulseCut, mycuts, 'firstPulseCut', cut=makeCut)
+    firstPulseCut = getCutMod(mycuts.firstPulseCut, mycuts, 'firstPulseCut', cut=makeCut, calculate=True)
 
     #cut out all pulses except bars
     barsCut = getCutMod(mycuts.barCut, mycuts, 'barCut', cut=makeCut)
@@ -522,6 +541,12 @@ if __name__ == "__main__":
     h_nPEBackPanel = r.TH1F('h_nPEBackPanel', 'NPE Back Panel;NPE;Pulses', 75, 0, 150)
     h_nPEPanels = r.TH2F('h_nPEPanels', 'NPE of Panels;Front Panel NPE;Back Panel NPE', 76, -2, 150, 76, -2, 150)
     h_numPanels = r.TH1F('h_numPanels', 'Number of Front/Back Panels;Panels Hit;Events', 4, 0, 4)
+
+    h_energyRatio = r.TH1F('h_energyRatio', 'Ratio of Max/Min Muon Energy', 100, 0, 200)
+    h_energyMaxMin = r.TH2F('h_energyMaxMin', 'Energy Max/Min of Muon;Max Energy [keV];Min Energy [keV]', 250, 0, 2500, 250, 0, 2500)
+    h_energyRatioVsMin = r.TH2F('h_energyRatioVsMin', 'Energy Ratio vs Min Energy; Min Energy [keV]; Max/Min Energy', 250, 0, 2500, 100, 0, 200)
+    h_energyRatioVsMax = r.TH2F('h_energyRatioVsMax', 'Energy Ratio vs Max Energy; Max Energy [keV]; Max/Min Energy', 250, 0, 2500, 100, 0, 200)
+    
     #define milliqan plotter
     myplotter = milliqanPlotter()
     myplotter.dict.clear()
@@ -566,28 +591,24 @@ if __name__ == "__main__":
     myplotter.addHistograms(h_nPEBackPanel, 'backNPE')
     myplotter.addHistograms(h_nPEPanels, ['frontNPE', 'backNPE'])
     myplotter.addHistograms(h_numPanels, 'nPanels')
-
-
+    myplotter.addHistograms(h_energyRatio, 'ratioEnergyMuon')
+    myplotter.addHistograms(h_energyMaxMin, ['maxEnergyMuon', 'minEnergyMuon'])
+    myplotter.addHistograms(h_energyRatioVsMin, ['minEnergyMuon', 'ratioEnergyMuon'])
+    myplotter.addHistograms(h_energyRatioVsMax, ['maxEnergyMuon', 'ratioEnergyMuon'])
     
     cutflow = [mycuts.totalEventCounter, 
                 mycuts.fullEventCounter, 
                 boardMatchCut, 
                 pickupCut, 
+                noiseCut, 
+                darkRateCut,
                 firstPulseCut,
                 centralTimeCut,
-                #frontBackPanelRequired,
-                #panelVeto,
-                #panelRequired,
-                areaCut,
-                #straightLineCut,
-                #threeInLine,
-                #frontAndBackRequired,
-                beamMuonCut,
-                #straightLineCutMod,
 
-                #straightLineCut,
-                #timeMaxMin,
-                #mycuts.frontBackPanelInfo,
+                #areaCut, #used for beam muon estimate
+                beamMuonPanelVetoInvert, #define control region
+                beamMuonCut,
+
                 mycuts.timeDiffBars,
                 mycuts.panelInfo,
             ]

@@ -52,7 +52,8 @@ mass2 = data2[:, 0]  # First column: mass values
 charge2 = data2[:, 1]  # Second column: charge values
 yields2 = data2[:, 2]  # Third column: yields (z values)
 
-yields = np.maximum(yields1, yields2)
+yields = yields2
+#yields = np.maximum(yields1, yields2)
 yields = yields *0.88
 
 yields = [1e-10 if x == 0 else x for x in yields]
@@ -173,17 +174,17 @@ projectionGraph.GetYaxis().CenterTitle(False)
 projectionGraph.GetYaxis().SetTitleOffset(1.18)
 r.gPad.SetLeftMargin(0.13)
 projectionGraph.Draw("AL")
-#graph1D.Draw("L same")
+graph1D.Draw("L same")
 excludedGraph.Draw("L same")
 exclusion_fill.Draw("F")
 exclusion_fill.SetFillColorAlpha(r.kBlack, 0.2)
-sr1Graph.Draw("F")
-sr2Graph.Draw("F")
+#sr1Graph.Draw("F")
+#sr2Graph.Draw("F")
 
 legend = r.TLegend(0.6, 0.2, 0.8, 0.4)  # x1, y1, x2, y2 (coordinates in the canvas)
 #legend.SetHeader("Graphs", "C")  # Centered header
 legend.SetTextSize(0.03)
-#legend.AddEntry(graph1D, rf"Run 3 {str(lumi)} fb^{{-1}} Limit", "L")  # Add graph1D with line style
+legend.AddEntry(graph1D, rf"Run 3 {str(lumi)} fb^{{-1}} Limit", "L")  # Add graph1D with line style
 legend.AddEntry(projectionGraph, rf"200 fb^{{-1}} Projection", "L")  # Add projectionGraph with line style
 legend.Draw()
 
@@ -209,19 +210,19 @@ latex.SetTextFont(42)
 latex.SetTextAlign(13)
 latex.DrawLatexNDC(0.82, 0.985, "(13.6 TeV)")
 
-sr1Text = r.TLatex()
-sr1Text.SetTextColor(r.kGreen+2)
-sr1Text.DrawLatexNDC(0.35, 0.3, 'SR 1')
+#sr1Text = r.TLatex()
+#sr1Text.SetTextColor(r.kGreen+2)
+#sr1Text.DrawLatexNDC(0.35, 0.3, 'SR 1')
 
-sr2Text = r.TLatex()
-sr2Text.SetTextColor(r.kRed)
-sr2Text.DrawLatexNDC(0.7, 0.75, 'SR 2')
+#sr2Text = r.TLatex()
+#sr2Text.SetTextColor(r.kRed)
+#sr2Text.DrawLatexNDC(0.7, 0.75, 'SR 2')
 
 paperRef = r.TLatex()
 paperRef.SetTextSize(0.025)
 paperRef.SetTextFont(42)
-paperRef.DrawLatexNDC(0.62, 0.25,'(2021PhRvD.104c2002B)')
+#paperRef.DrawLatexNDC(0.62, 0.25,'(2021PhRvD.104c2002B)')
 
-c1.SaveAs("limitsLakeLouise.png")
+c1.SaveAs("limits_SR2.png")
 
 

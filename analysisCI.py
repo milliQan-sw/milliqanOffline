@@ -42,7 +42,7 @@ if __name__ == "__main__":
     myplotter.addHistograms(h_height, 'height')
 
     #defining the cutflow
-    cutflow = [boardMatchCut, pickupCut, mycuts.layerCut, fourLayerCut, mycuts.straightLineCut, mycuts.barCut, myplotter.dict['h_height']]
+    cutflow = [boardMatchCut, pickupCut, fourLayerCut, mycuts.straightLineCut, mycuts.barCut, myplotter.dict['h_height']]
 
     #create a schedule of the cuts
     myschedule = milliQanScheduler(cutflow, mycuts, myplotter)

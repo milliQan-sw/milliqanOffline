@@ -91,6 +91,73 @@ def plotMQRawTogether(lumis, raw, var_y1='lumiSum', var_y2='lumiSum', x=0.4, y=0
         plt.yscale('log')
         plt.savefig(outDir+name+'_logy.png')
 
+
+def plotAllGoodRuns(tight, med, loose, raw, x=0.4, y=0.7, outDir=None, name=None, title=None, fill=True):
+
+    plt.figure(figsize=(10, 6))  # width, height in inches
+    var_y1 = 'lumiSum'
+    var_y2 = 'lumiSum'
+
+
+    if fill:
+        plt.plot(raw['end_stable_beam'], raw[var_y2], color='red')
+        plt.fill_between(raw['end_stable_beam'], raw[var_y2], color='red', alpha=0.3)
+    else:
+        plt.scatter(raw['end_stable_beam'], raw[var_y2], marker='o', linestyle='-', color='red', s=5)
+
+    plt.title('Run3 LHC Luminosity', fontsize=20)
+    plt.xlabel('Date', fontsize=16)
+    plt.ylabel('Stable Beam Luminosity (fb^-1)', fontsize=16)
+
+    totalLumi = round(raw.iloc[-1][var_y2], 2)
+    textStr = 'Total Delivered Luminosity: {}'.format(totalLumi)
+
+    if fill:
+        plt.text(x, y, textStr+' $fb^{-1}$', fontsize=16, color='red', ha='center', va='center', transform=plt.gca().transAxes)
+
+    if fill:
+        plt.plot(tight['stop'], tight[var_y1], color='blue')
+        plt.fill_between(tight['stop'], tight[var_y1], color='lightblue', alpha=0.3)
+        plt.plot(med['stop'], med[var_y1], color='green')
+        plt.fill_between(med['stop'], med[var_y1], color='lightgreen', alpha=0.3)
+        plt.plot(loose['stop'], loose[var_y1], color='darkviolet')
+        plt.fill_between(loose['stop'], loose[var_y1], color='darkviolet', alpha=0.3)
+    else:
+        plt.scatter(tight['stop'], tight[var_y1], marker='o', linestyle='-', color='blue', s=5)
+        plt.scatter(med['stop'], med[var_y1], marker='o', linestyle='-', color='green', s=5)
+        plt.scatter(loose['stop'], loose[var_y1], marker='o', linestyle='-', color='darkviolet', s=5)
+
+
+    if not title is None:
+        plt.title(title, fontsize=20)
+    else:
+        plt.title('Delivered Luminosity and MilliQan Recorded Luminosity', fontsize=20)
+    plt.xlabel('Date', fontsize=16)
+    plt.ylabel('Recorded Luminosity (fb^-1)', fontsize=16)
+
+    tightLumi = round(tight.iloc[-1][var_y1], 2)
+    medLumi = round(med.iloc[-1][var_y1], 2)
+    looseLumi = round(loose.iloc[-1][var_y1], 2)
+
+    textStr = 'Good Run Luminosity'
+    textStrTight = f"Tight: {tightLumi}"
+    textStrMedium = f"Medium: {medLumi}"
+    textStrLoose = f"Loose: {looseLumi}"
+
+    print(textStr, textStrTight, textStrMedium, textStrLoose)
+
+    if fill:
+        plt.text(x, y-0.1, textStr, fontsize=16, color='black', ha='center', va='center', transform=plt.gca().transAxes)
+        plt.text(x, y-0.2, textStrTight+' $fb^{-1}$', fontsize=16, color='blue', ha='center', va='center', transform=plt.gca().transAxes)
+        plt.text(x, y-0.3, textStrMedium+' $fb^{-1}$', fontsize=16, color='green', ha='center', va='center', transform=plt.gca().transAxes)
+        plt.text(x, y-0.4, textStrLoose+' $fb^{-1}$', fontsize=16, color='violet', ha='center', va='center', transform=plt.gca().transAxes)
+    
+    if outDir and name:
+        plt.savefig(outDir+name+'.png')
+        plt.yscale('log')
+        plt.savefig(outDir+name+'_logy.png')
+
+
 def plotRawLumis(raw, var_y='lumiSum', x=0.4, y=0.7, outDir=None, name=None, title=None, fill=True):
 
     plt.figure(figsize=(10, 6))  # width, height in inches
@@ -251,14 +318,34 @@ if __name__ == "__main__":
     ## Make Good Run Selections
     ############################
 
-    #select tight good runs
-    goodRunsTight = goodRuns[goodRuns['goodRunTight']==True]
-
     #select out runs passing goodRunsTight
-    selected_rows = lumis[lumis['run'].isin(goodRuns['run']) & lumis['file'].isin(goodRuns['file'])]
-    selected_rows23 = lumis23[lumis23['run'].isin(goodRuns['run']) & lumis23['file'].isin(goodRuns['file'])]
-    selected_rows24 = lumis24[lumis24['run'].isin(goodRuns['run']) & lumis24['file'].isin(goodRuns['file'])]
+    selected_rows = lumis.merge(goodRuns, on=['run', 'file'])
+    selected_rows23 = lumis23.merge(goodRuns, on=['run', 'file'])
+    selected_rows24 = lumis24.merge(goodRuns, on=['run', 'file'])
 
+    selected_rowsTight = selected_rows[selected_rows['goodRunTight']==True]
+    selected_rowsTight23 = selected_rows23[selected_rows23['goodRunTight']==True]
+    selected_rowsTight24 = selected_rows24[selected_rows24['goodRunTight']==True]
+
+    selected_rowsTight['lumiSum'] = selected_rowsTight['lumiEst'].cumsum()
+    selected_rowsTight23['lumiSum'] = selected_rowsTight23['lumiEst'].cumsum()
+    selected_rowsTight24['lumiSum'] = selected_rowsTight24['lumiEst'].cumsum()
+
+    selected_rowsMed = selected_rows[selected_rows['goodRunMedium']==True]
+    selected_rowsMed23 = selected_rows23[selected_rows23['goodRunMedium']==True]
+    selected_rowsMed24 = selected_rows24[selected_rows24['goodRunMedium']==True]
+
+    selected_rowsMed['lumiSum'] = selected_rowsMed['lumiEst'].cumsum()
+    selected_rowsMed23['lumiSum'] = selected_rowsMed23['lumiEst'].cumsum()
+    selected_rowsMed24['lumiSum'] = selected_rowsMed24['lumiEst'].cumsum()
+
+    selected_rowsLoose = selected_rows[selected_rows['goodRunLoose']==True]
+    selected_rowsLoose23 = selected_rows23[selected_rows23['goodRunLoose']==True]
+    selected_rowsLoose24 = selected_rows24[selected_rows24['goodRunLoose']==True]
+
+    selected_rowsLoose['lumiSum'] = selected_rowsLoose['lumiEst'].cumsum()
+    selected_rowsLoose23['lumiSum'] = selected_rowsLoose23['lumiEst'].cumsum()
+    selected_rowsLoose24['lumiSum'] = selected_rowsLoose24['lumiEst'].cumsum()
 
     ############################
     # Make Plots
@@ -282,14 +369,34 @@ if __name__ == "__main__":
 
     #plot mq recorded lumi w/ runs marked as good
     print("Plotting the good run lumis")
-    plotLumis(selected_rows, x=0.5, outDir=totalLumiDir, name='goodRunLumis', title='MilliQan Good Runs Recorded Luminosity')
-    plotLumis(selected_rows24, outDir=totalLumiDir, name='goodRunLumis2024', title='MilliQan Good Runs Recorded Luminosity 2024')
-    plotLumis(selected_rows23, outDir=totalLumiDir, name='goodRunLumis2023', title='MilliQan Good Runs Recorded Luminosity 2023')
+    plotLumis(selected_rowsTight, x=0.5, outDir=totalLumiDir, name='goodRunLumis', title='MilliQan Good Runs Recorded Luminosity')
+    plotLumis(selected_rowsTight24, outDir=totalLumiDir, name='goodRunLumis2024', title='MilliQan Good Runs Recorded Luminosity 2024')
+    plotLumis(selected_rowsTight23, outDir=totalLumiDir, name='goodRunLumis2023', title='MilliQan Good Runs Recorded Luminosity 2023')
    
     print("Plotting the good run lumis per file")     
-    plotLumis(selected_rows, var_y='lumiEst', x=0.5, outDir=perRunDir, name='goodRunLumisPerFile', title='MilliQan Good Runs Recorded Luminosity', fill=False)
-    plotLumis(selected_rows24, var_y='lumiEst', outDir=perRunDir, name='goodRunLumisPerFile2024', title='MilliQan Good Runs Recorded Luminosity 2024', fill=False)
-    plotLumis(selected_rows23, var_y='lumiEst', outDir=perRunDir, name='goodRunLumisPerFile2023', title='MilliQan Good Runs Recorded Luminosity 2023', fill=False)
+    plotLumis(selected_rowsTight, var_y='lumiEst', x=0.5, outDir=perRunDir, name='goodRunLumisPerFile', title='MilliQan Good Runs Recorded Luminosity', fill=False)
+    plotLumis(selected_rowsTight24, var_y='lumiEst', outDir=perRunDir, name='goodRunLumisPerFile2024', title='MilliQan Good Runs Recorded Luminosity 2024', fill=False)
+    plotLumis(selected_rowsTight23, var_y='lumiEst', outDir=perRunDir, name='goodRunLumisPerFile2023', title='MilliQan Good Runs Recorded Luminosity 2023', fill=False)
+
+    print("Plotting the good run lumis")
+    plotLumis(selected_rowsMed, x=0.5, outDir=totalLumiDir, name='goodRunMedLumis', title='MilliQan Good Runs Recorded Luminosity')
+    plotLumis(selected_rowsMed24, outDir=totalLumiDir, name='goodRunMedLumis2024', title='MilliQan Good Runs Recorded Luminosity 2024')
+    plotLumis(selected_rowsMed23, outDir=totalLumiDir, name='goodRunMedLumis2023', title='MilliQan Good Runs Recorded Luminosity 2023')
+
+    print("Plotting the good run lumis per file")
+    plotLumis(selected_rowsMed, var_y='lumiEst', x=0.5, outDir=perRunDir, name='goodRunMedLumisPerFile', title='MilliQan Good Runs Recorded Luminosity', fill=False)
+    plotLumis(selected_rowsMed24, var_y='lumiEst', outDir=perRunDir, name='goodRunMedLumisPerFile2024', title='MilliQan Good Runs Recorded Luminosity 2024', fill=False)
+    plotLumis(selected_rowsMed23, var_y='lumiEst', outDir=perRunDir, name='goodRunMedLumisPerFile2023', title='MilliQan Good Runs Recorded Luminosity 2023', fill=False)
+
+    print("Plotting the good run lumis")
+    plotLumis(selected_rowsLoose, x=0.5, outDir=totalLumiDir, name='goodRunLooseLumis', title='MilliQan Good Runs Recorded Luminosity')
+    plotLumis(selected_rowsLoose24, outDir=totalLumiDir, name='goodRunLooseLumis2024', title='MilliQan Good Runs Recorded Luminosity 2024')
+    plotLumis(selected_rowsLoose23, outDir=totalLumiDir, name='goodRunLooseLumis2023', title='MilliQan Good Runs Recorded Luminosity 2023')
+
+    print("Plotting the good run lumis per file")
+    plotLumis(selected_rowsLoose, var_y='lumiEst', x=0.5, outDir=perRunDir, name='goodRunLooseLumisPerFile', title='MilliQan Good Runs Recorded Luminosity', fill=False)
+    plotLumis(selected_rowsLoose24, var_y='lumiEst', outDir=perRunDir, name='goodRunLooseLumisPerFile2024', title='MilliQan Good Runs Recorded Luminosity 2024', fill=False)
+    plotLumis(selected_rowsLoose23, var_y='lumiEst', outDir=perRunDir, name='goodRunLooseLumisPerFile2023', title='MilliQan Good Runs Recorded Luminosity 2023', fill=False)
 
     #plot raw delivered lumis
     plotRawLumis(raw, outDir=rawLumiDir, name='deliveredLumi')
@@ -306,9 +413,19 @@ if __name__ == "__main__":
     plotMQRawTogether(lumis23, raw23, outDir=totalLumiDir, name='mqLumisPlusRaw2023')
 
     #plot mq good run lumi w/ raw lumis
-    plotMQRawTogether(selected_rows, raw, outDir=totalLumiDir, name='mqLumisGoodPlusRaw')
-    plotMQRawTogether(selected_rows24, raw24, outDir=totalLumiDir, name='mqLumisGoodPlusRaw2024')
-    plotMQRawTogether(selected_rows23, raw23, outDir=totalLumiDir, name='mqLumisGoodPlusRaw2023')
+    plotMQRawTogether(selected_rowsTight, raw, outDir=totalLumiDir, name='mqLumisGoodPlusRaw')
+    plotMQRawTogether(selected_rowsTight24, raw24, outDir=totalLumiDir, name='mqLumisGoodPlusRaw2024')
+    plotMQRawTogether(selected_rowsTight23, raw23, outDir=totalLumiDir, name='mqLumisGoodPlusRaw2023')
+
+    plotMQRawTogether(selected_rowsMed, raw, outDir=totalLumiDir, name='mqLumisGoodMedPlusRaw')
+    plotMQRawTogether(selected_rowsMed24, raw24, outDir=totalLumiDir, name='mqLumisGoodMedPlusRaw2024')
+    plotMQRawTogether(selected_rowsMed23, raw23, outDir=totalLumiDir, name='mqLumisGoodMedPlusRaw2023')
+
+    plotMQRawTogether(selected_rowsLoose, raw, outDir=totalLumiDir, name='mqLumisGoodLoosePlusRaw')
+    plotMQRawTogether(selected_rowsLoose24, raw24, outDir=totalLumiDir, name='mqLumisGoodLoosePlusRaw2024')
+    plotMQRawTogether(selected_rowsLoose23, raw23, outDir=totalLumiDir, name='mqLumisGoodLoosePlusRaw2023')
+
+    plotAllGoodRuns(selected_rowsTight, selected_rowsMed, selected_rowsLoose, raw, outDir=totalLumiDir, name='mqLumisAllGoodRunsPlusRaw')
 
     #plot the average time files are open in runs and average lumis/s in runs
     plotFileOpenTimes(lumis, outDir=perRunDir)

@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import math
 import sys
 from omsapi import OMSAPI
+import shutil
 
 #using omsapi client https://gitlab.cern.ch/cmsoms/oms-api-client/-/tree/master
 
@@ -74,7 +75,10 @@ class mqLumiList():
                     'last_run_number': 'object',
                     'energy': 'object'}
 
-        rawLumis = pd.read_json(self.rawLumis, orient = 'split', compression = 'infer', dtype=dtype_dict)
+        copyName = '/'.join([os.getcwd(), self.rawLumis.split('/')[-1]])
+        print(copyName)
+        shutil.copy(self.rawLumis, copyName)
+        rawLumis = pd.read_json(copyName, orient = 'split', compression = 'infer', dtype=dtype_dict)
         lastRun = rawLumis[(rawLumis['end_time'].isna()) & (~rawLumis['start_stable_beam'].isna())].head(1)['fill_number']
         if len(lastRun) == 0:
             lastRun = rawLumis.tail(1)['fill_number']
@@ -107,7 +111,7 @@ class mqLumiList():
             'fill_type_runtime',
             'delivered_lumi_stablebeams']
 
-        q = omsapi.query("filldetails")
+        q = omsapi.query("fills")
         q.filter('sequence','GLOBAL-RUN')
         q.filter('fill_number', lastRun-1, 'GT') #our runs start at fill 8800
         q.sort("fill_number", asc=False).paginate(per_page = 1000)
@@ -195,7 +199,9 @@ class mqLumiList():
         return filesToProcess
 
     def getLastUpdate(self, reprocess=True):
-        prevLumis = pd.read_json(self.outputFile, orient = 'split', compression = 'infer')
+        copyName = '/'.join([os.getcwd(),self.outputFile.split('/')[-1]])
+        shutil.copy(self.outputFile, copyName)
+        prevLumis = pd.read_json(copyName, orient = 'split', compression = 'infer')
 
         lastProcess = prevLumis.tail(1)
         lastRun = lastProcess['run'].values[0]
@@ -230,6 +236,7 @@ class mqLumiList():
                 dict_.file = (fileNum_)
                 dict_.dir = self.rawPath+'/'+path
                 dict_.filename = filename
+                print(dict_.__dict__)
                 self.mqLumis.loc[len(self.mqLumis.index)] = dict_.__dict__
         else:
             for ifile, filename in enumerate(os.listdir(self.rawPath+'/'+path)):
@@ -477,7 +484,9 @@ class mqLumiList():
         self.mqLumis.to_json(name, orient = 'split', compression = 'infer', index = 'true', date_format='iso')
 
     def updateJson(self):
-        existing = pd.read_json(self.outputFile, orient = 'split', compression = 'infer')
+        copyName = '/'.join([os.getcwd(),self.outputFile.split('/')[-1]])
+        shutil.copy(self.outputFile, copyName)
+        existing = pd.read_json(copyName, orient = 'split', compression = 'infer')
         existing['start'] = pd.to_datetime(existing['start'])
         existing = existing.sort_values(by='start')
         self.mqLumis['run'] = self.mqLumis['run'].astype(int)
@@ -511,8 +520,8 @@ if __name__ == "__main__":
         update=True
         debug=False
 
-        startingRun = None
-        startingFile = None
+        startingRun = 1899
+        startingFile = 1
 
         mylumiList = mqLumiList()
         mylumiList.debug = debug

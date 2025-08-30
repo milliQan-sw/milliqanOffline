@@ -1,0 +1,18 @@
+
+ imax 4  number of channels 
+ jmax *  number of backgrounds 
+ kmax *  number of nuisance parameters (sources of systematical uncertainties) 
+ ------------ 
+ bin SR1early SR2early SR1late SR2late
+ observation 0 2 0 0
+ ------------ 
+ bin              SR1early   SR1early   SR2early  SR2early SR1late SR1late SR2late SR2late
+ process          mCP        bkgd       mCP       bkgd     mCP     bkgd    mCP     bkgd
+ process          0          1          0         1        0       1       0       1
+ rate             0.051        0.099        0.044       0.875      0.084     0.0143     0.071     0.1263
+ ------------ 
+ SR1earlyBkg gmN 3    -    0.0329        -         -        -       -       -       -
+ SR2earlyBkg gmN 13   -    -          -         0.0673     -       -       -       -
+ SR1lateBkg gmN  4   -    -          -         -        -       0.0036    -       -
+ SR2lateBkg gmN  19   -    -          -         -        -       -       -       0.0066
+ sigErr lnN      0.8/1.2   -       0.8/1.2    -      0.8/1.2  -    0.8/1.2  -         estimated error of signal lnN = lognormal 

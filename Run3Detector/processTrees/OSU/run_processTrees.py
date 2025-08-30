@@ -17,7 +17,7 @@ def parse_args():
     parser.add_argument('-s', '--subDir', type=str, help='Subdirectory to be processed')
     parser.add_argument('-a', '--all', action='store_true', help='Find all non processed files and create offline trees')
     parser.add_argument('-f', '--reprocess', action='store_true', help='Reprocess all files')
-    parser.add_argument('-v', '--version', type=str, default='35', help='Set the version of offline trees')
+    parser.add_argument('-v', '--version', type=str, default='36', help='Set the version of offline trees')
     parser.add_argument('-S', '--single', type=str, default='-1', help='Single file to be submitted')
     parser.add_argument('-R', '--run', type=str, help='Single run to be submitted')
     parser.add_argument('-o', '--outputDir', type=str, help='Output directory for files')
@@ -62,6 +62,9 @@ def singleRun():
 
     milliqanOffline = 'milliqanOffline_v' + args.version + '.tar.gz'
 
+    ftype = 'bar'
+    if args.slab: ftype = 'slab'
+
     if args.slab:
         dataDir = '/store/user/milliqan/run3/slab/{0}/{1}/'.format(args.runDir, args.subDir)
     else:
@@ -70,8 +73,8 @@ def singleRun():
     if args.outputDir:
         outDir = args.outputDir
     else:
-        outDir = '/store/user/milliqan/trees/v{}/{}/'.format(args.version, args.runDir)
-    logDir = '/data/users/milliqan/log/trees/v{0}/logs_v{0}_{1}_{2}-{3}/'.format(args.version, args.runDir, args.subDir, now.strftime("%m-%d"))
+        outDir = '/store/user/milliqan/trees/v{}/{}/{}/'.format(args.version, ftype, args.runDir)
+    logDir = '/data/users/milliqan/log/trees/v{0}/logs_v{0}_{1}_{2}_{3}_{4}_{5}/'.format(args.version, ftype, args.runDir, args.subDir, now.strftime("%m-%d"), args.single.replace('.', '-'))
 
     if(not os.path.isdir(outDir)): os.mkdir(outDir)
     if(not os.path.isdir(logDir)): os.mkdir(logDir)
@@ -88,10 +91,12 @@ def singleRun():
     submitLines = """
     Universe = vanilla
     +IsLocalJob = true
+    +IsSmallJob = true
     Rank = TARGET.IsLocalSlot
     request_disk = 2000MB
     request_memory = 500MB
     request_cpus = 1
+    requirements = machine != "compute-0-0.local" && machine != "compute-0-2.local" && machine != "compute-0-4.local" &&  machine != "compute-0-30.local"
     executable              = wrapper.sh
     arguments               = $(PROCESS) {1} {2} {3} {5} {7} {8}
     log                     = {6}log_$(PROCESS).log
@@ -143,6 +148,9 @@ def main(runNum, subRun, swVersion, reprocessAllFiles=False):
     milliqanOffline = 'milliqanOffline_v' + swVersion + '.tar.gz'
     #milliqanOffline = 'milliqanOffline_lumi.tar.gz'
 
+    ftype = 'bar'
+    if args.slab: ftype = 'slab'
+
     if args.slab:
         dataDir = '/store/user/milliqan/run3/slab/{0}/{1}/'.format(runNum, subRun)
     else:
@@ -151,8 +159,8 @@ def main(runNum, subRun, swVersion, reprocessAllFiles=False):
     if args.outputDir:
         outDir = args.outputDir
     else:
-        outDir = '/store/user/milliqan/trees/v{}/{}/'.format(swVersion, runNum)
-    logDir = '/data/users/milliqan/log/trees/v{0}/logs_v{0}_{1}_{2}-{3}/'.format(swVersion, runNum, subRun, now.strftime("%m-%d-%H-%M-%S"))
+        outDir = '/store/user/milliqan/trees/v{}/{}/{}/'.format(swVersion, ftype, runNum)
+    logDir = '/data/users/milliqan/log/trees/v{0}/logs_v{0}_{1}_{2}_{3}-{4}/'.format(swVersion, ftype, runNum, subRun, now.strftime("%m-%d-%H-%M-%S"))
 
     if(not os.path.isdir(outDir)): os.mkdir(outDir)
     if(not os.path.isdir(logDir)): os.mkdir(logDir)
@@ -210,6 +218,7 @@ def main(runNum, subRun, swVersion, reprocessAllFiles=False):
     request_disk = 2000MB
     request_memory = 500MB
     request_cpus = 1
+    requirements = machine != "compute-0-0.local" && machine != "compute-0-2.local" && machine != "compute-0-4.local" &&  machine != "compute-0-30.local"
     executable              = wrapper.sh
     arguments               = $(PROCESS) {1} {2} {3} {5} {7}
     log                     = {6}log_$(PROCESS).log
@@ -253,6 +262,7 @@ def reprocess(reprocessList):
     request_disk = 2000MB
     request_memory = 250MB
     request_cpus = 1
+    requirements = machine != "compute-0-0.local" && machine != "compute-0-2.local" && machine != "compute-0-4.local" &&  machine != "compute-0-30.local"
     executable              = wrapper.sh
     arguments               = $(PROCESS) {1} {2} {3} {5} {7}
     log                     = {6}log_$(PROCESS).log
@@ -275,7 +285,12 @@ if __name__=="__main__":
 
     args = parse_args()
 
-    copyFromEOS()
+    last_modified_time = os.path.getmtime('mqLumis.json')  # Get file modification time
+    current_time = time.time()  # Get current time
+
+    # Check if modified in the last 24 hours
+    if current_time - last_modified_time > 86400:
+        copyFromEOS()
 
     if args.all:
         runAll()

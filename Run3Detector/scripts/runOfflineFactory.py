@@ -29,12 +29,13 @@ def parse_args():
     parser.add_argument("-m","--mergedTriggerFile",help="Trigger file friend tree",type=str,default="")
     parser.add_argument("-e","--exe",help="Executable to run",type=str,default="./script.exe")
     parser.add_argument("-d","--database",help="Database string",default=None)
-    parser.add_argument("-p","--publish",help="Publish dataset",action="store_true",default=False)
+    parser.add_argument("-p","--publish",help="Publish dataset",nargs="?",const=True,type=str,default=False)
     parser.add_argument("-f","--force_publish",help="Force publish dataset",action="store_true",default=False)
     parser.add_argument("-c","--configurations",help="JSON Configuration files or string",type=str,nargs="+")
     parser.add_argument("--drs",help="DRS input",action="store_true",default=False)
     parser.add_argument("--display",help="Display events",type=int,nargs="+")
     parser.add_argument("--slab", help="Forces slab detector configuration", action="store_true", default=False)
+    parser.add_argument("--sim", help="Forces sim configuration", action="store_true", default=False)
     args = parser.parse_args()
     return args
 def validateOutput(outputFile,runNumber=-1,fileNumber=-1):
@@ -61,14 +62,17 @@ def validateOutput(outputFile,runNumber=-1,fileNumber=-1):
         print ("removing output file because it does not deserve to live (result will not be published)")
         os.system("rm "+outputFile)
     return tag 
-def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publish,database,appendToTag,mergedTriggerFile,drs,display, slab,runNumber=None,fileNumber=None):
-    if force_publish:
+def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publish,database,appendToTag,mergedTriggerFile,drs,display, slab, sim, runNumber=None,fileNumber=None):
+    if force_publish and not publish:
         publish = True
     if runNumber == None:
         try:
             if drs:
                 runNumber = int(inputFile.split("/")[-1].split("CMS")[-1].split(".")[0])
-                fileNumber = 0
+                fileNumber = int(1)
+            elif sim:
+                runNumber = int(1)
+                fileNumber = int(1)
             else:
                 runNumber = int(inputFile.split("/")[-1].split("Run")[-1].split(".")[0])
                 fileNumber = int(inputFile.split("/")[-1].split(".")[1].split("_")[0]) 
@@ -84,16 +88,21 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
         exit()
     
     #copy files from eos
-    copyFromEOS()
+    if not sim:
+        copyFromEOS()
 
+    offlineDir = os.getenv("OFFLINEDIR")
     if not configurations:
-        offlineDir = os.getenv("OFFLINEDIR")
         if drs:
             configurations = [offlineDir+"/configuration/pulseFinding/pulseFindingDRS.json"]
         if slab:
             chanConfig = offlineDir + "/configuration/slabConfigs/" + getConfigs(runNumber, offlineDir+'/configuration/slabConfigs') + '.json'
             print("Using the chan config", chanConfig)
             configurations = [chanConfig, offlineDir+"/configuration/pulseFinding/pulseFindingSlab.json"]
+        elif sim:
+            print("Using sim config file")
+            chanConfig = offlineDir + '/configuration/barConfigs/simConfig.json'
+            configurations = [chanConfig, offlineDir+"/configuration/pulseFinding/pulseFindingBar.json"]
         else:
             chanConfig = offlineDir + "/configuration/barConfigs/" + getConfigs(runNumber, offlineDir+'/configuration/barConfigs') + '.json'
             print("Using the chan config", chanConfig)
@@ -121,6 +130,8 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
         argList.append("--display "+",".join([str(x) for x in display]))
     if slab:
         argList.append("--slab")
+    if sim:
+        argList.append("--sim")
     args = " ".join(argList)
 
     # from subprocess import Popen, PIPE, CalledProcessError
@@ -157,10 +168,29 @@ def runOfflineFactory(inputFile,outputFile,exe,configurations,publish,force_publ
                 tag += "_"+appendToTag
             if drs:
                 inputType = "DRS"
+            elif slab:
+                inputType = 'MilliQanSlab'
             else:
                 inputType = "MilliQan"
             matched = mergedTriggerFile!="" 
-            publishDataset(configurationsJSON,inputFile,outputFile,fileNumber,runNumber,tag,site=site,inputType=inputType,matched=matched,force_publish=force_publish,db=db)
+            publishing_inputs = {
+                'configurationsJSON': configurationsJSON,
+                'inputFile': inputFile,
+                'outputFile': os.path.abspath(outputFile),
+                'fileNumber': fileNumber,
+                'runNumber': runNumber,
+                'tag': tag,
+                'site': site,
+                'inputType': inputType,
+                'matched': matched
+            }
+            if publish and isinstance(publish, str):
+                publish = eval(publish)
+                for k, v in publish.items():
+                    publishing_inputs[k] = v
+            publishDataset(publishing_inputs['configurationsJSON'],publishing_inputs['inputFile'],publishing_inputs['outputFile'], publishing_inputs['fileNumber'],
+                           publishing_inputs['runNumber'],publishing_inputs['tag'],site=publishing_inputs['site'],inputType=publishing_inputs['inputType'],matched=publishing_inputs['matched'],
+                           force_publish=force_publish,db=db)
         return tag != None
 def getId(runNumber,fileNumber,tag,inputType,site):
     _id = "{}_{}_{}_{}_{}".format(runNumber,fileNumber,tag,inputType,site)
@@ -173,11 +203,11 @@ def publishDataset(configurationsJSON,inputFile,outputFile,fileNumber,runNumber,
     milliQanOfflineDataset["run"] = runNumber
     milliQanOfflineDataset["file"] = fileNumber
     milliQanOfflineDataset["version"] = tag
-    milliQanOfflineDataset["location"] = os.path.abspath(outputFile)
+    milliQanOfflineDataset["location"] = outputFile
     milliQanOfflineDataset["type"] = inputType
     milliQanOfflineDataset["site"] = site
     milliQanOfflineDataset["matched"] = matched
-
+    
     nX = 0
     #Check for existing entry
     for x in (db.milliQanOfflineDatasets.find({"_id" : _id})):
@@ -203,11 +233,11 @@ def getConfigs(runNum, offlineDir):
     runs = json.load(fin)
     fin.close()
     for key, value in runs.items():
-        print(key, value)
+        #print(key, value)
         if len(value) > 1:
             if value[0] <= runNum <= value[1]: return key
         else:
-            print(runNum)
+            #print(runNum)
             if runNum >= value[0]: return key
     print("Did not find the correct channel map for run {}".format(runNum))
     sys.exit(1)
@@ -217,7 +247,7 @@ def copyFromEOS(slab=False):
     if not slab and not os.path.exists('configuration/barConfigs/goodRunsList.json'): 
         print("Warning (runOfflineFactory.py): goodRunsList.json is not available locally, trying to access from eos")
         try:
-            os.system('cp /eos/experiment/milliqan/Configs/goodRunsList.json configuration/slabConfigs/')
+            os.system('xrdcp root://eospublic.cern.ch://eos/experiment/milliqan/Configs/goodRunsList.json configuration/slabConfigs/')
         except:
             print("Error (runOfflineFactory.py): could not access the goodRunList.json on eos or locally")
     
@@ -225,18 +255,17 @@ def copyFromEOS(slab=False):
         if not os.path.exists('configuration/barConfigs/mqLumis.json'):
             print("Warning (runOfflineFactory.py): mqLumis.json is not available locally, trying to access from eos")
             try:
-                os.system('cp /eos/experiment/milliqan/Configs/mqLumis.json configuration/barConfigs/')
+                os.system('xrdcp root://eospublic.cern.ch://eos/experiment/milliqan/Configs/mqLumis.json configuration/barConfigs/')
             except:
                 print("Error (runOfflineFactory.py): unable to access the mqLumis file on eos or locally")
         
-        #make datetimes into uint64 to be read by c++
-        lumis = pd.read_json('configuration/barConfigs/mqLumis.json', orient = 'split', compression = 'infer')
-        convert_cols = ['start', 'stop', 'fillStart', 'fillEnd', 'startStableBeam', 'endStableBeam']
+    #make datetimes into uint64 to be read by c++
+    lumis = pd.read_json('configuration/barConfigs/mqLumis.json', orient = 'split', compression = 'infer')
+    convert_cols = ['start', 'stop', 'fillStart', 'fillEnd', 'startStableBeam', 'endStableBeam']
 
-        for col in convert_cols:
-            lumis[col] = convertTimes(lumis[col])
-        lumis.to_json('configuration/barConfigs/mqLumis.json', orient = 'split', compression = 'infer', index = 'true')
-
+    for col in convert_cols:
+        lumis[col] = convertTimes(lumis[col])
+    lumis.to_json('configuration/barConfigs/mqLumis.json', orient = 'split', compression = 'infer', index = 'true')
 
 def convertTimes(input):
     input = input.apply(datetime_to_uint64)

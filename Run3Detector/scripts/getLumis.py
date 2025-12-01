@@ -520,7 +520,7 @@ if __name__ == "__main__":
         update=True
         debug=False
 
-        startingRun = 1780
+        startingRun = 1899
         startingFile = 1
 
         mylumiList = mqLumiList()

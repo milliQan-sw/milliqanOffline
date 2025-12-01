@@ -97,6 +97,12 @@ for datasetName in ["MilliQ", "ArgoNeut", "SENSEI", "CMS", "milliQan", "milliQan
         plt.loglog(dataset[:,0], dataset[:,1], color="red", linestyle="--", alpha=1, linewidth=2, label="Run 3 304 $\\rm{fb}^{-1}$ Proj")
     elif datasetName == "milliQanRun3Slab":
         plt.loglog(dataset[:,0], dataset[:,1], color="gray", linewidth=2, label="Run 3 Slab Proj")
+    # elif "milliQanRun3Fix2" in datasetName:
+    #     dataset = dataset[dataset[:,0] > 5]
+    #     dataset[:,1] = dataset[:,1]/1.3
+    #     line, = plt.loglog(dataset[:,0], dataset[:,1], color="blue", linewidth=2, zorder=21)
+    #     milliQan_handles.append(line)
+    #     milliQan_labels.append("Observed")
     elif "milliQanRun3Fix" in datasetName:
         line, = plt.loglog(dataset[:,0], dataset[:,1], color="black", linewidth=2, zorder=21)
         milliQan_handles.append(line)
@@ -145,12 +151,19 @@ for datasetName in ["MilliQ", "ArgoNeut", "SENSEI", "CMS", "milliQan", "milliQan
 
 plt.fill_between(datasets["Collider"][:,0], datasets["Collider"][:,1], 1, color="gray", alpha=0.4)
 if "ArgoNeut" in datasets:
-    AN_interpUp = np.interp(datasets["ArgoNeut"][:,0], datasets["Collider"][:,0], datasets["Collider"][:,1])
-    plt.fill_between(datasets["ArgoNeut"][:,0], datasets["ArgoNeut"][:,1], AN_interpUp, color="steelblue", alpha=0.4)
+    polygon1 = np.concatenate([datasets["ArgoNeut"], datasets["Collider"][::-1]], axis=0)
+    polygon1 = polygon1[polygon1[:,0] < 5]
+    filled_area1 = plt.fill(polygon1[:, 0], polygon1[:, 1], color="steelblue", alpha=0.4)
+# if "ArgoNeut" in datasets:
+#     AN_interpUp = np.interp(datasets["ArgoNeut"][:,0], datasets["Collider"][:,0], datasets["Collider"][:,1])
+#     plt.fill_between(datasets["ArgoNeut"][:,0], datasets["ArgoNeut"][:,1], AN_interpUp, color="steelblue", alpha=0.4)
 
 milliQanForShade = np.loadtxt("external/milliQanForShade.csv", delimiter=",")
-milliQanForShadeUp = np.interp(milliQanForShade[:,0], datasets["ArgoNeut"][:,0], datasets["ArgoNeut"][:,1])
-plt.fill_between(milliQanForShade[:,0], milliQanForShade[:,1]*0.99, milliQanForShadeUp, color="lightcoral", alpha=0.4)
+polygon2 = np.concatenate([datasets["milliQan"], datasets["ArgoNeut"][::-1]], axis=0)
+polygon2 = polygon2[polygon2[:,0]>2.3]
+filled_area2 = plt.fill(polygon2[:, 0], polygon2[:, 1], color="lightcoral", alpha=0.4)
+# milliQanForShadeUp = np.interp(milliQanForShade[:,0], datasets["ArgoNeut"][:,0], datasets["ArgoNeut"][:,1])
+# plt.fill_between(milliQanForShade[:,0], milliQanForShade[:,1]*0.99, milliQanForShadeUp, color="lightcoral", alpha=0.4)
 
 SENSEI_interpUp = np.interp(datasets["SENSEI"][:,0]/1000, datasets["Collider"][:,0], datasets["Collider"][:,1])
 SENSEI_interpUp2 = np.interp(datasets["SENSEI"][:,0]/1000, datasetCM[:,0], datasetCM[:,1])
@@ -210,6 +223,6 @@ plt.text(0.088, 1.05, "$\\bf{milliQan}$", horizontalalignment='center',
      verticalalignment='center', transform=plt.gca().transAxes, fontsize=14)
 plt.text(0.81, 1.05, "$124.7\ \\rm{fb}^{-1}$ (13.6 TeV)", horizontalalignment='center',
      verticalalignment='center', transform=plt.gca().transAxes, fontsize=14)
-plt.text(5.5,0.45,"Previous constraints",color="black",fontsize=9,zorder=30,alpha=0.5)
+plt.text(7,0.45,"Earlier constraints",color="black",fontsize=9,zorder=30,alpha=0.5)
 fig.savefig("finalLimit_Run3.pdf", transparent=True)
 fig.savefig("finalLimit_Run3.png")

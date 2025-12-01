@@ -23,9 +23,9 @@ def writeCondorSub(exe, script, nJobs, filelist, outDir, includeDirs, requiremen
     submitLines = """
     Universe = vanilla
     +IsLocalJob = true
+    run_as_owner = true
     Rank = TARGET.IsLocalSlot
     +IsSmallJob = true
-    requirements = machine != "compute-0-2.local" && machine != "compute-0-4.local" &&  machine != "compute-0-30.local"
     request_disk = {8}
     request_memory = {7}
     request_cpus = {6}
@@ -38,7 +38,7 @@ def writeCondorSub(exe, script, nJobs, filelist, outDir, includeDirs, requiremen
     when_to_transfer_output = ON_EXIT
     transfer_input_files = {4}/{1}, {4}/{2}, {4}/{3}, {4}/milliqanProcessing.tar.gz, {4}/mqLumis.json, {4}/goodRunsList.json
     transfer_output_files = ""
-    getenv = false
+    getenv = true
     queue {0}
     """.format(nJobs,exe,script,filelist,outDir,includeDirs,requirements[0],requirements[1],requirements[2])
 
@@ -48,13 +48,28 @@ def writeCondorSub(exe, script, nJobs, filelist, outDir, includeDirs, requiremen
 def createTarFile():
     with tarfile.open('milliqanProcessing.tar.gz', 'w:gz') as tar:
         tar.add('../utilities/', arcname='.')
+        tar.add('../../configuration/', arcname='.')
 
 def getRunFile(filename):
     run = int(filename.split('Run')[1].split('.')[0])
     file = int(filename.split('.')[1].split('_')[0])
     return run, file
 
-def getFilesLocal(startRun=-1, stopRun=10e9, beam=None, goodRun=None, dataDir='/store/user/milliqan/trees/v35/bar/', debug=False):
+def getSimFilesLocal(dataDir='/', debug=False):
+
+    runList = []
+        
+    for filename in os.listdir(dataDir):
+
+        if debug and len(runList) > 10: break
+
+        if not filename.endswith('.root'): continue
+        
+        runList.append('{}/{}:t'.format(dataDir, filename))
+
+    return runList
+
+def getFilesLocal(startRun=-1, stopRun=10e9, beam=None, goodRun=None, dataDir='/store/user/milliqan/trees/v35/bar/', debug=False, sim=False):
 
     runList = []
 
@@ -72,30 +87,32 @@ def getFilesLocal(startRun=-1, stopRun=10e9, beam=None, goodRun=None, dataDir='/
                 if debug and len(runList) > 10: break
 
                 if not filename.endswith('.root'): continue
-                run, file = getRunFile(filename)
+                
+                if not sim:
+                    run, file = getRunFile(filename)
 
-                #check if the run is in the range desired
-                inRange = False
-                if stopRun is None:
-                    if run == startRun: inRange = True
-                else:
-                  if run >= startRun and run < stopRun: inRange = True
+                    #check if the run is in the range desired
+                    inRange = False
+                    if stopRun is None:
+                        if run == startRun: inRange = True
+                    else:
+                        if run >= startRun and run < stopRun: inRange = True
 
-                #print("File {} in range {}".format(filename, inRange))
+                    #print("File {} in range {}".format(filename, inRange))
 
-                if not inRange: continue
+                    if not inRange: continue
 
-                #check if there is beam if desired
-                if beam is not None:
-                    beamOn = checkBeam(mqLumis, run, file, branch='beamInFill')
-                    if beamOn == None: continue
-                    if (beam and not beamOn) or (not beam and beamOn): continue
+                    #check if there is beam if desired
+                    if beam is not None:
+                        beamOn = checkBeam(mqLumis, run, file, branch='beamInFill')
+                        if beamOn == None: continue
+                        if (beam and not beamOn) or (not beam and beamOn): continue
 
-                #check good runs list
-                if goodRun is not None:
-                    isGoodRun = checkGoodRun(goodRuns, run, file, branch=goodRun)
+                    #check good runs list
+                    if goodRun is not None:
+                        isGoodRun = checkGoodRun(goodRuns, run, file, branch=goodRun)
 
-                    if not isGoodRun: continue
+                        if not isGoodRun: continue
 
                 #add file to runlist
                 runList.append('{}{}/{}:t'.format(root, directory, filename))
@@ -116,8 +133,17 @@ def checkBeam(mqLumis, run, file, branch='beam'):
     return beam
 
 def copyConfigs():
-    shutil.copy('/eos/experiment/milliqan/Configs/mqLumis.json', os.getcwd())
-    shutil.copy('/eos/experiment/milliqan/Configs/goodRunsList.json', os.getcwd())
+    try:
+        shutil.copy('/eos/experiment/milliqan/Configs/mqLumis.json', os.getcwd())
+        shutil.copy('/eos/experiment/milliqan/Configs/goodRunsList.json', os.getcwd())
+    except:
+        try:
+            script_dir = os.path.dirname(os.path.realpath(__file__))
+            shutil.copy(script_dir+'/../../configuration/barConfigs/mqLumis.json', os.getcwd())
+            shutil.copy(script_dir+'/../../configuration/barConfigs/goodRunsList.json', os.getcwd())
+        except:
+            print("Could not find the lumi/good runs files on eos or locally")
+            sys.exit(1)
 
 def createRunList(files, name='filelist.json', nFilesPerJob=100):
     
@@ -150,7 +176,7 @@ def checkZombie(filename):
         print("Unable to open file {}".format(filename))
         return False
 
-def checkFailures(outputDir):
+def checkFailures(outputDir, sim=False):
 
     totalFiles = []
     filesToMerge = []
@@ -162,7 +188,10 @@ def checkFailures(outputDir):
             if checkZombie(outputDir+'/'+filename): continue
             filesToMerge.append(filename)
             #goodFiles.append(int(filename.split('_')[-1].split('.')[0]))
-            goodFiles.append(int(filename.split('_')[-2].split('.')[0]))
+            if not sim:
+                goodFiles.append(int(filename.split('_')[-2].split('.')[0]))
+            else:
+                goodFiles.append(int(filename.split('_')[-1].split('.')[0]))
 
         if not filename.endswith('.err'):
             continue
@@ -231,16 +260,16 @@ if __name__ == "__main__":
 
     r.gErrorIgnoreLevel = r.kBreak
 
-    nFilesPerJob = 50
-    #script = 'backgroundAnalysisCondor.py'
-    #script = 'offlineTimingCorrectionCondor.py'
+    nFilesPerJob = 1
+    sim = True
+    script_dir = '../backgroundEstimation/'
     script = 'backgroundCutFlowCondor.py'
     singularity_image = ''
     exe = 'condor_exe.sh'
     fileListName = 'filelist.json'
-    outputDir = '/abyss/users/mcarrigan/milliqan/backgroundCutFlow_beamOff_demonstratorCuts'
+    outputDir = '/data/user/mcarrigan/milliqan/bgCutFlow_signalSim_SR1_v9/'
     requirements = ['4', '4000MB', '3000MB'] #CPU, Memory, Disk
-    includeDirs = '/store/,/data/,/abyss/'
+    includeDirs = '/data/'
 
     if args.tarFile:
         createTarFile()
@@ -250,7 +279,7 @@ if __name__ == "__main__":
         outputDir = args.outputDir
 
     if args.resubmit or args.merge:
-        filesToResubmit, filesToMerge = checkFailures(outputDir)
+        filesToResubmit, filesToMerge = checkFailures(outputDir, sim)
         print("There are {} file to resubmit and {} files available to merge".format(len(filesToResubmit), len(filesToMerge)))
         if args.merge:
             mergeFiles(outputDir, filesToMerge, includeDirs)
@@ -260,12 +289,16 @@ if __name__ == "__main__":
 
     if not os.path.exists(outputDir):
         os.mkdir(outputDir)
+        os.system(f'chmod -R a+rwx {outputDir}')
 
     copyConfigs()
 
     createTarFile()
 
-    filesList = getFilesLocal(startRun=1200, stopRun=1900, beam=False, goodRun='goodRunTight', debug=False)
+    if sim:
+        filesList = getSimFilesLocal(dataDir='/data/user/mcarrigan/milliqan/pulseInjectedSim_v5/trees/', debug=False)
+    else:
+        filesList = getFilesLocal()
 
     nJobs = createRunList(filesList, name=fileListName, nFilesPerJob=nFilesPerJob)
 
@@ -279,7 +312,7 @@ if __name__ == "__main__":
     shutil.copy('milliqanProcessing.tar.gz', outputDir)
     shutil.copy('mqLumis.json', outputDir)
     shutil.copy('goodRunsList.json', outputDir)
-    shutil.copy(script, outputDir)
+    shutil.copy(script_dir+script, outputDir)
 
 
     if not args.dryRun:

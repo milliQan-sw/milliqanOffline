@@ -102,6 +102,8 @@ class fileChecker():
 
         self.configList = self.getConfigList()
 
+        self.vetoedRuns = self.getVetoedRuns()
+
     def initializePlots(self):
 
         bins = self.max_run - self.min_run
@@ -139,6 +141,13 @@ class fileChecker():
             return True
         else: 
             return False
+
+    def getVetoedRuns(self):
+
+        with open(self.configDir+'vetoedRuns.json', 'r') as file:
+            data = json.load(file)
+            
+        return data['vetoedRuns']
         
     def checkOfflineFiles(self, fileList):
 
@@ -213,7 +222,7 @@ class fileChecker():
             ['runNum', 'eventNum', 'trigger', 'startTime'],
 
             #needs to be 1000 events for file number to be correct
-            step_size=10000,
+            step_size=1000,
 
             num_workers=8,
             
@@ -253,9 +262,21 @@ class fileChecker():
             thisConfig = self.configList[configName]
             for events in metadata:
                 #print("Run: {}, FW: {}, Trigger: {}, Coincidence: {}, Dead Time: {}".format(runNum, events.fwVersion, events.trigger, events.coincidenceTime, events.deadTime))
-                passing = passing and events.fwVersion == thisConfig.fwVersion
+                passing = passing and events.fwVersion >= thisConfig.fwVersion
                 passing = passing and events.coincidenceTime == thisConfig.coincidenceTime
                 passing = passing and events.deadTime == thisConfig.deadTime
+
+                #current triggers 0xff, 0xef, 0xff, 0xff, 0x3c, 0x01, 0x00, 0xc0
+                activeLVDS = (events.channelMask0 & 0xff) == 0xff
+                activeLVDS = ((events.channelMask1 & 0xef) == 0xef) and activeLVDS
+                activeLVDS = ((events.channelMask2 & 0xff) == 0xff) and activeLVDS
+                activeLVDS = ((events.channelMask3 & 0xff) == 0xff) and activeLVDS
+                activeLVDS = ((events.channelMask4 & 0x3c) == 0x3c) and activeLVDS
+                activeLVDS = ((events.channelMask5 & 0x01) == 0x01) and activeLVDS
+                activeLVDS = ((events.channelMask6 & 0x00) == 0x00) and activeLVDS
+                activeLVDS = ((events.channelMask7 & 0xc0) == 0xc0) and activeLVDS
+
+                passing = passing and activeLVDS
 
                 singleTrigger = False if events.trigger == 0 else (math.ceil(math.log10(events.trigger)/math.log10(2)) == math.floor(math.log10(events.trigger)/math.log10(2)))
                 #print("Trigger:", events.trigger, "Single Trigger Bit:", singleTrigger, "Passing", passing)
@@ -264,11 +285,11 @@ class fileChecker():
                 passing = passing and self.checkActiveTriggers(events.trigger)
 
                 thisTrigger = events.trigger
+
             self.runInfos.loc[(self.runInfos['run'] == int(runNum)) & (self.runInfos['file'] == int(fileNum)), 'triggerConfigPassing'] = passing
             self.runInfos.loc[(self.runInfos['run'] == int(runNum)) & (self.runInfos['file'] == int(fileNum)), 'trigger'] = thisTrigger
             self.runInfos.loc[(self.runInfos['run'] == int(runNum)) & (self.runInfos['file'] == int(fileNum)), 'singleTriggerPassing'] = singlePass
 
-    
     def getOfflineInfo(self):
 
         print("Getting Offline Info...")
@@ -455,23 +476,25 @@ class fileChecker():
         self.runInfos['offlineCTime'] = pd.to_datetime(self.runInfos['offlineCTime'])
 
         self.runInfos['TriggersMatched'] = self.runInfos['unmatchedEvents'].apply(lambda x: True if x < 10 else False)
-        self.runInfos['OfflineFilesTrigMatched'] = self.runInfos.apply(lambda x: True if (x['totalEvents'] > 0 and (x['offlineTrigMatched'] / x['totalEvents']) > 0.99) else False, axis=1)
-        self.runInfos['passBoardMatching'] = self.runInfos.apply(lambda x: True if (x['totalEvents'] > 0 and (x['unmatchedBoards'] / x['totalEvents']) < 0.01) else False, axis=1)
+        self.runInfos['OfflineFilesTrigMatched'] = self.runInfos.apply(lambda x: True if (x['totalEvents'] > 0 and (x['offlineTrigMatched'] / x['totalEvents']) > 0.95) else False, axis=1)
+        self.runInfos['passBoardMatching'] = self.runInfos.apply(lambda x: True if (x['totalEvents'] > 0 and (x['unmatchedBoards'] / x['totalEvents']) < 0.05) else False, axis=1)
         self.runInfos['passActiveChannels'] = self.runInfos.apply(lambda x: False if np.any(x['activeChannels'][self.configList[x['runConfig']].channels]==False) else True, axis=1)
         self.runInfos['inactiveChannels'] = self.runInfos.apply(lambda x: np.intersect1d(np.where(x['activeChannels']==False), self.configList[x['runConfig']].channels), axis=1)
         self.runInfos['lvdsSwapVeto'] = self.runInfos.apply(lambda x: True if ((x['daqCTime'] >= datetime(2023, 7, 6)) & (x['daqCTime'] <= datetime(2023, 11, 10))) else False, axis=1)
+        self.runInfos['vetoRunManual'] = self.runInfos.apply(lambda x: True if (x['run'] in self.vetoedRuns) else False, axis=1)
 
-        self.runInfos['goodRunLoose'] = (self.runInfos['TriggersMatched']) & \
-                                    (self.runInfos['passBoardMatching']) & \
-                                    (self.runInfos['triggerConfigPassing']) & \
-                                    (self.runInfos['OfflineFilesTrigMatched'])
-        self.runInfos['goodRunMedium'] = (self.runInfos['goodRunLoose']) & (self.runInfos['inactiveChannels'].str.len() <= 2)
-        self.runInfos['goodRunTight'] = (self.runInfos['goodRunLoose']) & (self.runInfos['passActiveChannels']) & (~self.runInfos['lvdsSwapVeto'])
+        self.runInfos['goodRunLoose'] = (self.runInfos['passBoardMatching']) & \
+                                        (self.runInfos['triggerConfigPassing']) & \
+                                        (self.runInfos['inactiveChannels'].str.len() <= 2) & \
+                                        (~self.runInfos['vetoRunManual'])
+        self.runInfos['goodRunMedium'] = (self.runInfos['goodRunLoose']) & (self.runInfos['passActiveChannels']) & (~self.runInfos['lvdsSwapVeto'])
+        self.runInfos['goodRunTight'] = (self.runInfos['goodRunMedium']) & (self.runInfos['TriggersMatched']) & (self.runInfos['OfflineFilesTrigMatched'])
 
         self.runInfos['goodSingleTrigger'] = (self.runInfos['TriggersMatched']) & \
                                     (self.runInfos['passBoardMatching']) & \
                                     (self.runInfos['singleTriggerPassing']) & \
-                                    (self.runInfos['OfflineFilesTrigMatched'])
+                                    (self.runInfos['OfflineFilesTrigMatched']) & \
+                                    (~self.runInfos['vetoRunManual'])
 
         self.runInfos['daqCTime'] = self.runInfos['daqCTime'].apply(lambda x: x.strftime("%Y-%m-%d %H:%M:%S") if not pd.isnull(x) else None)
         self.runInfos['trigCTime'] = self.runInfos['trigCTime'].apply(lambda x: x.strftime("%Y-%m-%d %H:%M:%S") if not pd.isnull(x) else None)

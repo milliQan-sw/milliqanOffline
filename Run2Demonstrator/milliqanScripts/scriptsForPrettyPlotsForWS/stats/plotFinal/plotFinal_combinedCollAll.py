@@ -46,7 +46,8 @@ datasetA = np.loadtxt("external/ArgoNeuTWithMQ.csv",delimiter=",")
 #"milliQanProjHighBkg",
 # for datasetName in ["MilliQ","ArgoNeut","SENSEI","CMS","milliQan","milliQanRun3Both","ColliderWithMilliQ","FORMOSA_dem",]:
 # for datasetName in ["MilliQ","ArgoNeut","SENSEI","CMS","milliQan","milliQanRun3Fix","ColliderWithMilliQ"][1:]:
-for datasetName in ["MilliQ","ArgoNeut","SENSEI","CMS","milliQan","milliQanRun3Both","SUBMET","luminiQPlastic","LongQuestLarge","SHIP","FORMOSA_nominal","ColliderWithMilliQ"][1:]:
+# for datasetName in ["MilliQ","ArgoNeut","SENSEI","CMS","milliQan","milliQanRun3Both","SUBMET","luminiQPlastic","LongQuestLarge","SHIP","FORMOSA_nominal","ColliderWithMilliQ"][1:]:
+for datasetName in ["MilliQ","ArgoNeut","SENSEI","CMS","milliQan","milliQanRun3Both","SUBMET","SHIP","ColliderWithMilliQ"][1:]:
     if  datasetName == "FORMOSA_dem_test":
         dataset = np.loadtxt("external/milliQanRun3Bar.csv",delimiter=",")
         dataset = extrapolate(dataset,4)

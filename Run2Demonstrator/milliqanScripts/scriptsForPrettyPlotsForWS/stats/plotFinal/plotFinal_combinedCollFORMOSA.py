@@ -45,7 +45,7 @@ datasets = {}
 datasetA = np.loadtxt("external/ArgoNeuTWithMQ.csv",delimiter=",")
 #"milliQanProjHighBkg",
 # for datasetName in ["MilliQ","ArgoNeut","SENSEI","CMS","milliQan","milliQanRun3Both","ColliderWithMilliQ","FORMOSA_dem",]:
-for datasetName in ["MilliQ","ArgoNeut","SENSEI","CMS","milliQan","milliQanRun3Both","ColliderWithMilliQ","FORMOSA_nominal","FORMOSA_crystal100",][1:]:
+for datasetName in ["MilliQ","ArgoNeut","SENSEI","CMS","milliQan","milliQanRun3Both","ColliderWithMilliQ","FORMOSA_SND","FORMOSA_SND_HLLHC","FORMOSA_nominal"][1:]:
     if  datasetName == "FORMOSA_dem_test":
         dataset = np.loadtxt("external/milliQanRun3Bar.csv",delimiter=",")
         dataset = extrapolate(dataset,4)
@@ -79,7 +79,7 @@ for datasetName in ["MilliQ","ArgoNeut","SENSEI","CMS","milliQan","milliQanRun3B
     elif datasetName == "ArgoNeut":
         plt.loglog(dataset[:,0],dataset[:,1],color="steelblue",linewidth=2)
     elif datasetName == "FORMOSA_nominal":
-        plt.loglog(dataset[:,0],dataset[:,1],color="fuchsia",linewidth=2,label="FORMOSA")
+        plt.loglog(dataset[:,0],dataset[:,1],color="fuchsia",linewidth=2,label="FORMOSA at the FPF (2000/fb)")
     elif datasetName == "FORMOSA_nominal3layer":
         plt.loglog(dataset[:,0],dataset[:,1],color="goldenrod",linewidth=2,label="FORMOSA (3 layers)")
     elif datasetName == "milliQanHL":
@@ -92,6 +92,10 @@ for datasetName in ["MilliQ","ArgoNeut","SENSEI","CMS","milliQan","milliQanRun3B
         plt.loglog(dataset[:,0],dataset[:,1],color="darkmagenta",linewidth=2,label="FORMOSA+CeBr3 (3 layer)")
     elif datasetName == "FORMOSA_dem":
         plt.loglog(dataset[:,0],dataset[:,1],color="darkmagenta",linewidth=2,label="FORMOSA demonstrator")
+    elif datasetName == "FORMOSA_SND":
+        plt.loglog(dataset[:,0],dataset[:,1],color="mediumvioletred",linewidth=2,label="FORMOSA at SND (200/fb)")
+    elif datasetName == "FORMOSA_SND_HLLHC":
+        plt.loglog(dataset[:,0],dataset[:,1],color="darkmagenta",linewidth=2,label="FORMOSA at SND (3000/fb)")
     elif datasetName == "moedalRun3":
         plt.loglog(dataset[:,0],dataset[:,1],color="lightskyblue",linewidth=2,label="Moedal Run 3")
     elif datasetName == "CMS":
@@ -132,7 +136,7 @@ plt.legend(frameon=False,loc="lower right",fontsize=9)
 plt.xlim([0.02,200])
 plt.xlabel("MCP mass (GeV)",fontsize=14,loc="right")
 plt.ylabel("Q/e",fontsize=14,loc="top" )
-plt.ylim([0.00005,0.6])
+plt.ylim([0.00008,0.6])
 plt.text(0.205,1.05, "$\\bf{FORMOSA}$ $\it{Simulation}$", horizontalalignment='center',
      verticalalignment='center',transform=plt.gca().transAxes,fontsize=14)
 plt.text(0.81,1.05, "$2000\ \\rm{fb}^{-1}$ (13.6 TeV)", horizontalalignment='center',

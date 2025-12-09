@@ -269,6 +269,15 @@ class milliqanCuts():
             self.cutBranches(branches, cutName)
 
     @mqCut
+    def removeCh56Cut(self, cutName='remove56', cut=False, branches=None):
+
+        non56_mask = self.events['chan'] != 56
+        self.events[cutName] = non56_mask
+        
+        if cut:
+            self.cutBranches(branches, cutName)
+
+    @mqCut
     def darkRateCut(self, cutName='darkRateCut', cut=False, branches=None):
 
         #duration >= 50ns

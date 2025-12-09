@@ -26,12 +26,12 @@ from utilities import *
 
 if __name__ == "__main__":
 
-    SR = 1
+    SR = 2
     blind = False
     beam = False
     skim = True
     sim = False
-    outputFile = 'finalSelections/bgCutFlow_SR1_beamOff_finalV2.root'
+    outputFile = 'backgroundCheck.root' #'finalSelections/bgCutFlow_SR1_beamOff_finalV2.root'
     qualityLevel = 'tight'
     maxEvents = None
     stepSize = 20000
@@ -125,6 +125,7 @@ if __name__ == "__main__":
     pickupCut = getCutMod(mycuts.pickupCutCustom, mycuts, 'pickupCut', cut=makeCut)
     noiseCut = getCutMod(mycuts.noiseCut, mycuts, 'noiseCut', cut=makeCut)
     darkRateCut = getCutMod(mycuts.darkRateCut, mycuts, 'darkRateCut', cut=makeCut)
+    removeCh56Cut = getCutMod(mycuts.removeCh56Cut, mycuts, 'remove56', cut=makeCut)
 
     #require that all digitizer boards are matched
     boardMatchCut = getCutMod(mycuts.boardsMatched, mycuts, 'boardMatchCut', cut=makeCut, branches=branches)
@@ -338,6 +339,7 @@ if __name__ == "__main__":
                 boardMatchCut, 
                 pickupCut, 
                 darkRateCut,
+                removeCh56Cut,
 
                 mycuts.countNBars, 
                 nBarsCut6, #require that <= 6 channels after removing pickup/dark rate 
@@ -413,6 +415,7 @@ if __name__ == "__main__":
                 pickupCut, 
                 noiseCut, 
                 darkRateCut,                
+                removeCh56Cut,
                 firstPulseCut,
                 centralTimeCut,
                 mycuts.countNBars, 

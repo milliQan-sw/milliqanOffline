@@ -1,4 +1,4 @@
-# importing packages for the analysis
+# importing packages
 import os
 import ROOT as r
 import uproot
